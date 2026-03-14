@@ -120,7 +120,7 @@ class SocrataPermitScraper(BaseScraper):
         """Try common date column names; fall back to config."""
         candidates = self.field_map.get("filed_date", []) + ["filed_date", "application_date", "date_filed"]
         # Trust config first
-        return self.county_config.get("date_column") or candidates[0]
+        return self.config.get("date_column") or candidates[0]
 
     def _normalise(self, row: dict) -> RawPermit | None:
         source_id = (
