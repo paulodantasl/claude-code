@@ -1,0 +1,150 @@
+# Companies and entities to watch for in permit applications
+# Uses fuzzy matching — add subsidiaries, legal names, and aliases
+
+watch_list:
+  # Grocery / Retail
+  - id: publix
+    display_name: "Publix"
+    aliases:
+      - "Publix Super Markets"
+      - "Publix Super Market"
+      - "Publix Markets"
+      - "Publix Realty"
+    permit_types: ["commercial", "retail", "new construction", "addition"]
+    min_value: 500000
+
+  - id: amazon
+    display_name: "Amazon"
+    aliases:
+      - "Amazon.com"
+      - "Amazon Fulfillment"
+      - "Amazon Logistics"
+      - "Amazon Data Services"
+      - "AWS"
+      - "Vadata"
+      - "AMZN"
+      - "Amazon Warehouse"
+    permit_types: ["warehouse", "industrial", "commercial", "data center"]
+    min_value: 1000000
+
+  - id: walmart
+    display_name: "Walmart"
+    aliases:
+      - "Wal-Mart"
+      - "Walmart Stores"
+      - "Sam's Club"
+      - "Walmart Real Estate"
+      - "Walmart Inc"
+    permit_types: ["commercial", "retail", "new construction"]
+    min_value: 500000
+
+  - id: target
+    display_name: "Target"
+    aliases:
+      - "Target Corporation"
+      - "Target Stores"
+      - "Target Real Estate"
+    permit_types: ["commercial", "retail", "new construction"]
+    min_value: 500000
+
+  - id: home_depot
+    display_name: "Home Depot"
+    aliases:
+      - "The Home Depot"
+      - "Home Depot USA"
+      - "Home Depot Inc"
+    permit_types: ["commercial", "retail", "new construction"]
+    min_value: 1000000
+
+  - id: costco
+    display_name: "Costco"
+    aliases:
+      - "Costco Wholesale"
+      - "Costco Warehouse"
+    permit_types: ["commercial", "retail", "warehouse", "new construction"]
+    min_value: 2000000
+
+  # E-commerce & Logistics
+  - id: fedex
+    display_name: "FedEx"
+    aliases:
+      - "Federal Express"
+      - "FedEx Ground"
+      - "FedEx Freight"
+      - "FedEx Logistics"
+    permit_types: ["warehouse", "industrial", "distribution"]
+    min_value: 500000
+
+  - id: ups
+    display_name: "UPS"
+    aliases:
+      - "United Parcel Service"
+      - "UPS Supply Chain"
+    permit_types: ["warehouse", "industrial", "distribution"]
+    min_value: 500000
+
+  # Food & Restaurant Chains
+  - id: chick_fil_a
+    display_name: "Chick-fil-A"
+    aliases:
+      - "CFA Properties"
+      - "Chick Fil A"
+    permit_types: ["commercial", "restaurant", "new construction"]
+    min_value: 200000
+
+  - id: mcdonalds
+    display_name: "McDonald's"
+    aliases:
+      - "McDonalds"
+      - "McDonald's USA"
+      - "Golden Arches"
+    permit_types: ["commercial", "restaurant", "new construction"]
+    min_value: 200000
+
+  # Data Centers / Tech
+  - id: google
+    display_name: "Google / Alphabet"
+    aliases:
+      - "Google LLC"
+      - "Alphabet Inc"
+      - "Google Data Center"
+    permit_types: ["data center", "industrial", "commercial"]
+    min_value: 5000000
+
+  - id: microsoft
+    display_name: "Microsoft"
+    aliases:
+      - "Microsoft Corporation"
+      - "Microsoft Azure"
+    permit_types: ["data center", "industrial", "commercial"]
+    min_value: 5000000
+
+  - id: meta
+    display_name: "Meta / Facebook"
+    aliases:
+      - "Facebook"
+      - "Meta Platforms"
+      - "Instagram"
+    permit_types: ["data center", "industrial", "commercial"]
+    min_value: 5000000
+
+  # Healthcare
+  - id: hca
+    display_name: "HCA Healthcare"
+    aliases:
+      - "HCA Florida"
+      - "HCA Healthcare"
+      - "Columbia HCA"
+    permit_types: ["hospital", "medical", "commercial"]
+    min_value: 1000000
+
+  # Hotels
+  - id: marriott
+    display_name: "Marriott"
+    aliases:
+      - "Marriott International"
+      - "Marriott Hotels"
+      - "Courtyard Marriott"
+      - "Residence Inn"
+    permit_types: ["hotel", "commercial", "new construction"]
+    min_value: 2000000

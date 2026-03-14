@@ -1,0 +1,98 @@
+# Target counties and cities configuration
+# Add or remove entries to focus on specific regions
+
+targets:
+  # Florida - Miami-Dade County
+  - id: miami_dade
+    name: "Miami-Dade County"
+    state: FL
+    type: accela
+    base_url: "https://aca.miamidade.gov/CitizenAccess"
+    open_data_url: "https://opendata.miamidade.gov/resource/8yp4-rnxy.json"
+    open_data_type: socrata
+    notes: "Uses Accela; also has Socrata open data portal"
+
+  # Florida - Broward County
+  - id: broward
+    name: "Broward County"
+    state: FL
+    type: accela
+    base_url: "https://capec.broward.org/aca"
+    open_data_url: "https://opendata.broward.org/resource/permits.json"
+    open_data_type: socrata
+
+  # Florida - Palm Beach County
+  - id: palm_beach
+    name: "Palm Beach County"
+    state: FL
+    type: accela
+    base_url: "https://epermits.pbcgov.org/CitizenAccess"
+
+  # Florida - Orange County (Orlando area)
+  - id: orange_county_fl
+    name: "Orange County, FL"
+    state: FL
+    type: accela
+    base_url: "https://aca.orangecountyfl.net/aca"
+
+  # Florida - Hillsborough County (Tampa)
+  - id: hillsborough
+    name: "Hillsborough County"
+    state: FL
+    type: accela
+    base_url: "https://hcfl.gov/building-permits"
+
+  # Florida - City of Miami
+  - id: city_miami
+    name: "City of Miami"
+    state: FL
+    type: opengov
+    base_url: "https://egov.miami.gov/CitizenAccess"
+
+  # Georgia - Fulton County (Atlanta)
+  - id: fulton_ga
+    name: "Fulton County, GA"
+    state: GA
+    type: opengov
+    base_url: "https://permitportal.fultoncountyga.gov"
+
+  # Texas - Harris County (Houston)
+  - id: harris_tx
+    name: "Harris County, TX"
+    state: TX
+    type: socrata
+    open_data_url: "https://data.houstontx.gov/resource/building-permits.json"
+    open_data_type: socrata
+
+  # Texas - Dallas County
+  - id: dallas_tx
+    name: "City of Dallas, TX"
+    state: TX
+    type: socrata
+    open_data_url: "https://www.dallasopendata.com/resource/building-permits.json"
+    open_data_type: socrata
+
+  # California - Los Angeles County
+  - id: la_county
+    name: "Los Angeles County"
+    state: CA
+    type: socrata
+    open_data_url: "https://data.lacounty.gov/resource/permits.json"
+    open_data_type: socrata
+
+  # New York - New York City
+  - id: nyc
+    name: "New York City"
+    state: NY
+    type: socrata
+    open_data_url: "https://data.cityofnewyork.us/resource/ipu4-2q9a.json"
+    open_data_type: socrata
+    notes: "DOB job applications dataset"
+
+  # Washington - King County (Seattle)
+  - id: king_county_wa
+    name: "King County, WA"
+    state: WA
+    type: socrata
+    open_data_url: "https://data.kingcounty.gov/resource/permits.json"
+    open_data_type: socrata
