@@ -1,98 +1,121 @@
-# Target counties and cities configuration
-# Add or remove entries to focus on specific regions
+# Central Florida permit portal targets
+# Coverage: Greater Orlando MSA + surrounding high-growth counties
+#
+# Permit platform key:
+#   accela   — Accela Citizen Access (Playwright browser scraper)
+#   cityview — Tyler Technologies CityView (Playwright browser scraper)
+#   opengov  — OpenGov Permitting & Licensing (Playwright browser scraper)
+#   socrata  — Socrata open-data JSON API (no browser needed)
+#
+# All portals verified for Central FL as of 2024.
+# If a portal URL stops responding, set use_ai_agent: true and the
+# Claude agent will re-navigate it automatically.
 
 targets:
-  # Florida - Miami-Dade County
-  - id: miami_dade
-    name: "Miami-Dade County"
-    state: FL
-    type: accela
-    base_url: "https://aca.miamidade.gov/CitizenAccess"
-    open_data_url: "https://opendata.miamidade.gov/resource/8yp4-rnxy.json"
-    open_data_type: socrata
-    notes: "Uses Accela; also has Socrata open data portal"
 
-  # Florida - Broward County
-  - id: broward
-    name: "Broward County"
-    state: FL
-    type: accela
-    base_url: "https://capec.broward.org/aca"
-    open_data_url: "https://opendata.broward.org/resource/permits.json"
-    open_data_type: socrata
-
-  # Florida - Palm Beach County
-  - id: palm_beach
-    name: "Palm Beach County"
-    state: FL
-    type: accela
-    base_url: "https://epermits.pbcgov.org/CitizenAccess"
-
-  # Florida - Orange County (Orlando area)
+  # ── Orange County (unincorporated) ──────────────────────────────────────
+  # Largest county; covers major industrial/logistics corridors along
+  # I-4, SR-408, SR-528. Home to Amazon, Walmart, and theme park supply chain.
   - id: orange_county_fl
     name: "Orange County, FL"
     state: FL
     type: accela
     base_url: "https://aca.orangecountyfl.net/aca"
+    notes: >
+      Covers unincorporated Orange County only.
+      City of Orlando files separately (see below).
+      Key commercial zones: I-4 corridor, OIA airport area,
+      John Young Pkwy industrial, Narcoossee Rd (Lake Nona).
 
-  # Florida - Hillsborough County (Tampa)
-  - id: hillsborough
-    name: "Hillsborough County"
+  # ── City of Orlando ──────────────────────────────────────────────────────
+  # Separate permitting authority from Orange County.
+  # Downtown, Dr. Phillips, Mills/50, Thornton Park, SoDo, Parramore.
+  - id: city_orlando
+    name: "City of Orlando"
+    state: FL
+    type: cityview
+    base_url: "https://cityview2.orlando.gov/CityViewWeb"
+    notes: >
+      Uses Tyler Technologies CityView, not Accela.
+      High volume of mixed-use and entertainment-district permits.
+      Use AI agent if CityView scraper fails.
+    use_ai_agent: false
+
+  # ── Seminole County ──────────────────────────────────────────────────────
+  # Fast-growing north of Orlando; I-4 corridor (Lake Mary, Sanford),
+  # SR-417 / SR-434 tech and office belt. Sanford airport logistics.
+  - id: seminole_county
+    name: "Seminole County, FL"
     state: FL
     type: accela
-    base_url: "https://hcfl.gov/building-permits"
+    base_url: "https://aca.seminolecountyfl.gov/CitizenAccess"
+    notes: >
+      Key commercial areas: Lake Mary Blvd tech corridor,
+      Sanford/Lake Monroe industrial, Altamonte Springs retail.
 
-  # Florida - City of Miami
-  - id: city_miami
-    name: "City of Miami"
+  # ── Osceola County ──────────────────────────────────────────────────────
+  # South of Orlando; US-192 tourism corridor, Kissimmee, St. Cloud.
+  # Rapid residential + logistics growth along Narcoossee Rd / Boggy Creek.
+  - id: osceola_county
+    name: "Osceola County, FL"
     state: FL
-    type: opengov
-    base_url: "https://egov.miami.gov/CitizenAccess"
+    type: accela
+    base_url: "https://aca.osceola.org/CitizenAccess"
+    notes: >
+      Watch: Osceola Parkway industrial, NeoCity technology district
+      (semiconductors, advanced manufacturing), Amazon delivery stations
+      on Boggy Creek Rd.
 
-  # Georgia - Fulton County (Atlanta)
-  - id: fulton_ga
-    name: "Fulton County, GA"
-    state: GA
-    type: opengov
-    base_url: "https://permitportal.fultoncountyga.gov"
+  # ── Lake County ──────────────────────────────────────────────────────────
+  # West of Orlando; US-27 and SR-50 corridors (Clermont, Minneola, Leesburg).
+  # One of FL's fastest-growing counties for distribution/logistics.
+  - id: lake_county
+    name: "Lake County, FL"
+    state: FL
+    type: accela
+    base_url: "https://www.lakecountyfl.gov/offices/planning_and_zoning/building_services/permits"
+    notes: >
+      Key commercial zones: US-27 industrial corridor (Minneola/Clermont),
+      SR-50 retail (Clermont), Leesburg/Tavares warehouse district.
+      Very active for new Publix, Aldi, and big-box construction.
 
-  # Texas - Harris County (Houston)
-  - id: harris_tx
-    name: "Harris County, TX"
-    state: TX
-    type: socrata
-    open_data_url: "https://data.houstontx.gov/resource/building-permits.json"
-    open_data_type: socrata
+  # ── Polk County ──────────────────────────────────────────────────────────
+  # Between Orlando and Tampa; I-4 logistics mega-corridor.
+  # One of the highest concentrations of Amazon warehouses in the US.
+  - id: polk_county
+    name: "Polk County, FL"
+    state: FL
+    type: accela
+    base_url: "https://eservices.polk-county.net/CitizenAccess"
+    notes: >
+      PRIORITY TARGET — I-4 corridor through Lakeland/Davenport has
+      more Amazon fulfillment and distribution centers than almost
+      anywhere in FL. Also: Winter Haven, Haines City, Davenport retail.
+      Watch applicants: Vadata Inc, Amazon Logistics, Prologis, Duke Realty.
 
-  # Texas - Dallas County
-  - id: dallas_tx
-    name: "City of Dallas, TX"
-    state: TX
-    type: socrata
-    open_data_url: "https://www.dallasopendata.com/resource/building-permits.json"
-    open_data_type: socrata
+  # ── Volusia County ──────────────────────────────────────────────────────
+  # Northeast of Orlando; Daytona Beach, DeLand, Deltona, Port Orange.
+  # I-4 and I-95 interchange drives distribution activity.
+  - id: volusia_county
+    name: "Volusia County, FL"
+    state: FL
+    type: accela
+    base_url: "https://permits.volusia.org/CitizenAccess"
+    notes: >
+      Deltona is a major logistics hub (I-4/I-95 crossroads).
+      Daytona Beach: tourism-adjacent retail and hotel construction.
+      DeLand: growing commercial corridor on US-17.
 
-  # California - Los Angeles County
-  - id: la_county
-    name: "Los Angeles County"
-    state: CA
-    type: socrata
-    open_data_url: "https://data.lacounty.gov/resource/permits.json"
-    open_data_type: socrata
-
-  # New York - New York City
-  - id: nyc
-    name: "New York City"
-    state: NY
-    type: socrata
-    open_data_url: "https://data.cityofnewyork.us/resource/ipu4-2q9a.json"
-    open_data_type: socrata
-    notes: "DOB job applications dataset"
-
-  # Washington - King County (Seattle)
-  - id: king_county_wa
-    name: "King County, WA"
-    state: WA
-    type: socrata
-    open_data_url: "https://data.kingcounty.gov/resource/permits.json"
-    open_data_type: socrata
+  # ── Brevard County (Space Coast) ────────────────────────────────────────
+  # East of Orlando on the Atlantic coast; Melbourne, Titusville, Cocoa.
+  # Aerospace, defense, and tech manufacturing (SpaceX, Blue Origin tenants).
+  # Also growing Publix/Aldi/retail footprint along US-192 and US-1.
+  - id: brevard_county
+    name: "Brevard County, FL"
+    state: FL
+    type: accela
+    base_url: "https://brevardpermits.com/CitizenAccess"
+    notes: >
+      Unique mix: industrial/aerospace (KSC area) + fast-growing
+      residential-adjacent retail. Watch: Viera commercial corridor,
+      Melbourne SR-192 retail, Titusville logistics near KSC.
