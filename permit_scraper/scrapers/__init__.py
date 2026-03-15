@@ -1,6 +1,7 @@
 from .accela import AccelaApiScraper, AccelaPlaywrightScraper
 from .base import BaseScraper, RawPermit
 from .cityview import CityViewScraper
+from .energov import EnerGovScraper
 from .opengov import OpenGovScraper
 from .socrata_api import SocrataPermitScraper
 
@@ -8,6 +9,7 @@ SCRAPER_REGISTRY = {
     "accela": AccelaPlaywrightScraper,
     "accela_api": AccelaApiScraper,
     "cityview": CityViewScraper,
+    "energov": EnerGovScraper,
     "opengov": OpenGovScraper,
     "socrata": SocrataPermitScraper,
 }
@@ -33,6 +35,7 @@ __all__ = [
     "AccelaPlaywrightScraper",
     "AccelaApiScraper",
     "CityViewScraper",
+    "EnerGovScraper",
     "OpenGovScraper",
     "SocrataPermitScraper",
     "SCRAPER_REGISTRY",
