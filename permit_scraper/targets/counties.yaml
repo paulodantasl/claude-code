@@ -140,6 +140,7 @@ targets:
       Key zones: I-75/Gibsonton warehouse belt, Brandon/Riverview retail,
       US-301 industrial, USF/Fletcher Ave commercial.
       Watch: Prologis, Duke Realty, Hillsborough Logistics Center projects.
+    use_ai_agent: true
 
   # ── City of Tampa ────────────────────────────────────────────────────────
   # Separate permitting authority. Highest commercial permit volume in
@@ -154,7 +155,7 @@ targets:
       Top commercial corridors: Westshore (office/retail), Dale Mabry Hwy,
       Kennedy Blvd, Busch Blvd, Adamo Dr industrial, Port of Tampa terminal.
       High hotel + mixed-use permit volume near Channelside/downtown.
-    use_ai_agent: true
+    use_ai_agent: false
 
   # ── Pinellas County ──────────────────────────────────────────────────────
   # Peninsula west of Tampa; St. Petersburg, Clearwater, Largo, Dunedin.

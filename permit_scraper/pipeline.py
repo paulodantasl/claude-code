@@ -124,7 +124,18 @@ class PermitPipeline:
 
         try:
             # ── Scrape ────────────────────────────────────────────────────
-            if use_ai_agent or county.get("use_ai_agent"):
+            want_ai = use_ai_agent or county.get("use_ai_agent")
+            has_api_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+
+            if want_ai and not has_api_key:
+                logger.warning(
+                    "%s: use_ai_agent=true but ANTHROPIC_API_KEY not set — "
+                    "falling back to rule-based scraper",
+                    county["name"],
+                )
+                want_ai = False
+
+            if want_ai:
                 raw_permits = self._run_ai_agent(county, days_back, permit_types)
             else:
                 scraper = get_scraper(county)

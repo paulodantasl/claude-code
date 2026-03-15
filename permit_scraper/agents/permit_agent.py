@@ -37,6 +37,7 @@ import anthropic
 from playwright.sync_api import Page, sync_playwright
 
 from ..scrapers.base import RawPermit
+from ..scrapers.browser_utils import CHROMIUM_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +175,7 @@ class PermitAgent:
         logger.info("Starting AI agent for %s (%s)", county_name, base_url)
 
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=county_config.get("headless", True))
+            browser = p.chromium.launch(headless=county_config.get("headless", True), executable_path=CHROMIUM_PATH)
             context = browser.new_context(
                 user_agent=(
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

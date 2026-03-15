@@ -18,6 +18,7 @@ from typing import Any
 from playwright.sync_api import sync_playwright
 
 from .base import BaseScraper, RawPermit
+from .browser_utils import CHROMIUM_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class CityViewScraper(BaseScraper):
         results: list[RawPermit] = []
 
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=self.headless)
+            browser = p.chromium.launch(headless=self.headless, executable_path=CHROMIUM_PATH)
             context = browser.new_context(
                 user_agent=(
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
