@@ -76,6 +76,9 @@ def cli(ctx: click.Context, db_url: str | None, debug: bool) -> None:
 @click.option("--slack-webhook", envvar="SLACK_WEBHOOK_URL", default=None,
               help="Slack webhook URL for match alerts")
 @click.option("--csv-output", default=None, help="Append matched permits to this CSV file")
+@click.option("--google-sheet", "google_sheet", is_flag=True, default=False,
+              help="Export results to Google Sheets/Drive (requires GOOGLE_SERVICE_ACCOUNT_FILE "
+                   "or GOOGLE_OAUTH_CLIENT_FILE env var)")
 @click.pass_context
 def run(
     ctx: click.Context,
@@ -87,6 +90,7 @@ def run(
     min_score: float,
     slack_webhook: str | None,
     csv_output: str | None,
+    google_sheet: bool,
 ) -> None:
     """Scrape permit portals and match against the company watch list."""
     alert_channels: list[dict] = [{"type": "console"}]
@@ -104,6 +108,7 @@ def run(
         permit_types=list(permit_type) or None,
         use_ai_agent=use_ai_agent,
         min_match_score=min_score,
+        export_to_google=google_sheet,
     )
 
     console.rule("[bold cyan]Run complete")
@@ -115,6 +120,8 @@ def run(
     t.add_row("New (not in DB)", str(summary["total_new"]))
     t.add_row("Company matches", str(summary["total_matched"]))
     t.add_row("Alerts sent", str(summary["alerts_sent"]))
+    if summary.get("google_sheet_url"):
+        t.add_row("[green]Google Sheet[/]", summary["google_sheet_url"])
     if summary["errors"]:
         t.add_row("[red]Errors[/]", str(len(summary["errors"])))
     console.print(t)
@@ -150,8 +157,11 @@ def watch(ctx: click.Context, interval: str, county: tuple, days: int, slack_web
 @click.option("--company", "-c", default=None, help="Filter by company ID")
 @click.option("--county", default=None)
 @click.option("--min-score", default=85.0)
+@click.option("--google-sheet", "google_sheet", is_flag=True, default=False,
+              help="Also export to Google Sheets/Drive")
 @click.pass_context
-def export(ctx: click.Context, output: str, company: str | None, county: str | None, min_score: float) -> None:
+def export(ctx: click.Context, output: str, company: str | None, county: str | None,
+           min_score: float, google_sheet: bool) -> None:
     """Export matched permits from the database to a CSV file."""
     from .storage import Permit, get_session
 
@@ -183,6 +193,37 @@ def export(ctx: click.Context, output: str, company: str | None, county: str | N
             writer.writerow(row)
 
     console.print(f"[green]Exported {len(permits)} records to {output}[/]")
+
+    if google_sheet:
+        try:
+            from .notifications.google_drive import GoogleDriveExporter
+            # Build display rows for the sheet
+            sheet_rows = []
+            for p in permits:
+                sheet_rows.append({
+                    "filed_date":      p.filed_date.strftime("%Y-%m-%d") if p.filed_date else "",
+                    "permit_number":   p.permit_number or "",
+                    "county":          p.county_name or "",
+                    "city":            p.city or "",
+                    "address":         p.address or "",
+                    "zip_code":        p.zip_code or "",
+                    "permit_type":     p.permit_type or "",
+                    "status":          p.status or "",
+                    "applicant_name":  p.applicant_name or "",
+                    "owner_name":      p.owner_name or "",
+                    "contractor_name": p.contractor_name or "",
+                    "description":     p.description or "",
+                    "est_value":       f"${p.estimated_value:,.0f}" if p.estimated_value else "",
+                    "sqft":            f"{int(p.total_sqft):,}" if p.total_sqft else "",
+                    "parcel_number":   p.parcel_number or "",
+                    "matched_company": p.matched_company_name or "—",
+                    "match_score":     f"{p.match_score:.0f}%" if p.match_score else "—",
+                })
+            exporter = GoogleDriveExporter.from_env()
+            url = exporter.export_matches(matched_rows=sheet_rows)
+            console.print(f"[green]Google Sheet created:[/] {url}")
+        except Exception as exc:
+            console.print(f"[red]Google Drive export failed:[/] {exc}")
 
 
 @cli.command("property-appraisers")

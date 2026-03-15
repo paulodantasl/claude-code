@@ -631,3 +631,34 @@ if __name__ == "__main__":
     print(f"Residential filtered    : {len(all_rows) - len(matched)}")
     print(f"All permits CSV         : {out_all}")
     print(f"Matches CSV             : {out_matched}")
+
+    # ── Google Drive export (optional) ──────────────────────────────────────
+    # Runs automatically if GOOGLE_SERVICE_ACCOUNT_FILE or
+    # GOOGLE_OAUTH_CLIENT_FILE is set in the environment / .env
+    import os
+    has_google_creds = (
+        os.environ.get("GOOGLE_SERVICE_ACCOUNT_FILE")
+        or os.environ.get("GOOGLE_OAUTH_CLIENT_FILE")
+    )
+    if has_google_creds:
+        try:
+            from permit_scraper.notifications.google_drive import GoogleDriveExporter
+            exporter = GoogleDriveExporter.from_env()
+            sheet_url = exporter.export_matches(
+                matched_rows=matched,
+                all_rows=all_rows,
+                sheet_title=f"Permit Intelligence — Central West FL — {datetime.now().strftime('%Y-%m-%d')}",
+            )
+            print(f"\nGoogle Sheet created    : {sheet_url}")
+            # Also upload the raw CSVs for archive
+            exporter.upload_csv(out_matched, filename=out_matched.name)
+            exporter.upload_csv(out_all,     filename=out_all.name)
+            print("CSV files uploaded to Drive.")
+        except Exception as exc:
+            print(f"\n[Google Drive] Export failed: {exc}")
+            print("  Check your credentials and that the Google Sheets/Drive APIs are enabled.")
+    else:
+        print(
+            "\nTip: set GOOGLE_SERVICE_ACCOUNT_FILE or GOOGLE_OAUTH_CLIENT_FILE"
+            " to automatically export results to Google Drive."
+        )

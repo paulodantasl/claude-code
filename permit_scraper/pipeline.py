@@ -70,6 +70,7 @@ class PermitPipeline:
         permit_types: list[str] | None = None,
         use_ai_agent: bool = False,
         min_match_score: float = 85.0,
+        export_to_google: bool = False,
     ) -> dict[str, Any]:
         """
         Run the pipeline for selected counties.
@@ -89,14 +90,17 @@ class PermitPipeline:
             if county_ids is None or c["id"] in county_ids
         ]
 
-        summary = {
+        summary: dict[str, Any] = {
             "counties_processed": 0,
             "total_permits_found": 0,
             "total_new": 0,
             "total_matched": 0,
             "alerts_sent": 0,
             "errors": [],
+            "google_sheet_url": None,
         }
+
+        all_matched_permits: list[Permit] = []
 
         for county in targets:
             logger.info("━━ Processing %s ━━", county["name"])
@@ -110,6 +114,24 @@ class PermitPipeline:
             summary["alerts_sent"] += result["alerts"]
             if result.get("error"):
                 summary["errors"].append({"county": county["id"], "error": result["error"]})
+            all_matched_permits.extend(result.get("matched_permits", []))
+
+        # ── Optional Google Drive export ──────────────────────────────────
+        if export_to_google and all_matched_permits:
+            try:
+                from .notifications.google_drive import GoogleDriveExporter
+                exporter = GoogleDriveExporter.from_env()
+                sheet_rows = [self._permit_to_sheet_row(p) for p in all_matched_permits]
+                url = exporter.export_matches(
+                    matched_rows=sheet_rows,
+                    sheet_title=(
+                        f"Permit Intelligence — {datetime.utcnow().strftime('%Y-%m-%d %H:%M')} UTC"
+                    ),
+                )
+                summary["google_sheet_url"] = url
+                logger.info("Google Sheet: %s", url)
+            except Exception as exc:
+                logger.error("Google Drive export failed: %s", exc)
 
         return summary
 
@@ -125,7 +147,7 @@ class PermitPipeline:
             county_id=county["id"],
             scraper_type="ai_agent" if use_ai_agent else county.get("type", "accela"),
         )
-        result = {"found": 0, "new": 0, "matched": 0, "alerts": 0, "error": None}
+        result: dict[str, Any] = {"found": 0, "new": 0, "matched": 0, "alerts": 0, "error": None, "matched_permits": []}
 
         try:
             # ── Scrape ────────────────────────────────────────────────────
@@ -185,6 +207,7 @@ class PermitPipeline:
 
             result["new"] = len(new_permits)
             result["matched"] = len(matched_permits)
+            result["matched_permits"] = matched_permits
 
             # ── Alerts ────────────────────────────────────────────────────
             for permit in matched_permits:
@@ -253,6 +276,28 @@ class PermitPipeline:
             matched_company_name=enrichment.get("matched_company_name"),
             match_score=enrichment.get("match_score"),
         )
+
+    @staticmethod
+    def _permit_to_sheet_row(p: Permit) -> dict:
+        return {
+            "filed_date":      p.filed_date.strftime("%Y-%m-%d") if p.filed_date else "",
+            "permit_number":   p.permit_number or "",
+            "county":          p.county_name or "",
+            "city":            p.city or "",
+            "address":         p.address or "",
+            "zip_code":        p.zip_code or "",
+            "permit_type":     p.permit_type or "",
+            "status":          p.status or "",
+            "applicant_name":  p.applicant_name or "",
+            "owner_name":      p.owner_name or "",
+            "contractor_name": p.contractor_name or "",
+            "description":     p.description or "",
+            "est_value":       f"${p.estimated_value:,.0f}" if p.estimated_value else "",
+            "sqft":            f"{int(p.total_sqft):,}" if p.total_sqft else "",
+            "parcel_number":   p.parcel_number or "",
+            "matched_company": p.matched_company_name or "—",
+            "match_score":     f"{p.match_score:.0f}%" if p.match_score else "—",
+        }
 
     def run_property_appraisers(
         self,
