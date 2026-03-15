@@ -131,10 +131,10 @@ targets:
   - id: hillsborough_county
     name: "Hillsborough County, FL"
     state: FL
-    type: energov
-    base_url: "https://hillsgovhub.hcflgov.net/GovHub"
+    type: accela
+    base_url: "https://aca-prod.accela.com/HCFL"
     notes: >
-      Uses Tyler Technologies EnerGov (branded HillsGovHub).
+      Uses Accela Citizen Access (branded HillsGovHub) at aca-prod.accela.com/HCFL.
       Covers unincorporated Hillsborough only — City of Tampa files
       separately (see below).
       Key zones: I-75/Gibsonton warehouse belt, Brandon/Riverview retail,
@@ -145,17 +145,20 @@ targets:
   # ── City of Tampa ────────────────────────────────────────────────────────
   # Separate permitting authority. Highest commercial permit volume in
   # the Tampa Bay area. Westshore, downtown, Ybor City, East Tampa.
+  # Has a FULLY PUBLIC ArcGIS FeatureServer API — no auth required.
   - id: city_tampa
     name: "City of Tampa"
     state: FL
-    type: energov
-    base_url: "https://www.tampagov.net/building-and-construction"
+    type: arcgis
+    arcgis_service_url: "https://arcgis.tampagov.net/arcgis/rest/services/Planning/PermitsAll/FeatureServer"
+    arcgis_layer_id: 0
+    arcgis_date_field: "APPLICATIONDATE"
     notes: >
-      Uses City of Tampa's EnerGov instance, separate from Hillsborough Co.
+      PRIMARY DATA SOURCE: ArcGIS FeatureServer — fully public, no auth, updated daily.
+      Service: arcgis.tampagov.net/arcgis/rest/services/Planning/PermitsAll/FeatureServer
       Top commercial corridors: Westshore (office/retail), Dale Mabry Hwy,
       Kennedy Blvd, Busch Blvd, Adamo Dr industrial, Port of Tampa terminal.
       High hotel + mixed-use permit volume near Channelside/downtown.
-    use_ai_agent: false
 
   # ── Pinellas County ──────────────────────────────────────────────────────
   # Peninsula west of Tampa; St. Petersburg, Clearwater, Largo, Dunedin.
@@ -192,7 +195,7 @@ targets:
     name: "Pasco County, FL"
     state: FL
     type: accela
-    base_url: "https://permits.pascocountyfl.net/CitizenAccess"
+    base_url: "https://aca-prod.accela.com/PASCO"
     notes: >
       PRIORITY — Wesley Chapel SR-56/SR-54/I-75 interchange is one of
       the most active commercial permit areas in FL right now.

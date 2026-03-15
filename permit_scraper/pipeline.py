@@ -26,7 +26,12 @@ from .agents.permit_agent import PermitAgent
 from .notifications.alerts import AlertManager
 from .scrapers import get_scraper
 from .scrapers.base import RawPermit
-from .storage import Permit, ScraperRun, get_session, init_db
+from .scrapers.property_appraiser import (
+    HillsboroughPropertyScraper,
+    PascoPropertyScraper,
+    RawProperty,
+)
+from .storage import Permit, PropertyRecord, ScraperRun, get_session, init_db
 
 logger = logging.getLogger(__name__)
 
@@ -248,6 +253,130 @@ class PermitPipeline:
             matched_company_name=enrichment.get("matched_company_name"),
             match_score=enrichment.get("match_score"),
         )
+
+    def run_property_appraisers(
+        self,
+        county_ids: list[str] | None = None,
+        days_back: int = 90,
+        cross_reference: bool = True,
+    ) -> dict[str, Any]:
+        """
+        Scrape property appraiser data and optionally cross-reference
+        recent land sales against the permit database.
+
+        A parcel that (a) recently changed ownership AND (b) has a new
+        large commercial permit is a very strong signal.
+
+        Args:
+            county_ids:       Limit to these county IDs (None = all supported).
+            days_back:        How far back to look for recent sales.
+            cross_reference:  If True, tag permits whose parcel had a recent sale.
+
+        Returns:
+            Summary dict.
+        """
+        summary = {"properties_found": 0, "cross_references": 0, "errors": []}
+
+        # Hillsborough
+        if county_ids is None or "hillsborough_county" in county_ids:
+            try:
+                scraper = HillsboroughPropertyScraper()
+                props = scraper.scrape_recent_sales(days_back=days_back)
+                self._persist_properties(props)
+                summary["properties_found"] += len(props)
+                if cross_reference:
+                    summary["cross_references"] += self._cross_reference(props)
+            except Exception as exc:
+                logger.error("Hillsborough PA failed: %s", exc)
+                summary["errors"].append({"county": "hillsborough_county", "error": str(exc)})
+
+        # Pasco — owner-lookup only (no bulk API)
+        if county_ids is None or "pasco_county" in county_ids:
+            try:
+                scraper = PascoPropertyScraper()
+                # Look up known company aliases in the watch list
+                aliases = [
+                    alias
+                    for company in self.watch_list
+                    for alias in [company["display_name"]] + company.get("aliases", [])
+                ]
+                props = []
+                for alias in aliases[:20]:   # limit to avoid hammering the site
+                    props.extend(scraper.lookup_by_owner(alias))
+                self._persist_properties(props)
+                summary["properties_found"] += len(props)
+                if cross_reference:
+                    summary["cross_references"] += self._cross_reference(props)
+            except Exception as exc:
+                logger.error("Pasco PA failed: %s", exc)
+                summary["errors"].append({"county": "pasco_county", "error": str(exc)})
+
+        return summary
+
+    def _persist_properties(self, props: list[RawProperty]) -> None:
+        with get_session() as session:
+            matcher = self.classifier.matcher
+            for raw in props:
+                existing = (
+                    session.query(PropertyRecord)
+                    .filter_by(parcel_number=raw.parcel_number, county_id=raw.county_id)
+                    .first()
+                )
+                if existing:
+                    continue
+
+                match = matcher.match_value_str(raw.owner_name or "")
+                db_prop = PropertyRecord(
+                    county_id=raw.county_id,
+                    parcel_number=raw.parcel_number,
+                    owner_name=raw.owner_name,
+                    mailing_address=raw.mailing_address,
+                    site_address=raw.site_address,
+                    city=raw.city,
+                    zip_code=raw.zip_code,
+                    land_use=raw.land_use,
+                    assessed_value=raw.assessed_value,
+                    land_area_sqft=raw.land_area_sqft,
+                    building_area_sqft=raw.building_area_sqft,
+                    last_sale_date=raw.last_sale_date,
+                    last_sale_price=raw.last_sale_price,
+                    matched_company_id=match.company_id if match else None,
+                    matched_company_name=match.company_name if match else None,
+                    match_score=match.score if match else None,
+                )
+                session.add(db_prop)
+
+    def _cross_reference(self, props: list[RawProperty]) -> int:
+        """
+        Tag permits whose parcel_number matches a recently sold property.
+        Returns count of permits updated.
+        """
+        updated = 0
+        parcel_map = {p.parcel_number: p for p in props if p.parcel_number}
+        if not parcel_map:
+            return 0
+
+        with get_session() as session:
+            permits = (
+                session.query(Permit)
+                .filter(Permit.parcel_number.in_(list(parcel_map.keys())))
+                .all()
+            )
+            for permit in permits:
+                prop = parcel_map[permit.parcel_number]
+                if prop.owner_name and not permit.owner_name:
+                    permit.owner_name = prop.owner_name
+                # If permit has no company match but property owner does, inherit it
+                if not permit.matched_company_id and prop.owner_name:
+                    from .agents.classifier import CompanyMatcher
+                    m = self.classifier.matcher._match_value(prop.owner_name, "owner_name")
+                    if m:
+                        permit.matched_company_id = m.company_id
+                        permit.matched_company_name = m.company_name
+                        permit.match_score = m.score
+                        updated += 1
+
+        return updated
 
     def _load_yaml(self, filename: str) -> dict:
         path = self.config_dir / filename

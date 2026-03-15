@@ -68,6 +68,10 @@ class CompanyMatcher:
 
         return best
 
+    def match_value_str(self, value: str) -> MatchResult | None:
+        """Public single-string match (used by property appraiser cross-reference)."""
+        return self._match_value(value, "owner_name") if value else None
+
     def _match_value(self, value: str, field_name: str) -> MatchResult | None:
         upper = value.upper()
 

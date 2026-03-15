@@ -185,6 +185,32 @@ def export(ctx: click.Context, output: str, company: str | None, county: str | N
     console.print(f"[green]Exported {len(permits)} records to {output}[/]")
 
 
+@cli.command("property-appraisers")
+@click.option("--county", "-c", multiple=True, help="County IDs (default: all supported)")
+@click.option("--days", "-d", default=90, show_default=True, help="Days back for recent sales")
+@click.option("--no-cross-ref", "cross_reference", is_flag=True, default=True,
+              help="Skip cross-referencing sales against permit DB")
+@click.pass_context
+def property_appraisers(ctx: click.Context, county: tuple, days: int, cross_reference: bool) -> None:
+    """Scrape property appraiser data and cross-reference with permits."""
+    pipeline = _make_pipeline(ctx.obj["db_url"], None)
+    console.rule("[bold cyan]Scraping property appraisers")
+    summary = pipeline.run_property_appraisers(
+        county_ids=list(county) or None,
+        days_back=days,
+        cross_reference=cross_reference,
+    )
+    console.rule("[bold cyan]Complete")
+    t = Table(show_header=False)
+    t.add_column("Metric", style="bold")
+    t.add_column("Value")
+    t.add_row("Properties found", str(summary["properties_found"]))
+    t.add_row("Permit cross-references updated", str(summary["cross_references"]))
+    if summary["errors"]:
+        t.add_row("[red]Errors[/]", str(len(summary["errors"])))
+    console.print(t)
+
+
 @cli.command()
 @click.pass_context
 def counties(ctx: click.Context) -> None:
