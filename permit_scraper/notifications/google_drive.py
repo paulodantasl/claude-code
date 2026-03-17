@@ -115,7 +115,7 @@ def _build_credentials(
                 return creds
 
         flow = InstalledAppFlow.from_client_secrets_file(oauth_client_file, scopes)
-        creds = flow.run_local_server(port=0)
+        creds = flow.run_local_server(port=0, open_browser=False)
         cache_path.write_text(creds.to_json())
         return creds
 
