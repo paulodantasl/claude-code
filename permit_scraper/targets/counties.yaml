@@ -1,0 +1,247 @@
+# Central & Central West Florida permit portal targets
+# Coverage: Greater Orlando MSA + Tampa Bay / Gulf Coast region
+#
+# Permit platform key:
+#   accela   — Accela Citizen Access (Playwright browser scraper)
+#   cityview — Tyler Technologies CityView (Playwright browser scraper)
+#   energov  — Tyler Technologies EnerGov / GovHub (Playwright browser scraper)
+#   opengov  — OpenGov Permitting & Licensing (Playwright browser scraper)
+#   socrata  — Socrata open-data JSON API (no browser needed)
+#
+# If a portal URL stops responding, set use_ai_agent: true and the
+# Claude agent will re-navigate it automatically.
+
+targets:
+
+  # ── Orange County (unincorporated) ──────────────────────────────────────
+  # Largest county; covers major industrial/logistics corridors along
+  # I-4, SR-408, SR-528. Home to Amazon, Walmart, and theme park supply chain.
+  - id: orange_county_fl
+    name: "Orange County, FL"
+    state: FL
+    type: accela
+    base_url: "https://aca.orangecountyfl.net/aca"
+    notes: >
+      Covers unincorporated Orange County only.
+      City of Orlando files separately (see below).
+      Key commercial zones: I-4 corridor, OIA airport area,
+      John Young Pkwy industrial, Narcoossee Rd (Lake Nona).
+
+  # ── City of Orlando ──────────────────────────────────────────────────────
+  # Separate permitting authority from Orange County.
+  # Downtown, Dr. Phillips, Mills/50, Thornton Park, SoDo, Parramore.
+  - id: city_orlando
+    name: "City of Orlando"
+    state: FL
+    type: cityview
+    base_url: "https://cityview2.orlando.gov/CityViewWeb"
+    notes: >
+      Uses Tyler Technologies CityView, not Accela.
+      High volume of mixed-use and entertainment-district permits.
+      Use AI agent if CityView scraper fails.
+    use_ai_agent: false
+
+  # ── Seminole County ──────────────────────────────────────────────────────
+  # Fast-growing north of Orlando; I-4 corridor (Lake Mary, Sanford),
+  # SR-417 / SR-434 tech and office belt. Sanford airport logistics.
+  - id: seminole_county
+    name: "Seminole County, FL"
+    state: FL
+    type: accela
+    base_url: "https://aca.seminolecountyfl.gov/CitizenAccess"
+    notes: >
+      Key commercial areas: Lake Mary Blvd tech corridor,
+      Sanford/Lake Monroe industrial, Altamonte Springs retail.
+
+  # ── Osceola County ──────────────────────────────────────────────────────
+  # South of Orlando; US-192 tourism corridor, Kissimmee, St. Cloud.
+  # Rapid residential + logistics growth along Narcoossee Rd / Boggy Creek.
+  - id: osceola_county
+    name: "Osceola County, FL"
+    state: FL
+    type: accela
+    base_url: "https://aca.osceola.org/CitizenAccess"
+    notes: >
+      Watch: Osceola Parkway industrial, NeoCity technology district
+      (semiconductors, advanced manufacturing), Amazon delivery stations
+      on Boggy Creek Rd.
+
+  # ── Lake County ──────────────────────────────────────────────────────────
+  # West of Orlando; US-27 and SR-50 corridors (Clermont, Minneola, Leesburg).
+  # One of FL's fastest-growing counties for distribution/logistics.
+  - id: lake_county
+    name: "Lake County, FL"
+    state: FL
+    type: accela
+    base_url: "https://www.lakecountyfl.gov/offices/planning_and_zoning/building_services/permits"
+    notes: >
+      Key commercial zones: US-27 industrial corridor (Minneola/Clermont),
+      SR-50 retail (Clermont), Leesburg/Tavares warehouse district.
+      Very active for new Publix, Aldi, and big-box construction.
+
+  # ── Polk County ──────────────────────────────────────────────────────────
+  # Between Orlando and Tampa; I-4 logistics mega-corridor.
+  # One of the highest concentrations of Amazon warehouses in the US.
+  - id: polk_county
+    name: "Polk County, FL"
+    state: FL
+    type: accela
+    base_url: "https://eservices.polk-county.net/CitizenAccess"
+    notes: >
+      PRIORITY TARGET — I-4 corridor through Lakeland/Davenport has
+      more Amazon fulfillment and distribution centers than almost
+      anywhere in FL. Also: Winter Haven, Haines City, Davenport retail.
+      Watch applicants: Vadata Inc, Amazon Logistics, Prologis, Duke Realty.
+
+  # ── Volusia County ──────────────────────────────────────────────────────
+  # Northeast of Orlando; Daytona Beach, DeLand, Deltona, Port Orange.
+  # I-4 and I-95 interchange drives distribution activity.
+  - id: volusia_county
+    name: "Volusia County, FL"
+    state: FL
+    type: accela
+    base_url: "https://permits.volusia.org/CitizenAccess"
+    notes: >
+      Deltona is a major logistics hub (I-4/I-95 crossroads).
+      Daytona Beach: tourism-adjacent retail and hotel construction.
+      DeLand: growing commercial corridor on US-17.
+
+  # ── Brevard County (Space Coast) ────────────────────────────────────────
+  # East of Orlando on the Atlantic coast; Melbourne, Titusville, Cocoa.
+  # Aerospace, defense, and tech manufacturing (SpaceX, Blue Origin tenants).
+  # Also growing Publix/Aldi/retail footprint along US-192 and US-1.
+  - id: brevard_county
+    name: "Brevard County, FL"
+    state: FL
+    type: accela
+    base_url: "https://brevardpermits.com/CitizenAccess"
+    notes: >
+      Unique mix: industrial/aerospace (KSC area) + fast-growing
+      residential-adjacent retail. Watch: Viera commercial corridor,
+      Melbourne SR-192 retail, Titusville logistics near KSC.
+
+  # ════════════════════════════════════════════════════════════════════════
+  # CENTRAL WEST FLORIDA — Tampa Bay / Gulf Coast
+  # ════════════════════════════════════════════════════════════════════════
+
+  # ── Hillsborough County (unincorporated) ────────────────────────────────
+  # Largest Tampa Bay county by population. Eastern Hillsborough (Brandon,
+  # Riverview, Gibsonton) is one of FL's busiest I-75 logistics corridors.
+  # Port of Tampa drives heavy industrial/cold-storage permitting.
+  - id: hillsborough_county
+    name: "Hillsborough County, FL"
+    state: FL
+    type: accela
+    base_url: "https://aca-prod.accela.com/HCFL"
+    notes: >
+      Uses Accela Citizen Access (branded HillsGovHub) at aca-prod.accela.com/HCFL.
+      Covers unincorporated Hillsborough only — City of Tampa files
+      separately (see below).
+      Key zones: I-75/Gibsonton warehouse belt, Brandon/Riverview retail,
+      US-301 industrial, USF/Fletcher Ave commercial.
+      Watch: Prologis, Duke Realty, Hillsborough Logistics Center projects.
+    use_ai_agent: true
+
+  # ── City of Tampa ────────────────────────────────────────────────────────
+  # Separate permitting authority. Highest commercial permit volume in
+  # the Tampa Bay area. Westshore, downtown, Ybor City, East Tampa.
+  # Has a FULLY PUBLIC ArcGIS FeatureServer API — no auth required.
+  - id: city_tampa
+    name: "City of Tampa"
+    state: FL
+    type: arcgis
+    arcgis_service_url: "https://arcgis.tampagov.net/arcgis/rest/services/Planning/PermitsAll/FeatureServer"
+    arcgis_layer_id: 0
+    arcgis_date_field: "APPLICATIONDATE"
+    notes: >
+      PRIMARY DATA SOURCE: ArcGIS FeatureServer — fully public, no auth, updated daily.
+      Service: arcgis.tampagov.net/arcgis/rest/services/Planning/PermitsAll/FeatureServer
+      Top commercial corridors: Westshore (office/retail), Dale Mabry Hwy,
+      Kennedy Blvd, Busch Blvd, Adamo Dr industrial, Port of Tampa terminal.
+      High hotel + mixed-use permit volume near Channelside/downtown.
+
+  # ── Pinellas County ──────────────────────────────────────────────────────
+  # Peninsula west of Tampa; St. Petersburg, Clearwater, Largo, Dunedin.
+  # Dense retail/hospitality market; US-19 corridor is a major commercial spine.
+  - id: pinellas_county
+    name: "Pinellas County, FL"
+    state: FL
+    type: accela
+    base_url: "https://accela.pinellascounty.org/CitizenAccess"
+    notes: >
+      Key commercial areas: US-19 retail corridor (Clearwater/Largo/Pinellas Park),
+      Gateway area (Roosevelt Blvd industrial/office), St. Pete Beach/Clearwater
+      Beach hospitality. Watch: new grocery (Publix, Aldi, Sprouts) along US-19.
+
+  # ── City of St. Petersburg ───────────────────────────────────────────────
+  # Separate permitting authority from Pinellas County.
+  # Active downtown redevelopment, Edge District, Grand Central, Tropicana Field site.
+  - id: city_st_pete
+    name: "City of St. Petersburg"
+    state: FL
+    type: opengov
+    base_url: "https://stpete.opengov.com/permits"
+    notes: >
+      Uses OpenGov permitting platform.
+      High mixed-use and hotel permit activity downtown.
+      Watch: Tropicana Field redevelopment (major multi-year project),
+      Edge District retail, Central Ave corridor.
+
+  # ── Pasco County ────────────────────────────────────────────────────────
+  # PRIORITY TARGET — Wesley Chapel is among FL's fastest-growing suburbs.
+  # I-75 corridor (SR-56/SR-54 interchange) has exploded with retail,
+  # last-mile delivery, and big-box construction since 2020.
+  - id: pasco_county
+    name: "Pasco County, FL"
+    state: FL
+    type: accela
+    base_url: "https://aca-prod.accela.com/PASCO"
+    notes: >
+      PRIORITY — Wesley Chapel SR-56/SR-54/I-75 interchange is one of
+      the most active commercial permit areas in FL right now.
+      Also: Zephyrhills SR-54 corridor, New Port Richey US-19,
+      Land O' Lakes / Wiregrass Ranch retail belt.
+      Watch: Amazon delivery stations, Publix, Target, Costco, Walmart.
+
+  # ── Hernando County ──────────────────────────────────────────────────────
+  # North of Pasco/Tampa; Spring Hill, Brooksville, Weeki Wachee.
+  # Lower volume but rapidly growing as residents push north from Tampa.
+  - id: hernando_county
+    name: "Hernando County, FL"
+    state: FL
+    type: accela
+    base_url: "https://www.hernandocounty.us/departments/departments-a-g/building-construction-services"
+    notes: >
+      Growing bedroom community driving retail construction along
+      US-19 (Spring Hill) and SR-50 (Brooksville). Smaller market
+      but watch for first-to-market retailers as population grows.
+    use_ai_agent: true
+
+  # ── Manatee County ───────────────────────────────────────────────────────
+  # South of Hillsborough; Bradenton, Palmetto, Lakewood Ranch, Parrish.
+  # Lakewood Ranch is one of the largest master-planned communities in the US —
+  # constant retail, medical, and office construction.
+  - id: manatee_county
+    name: "Manatee County, FL"
+    state: FL
+    type: accela
+    base_url: "https://www.mymanatee.org/departments/building_and_development_services/permits"
+    notes: >
+      Key zones: Lakewood Ranch (SR-64/SR-70 commercial nodes, highest
+      permit density in county), Parrish/Ellenton I-75 corridor (growing
+      industrial/logistics), Port Manatee (cold storage, ag import).
+      Watch: medical/urgent care, Publix anchored centers, warehousing.
+
+  # ── Sarasota County ──────────────────────────────────────────────────────
+  # South of Manatee; Sarasota, Venice, North Port, Englewood.
+  # North Port is one of FL's fastest-growing cities by permit count.
+  - id: sarasota_county
+    name: "Sarasota County, FL"
+    state: FL
+    type: accela
+    base_url: "https://aca.sarasotacountyfl.gov/CitizenAccess"
+    notes: >
+      North Port growing extremely fast — watch SR-776/I-75 exits for
+      new retail and distribution. Sarasota US-41 (Tamiami Trail) sees
+      steady commercial redevelopment. Venice/Nokomis: healthcare and
+      retirement-adjacent retail. I-75 Clark Rd/Bee Ridge exits: big-box.
