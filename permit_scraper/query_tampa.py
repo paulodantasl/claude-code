@@ -34,7 +34,7 @@ def show_table(permits: list[dict], source: str) -> None:
     t.add_column("Applicant",                    min_width=26)
     t.add_column("Permit Type",                  min_width=30)
     t.add_column("Status",      style="green",   min_width=22)
-    t.add_column("Est. Value",  style="magenta", min_width=14)
+    t.add_column("Sq Ft",       style="magenta", min_width=14)
     for p in permits:
         t.add_row(p["date"], p["number"], p["address"],
                   p["applicant"], p["type"], p["status"], p["value"])
@@ -60,7 +60,7 @@ def run_live() -> bool:
         "where":             "1=1",
         "outFields":         "*",
         "resultRecordCount": 5,
-        "orderByFields":     "APPLICATIONDATE DESC",
+        "orderByFields":     "CREATEDDATE DESC",
         "f":                 "json",
     }
     console.print("[cyan]Querying live City of Tampa ArcGIS API...[/]")
@@ -82,16 +82,21 @@ def run_live() -> bool:
         return False
 
     rows = []
-    for f in features:
-        a = f.get("attributes", {})
+    for feat in features:
+        a = feat.get("attributes", {})
+        sqft_raw = a.get("NEWCONSTRUCTIONSF") or a.get("COMBLDGAREA") or a.get("RESBLDGAREA")
+        try:
+            sqft = f"{int(sqft_raw):,} sf" if sqft_raw else "—"
+        except (ValueError, TypeError):
+            sqft = str(sqft_raw) if sqft_raw else "—"
         rows.append({
-            "date":      epoch_to_date(a.get("APPLICATIONDATE")),
-            "number":    g(a, "PERMITNUM", "PERMIT_NUM", "PERMITNUMBER", "RECORDID"),
-            "address":   g(a, "ADDRESS", "SITEADDRESS", "FULLADDRESS", "JOBADDRESS"),
-            "applicant": g(a, "APPLICANTNAME", "APPLICANT", "OWNERNAME"),
-            "type":      g(a, "PERMITTYPE", "PERMIT_TYPE", "WORKTYPE"),
-            "status":    g(a, "STATUSDESC", "STATUS", "PERMITSTATUS"),
-            "value":     f"${float(a['ESTIMATEDVALUE']):,.0f}" if a.get("ESTIMATEDVALUE") else "—",
+            "date":      epoch_to_date(a.get("CREATEDDATE")),
+            "number":    g(a, "RECORD_ID"),
+            "address":   g(a, "ADDRESS"),
+            "applicant": g(a, "PROJECTNAME1", "PROJECTNAME2"),
+            "type":      g(a, "OCCUPANCYTYPE", "RECORDTYPE", "OCCUPANCYCATEGORY"),
+            "status":    g(a, "PROJECTSTATUS"),
+            "value":     sqft,
         })
 
     show_table(rows, "live — arcgis.tampagov.net")
