@@ -56,9 +56,8 @@ def epoch_to_date(ms) -> str:
 
 
 def run_live() -> bool:
-    since = (datetime.utcnow() - timedelta(days=365)).strftime("%Y-%m-%d")
     params = {
-        "where":             f"APPLICATIONDATE >= DATE '{since}'",
+        "where":             "1=1",
         "outFields":         "*",
         "resultRecordCount": 5,
         "orderByFields":     "APPLICATIONDATE DESC",
