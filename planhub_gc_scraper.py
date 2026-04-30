@@ -12,6 +12,7 @@ import json
 from datetime import datetime
 from typing import List, Dict
 import pandas as pd
+from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -19,6 +20,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 class PlanhubGCScraper:
@@ -29,11 +33,18 @@ class PlanhubGCScraper:
         self.gc_data = []
         self.base_url = "https://www.planhub.com"
 
-    def setup_driver(self):
+    def setup_driver(self, headless=False):
         """Initialize Chrome WebDriver"""
         options = webdriver.ChromeOptions()
         options.add_argument("--start-maximized")
         options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+
+        if headless:
+            options.add_argument("--headless")
+            options.add_argument("--disable-gpu")
+
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option("useAutomationExtension", False)
 
@@ -228,22 +239,36 @@ class PlanhubGCScraper:
 
 
 def main():
-    # Get credentials
-    email = os.getenv("PLANHUB_EMAIL") or input("Enter PlanHub email: ")
-    password = os.getenv("PLANHUB_PASSWORD") or input("Enter PlanHub password: ")
+    # Get credentials from environment
+    email = os.getenv("PLANHUB_EMAIL")
+    password = os.getenv("PLANHUB_PASSWORD")
+
+    if not email or not password:
+        print("✗ Missing credentials!")
+        print("Please set PLANHUB_EMAIL and PLANHUB_PASSWORD in .env file")
+        return
+
+    print(f"Starting PlanHub scraper...")
+    print(f"Email: {email}")
+    print()
 
     scraper = PlanhubGCScraper(email, password)
 
     try:
-        scraper.setup_driver()
+        # Check if running in headless mode (no display server)
+        headless = os.getenv("HEADLESS", "false").lower() == "true"
+        scraper.setup_driver(headless=headless)
         scraper.login()
         scraper.scrape_all_projects()
         scraper.export_to_spreadsheet()
+        print("\n✓ Scraping completed successfully!")
 
     except KeyboardInterrupt:
         print("\n✗ Scraping interrupted by user")
     except Exception as e:
         print(f"\n✗ Fatal error: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
         scraper.close()
 
