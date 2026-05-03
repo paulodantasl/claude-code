@@ -18,11 +18,38 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 
 # Load environment variables from .env file
 load_dotenv()
+
+
+def find_chromedriver():
+    """Find chromedriver in common locations"""
+    import subprocess
+
+    # Try to find chromedriver via which command (installed via brew)
+    try:
+        result = subprocess.run(["which", "chromedriver"], capture_output=True, text=True)
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except:
+        pass
+
+    # Try common installation paths
+    common_paths = [
+        "/usr/local/bin/chromedriver",
+        "/opt/homebrew/bin/chromedriver",
+        os.path.expanduser("~/.wdm/drivers/chromedriver/mac64/chromedriver"),
+    ]
+
+    for path in common_paths:
+        if os.path.exists(path) and os.access(path, os.X_OK):
+            return path
+
+    raise FileNotFoundError(
+        "ChromeDriver not found. Install it with: brew install chromedriver"
+    )
 
 
 class PlanhubGCScraper:
@@ -48,7 +75,13 @@ class PlanhubGCScraper:
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option("useAutomationExtension", False)
 
-        service = Service(ChromeDriverManager().install())
+        try:
+            chromedriver_path = find_chromedriver()
+            service = Service(chromedriver_path)
+        except FileNotFoundError as e:
+            print(f"✗ {e}")
+            raise
+
         self.driver = webdriver.Chrome(service=service, options=options)
         print("✓ WebDriver initialized")
 
