@@ -89,22 +89,75 @@ class PlanhubGCScraper:
         try:
             print(f"Logging into PlanHub as {self.email}...")
             self.driver.get(f"{self.base_url}/login")
-            time.sleep(2)
+            time.sleep(3)
 
-            # Find and fill email field
-            email_input = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.NAME, "email"))
-            )
+            print(f"Page URL: {self.driver.current_url}")
+            print(f"Page title: {self.driver.title}")
+
+            # Find and fill email field - try multiple selectors
+            email_input = None
+            selectors = [
+                (By.NAME, "email"),
+                (By.ID, "email"),
+                (By.XPATH, "//input[@type='email']"),
+                (By.XPATH, "//input[contains(@placeholder, 'email')]"),
+            ]
+
+            for selector in selectors:
+                try:
+                    email_input = WebDriverWait(self.driver, 5).until(
+                        EC.presence_of_element_located(selector)
+                    )
+                    print(f"✓ Found email field using selector: {selector}")
+                    break
+                except TimeoutException:
+                    continue
+
+            if not email_input:
+                raise TimeoutException("Could not find email input field with any selector")
+
             email_input.clear()
             email_input.send_keys(self.email)
 
             # Find and fill password field
-            password_input = self.driver.find_element(By.NAME, "password")
+            password_input = None
+            pwd_selectors = [
+                (By.NAME, "password"),
+                (By.ID, "password"),
+                (By.XPATH, "//input[@type='password']"),
+            ]
+
+            for selector in pwd_selectors:
+                try:
+                    password_input = self.driver.find_element(*selector)
+                    break
+                except NoSuchElementException:
+                    continue
+
+            if not password_input:
+                raise NoSuchElementException("Could not find password input field")
+
             password_input.clear()
             password_input.send_keys(self.password)
 
             # Click login button
-            login_button = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Login') or contains(text(), 'Sign In')]")
+            login_button = None
+            button_selectors = [
+                (By.XPATH, "//button[contains(text(), 'Login')]"),
+                (By.XPATH, "//button[contains(text(), 'Sign In')]"),
+                (By.XPATH, "//button[@type='submit']"),
+            ]
+
+            for selector in button_selectors:
+                try:
+                    login_button = self.driver.find_element(*selector)
+                    break
+                except NoSuchElementException:
+                    continue
+
+            if not login_button:
+                raise NoSuchElementException("Could not find login button")
+
             login_button.click()
 
             # Wait for dashboard to load
