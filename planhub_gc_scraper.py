@@ -59,6 +59,7 @@ class PlanhubGCScraper:
         self.driver = None
         self.gc_data = []
         self.base_url = "https://www.planhub.com"
+        self.login_url = "https://access.planhub.com/signin"
 
     def setup_driver(self, headless=False):
         """Initialize Chrome WebDriver"""
@@ -88,7 +89,7 @@ class PlanhubGCScraper:
         """Log into PlanHub"""
         try:
             print(f"Logging into PlanHub as {self.email}...")
-            self.driver.get(self.base_url)
+            self.driver.get(self.login_url)
             time.sleep(3)
 
             print(f"Page URL: {self.driver.current_url}")
