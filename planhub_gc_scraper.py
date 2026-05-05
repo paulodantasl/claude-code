@@ -88,7 +88,7 @@ class PlanhubGCScraper:
         """Log into PlanHub"""
         try:
             print(f"Logging into PlanHub as {self.email}...")
-            self.driver.get(f"{self.base_url}/login")
+            self.driver.get(self.base_url)
             time.sleep(3)
 
             print(f"Page URL: {self.driver.current_url}")
