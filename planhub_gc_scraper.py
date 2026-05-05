@@ -63,9 +63,7 @@ class PlanhubGCScraper:
     def setup_driver(self, headless=False):
         """Initialize Chrome WebDriver"""
         options = webdriver.ChromeOptions()
-        options.add_argument("--start-maximized")
         options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
         if headless:
@@ -83,6 +81,7 @@ class PlanhubGCScraper:
             raise
 
         self.driver = webdriver.Chrome(service=service, options=options)
+        self.driver.set_window_size(1280, 720)
         print("✓ WebDriver initialized")
 
     def login(self):
