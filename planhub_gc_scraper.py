@@ -114,6 +114,12 @@ class PlanhubGCScraper:
                     continue
 
             if not email_input:
+                # Take a screenshot to debug
+                self.driver.save_screenshot("planhub_login_page.png")
+                print("✗ Could not find email input with any selector")
+                print("Screenshot saved as planhub_login_page.png")
+                print("Page HTML (first 2000 chars):")
+                print(self.driver.page_source[:2000])
                 raise TimeoutException("Could not find email input field with any selector")
 
             email_input.clear()
