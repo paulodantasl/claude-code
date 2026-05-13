@@ -1,0 +1,28 @@
+{
+  "name": "@procurement/root",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Construction procurement agent (Phase 0 vertical slice)",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @procurement/web --filter @procurement/worker dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "db:generate": "pnpm --filter @procurement/db generate",
+    "db:migrate": "pnpm --filter @procurement/db migrate",
+    "db:studio": "pnpm --filter @procurement/db studio",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:reset": "docker compose down -v && docker compose up -d",
+    "seed": "pnpm --filter @procurement/db seed"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3",
+    "@types/node": "22.7.4",
+    "tsx": "4.19.1"
+  },
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20"
+  }
+}
