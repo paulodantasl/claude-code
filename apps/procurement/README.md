@@ -1,14 +1,14 @@
-# Construction Procurement Agent — Phase 0
+# Construction Procurement Agent — Phase 0 + Phase 1a
 
 A grounded, citation-first agent for construction procurement workflows
-(RFQs, bid comparison, compliance packs). This branch ships **Phase 0 only**:
-a working monorepo with project workspaces, document uploads, async PDF/XLSX
-parsing, and a chat interface that answers questions with clickable citations
-into the original document pages.
+(RFQs, bid comparison, compliance packs). This branch ships **Phase 0 +
+Phase 1a**: a working monorepo with project workspaces, document uploads,
+async PDF/XLSX parsing, a citation-grounded chat agent, **and** trade-specific
+RFQ templates that the agent fills from your project corpus, with versioned
+DOCX export.
 
-The rest of the v1 plan (RFQ drafting, bid normalization, compliance
-templates) plugs into the same schema, queue, and tool interface — see
-[Roadmap](#roadmap).
+The remaining v1 plan (bid normalization, compliance templates) plugs into
+the same schema, queue, and tool interface — see [Roadmap](#roadmap).
 
 ## Stack
 
@@ -90,6 +90,25 @@ citations — useful for verifying the pipeline without spending tokens.
 - Audit log surface in the project UI, recording uploads, parses, chat
   messages, sign-ins, and project creation
 
+## What's added in Phase 1a (RFQ drafting)
+
+- **Packages tab** per project — create sourcing or compliance packages, each
+  with its own RFQ drafts
+- **Trade-specific templates** seeded at startup (concrete `03 30 00`,
+  structural steel `05 12 00`, drywall `09 21 16`); add more in
+  `packages/db/src/templates.ts`
+- **Section-by-section generation**: each template section has a brief the
+  agent uses to retrieve evidence and write the body. Inline citation markers
+  become clickable chips back to the source PDF page.
+- **Manual edits** preserved alongside generated content (an `editedAt`
+  timestamp shows on-the-fly overrides)
+- **Immutable versions**: "Freeze new version" snapshots the current sections;
+  versions are listed with their notes and creation time
+- **DOCX export**: rendered with title/heading hierarchy, citation markers
+  rewritten to `(Document Name, p<n>)` inline, and a References appendix
+  listing every cited source. Exports are stored in object storage and tracked
+  in `rfq_exports` for audit/redownload.
+
 ## Agent design
 
 The LLM is treated as an **orchestrator + writer** over retrieved evidence,
@@ -142,8 +161,6 @@ existing tables.
 
 ## Roadmap (next slices)
 
-- **Phase 1a — RFQ drafting**: template library per trade, agent fills sections
-  from retrieved spec clauses, versioned drafts, DOCX/PDF export
 - **Phase 1b — Bid intake & comparison**: normalize bids to a line-item schema
   (allowances, alternates, exclusions, lead times), generate immutable
   `comparison_runs` snapshots with cell-level citations

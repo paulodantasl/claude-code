@@ -7,12 +7,13 @@ import { DocumentList } from "@/components/DocumentList";
 import { UploadButton } from "@/components/UploadButton";
 import { ChatPanel } from "@/components/ChatPanel";
 import { AuditPanel } from "@/components/AuditPanel";
+import { PackagesPanel } from "@/components/PackagesPanel";
 
 export default function ProjectDetailPage() {
   const params = useParams<{ id: string }>();
   const projectId = params.id;
   const project = trpc.project.get.useQuery({ projectId });
-  const [tab, setTab] = useState<"chat" | "audit">("chat");
+  const [tab, setTab] = useState<"chat" | "packages" | "audit">("chat");
 
   if (project.isLoading) return <main className="p-10">Loading…</main>;
   if (project.error) {
@@ -64,13 +65,21 @@ export default function ProjectDetailPage() {
               Agent
             </button>
             <button
+              className={`px-4 py-2 text-sm ${tab === "packages" ? "border-b-2 border-brand-600 font-medium" : "text-slate-600"}`}
+              onClick={() => setTab("packages")}
+            >
+              Packages & RFQs
+            </button>
+            <button
               className={`px-4 py-2 text-sm ${tab === "audit" ? "border-b-2 border-brand-600 font-medium" : "text-slate-600"}`}
               onClick={() => setTab("audit")}
             >
               Audit log
             </button>
           </div>
-          {tab === "chat" ? <ChatPanel projectId={projectId} /> : <AuditPanel projectId={projectId} />}
+          {tab === "chat" && <ChatPanel projectId={projectId} />}
+          {tab === "packages" && <PackagesPanel projectId={projectId} />}
+          {tab === "audit" && <AuditPanel projectId={projectId} />}
         </section>
       </div>
     </main>

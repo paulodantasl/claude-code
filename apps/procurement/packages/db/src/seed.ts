@@ -1,10 +1,35 @@
 import { getDb } from "./client.js";
-import { organizations, users, memberships, projects } from "./schema.js";
-import { eq } from "drizzle-orm";
+import {
+  organizations,
+  users,
+  memberships,
+  projects,
+  rfqTemplates,
+} from "./schema.js";
+import { eq, and } from "drizzle-orm";
+import { TRADE_TEMPLATES } from "./templates.js";
+
+async function seedTemplates() {
+  const db = getDb();
+  let inserted = 0;
+  for (const tpl of TRADE_TEMPLATES) {
+    const existing = await db
+      .select()
+      .from(rfqTemplates)
+      .where(and(eq(rfqTemplates.name, tpl.name), eq(rfqTemplates.trade, tpl.trade)))
+      .limit(1);
+    if (existing[0]) continue;
+    await db.insert(rfqTemplates).values(tpl);
+    inserted++;
+  }
+  if (inserted > 0) console.log(`Seeded ${inserted} RFQ template(s).`);
+}
 
 async function main() {
   const db = getDb();
   const email = "dev@example.test";
+
+  await seedTemplates();
 
   const [existingUser] = await db.select().from(users).where(eq(users.email, email));
   if (existingUser) {

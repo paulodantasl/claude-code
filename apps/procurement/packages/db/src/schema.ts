@@ -301,6 +301,114 @@ export const documentScans = pgTable(
   },
 );
 
+// ---------- RFQ drafting (Phase 1a) ----------
+
+export const rfqExportFormatEnum = pgEnum("rfq_export_format", ["docx", "pdf"]);
+
+// A RfqSectionSpec lives inside an rfq_templates.sections jsonb. It describes
+// what a section is for and gives the agent a prompt it can ground from the
+// project corpus when generating a section body.
+export interface RfqSectionSpec {
+  id: string;
+  title: string;
+  prompt: string;
+  required: boolean;
+}
+
+// A FilledSection lives inside rfq_drafts.current_sections and
+// rfq_draft_versions.sections. It's the user-visible body plus citations.
+export interface FilledSection {
+  id: string;
+  title: string;
+  body: string;
+  citations: Array<{
+    documentId: string;
+    page: number;
+    chunkId: string;
+    snippet: string;
+  }>;
+  generatedAt: string | null;
+  editedAt: string | null;
+}
+
+export const rfqTemplates = pgTable(
+  "rfq_templates",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name").notNull(),
+    trade: text("trade").notNull(),
+    division: varchar("division", { length: 16 }),
+    description: text("description"),
+    sections: jsonb("sections").$type<RfqSectionSpec[]>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(now).notNull(),
+  },
+  (t) => ({
+    tradeIdx: index("rfq_templates_trade_idx").on(t.trade),
+  }),
+);
+
+export const rfqDrafts = pgTable(
+  "rfq_drafts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    packageId: uuid("package_id").references(() => packages.id, { onDelete: "set null" }),
+    templateId: uuid("template_id")
+      .notNull()
+      .references(() => rfqTemplates.id, { onDelete: "restrict" }),
+    title: text("title").notNull(),
+    currentSections: jsonb("current_sections")
+      .$type<FilledSection[]>()
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(now).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).default(now).notNull(),
+  },
+  (t) => ({
+    projectIdx: index("rfq_drafts_project_idx").on(t.projectId),
+    packageIdx: index("rfq_drafts_package_idx").on(t.packageId),
+  }),
+);
+
+export const rfqDraftVersions = pgTable(
+  "rfq_draft_versions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    draftId: uuid("draft_id")
+      .notNull()
+      .references(() => rfqDrafts.id, { onDelete: "cascade" }),
+    versionNumber: integer("version_number").notNull(),
+    sections: jsonb("sections").$type<FilledSection[]>().notNull(),
+    notes: text("notes"),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(now).notNull(),
+  },
+  (t) => ({
+    draftVersionIdx: uniqueIndex("rfq_versions_draft_version_idx").on(t.draftId, t.versionNumber),
+  }),
+);
+
+export const rfqExports = pgTable(
+  "rfq_exports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    versionId: uuid("version_id")
+      .notNull()
+      .references(() => rfqDraftVersions.id, { onDelete: "cascade" }),
+    format: rfqExportFormatEnum("format").notNull(),
+    storageKey: text("storage_key").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(now).notNull(),
+  },
+  (t) => ({
+    versionIdx: index("rfq_exports_version_idx").on(t.versionId),
+  }),
+);
+
 export type Organization = typeof organizations.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Project = typeof projects.$inferSelect;
@@ -314,3 +422,9 @@ export type ChatMessage = typeof chatMessages.$inferSelect;
 export type ChatThread = typeof chatThreads.$inferSelect;
 export type AuditEvent = typeof auditEvents.$inferSelect;
 export type AuditEventInsert = typeof auditEvents.$inferInsert;
+export type RfqTemplate = typeof rfqTemplates.$inferSelect;
+export type RfqTemplateInsert = typeof rfqTemplates.$inferInsert;
+export type RfqDraft = typeof rfqDrafts.$inferSelect;
+export type RfqDraftInsert = typeof rfqDrafts.$inferInsert;
+export type RfqDraftVersion = typeof rfqDraftVersions.$inferSelect;
+export type RfqExport = typeof rfqExports.$inferSelect;
