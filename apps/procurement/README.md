@@ -1,14 +1,14 @@
-# Construction Procurement Agent — Phase 0 + Phase 1a
+# Construction Procurement Agent — Phase 0 + 1a + 1b
 
 A grounded, citation-first agent for construction procurement workflows
-(RFQs, bid comparison, compliance packs). This branch ships **Phase 0 +
-Phase 1a**: a working monorepo with project workspaces, document uploads,
-async PDF/XLSX parsing, a citation-grounded chat agent, **and** trade-specific
-RFQ templates that the agent fills from your project corpus, with versioned
-DOCX export.
+(RFQs, bid comparison, compliance packs). This branch ships Phase 0 plus
+1a and 1b: project workspaces, async PDF/XLSX ingestion, a chat agent
+grounded in document citations, trade-specific RFQ drafting with versioned
+DOCX export, **and** structured bid extraction + side-by-side comparison
+matrices with cell-level citations and immutable run snapshots.
 
-The remaining v1 plan (bid normalization, compliance templates) plugs into
-the same schema, queue, and tool interface — see [Roadmap](#roadmap).
+The remaining v1 work (compliance templates) plugs into the same schema,
+queue, and tool interface — see [Roadmap](#roadmap).
 
 ## Stack
 
@@ -159,16 +159,34 @@ existing tables.
 - Tenant isolation enforced at the SQL layer — every chat/search query joins on
   `projectId` before returning chunks
 
+## What's added in Phase 1b (bids + comparison)
+
+- **Vendor directory** scoped to the organization (basic create/list)
+- **Bid registration**: link a parsed bid document to a vendor for a package
+  (one bid per document, enforced by unique index)
+- **LLM-driven extraction**: forced tool-use schema makes the model emit a
+  structured list of line items with category (`base` / `alternate` /
+  `allowance` / `exclusion`), qty/unit/unitPrice/extended, lead time, and
+  per-row source page + snippet. Stub extractor parses tab-separated XLSX text
+  heuristically for offline dev.
+- **Comparison matrix**: pick 2+ extracted bids, name the run, get an
+  immutable `comparison_runs` snapshot. Rows are normalized line items grouped
+  by description; cells show each vendor's extended price + unit price + a
+  citation chip linking to the source page in the bid PDF/XLSX viewer.
+- **Auto-flagging** (pure TS, predictable): missing bids on base lines,
+  exclusions called out by any vendor, and outlier cells (>1.5× or <0.5×
+  median of vendors that quoted).
+- **Totals row**: base bid total, net of alternates, lead time per vendor.
+
 ## Roadmap (next slices)
 
-- **Phase 1b — Bid intake & comparison**: normalize bids to a line-item schema
-  (allowances, alternates, exclusions, lead times), generate immutable
-  `comparison_runs` snapshots with cell-level citations
 - **Phase 2 — Compliance pack**: checklist templates per package type, fulfill
   with evidence spans, reviewer workflow (missing → received → approved),
   generate compliance pack PDF with citation appendix
 - **Phase 3 — Eval harness**: golden-key fixtures in `fixtures/expected/`,
   precision/recall on compliance gaps, cell accuracy on comparison matrices
+- **Polish**: comparison matrix XLSX/PDF export; comparison-run re-run with
+  fresh bids; vendor portal upload links
 
 ## Development tips
 

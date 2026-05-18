@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { BidsPanel } from "@/components/BidsPanel";
 
 export default function PackageDetailPage() {
   const params = useParams<{ id: string; pkgId: string }>();
@@ -10,6 +11,7 @@ export default function PackageDetailPage() {
   const packageId = params.pkgId;
 
   const pkg = trpc.package.get.useQuery({ projectId, packageId });
+  const project = trpc.project.get.useQuery({ projectId });
   const templates = trpc.rfq.listTemplates.useQuery({ projectId });
   const drafts = trpc.rfq.listDrafts.useQuery({ projectId, packageId });
   const utils = trpc.useUtils();
@@ -92,6 +94,14 @@ export default function PackageDetailPage() {
           <p className="mt-2 text-xs text-slate-500">{tpl.description}</p>
         )}
       </section>
+
+      {project.data && pkg.data.kind === "sourcing" && (
+        <BidsPanel
+          projectId={projectId}
+          packageId={packageId}
+          organizationId={project.data.project.organizationId}
+        />
+      )}
 
       <section className="mt-6">
         <h2 className="text-sm font-semibold">RFQ drafts</h2>

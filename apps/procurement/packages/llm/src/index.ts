@@ -2,6 +2,15 @@ export * from "./types.js";
 export { SYSTEM_PROMPT, toolDefinitions } from "./tools.js";
 export { createAnthropicProvider } from "./anthropic-provider.js";
 export { createStubProvider } from "./stub-provider.js";
+export {
+  selectExtractor,
+  createAnthropicExtractor,
+  createStubExtractor,
+  extractionResultSchema,
+  type BidExtractor,
+  type ExtractedLineItem,
+  type ExtractionResult,
+} from "./bid-extractor.js";
 
 import { createAnthropicProvider } from "./anthropic-provider.js";
 import { createStubProvider } from "./stub-provider.js";

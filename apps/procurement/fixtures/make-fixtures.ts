@@ -16,8 +16,19 @@ const pdfPath = join(OUT, "concrete-spec-excerpt.pdf");
 writeFileSync(pdfPath, buildPdf());
 console.log(`Wrote ${pdfPath}`);
 
-await buildXlsx(join(OUT, "concrete-bid-vendor-a.xlsx"));
+await buildXlsx(join(OUT, "concrete-bid-vendor-a.xlsx"), {
+  vendor: "Acme Concrete Inc.",
+  unitPrices: { footings: 195, slab: 175, walls: 215, curing: 4500 },
+  leadTime: "6 weeks from approved submittal",
+});
 console.log(`Wrote ${join(OUT, "concrete-bid-vendor-a.xlsx")}`);
+
+await buildXlsx(join(OUT, "concrete-bid-vendor-b.xlsx"), {
+  vendor: "Bayview Concrete Co.",
+  unitPrices: { footings: 210, slab: 168, walls: 235, curing: 3900 },
+  leadTime: "8 weeks from approved submittal",
+});
+console.log(`Wrote ${join(OUT, "concrete-bid-vendor-b.xlsx")}`);
 
 // --- PDF (raw, single-page, monospace-ish text) ---
 function buildPdf(): Buffer {
@@ -53,22 +64,33 @@ function buildPdf(): Buffer {
   return makeMinimalPdf(pages);
 }
 
-async function buildXlsx(path: string) {
+interface BidArgs {
+  vendor: string;
+  unitPrices: { footings: number; slab: number; walls: number; curing: number };
+  leadTime: string;
+}
+
+async function buildXlsx(path: string, args: BidArgs) {
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("Bid Summary");
-  ws.addRow(["Vendor", "Acme Concrete Inc."]);
+  ws.addRow(["Vendor", args.vendor]);
   ws.addRow(["Package", "03 30 00 - Cast-in-place concrete"]);
   ws.addRow([]);
   ws.addRow(["Line Item", "Description", "Qty", "Unit", "Unit Price", "Extended"]);
-  ws.addRow(["1.1", "Footings, 4000 psi", 120, "CY", 195, 23400]);
-  ws.addRow(["1.2", "Slabs-on-grade, 4000 psi", 350, "CY", 175, 61250]);
-  ws.addRow(["1.3", "Walls, 4000 psi", 200, "CY", 215, 43000]);
-  ws.addRow(["2.1", "Curing compound (ASTM C309)", 1, "LS", 4500, 4500]);
+  ws.addRow(["1.1", "Footings, 4000 psi", 120, "CY", args.unitPrices.footings, args.unitPrices.footings * 120]);
+  ws.addRow(["1.2", "Slabs-on-grade, 4000 psi", 350, "CY", args.unitPrices.slab, args.unitPrices.slab * 350]);
+  ws.addRow(["1.3", "Walls, 4000 psi", 200, "CY", args.unitPrices.walls, args.unitPrices.walls * 200]);
+  ws.addRow(["2.1", "Curing compound (ASTM C309)", 1, "LS", args.unitPrices.curing, args.unitPrices.curing]);
   ws.addRow([]);
-  ws.addRow(["Subtotal", "", "", "", "", 132150]);
+  const subtotal =
+    args.unitPrices.footings * 120 +
+    args.unitPrices.slab * 350 +
+    args.unitPrices.walls * 200 +
+    args.unitPrices.curing;
+  ws.addRow(["Subtotal", "", "", "", "", subtotal]);
   ws.addRow(["Alternates", "Fly ash 20% replacement", "", "", "", -3200]);
   ws.addRow(["Exclusions", "Reinforcing steel, formwork, finishing", "", "", "", ""]);
-  ws.addRow(["Lead time", "6 weeks from approved submittal", "", "", "", ""]);
+  ws.addRow(["Lead time", args.leadTime, "", "", "", ""]);
   await wb.xlsx.writeFile(path);
 }
 

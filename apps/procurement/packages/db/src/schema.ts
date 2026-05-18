@@ -409,6 +409,128 @@ export const rfqExports = pgTable(
   }),
 );
 
+// ---------- Bids & comparison (Phase 1b) ----------
+
+export const bidStatusEnum = pgEnum("bid_status", [
+  "received",
+  "under_review",
+  "excluded",
+  "accepted",
+]);
+
+export const bidLineCategoryEnum = pgEnum("bid_line_category", [
+  "base",
+  "alternate",
+  "allowance",
+  "exclusion",
+]);
+
+export interface BidLineItemSource {
+  page: number;
+  chunkId: string;
+  snippet: string;
+}
+
+export interface BidLineItem {
+  id: string;
+  description: string;
+  qty: number | null;
+  unit: string | null;
+  unitPrice: number | null;
+  extended: number | null;
+  category: "base" | "alternate" | "allowance" | "exclusion";
+  notes: string | null;
+  source: BidLineItemSource | null;
+}
+
+export const bids = pgTable(
+  "bids",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    packageId: uuid("package_id").references(() => packages.id, { onDelete: "set null" }),
+    vendorId: uuid("vendor_id")
+      .notNull()
+      .references(() => vendors.id, { onDelete: "restrict" }),
+    documentId: uuid("document_id")
+      .notNull()
+      .references(() => documents.id, { onDelete: "restrict" }),
+    status: bidStatusEnum("status").notNull().default("received"),
+    leadTimeWeeks: integer("lead_time_weeks"),
+    baseTotal: integer("base_total_cents"),
+    notes: text("notes"),
+    lineItems: jsonb("line_items")
+      .$type<BidLineItem[]>()
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    extractedAt: timestamp("extracted_at", { withTimezone: true }),
+    extractedBy: uuid("extracted_by").references(() => users.id, { onDelete: "set null" }),
+    receivedAt: timestamp("received_at", { withTimezone: true }).default(now).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(now).notNull(),
+  },
+  (t) => ({
+    projectIdx: index("bids_project_idx").on(t.projectId),
+    packageIdx: index("bids_package_idx").on(t.packageId),
+    vendorIdx: index("bids_vendor_idx").on(t.vendorId),
+    docIdx: uniqueIndex("bids_document_idx").on(t.documentId),
+  }),
+);
+
+export interface ComparisonCell {
+  bidLineItemId: string;
+  documentId: string;
+  unitPrice: number | null;
+  extended: number | null;
+  notes: string | null;
+  source: BidLineItemSource | null;
+}
+
+export interface ComparisonRow {
+  id: string;
+  canonicalDescription: string;
+  category: "base" | "alternate" | "allowance" | "exclusion";
+  // cells[vendorId] — null/missing means "not bid"
+  cells: Record<string, ComparisonCell | null>;
+}
+
+export interface ComparisonMatrix {
+  vendors: Array<{ id: string; name: string; bidId: string }>;
+  rows: ComparisonRow[];
+  totals: Record<
+    string,
+    { baseCents: number | null; alternatesCents: number | null; leadTimeWeeks: number | null }
+  >;
+  flags: Array<{
+    rowId: string;
+    vendorId?: string;
+    kind: "missing" | "outlier" | "exclusion";
+    note: string;
+  }>;
+}
+
+export const comparisonRuns = pgTable(
+  "comparison_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    packageId: uuid("package_id").references(() => packages.id, { onDelete: "set null" }),
+    title: text("title").notNull(),
+    bidIds: jsonb("bid_ids").$type<string[]>().notNull(),
+    matrix: jsonb("matrix").$type<ComparisonMatrix>().notNull(),
+    assumptions: jsonb("assumptions").$type<string[]>().default(sql`'[]'::jsonb`).notNull(),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(now).notNull(),
+  },
+  (t) => ({
+    projectIdx: index("comparison_runs_project_idx").on(t.projectId),
+    packageIdx: index("comparison_runs_package_idx").on(t.packageId),
+  }),
+);
+
 export type Organization = typeof organizations.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Project = typeof projects.$inferSelect;
@@ -428,3 +550,8 @@ export type RfqDraft = typeof rfqDrafts.$inferSelect;
 export type RfqDraftInsert = typeof rfqDrafts.$inferInsert;
 export type RfqDraftVersion = typeof rfqDraftVersions.$inferSelect;
 export type RfqExport = typeof rfqExports.$inferSelect;
+export type Vendor = typeof vendors.$inferSelect;
+export type VendorInsert = typeof vendors.$inferInsert;
+export type Bid = typeof bids.$inferSelect;
+export type BidInsert = typeof bids.$inferInsert;
+export type ComparisonRun = typeof comparisonRuns.$inferSelect;
