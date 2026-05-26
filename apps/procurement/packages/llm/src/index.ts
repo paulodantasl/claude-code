@@ -11,6 +11,16 @@ export {
   type ExtractedLineItem,
   type ExtractionResult,
 } from "./bid-extractor.js";
+export {
+  selectDeriver,
+  createAnthropicDeriver,
+  createStubDeriver,
+  derivationResultSchema,
+  hitsToSpecText,
+  type RequirementDeriver,
+  type DerivedRequirement,
+  type DerivationResult,
+} from "./requirement-deriver.js";
 
 import { createAnthropicProvider } from "./anthropic-provider.js";
 import { createStubProvider } from "./stub-provider.js";

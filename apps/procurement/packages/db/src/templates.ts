@@ -1,4 +1,4 @@
-import type { RfqTemplateInsert } from "./schema.js";
+import type { RfqTemplateInsert, RequirementTemplateInsert } from "./schema.js";
 
 // Three trade templates. Sections are intentionally short; the LLM fleshes
 // each body from the project's actual specs at draft time.
@@ -151,6 +151,94 @@ export const TRADE_TEMPLATES: RfqTemplateInsert[] = [
         prompt:
           "Standard exclusions (acoustic insulation, in-wall blocking, painting) and clarifications.",
         required: false,
+      },
+    ],
+  },
+];
+
+// Requirement (compliance checklist) templates. The deriver can also propose
+// requirements straight from spec language; these give a fast manual start.
+export const REQUIREMENT_TEMPLATES: RequirementTemplateInsert[] = [
+  {
+    name: "General vendor onboarding (insurance & waivers)",
+    packageKind: "compliance",
+    trade: null,
+    description:
+      "Baseline compliance artifacts required from every vendor before mobilization.",
+    items: [
+      {
+        id: "coi",
+        label: "Certificate of Insurance (COI)",
+        description:
+          "Current COI naming the GC and owner as additional insured, with required GL/auto/umbrella/WC limits.",
+        artifactKind: "coi",
+        severity: "required",
+        sourceHint: "Subcontract insurance exhibit",
+      },
+      {
+        id: "w9",
+        label: "W-9",
+        description: "Signed W-9 for payment setup.",
+        artifactKind: "other",
+        severity: "required",
+        sourceHint: null,
+      },
+      {
+        id: "lien-waiver",
+        label: "Conditional lien waiver (first draw)",
+        description: "Conditional waiver and release on progress payment.",
+        artifactKind: "lien_waiver",
+        severity: "required",
+        sourceHint: "State statutory form",
+      },
+      {
+        id: "safety-plan",
+        label: "Site-specific safety plan",
+        description: "Safety plan and EMR documentation.",
+        artifactKind: "other",
+        severity: "recommended",
+        sourceHint: null,
+      },
+    ],
+  },
+  {
+    name: "Cast-in-place concrete submittals (03 30 00)",
+    packageKind: "compliance",
+    trade: "concrete",
+    description: "Submittal package required for the concrete scope.",
+    items: [
+      {
+        id: "mix-design",
+        label: "Concrete mix design",
+        description:
+          "Mix design for each specified strength, submitted at least 14 days before placement.",
+        artifactKind: "submittal",
+        severity: "required",
+        sourceHint: "03 30 00 - 3.3 Submittals",
+      },
+      {
+        id: "admixture-sds",
+        label: "Admixture SDS / product data",
+        description: "Manufacturer data and SDS for all admixtures and curing compounds.",
+        artifactKind: "sds",
+        severity: "required",
+        sourceHint: "03 30 00 - 3.3 Submittals",
+      },
+      {
+        id: "cement-cert",
+        label: "Cement & aggregate compliance certs",
+        description: "ASTM C150 / C33 certificates of compliance.",
+        artifactKind: "submittal",
+        severity: "required",
+        sourceHint: "03 30 00 - 3.3 Submittals",
+      },
+      {
+        id: "curing-warranty",
+        label: "Curing compound warranty",
+        description: "Manufacturer warranty for the curing compound, if applicable.",
+        artifactKind: "warranty",
+        severity: "optional",
+        sourceHint: null,
       },
     ],
   },

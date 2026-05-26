@@ -1,14 +1,18 @@
-# Construction Procurement Agent — Phase 0 + 1a + 1b
+# Construction Procurement Agent — v1 (Phases 0, 1a, 1b, 2)
 
-A grounded, citation-first agent for construction procurement workflows
-(RFQs, bid comparison, compliance packs). This branch ships Phase 0 plus
-1a and 1b: project workspaces, async PDF/XLSX ingestion, a chat agent
-grounded in document citations, trade-specific RFQ drafting with versioned
-DOCX export, **and** structured bid extraction + side-by-side comparison
-matrices with cell-level citations and immutable run snapshots.
+A grounded, citation-first agent for construction procurement workflows.
+This branch implements the full v1 in-scope feature set:
 
-The remaining v1 work (compliance templates) plugs into the same schema,
-queue, and tool interface — see [Roadmap](#roadmap).
+- **Sourcing (A)**: ingest project docs → chat with citations → draft
+  trade-specific RFQs → register bids → structured extraction → side-by-side
+  comparison matrices with cell-level citations and immutable snapshots.
+- **Compliance/docs (B)**: derive a compliance checklist from spec language
+  (or templates), bind evidence documents to requirements, and run them
+  through a reviewer workflow (missing → received → under review → approved /
+  rejected) with a project-wide reviewer queue and gap report.
+
+Everything is grounded: matrices, checklists, and RFQ prose link back to the
+source document page. See [Roadmap](#roadmap) for what's deferred.
 
 ## Stack
 
@@ -178,15 +182,33 @@ existing tables.
   median of vendors that quoted).
 - **Totals row**: base bid total, net of alternates, lead time per vendor.
 
-## Roadmap (next slices)
+## What's added in Phase 2 (compliance pack)
 
-- **Phase 2 — Compliance pack**: checklist templates per package type, fulfill
-  with evidence spans, reviewer workflow (missing → received → approved),
-  generate compliance pack PDF with citation appendix
-- **Phase 3 — Eval harness**: golden-key fixtures in `fixtures/expected/`,
+- **Requirement templates** seeded at startup: a general vendor-onboarding
+  checklist (COI, W-9, lien waiver, safety plan) and a concrete-submittals
+  checklist. Add more in `packages/db/src/templates.ts`.
+- **Derive from spec (AI)**: retrieves spec passages and uses a forced
+  tool-use schema to propose requirements — label, artifact kind, severity
+  (required/recommended/optional), and a source clause + page + snippet for
+  provenance. Stub deriver scans for submittal/cert/warranty keywords offline.
+- **Evidence binding**: attach a parsed document (and page) to a requirement;
+  bindings are append-only `fulfillments` rows, newest = current.
+- **Reviewer workflow**: per-requirement status transitions
+  (missing → received → under review → approved / rejected) with reviewer
+  notes, plus a **project-wide reviewer queue** tab and a **gap report**
+  (counts by status, count of still-open required items).
+- Compliance checklist appears on every package; requirement source clauses
+  and bound evidence render as citation chips into the document viewer.
+
+## Roadmap (deferred)
+
+- **Eval harness**: golden-key fixtures in `fixtures/expected/`,
   precision/recall on compliance gaps, cell accuracy on comparison matrices
-- **Polish**: comparison matrix XLSX/PDF export; comparison-run re-run with
-  fresh bids; vendor portal upload links
+- **Exports**: comparison matrix XLSX/PDF; compliance pack PDF with a
+  citation-backed appendix
+- **Polish**: comparison-run re-run with fresh bids; per-vendor requirement
+  scoping in the UI; vendor portal upload links; ERP/PO issuance (out of v1
+  scope)
 
 ## Development tips
 

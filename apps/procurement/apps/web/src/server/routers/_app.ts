@@ -8,6 +8,7 @@ import { rfqRouter } from "./rfq.js";
 import { vendorRouter } from "./vendor.js";
 import { bidRouter } from "./bid.js";
 import { comparisonRouter } from "./comparison.js";
+import { requirementRouter } from "./requirement.js";
 
 export const appRouter = router({
   auth: authRouter,
@@ -19,6 +20,7 @@ export const appRouter = router({
   vendor: vendorRouter,
   bid: bidRouter,
   comparison: comparisonRouter,
+  requirement: requirementRouter,
 });
 
 export type AppRouter = typeof appRouter;

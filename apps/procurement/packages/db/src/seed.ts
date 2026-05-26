@@ -5,13 +5,14 @@ import {
   memberships,
   projects,
   rfqTemplates,
+  requirementTemplates,
 } from "./schema.js";
 import { eq, and } from "drizzle-orm";
-import { TRADE_TEMPLATES } from "./templates.js";
+import { TRADE_TEMPLATES, REQUIREMENT_TEMPLATES } from "./templates.js";
 
 async function seedTemplates() {
   const db = getDb();
-  let inserted = 0;
+  let rfqInserted = 0;
   for (const tpl of TRADE_TEMPLATES) {
     const existing = await db
       .select()
@@ -20,9 +21,22 @@ async function seedTemplates() {
       .limit(1);
     if (existing[0]) continue;
     await db.insert(rfqTemplates).values(tpl);
-    inserted++;
+    rfqInserted++;
   }
-  if (inserted > 0) console.log(`Seeded ${inserted} RFQ template(s).`);
+  if (rfqInserted > 0) console.log(`Seeded ${rfqInserted} RFQ template(s).`);
+
+  let reqInserted = 0;
+  for (const tpl of REQUIREMENT_TEMPLATES) {
+    const existing = await db
+      .select()
+      .from(requirementTemplates)
+      .where(eq(requirementTemplates.name, tpl.name))
+      .limit(1);
+    if (existing[0]) continue;
+    await db.insert(requirementTemplates).values(tpl);
+    reqInserted++;
+  }
+  if (reqInserted > 0) console.log(`Seeded ${reqInserted} requirement template(s).`);
 }
 
 async function main() {

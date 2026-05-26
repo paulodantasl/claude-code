@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { BidsPanel } from "@/components/BidsPanel";
+import { CompliancePanel } from "@/components/CompliancePanel";
 
 export default function PackageDetailPage() {
   const params = useParams<{ id: string; pkgId: string }>();
@@ -102,6 +103,8 @@ export default function PackageDetailPage() {
           organizationId={project.data.project.organizationId}
         />
       )}
+
+      <CompliancePanel projectId={projectId} packageId={packageId} />
 
       <section className="mt-6">
         <h2 className="text-sm font-semibold">RFQ drafts</h2>

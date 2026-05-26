@@ -531,6 +531,111 @@ export const comparisonRuns = pgTable(
   }),
 );
 
+// ---------- Compliance (Phase 2) ----------
+
+export const requirementSeverityEnum = pgEnum("requirement_severity", [
+  "required",
+  "recommended",
+  "optional",
+]);
+
+export const requirementStatusEnum = pgEnum("requirement_status", [
+  "missing",
+  "received",
+  "under_review",
+  "approved",
+  "rejected",
+]);
+
+// A RequirementSpec lives inside requirement_templates.items.
+export interface RequirementSpec {
+  id: string;
+  label: string;
+  description: string;
+  artifactKind:
+    | "submittal"
+    | "sds"
+    | "warranty"
+    | "coi"
+    | "lien_waiver"
+    | "other";
+  severity: "required" | "recommended" | "optional";
+  sourceHint: string | null;
+}
+
+export const requirementTemplates = pgTable(
+  "requirement_templates",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name").notNull(),
+    packageKind: packageKindEnum("package_kind").notNull().default("compliance"),
+    trade: text("trade"),
+    description: text("description"),
+    items: jsonb("items").$type<RequirementSpec[]>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(now).notNull(),
+  },
+  (t) => ({
+    tradeIdx: index("requirement_templates_trade_idx").on(t.trade),
+  }),
+);
+
+export const requirements = pgTable(
+  "requirements",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    packageId: uuid("package_id").references(() => packages.id, { onDelete: "cascade" }),
+    vendorId: uuid("vendor_id").references(() => vendors.id, { onDelete: "set null" }),
+    label: text("label").notNull(),
+    description: text("description"),
+    artifactKind: documentKindEnum("artifact_kind").notNull().default("submittal"),
+    severity: requirementSeverityEnum("severity").notNull().default("required"),
+    status: requirementStatusEnum("status").notNull().default("missing"),
+    // Provenance of the requirement: which spec clause demanded it.
+    sourceClause: text("source_clause"),
+    sourceDocumentId: uuid("source_document_id").references(() => documents.id, {
+      onDelete: "set null",
+    }),
+    sourcePage: integer("source_page"),
+    sourceSnippet: text("source_snippet"),
+    // Current review state (mirrors latest review action).
+    reviewerNotes: text("reviewer_notes"),
+    reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(now).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).default(now).notNull(),
+  },
+  (t) => ({
+    projectIdx: index("requirements_project_idx").on(t.projectId),
+    packageIdx: index("requirements_package_idx").on(t.packageId),
+    statusIdx: index("requirements_status_idx").on(t.status),
+  }),
+);
+
+// Evidence bindings — append-only. The newest row per requirement is current.
+export const fulfillments = pgTable(
+  "fulfillments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    requirementId: uuid("requirement_id")
+      .notNull()
+      .references(() => requirements.id, { onDelete: "cascade" }),
+    evidenceDocumentId: uuid("evidence_document_id")
+      .notNull()
+      .references(() => documents.id, { onDelete: "cascade" }),
+    evidencePage: integer("evidence_page"),
+    evidenceSnippet: text("evidence_snippet"),
+    note: text("note"),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(now).notNull(),
+  },
+  (t) => ({
+    reqIdx: index("fulfillments_requirement_idx").on(t.requirementId, t.createdAt),
+  }),
+);
+
 export type Organization = typeof organizations.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Project = typeof projects.$inferSelect;
@@ -555,3 +660,8 @@ export type VendorInsert = typeof vendors.$inferInsert;
 export type Bid = typeof bids.$inferSelect;
 export type BidInsert = typeof bids.$inferInsert;
 export type ComparisonRun = typeof comparisonRuns.$inferSelect;
+export type RequirementTemplate = typeof requirementTemplates.$inferSelect;
+export type RequirementTemplateInsert = typeof requirementTemplates.$inferInsert;
+export type Requirement = typeof requirements.$inferSelect;
+export type RequirementInsert = typeof requirements.$inferInsert;
+export type Fulfillment = typeof fulfillments.$inferSelect;
