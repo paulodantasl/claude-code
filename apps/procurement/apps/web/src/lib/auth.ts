@@ -7,9 +7,9 @@ import {
   sessions,
   users,
 } from "@procurement/db";
-import { db } from "./db.js";
-import { randomToken, sha256 } from "./crypto.js";
-import { env } from "./env.js";
+import { db } from "./db";
+import { randomToken, sha256 } from "./crypto";
+import { env } from "./env";
 
 const SESSION_COOKIE = "procurement_session";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 14; // 14 days
@@ -61,6 +61,7 @@ export async function consumeMagicLink(token: string): Promise<{ userId: string 
       .insert(organizations)
       .values({ name: `${record.email.split("@")[0]}'s workspace` })
       .returning();
+    if (!user || !org) throw new Error("Failed to create user workspace.");
     await db.insert(memberships).values({
       userId: user.id,
       organizationId: org.id,

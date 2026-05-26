@@ -59,6 +59,7 @@ async function main() {
     .insert(users)
     .values({ email, name: "Dev User" })
     .returning();
+  if (!org || !user) throw new Error("seed insert failed");
   await db.insert(memberships).values({
     userId: user.id,
     organizationId: org.id,
@@ -74,6 +75,7 @@ async function main() {
       createdBy: user.id,
     })
     .returning();
+  if (!project) throw new Error("seed project insert failed");
 
   console.log("Seeded:");
   console.log(`  Org:     ${org.id} (${org.name})`);

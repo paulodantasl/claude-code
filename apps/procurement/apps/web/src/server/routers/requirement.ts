@@ -13,8 +13,8 @@ import { selectDeriver } from "@procurement/llm";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { recordAudit } from "@/lib/audit";
-import { searchProjectDocs } from "../search.js";
-import { router, projectProcedure, writeProjectProcedure } from "../trpc.js";
+import { searchProjectDocs } from "../search";
+import { router, projectProcedure, writeProjectProcedure } from "../trpc";
 
 const deriver = selectDeriver({
   apiKey: env.ANTHROPIC_API_KEY,

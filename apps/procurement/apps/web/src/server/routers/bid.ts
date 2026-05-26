@@ -12,7 +12,7 @@ import { selectExtractor, type ExtractedLineItem } from "@procurement/llm";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { recordAudit } from "@/lib/audit";
-import { router, projectProcedure, writeProjectProcedure } from "../trpc.js";
+import { router, projectProcedure, writeProjectProcedure } from "../trpc";
 
 const extractor = selectExtractor({
   apiKey: env.ANTHROPIC_API_KEY,
@@ -82,6 +82,7 @@ export const bidRouter = router({
             documentId: input.documentId,
           })
           .returning();
+        if (!bid) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Insert failed." });
         await recordAudit({
           organizationId: ctx.project.organizationId,
           projectId: ctx.project.id,

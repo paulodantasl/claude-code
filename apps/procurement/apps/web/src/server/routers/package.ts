@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { packages } from "@procurement/db";
 import { db } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
-import { router, projectProcedure, writeProjectProcedure } from "../trpc.js";
+import { router, projectProcedure, writeProjectProcedure } from "../trpc";
 
 export const packageRouter = router({
   list: projectProcedure.query(async ({ ctx }) => {
@@ -36,6 +36,7 @@ export const packageRouter = router({
           bidDueAt: input.bidDueAt,
         })
         .returning();
+      if (!pkg) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Insert failed." });
       await recordAudit({
         organizationId: ctx.project.organizationId,
         projectId: ctx.project.id,

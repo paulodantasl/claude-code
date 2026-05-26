@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { router, publicProcedure, authedProcedure } from "../trpc.js";
+import { router, publicProcedure, authedProcedure } from "../trpc";
 import { createMagicLink, endSession } from "@/lib/auth";
 import { sendMagicLink } from "@/lib/mail";
 import { recordAudit } from "@/lib/audit";

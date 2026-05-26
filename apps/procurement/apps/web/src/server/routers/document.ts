@@ -7,7 +7,7 @@ import { createUploadUrl, createDownloadUrl, headObject } from "@/lib/storage";
 import { enqueueParse } from "@/lib/queue";
 import { recordAudit } from "@/lib/audit";
 import { sha256 } from "@/lib/crypto";
-import { router, projectProcedure, writeProjectProcedure } from "../trpc.js";
+import { router, projectProcedure, writeProjectProcedure } from "../trpc";
 
 const ALLOWED_MIME = new Set([
   "application/pdf",
@@ -107,6 +107,7 @@ export const documentRouter = router({
           uploadedBy: ctx.session.userId,
         })
         .returning();
+      if (!doc) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Insert failed." });
       // Stubbed virus scan — flips to clean immediately and queues parse.
       await db.insert(documentScans).values({
         documentId: doc.id,

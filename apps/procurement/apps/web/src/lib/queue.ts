@@ -1,6 +1,6 @@
 import { Queue } from "bullmq";
 import { PARSE_QUEUE, type ParseDocumentJob } from "@procurement/shared";
-import { env } from "./env.js";
+import { env } from "./env";
 
 const connection = { url: env.REDIS_URL };
 

@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { vendors } from "@procurement/db";
 import { db } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
-import { router, authedProcedure } from "../trpc.js";
+import { router, authedProcedure } from "../trpc";
 
 export const vendorRouter = router({
   list: authedProcedure
@@ -46,6 +46,7 @@ export const vendorRouter = router({
           trades: input.trades,
         })
         .returning();
+      if (!vendor) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Insert failed." });
       await recordAudit({
         organizationId: input.organizationId,
         userId: ctx.session.userId,

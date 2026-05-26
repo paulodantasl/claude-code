@@ -1,14 +1,14 @@
-import { router } from "../trpc.js";
-import { authRouter } from "./auth.js";
-import { projectRouter } from "./project.js";
-import { documentRouter } from "./document.js";
-import { chatRouter } from "./chat.js";
-import { packageRouter } from "./package.js";
-import { rfqRouter } from "./rfq.js";
-import { vendorRouter } from "./vendor.js";
-import { bidRouter } from "./bid.js";
-import { comparisonRouter } from "./comparison.js";
-import { requirementRouter } from "./requirement.js";
+import { router } from "../trpc";
+import { authRouter } from "./auth";
+import { projectRouter } from "./project";
+import { documentRouter } from "./document";
+import { chatRouter } from "./chat";
+import { packageRouter } from "./package";
+import { rfqRouter } from "./rfq";
+import { vendorRouter } from "./vendor";
+import { bidRouter } from "./bid";
+import { comparisonRouter } from "./comparison";
+import { requirementRouter } from "./requirement";
 
 export const appRouter = router({
   auth: authRouter,

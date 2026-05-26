@@ -2,7 +2,7 @@ import type { FilledSection, RfqSectionSpec } from "@procurement/db";
 import type { ToolRegistry } from "@procurement/llm";
 import { selectProvider } from "@procurement/llm";
 import { env } from "@/lib/env";
-import { searchProjectDocs, getPageText } from "./search.js";
+import { searchProjectDocs, getPageText } from "./search";
 
 const provider = selectProvider({
   apiKey: env.ANTHROPIC_API_KEY,

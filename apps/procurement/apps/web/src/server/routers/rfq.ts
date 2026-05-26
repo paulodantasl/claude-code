@@ -14,9 +14,9 @@ import { db } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
 import { createDownloadUrl, s3Client, BUCKET } from "@/lib/storage";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { generateRfqSection } from "../rfq-generator.js";
-import { renderRfqDocx } from "../rfq-export.js";
-import { router, projectProcedure, writeProjectProcedure } from "../trpc.js";
+import { generateRfqSection } from "../rfq-generator";
+import { renderRfqDocx } from "../rfq-export";
+import { router, projectProcedure, writeProjectProcedure } from "../trpc";
 
 async function loadDraft(projectId: string, draftId: string) {
   const draft = (
@@ -92,6 +92,7 @@ export const rfqRouter = router({
           createdBy: ctx.session.userId,
         })
         .returning();
+      if (!draft) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Insert failed." });
       await recordAudit({
         organizationId: ctx.project.organizationId,
         projectId: ctx.project.id,
@@ -227,6 +228,7 @@ export const rfqRouter = router({
           createdBy: ctx.session.userId,
         })
         .returning();
+      if (!version) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Insert failed." });
       await recordAudit({
         organizationId: ctx.project.organizationId,
         projectId: ctx.project.id,
@@ -323,6 +325,7 @@ export const rfqRouter = router({
           createdBy: ctx.session.userId,
         })
         .returning();
+      if (!record) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Insert failed." });
       const url = await createDownloadUrl(storageKey);
       await recordAudit({
         organizationId: ctx.project.organizationId,

@@ -6,8 +6,8 @@ import { selectProvider, type ToolRegistry } from "@procurement/llm";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { recordAudit } from "@/lib/audit";
-import { searchProjectDocs, getPageText } from "../search.js";
-import { router, projectProcedure, writeProjectProcedure } from "../trpc.js";
+import { searchProjectDocs, getPageText } from "../search";
+import { router, projectProcedure, writeProjectProcedure } from "../trpc";
 
 const provider = selectProvider({
   apiKey: env.ANTHROPIC_API_KEY,
@@ -34,6 +34,7 @@ export const chatRouter = router({
           title: input.title ?? "New thread",
         })
         .returning();
+      if (!thread) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Insert failed." });
       return thread;
     }),
 

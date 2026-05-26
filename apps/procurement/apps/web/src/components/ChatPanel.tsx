@@ -152,8 +152,8 @@ function Message({
 
 // Replace [doc:<uuid> p<n>] markers in model text with citation chips.
 function renderWithCitations(text: string, citations: Citation[], projectId: string) {
-  const byKey = new Map(
-    citations.map((c) => [`${c.documentId}:${c.page}`, c] as const),
+  const byKey = new Map<string, Citation>(
+    citations.map((c) => [`${c.documentId}:${c.page}`, c]),
   );
   const parts: React.ReactNode[] = [];
   const regex = /\[doc:([0-9a-f-]{36})\s+p(\d+)\]/gi;

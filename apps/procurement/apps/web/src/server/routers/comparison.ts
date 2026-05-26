@@ -4,8 +4,8 @@ import { TRPCError } from "@trpc/server";
 import { bids, comparisonRuns, vendors } from "@procurement/db";
 import { db } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
-import { buildComparisonMatrix } from "../comparison-builder.js";
-import { router, projectProcedure, writeProjectProcedure } from "../trpc.js";
+import { buildComparisonMatrix } from "../comparison-builder";
+import { router, projectProcedure, writeProjectProcedure } from "../trpc";
 
 export const comparisonRouter = router({
   list: projectProcedure
@@ -95,6 +95,7 @@ export const comparisonRouter = router({
           createdBy: ctx.session.userId,
         })
         .returning();
+      if (!run) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Insert failed." });
       await recordAudit({
         organizationId: ctx.project.organizationId,
         projectId: ctx.project.id,
