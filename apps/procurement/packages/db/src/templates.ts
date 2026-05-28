@@ -154,6 +154,50 @@ export const TRADE_TEMPLATES: RfqTemplateInsert[] = [
       },
     ],
   },
+  {
+    name: "General materials & services (fallback)",
+    trade: "general",
+    division: null,
+    description:
+      "Generic RFQ template for trades without a specific seeded template. Sections are kept high-level; the agent fills them from project context.",
+    sections: [
+      {
+        id: "scope",
+        title: "1. Scope of Work",
+        prompt:
+          "Describe the scope of work in 1–2 paragraphs based on the request's item, quantity, and any specs. If project documents are available, ground the scope in them.",
+        required: true,
+      },
+      {
+        id: "specifications",
+        title: "2. Specifications & Standards",
+        prompt:
+          "List the technical specifications, applicable standards, and any quality requirements. Pull from project specs if available; otherwise state industry defaults and flag for review.",
+        required: true,
+      },
+      {
+        id: "submittals",
+        title: "3. Required Submittals",
+        prompt:
+          "List submittals the vendor must provide: product data sheets, certificates of compliance, manufacturer warranties.",
+        required: true,
+      },
+      {
+        id: "schedule",
+        title: "4. Schedule & Lead Time",
+        prompt:
+          "State the required delivery / completion date and any phasing.",
+        required: false,
+      },
+      {
+        id: "pricing",
+        title: "5. Pricing Format",
+        prompt:
+          "Specify the required pricing format: unit prices, lump sum, alternates, and required exclusions.",
+        required: true,
+      },
+    ],
+  },
 ];
 
 // Requirement (compliance checklist) templates. The deriver can also propose

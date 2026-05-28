@@ -522,10 +522,19 @@ function heuristicExtract(text: string, current: NeedSpec): Partial<NeedSpec> {
     else if (/drywall|gypsum|sheetrock|partition/i.test(lower)) fields.trade = "drywall";
   }
 
-  // Item (rough): take the first 80 chars of the message if not set
+  // Item: strip "I need / we need / please procure" preamble, then keep up to
+  // the first natural stop (comma, ". ", " for ", " by ", " in ", " delivered").
   if (!current.item) {
-    const cleaned = text.replace(/\s+/g, " ").trim();
-    fields.item = cleaned.length > 120 ? cleaned.slice(0, 117) + "…" : cleaned;
+    const cleaned = text
+      .replace(/\s+/g, " ")
+      .replace(
+        /^\s*(i\s+(?:need|want|require)|we\s+(?:need|require)|please\s+procure|procure|need|want|get me|order)\s+/i,
+        "",
+      )
+      .trim();
+    const stop = cleaned.search(/,|\.\s| for | by | in | delivered? /i);
+    const item = (stop > 0 ? cleaned.slice(0, stop) : cleaned).trim();
+    fields.item = item.length > 100 ? item.slice(0, 97) + "…" : item;
   }
 
   // Deadline phrasings

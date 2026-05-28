@@ -558,18 +558,25 @@ export function createStubOrchestrator(): OrchestratorProvider {
 
       // SOURCING — create package + RFQ draft if not already done
       if (state.status === "intake" && missingFields(currentNeed).length === 0 && !state.rfqDraftId) {
-        const templates = await tools.list_rfq_templates({ trade: currentNeed.trade ?? undefined });
+        let templates = await tools.list_rfq_templates({ trade: currentNeed.trade ?? undefined });
         record("list_rfq_templates", { trade: currentNeed.trade }, true, `${templates.length} templates`);
+        if (templates.length === 0) {
+          // Fallback to general template
+          const all = await tools.list_rfq_templates({});
+          templates = all.filter((t) => t.trade === "general");
+          record("list_rfq_templates", { trade: "general" }, true, `${templates.length} fallback templates`);
+        }
         const tpl = templates[0];
         if (!tpl) {
           return reply(
             stateUpdates,
             actions,
             artifacts,
-            `I couldn't find an RFQ template for trade "${currentNeed.trade}". You may need to add one.`,
+            `I couldn't find an RFQ template for trade "${currentNeed.trade}" and no general fallback is seeded. Add one in packages/db/src/templates.ts.`,
           );
         }
-        const title = `${currentNeed.item} (${currentNeed.quantity} ${currentNeed.unit})`;
+        const itemShort = (currentNeed.item ?? "").slice(0, 60).replace(/[…\s]+$/, "");
+        const title = `${itemShort} — ${currentNeed.quantity} ${currentNeed.unit}`;
         const out = await tools.create_package_and_rfq_draft({ title, templateId: tpl.id });
         stateUpdates.packageId = out.packageId;
         stateUpdates.rfqDraftId = out.rfqDraftId;
