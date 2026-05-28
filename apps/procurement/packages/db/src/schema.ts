@@ -13,6 +13,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import type { NeedSpec } from "@procurement/shared";
 
 export const userRoleEnum = pgEnum("user_role", [
   "admin",
@@ -636,6 +637,76 @@ export const fulfillments = pgTable(
   }),
 );
 
+// ---------- Procurement requests (intake + orchestration) ----------
+
+export const procurementRequestStatusEnum = pgEnum("procurement_request_status", [
+  "intake",
+  "sourcing",
+  "awaiting_bids",
+  "comparing",
+  "recommended",
+  "done",
+  "cancelled",
+]);
+
+export type { NeedSpec };
+
+export interface RequestArtifact {
+  kind: "package" | "rfq_draft" | "rfq_version" | "rfq_export" | "comparison_run";
+  id: string;
+  label: string;
+}
+
+export const procurementRequests = pgTable(
+  "procurement_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    status: procurementRequestStatusEnum("status").notNull().default("intake"),
+    need: jsonb("need").$type<NeedSpec>().notNull(),
+    packageId: uuid("package_id").references(() => packages.id, { onDelete: "set null" }),
+    rfqDraftId: uuid("rfq_draft_id").references(() => rfqDrafts.id, { onDelete: "set null" }),
+    comparisonRunId: uuid("comparison_run_id").references(() => comparisonRuns.id, {
+      onDelete: "set null",
+    }),
+    recommendation: text("recommendation"),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(now).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).default(now).notNull(),
+  },
+  (t) => ({
+    projectIdx: index("procurement_requests_project_idx").on(t.projectId, t.createdAt),
+    statusIdx: index("procurement_requests_status_idx").on(t.status),
+  }),
+);
+
+export const procurementRequestMessages = pgTable(
+  "procurement_request_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    requestId: uuid("request_id")
+      .notNull()
+      .references(() => procurementRequests.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 16 }).notNull(), // "user" | "agent" | "system"
+    content: text("content").notNull(),
+    artifacts: jsonb("artifacts")
+      .$type<RequestArtifact[]>()
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    actions: jsonb("actions")
+      .$type<Array<{ tool: string; input: unknown; ok: boolean; summary: string }>>()
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(now).notNull(),
+  },
+  (t) => ({
+    requestIdx: index("procurement_request_messages_request_idx").on(t.requestId, t.createdAt),
+  }),
+);
+
 export type Organization = typeof organizations.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Project = typeof projects.$inferSelect;
@@ -665,3 +736,6 @@ export type RequirementTemplateInsert = typeof requirementTemplates.$inferInsert
 export type Requirement = typeof requirements.$inferSelect;
 export type RequirementInsert = typeof requirements.$inferInsert;
 export type Fulfillment = typeof fulfillments.$inferSelect;
+export type ProcurementRequest = typeof procurementRequests.$inferSelect;
+export type ProcurementRequestInsert = typeof procurementRequests.$inferInsert;
+export type ProcurementRequestMessage = typeof procurementRequestMessages.$inferSelect;

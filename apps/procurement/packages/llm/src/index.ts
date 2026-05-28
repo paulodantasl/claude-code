@@ -21,6 +21,20 @@ export {
   type DerivedRequirement,
   type DerivationResult,
 } from "./requirement-deriver.js";
+export {
+  selectOrchestrator,
+  createAnthropicOrchestrator,
+  createStubOrchestrator,
+  needSpecSchema,
+  type OrchestratorProvider,
+  type OrchestratorStatus,
+  type OrchestratorState,
+  type OrchestratorHistoryMessage,
+  type OrchestratorTurnResult,
+  type OrchestratorTools,
+  type ToolAction,
+  type ArtifactRef,
+} from "./orchestrator.js";
 
 import { createAnthropicProvider } from "./anthropic-provider.js";
 import { createStubProvider } from "./stub-provider.js";

@@ -9,12 +9,15 @@ import { ChatPanel } from "@/components/ChatPanel";
 import { AuditPanel } from "@/components/AuditPanel";
 import { PackagesPanel } from "@/components/PackagesPanel";
 import { ReviewerQueue } from "@/components/ReviewerQueue";
+import { RequestsPanel } from "@/components/RequestsPanel";
 
 export default function ProjectDetailPage() {
   const params = useParams<{ id: string }>();
   const projectId = params.id;
   const project = trpc.project.get.useQuery({ projectId });
-  const [tab, setTab] = useState<"chat" | "packages" | "compliance" | "audit">("chat");
+  const [tab, setTab] = useState<
+    "requests" | "chat" | "packages" | "compliance" | "audit"
+  >("requests");
 
   if (project.isLoading) return <main className="p-10">Loading…</main>;
   if (project.error) {
@@ -60,10 +63,16 @@ export default function ProjectDetailPage() {
         <section className="rounded border border-slate-200 bg-white">
           <div className="flex border-b border-slate-200">
             <button
+              className={`px-4 py-2 text-sm ${tab === "requests" ? "border-b-2 border-brand-600 font-medium" : "text-slate-600"}`}
+              onClick={() => setTab("requests")}
+            >
+              Procurement requests
+            </button>
+            <button
               className={`px-4 py-2 text-sm ${tab === "chat" ? "border-b-2 border-brand-600 font-medium" : "text-slate-600"}`}
               onClick={() => setTab("chat")}
             >
-              Agent
+              Q&A
             </button>
             <button
               className={`px-4 py-2 text-sm ${tab === "packages" ? "border-b-2 border-brand-600 font-medium" : "text-slate-600"}`}
@@ -84,6 +93,7 @@ export default function ProjectDetailPage() {
               Audit log
             </button>
           </div>
+          {tab === "requests" && <RequestsPanel projectId={projectId} />}
           {tab === "chat" && <ChatPanel projectId={projectId} />}
           {tab === "packages" && <PackagesPanel projectId={projectId} />}
           {tab === "compliance" && <ReviewerQueue projectId={projectId} />}

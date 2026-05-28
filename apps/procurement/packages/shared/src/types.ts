@@ -41,3 +41,16 @@ export const ROLE_PERMISSIONS = {
   pm_read_only: { canWrite: false, canManageMembers: false },
 } as const;
 export type Role = keyof typeof ROLE_PERMISSIONS;
+
+// Procurement-request need shape — used by db (for jsonb column type) and llm
+// (orchestrator input/output). Keeping it in shared keeps llm independent of db.
+export interface NeedSpec {
+  item: string | null;
+  quantity: number | null;
+  unit: string | null;
+  deadline: string | null;
+  jurisdiction: string | null;
+  trade: string | null;
+  specs: string[];
+  notes: string | null;
+}

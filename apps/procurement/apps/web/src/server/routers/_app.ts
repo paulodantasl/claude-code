@@ -9,6 +9,7 @@ import { vendorRouter } from "./vendor";
 import { bidRouter } from "./bid";
 import { comparisonRouter } from "./comparison";
 import { requirementRouter } from "./requirement";
+import { requestRouter } from "./request";
 
 export const appRouter = router({
   auth: authRouter,
@@ -21,6 +22,7 @@ export const appRouter = router({
   bid: bidRouter,
   comparison: comparisonRouter,
   requirement: requirementRouter,
+  request: requestRouter,
 });
 
 export type AppRouter = typeof appRouter;

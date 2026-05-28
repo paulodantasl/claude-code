@@ -1,18 +1,33 @@
-# Construction Procurement Agent — v1 (Phases 0, 1a, 1b, 2)
+# Construction Procurement Agent
 
-A grounded, citation-first agent for construction procurement workflows.
-This branch implements the full v1 in-scope feature set:
+State what you need, the agent takes care of how to procure it.
 
-- **Sourcing (A)**: ingest project docs → chat with citations → draft
-  trade-specific RFQs → register bids → structured extraction → side-by-side
-  comparison matrices with cell-level citations and immutable snapshots.
-- **Compliance/docs (B)**: derive a compliance checklist from spec language
-  (or templates), bind evidence documents to requirements, and run them
-  through a reviewer workflow (missing → received → under review → approved /
-  rejected) with a project-wide reviewer queue and gap report.
+```
+You: "I need 670 cubic yards of 4000 psi concrete for slabs and walls,
+      delivery in 6 weeks. Max w/c 0.45."
+Agent: extracts the need → picks the concrete template →
+       creates a package + RFQ draft → generates every section grounded
+       in your project specs → identifies matching vendors → tells you
+       what's missing or who to send it to.
+Once bids land: agent extracts each into structured line items, builds
+       an immutable comparison matrix with cell-level citations, and
+       recommends a vendor with reasoning.
+```
 
-Everything is grounded: matrices, checklists, and RFQ prose link back to the
-source document page. See [Roadmap](#roadmap) for what's deferred.
+The agent doesn't invent specs or prices — every claim is grounded in a
+parsed document, with clickable citations into the source page. The entire
+workflow runs through a tool-using LLM orchestrator (or a deterministic stub
+for offline dev), backed by the supporting infrastructure below.
+
+## Supporting workflows (also usable directly)
+
+- **Sourcing (A)**: project doc ingestion → chat with citations → RFQ
+  drafting with versioned DOCX export → bid intake → structured extraction →
+  side-by-side comparison matrices with immutable snapshots.
+- **Compliance/docs (B)**: derive a checklist from spec language (or
+  templates), bind evidence documents to requirements, run them through a
+  reviewer workflow (missing → received → under review → approved / rejected)
+  with a project-wide reviewer queue and gap report.
 
 ## Stack
 
