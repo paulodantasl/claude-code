@@ -410,6 +410,37 @@ export const rfqExports = pgTable(
   }),
 );
 
+// Outbound RFQ mail log — one row per (version, vendor) send attempt.
+export const rfqSendStatusEnum = pgEnum("rfq_send_status", [
+  "pending",
+  "sent",
+  "failed",
+]);
+
+export const rfqSends = pgTable(
+  "rfq_sends",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    versionId: uuid("version_id")
+      .notNull()
+      .references(() => rfqDraftVersions.id, { onDelete: "cascade" }),
+    vendorId: uuid("vendor_id").references(() => vendors.id, { onDelete: "set null" }),
+    toEmail: varchar("to_email", { length: 320 }).notNull(),
+    fromEmail: varchar("from_email", { length: 320 }).notNull(),
+    subject: text("subject").notNull(),
+    status: rfqSendStatusEnum("status").notNull().default("pending"),
+    providerMessageId: text("provider_message_id"),
+    error: text("error"),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    sentBy: uuid("sent_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(now).notNull(),
+  },
+  (t) => ({
+    versionIdx: index("rfq_sends_version_idx").on(t.versionId),
+    vendorIdx: index("rfq_sends_vendor_idx").on(t.vendorId),
+  }),
+);
+
 // ---------- Bids & comparison (Phase 1b) ----------
 
 export const bidStatusEnum = pgEnum("bid_status", [
@@ -726,6 +757,8 @@ export type RfqDraft = typeof rfqDrafts.$inferSelect;
 export type RfqDraftInsert = typeof rfqDrafts.$inferInsert;
 export type RfqDraftVersion = typeof rfqDraftVersions.$inferSelect;
 export type RfqExport = typeof rfqExports.$inferSelect;
+export type RfqSend = typeof rfqSends.$inferSelect;
+export type RfqSendInsert = typeof rfqSends.$inferInsert;
 export type Vendor = typeof vendors.$inferSelect;
 export type VendorInsert = typeof vendors.$inferInsert;
 export type Bid = typeof bids.$inferSelect;

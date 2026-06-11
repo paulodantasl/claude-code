@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import {
   bids as bidsTable,
@@ -8,7 +8,9 @@ import {
   packages as packagesTable,
   procurementRequestMessages,
   procurementRequests,
+  rfqDraftVersions,
   rfqDrafts,
+  rfqSends,
   rfqTemplates,
   vendors,
   type NeedSpec,
@@ -24,10 +26,13 @@ import {
 } from "@procurement/llm";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
+import { sendMail } from "@/lib/mail";
 import { recordAudit } from "@/lib/audit";
+import { max as maxFn } from "drizzle-orm";
 import { searchProjectDocs } from "../search";
 import { generateRfqSection } from "../rfq-generator";
 import { buildComparisonMatrix } from "../comparison-builder";
+import { renderRfqMail } from "../rfq-mail";
 import { router, projectProcedure, writeProjectProcedure } from "../trpc";
 
 const orchestrator = selectOrchestrator({
@@ -414,6 +419,142 @@ async function runTurn(opts: {
         .update(procurementRequests)
         .set({ recommendation: text, updatedAt: new Date() })
         .where(eq(procurementRequests.id, request.id));
+    },
+
+    send_rfq_to_vendors: async ({ recipients, responseDueDays, notes }) => {
+      if (!workingRfqDraftId) {
+        throw new Error("No RFQ draft created yet — call create_package_and_rfq_draft first.");
+      }
+      // Freeze a new version from the draft's current sections.
+      const draft = (
+        await db.select().from(rfqDrafts).where(eq(rfqDrafts.id, workingRfqDraftId)).limit(1)
+      )[0];
+      if (!draft) throw new Error("RFQ draft missing");
+
+      const [latest] = await db
+        .select({ max: maxFn(rfqDraftVersions.versionNumber) })
+        .from(rfqDraftVersions)
+        .where(eq(rfqDraftVersions.draftId, draft.id));
+      const nextVersionNumber = (latest?.max ?? 0) + 1;
+      const [version] = await db
+        .insert(rfqDraftVersions)
+        .values({
+          draftId: draft.id,
+          versionNumber: nextVersionNumber,
+          sections: draft.currentSections,
+          notes: notes ?? "Sent to vendors via orchestrator",
+          createdBy: userId,
+        })
+        .returning();
+      if (!version) throw new Error("Failed to freeze version");
+
+      // Resolve document titles for inline citation rewriting.
+      const citedDocIds = Array.from(
+        new Set(version.sections.flatMap((s) => s.citations.map((c) => c.documentId))),
+      );
+      const titlesMap: Record<string, string> = {};
+      if (citedDocIds.length > 0) {
+        const docs = await db
+          .select({ id: documents.id, title: documents.title })
+          .from(documents)
+          .where(inArray(documents.id, citedDocIds));
+        for (const d of docs) titlesMap[d.id] = d.title;
+      }
+
+      // Look up vendor rows for the recipients that came in with a vendorId.
+      const wantedVendorIds = recipients
+        .map((r) => r.vendorId)
+        .filter((v): v is string => Boolean(v));
+      const vendorRows = wantedVendorIds.length
+        ? await db.select().from(vendors).where(inArray(vendors.id, wantedVendorIds))
+        : [];
+      const vendorById = new Map(vendorRows.map((v) => [v.id, v] as const));
+
+      let sent = 0;
+      let failed = 0;
+      const failures: Array<{ email: string; error: string }> = [];
+      for (const r of recipients) {
+        const vendor = r.vendorId ? vendorById.get(r.vendorId) : null;
+        const mail = renderRfqMail({
+          rfqTitle: draft.title,
+          projectName: workingNeed.item ?? draft.title,
+          versionNumber: version.versionNumber,
+          sections: version.sections,
+          responseDueDays,
+          vendorName: vendor?.name,
+          gcName: "Procurement",
+          fromEmail: env.MAIL_FROM,
+          documentTitles: titlesMap,
+        });
+        const [sendRow] = await db
+          .insert(rfqSends)
+          .values({
+            versionId: version.id,
+            vendorId: r.vendorId ?? null,
+            toEmail: r.email,
+            fromEmail: env.MAIL_FROM,
+            subject: mail.subject,
+            status: "pending",
+            sentBy: userId,
+          })
+          .returning();
+        if (!sendRow) {
+          failed++;
+          failures.push({ email: r.email, error: "DB insert failed" });
+          continue;
+        }
+        try {
+          const out = await sendMail({
+            to: r.email,
+            subject: mail.subject,
+            text: mail.text,
+            html: mail.html,
+            replyTo: env.MAIL_REPLY_TO,
+          });
+          await db
+            .update(rfqSends)
+            .set({
+              status: "sent",
+              providerMessageId: out.providerMessageId,
+              sentAt: new Date(),
+            })
+            .where(eq(rfqSends.id, sendRow.id));
+          sent++;
+        } catch (err) {
+          const e = err instanceof Error ? err.message : String(err);
+          await db
+            .update(rfqSends)
+            .set({ status: "failed", error: e })
+            .where(eq(rfqSends.id, sendRow.id));
+          failed++;
+          failures.push({ email: r.email, error: e });
+        }
+      }
+
+      await recordAudit({
+        organizationId,
+        projectId,
+        userId,
+        action: "procurement_request.rfq_sent",
+        targetType: "rfq_version",
+        targetId: version.id,
+        metadata: {
+          requestId: request.id,
+          versionNumber: version.versionNumber,
+          attempted: recipients.length,
+          sent,
+          failed,
+        },
+      });
+
+      return {
+        versionId: version.id,
+        versionNumber: version.versionNumber,
+        attempted: recipients.length,
+        sent,
+        failed,
+        failures,
+      };
     },
   };
 

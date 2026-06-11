@@ -17,7 +17,16 @@ const baseSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional().default(""),
   ANTHROPIC_MODEL: z.string().default("claude-sonnet-4-6"),
   MAIL_FROM: z.string().email().default("procurement@example.test"),
-  MAIL_TRANSPORT: z.enum(["console", "smtp"]).default("console"),
+  MAIL_TRANSPORT: z.enum(["console", "resend", "smtp"]).default("console"),
+  MAIL_REPLY_TO: z.string().email().optional(),
+  RESEND_API_KEY: z.string().optional().default(""),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z
+    .string()
+    .optional()
+    .transform((v) => (v ? parseInt(v, 10) : 587)),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
 });
 
 export type Env = z.infer<typeof baseSchema>;

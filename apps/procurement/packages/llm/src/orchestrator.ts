@@ -136,6 +136,26 @@ export interface OrchestratorTools {
   set_status: (input: { status: OrchestratorStatus }) => Promise<void>;
 
   set_recommendation: (input: { text: string }) => Promise<void>;
+
+  /**
+   * Freeze the current RFQ draft as a new immutable version, then send it
+   * by email to the listed vendor recipients. Required: at least one
+   * recipient with a real email. The caller (request router) handles
+   * version creation and mail send + persisted send-log; the orchestrator
+   * just decides who/when.
+   */
+  send_rfq_to_vendors: (input: {
+    recipients: Array<{ vendorId?: string; email: string }>;
+    responseDueDays?: number;
+    notes?: string;
+  }) => Promise<{
+    versionId: string;
+    versionNumber: number;
+    attempted: number;
+    sent: number;
+    failed: number;
+    failures: Array<{ email: string; error: string }>;
+  }>;
 }
 
 const toolDefinitions: Anthropic.Messages.Tool[] = [
@@ -274,6 +294,32 @@ const toolDefinitions: Anthropic.Messages.Tool[] = [
       required: ["text"],
     },
   },
+  {
+    name: "send_rfq_to_vendors",
+    description:
+      "Freeze the current RFQ draft as a new version and send it by email to the listed vendor recipients. Use ONLY when the user has confirmed the recipient list — never blindly send. Pass either vendorId (preferred — uses the vendor's stored contact email) or an explicit email for each recipient.",
+    input_schema: {
+      type: "object",
+      properties: {
+        recipients: {
+          type: "array",
+          minItems: 1,
+          maxItems: 50,
+          items: {
+            type: "object",
+            properties: {
+              vendorId: { type: "string", format: "uuid" },
+              email: { type: "string", format: "email" },
+            },
+            required: ["email"],
+          },
+        },
+        responseDueDays: { type: "integer", minimum: 1, maximum: 120 },
+        notes: { type: "string" },
+      },
+      required: ["recipients"],
+    },
+  },
 ];
 
 const SYSTEM_PROMPT = `You are an autonomous construction procurement agent. The user states what they need; you take care of how to procure it.
@@ -281,9 +327,14 @@ const SYSTEM_PROMPT = `You are an autonomous construction procurement agent. The
 Workflow you progress through:
 1. intake — capture a Need (item, quantity, unit, deadline, trade, specs). Ask only the smallest set of follow-up questions needed to proceed.
 2. sourcing — pick the best matching RFQ template, create a package + RFQ draft, generate every section grounded in the project's specs.
-3. awaiting_bids — identify candidate vendors from the directory (or recommend adding ones) and wait for the user to register bids.
+3. awaiting_bids — identify candidate vendors from the directory. **Confirm the recipient list with the user before calling send_rfq_to_vendors.** Then send the RFQ by email. After sending, wait for bids.
 4. comparing — when 2+ bids are extracted, create a comparison run.
 5. recommended — surface a clear recommendation (which vendor, why) with the comparison_run as evidence.
+
+Email sending rules:
+- NEVER call send_rfq_to_vendors without first showing the user the list of (vendorName → email) and getting confirmation in their reply.
+- Prefer vendorId over a raw email so the vendor row is linked in the send log.
+- Default responseDueDays to 10 unless the Need has a stricter deadline.
 
 Rules:
 - Tool-first. Always retrieve before claiming a spec exists.
@@ -491,6 +542,19 @@ async function runTool(
         stateUpdates.recommendation = i.text;
         stateUpdates.status = "recommended";
         return { payload: { ok: true }, isError: false, summary: `recommendation set` };
+      }
+      case "send_rfq_to_vendors": {
+        const i = block.input as {
+          recipients: Array<{ vendorId?: string; email: string }>;
+          responseDueDays?: number;
+          notes?: string;
+        };
+        const out = await tools.send_rfq_to_vendors(i);
+        return {
+          payload: out,
+          isError: out.sent === 0,
+          summary: `sent RFQ v${out.versionNumber} → ${out.sent}/${out.attempted} ok${out.failed > 0 ? `, ${out.failed} failed` : ""}`,
+        };
       }
       default:
         return {

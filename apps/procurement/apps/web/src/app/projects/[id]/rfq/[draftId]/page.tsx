@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { RfqSectionEditor } from "@/components/RfqSectionEditor";
+import { RfqSendPanel } from "@/components/RfqSendPanel";
 
 export default function RfqDraftPage() {
   const params = useParams<{ id: string; draftId: string }>();
@@ -11,6 +12,8 @@ export default function RfqDraftPage() {
   const draftId = params.draftId;
   const utils = trpc.useUtils();
   const draftQ = trpc.rfq.getDraft.useQuery({ projectId, draftId });
+  const projectQ = trpc.project.get.useQuery({ projectId });
+  const [openSendForVersion, setOpenSendForVersion] = useState<string | null>(null);
 
   const saveVersion = trpc.rfq.saveVersion.useMutation({
     onSuccess: () => utils.rfq.getDraft.invalidate({ projectId, draftId }),
@@ -78,30 +81,52 @@ export default function RfqDraftPage() {
                 No versions yet. Save one to enable export.
               </p>
             ) : (
-              <ul className="mt-2 space-y-2">
+              <ul className="mt-2 space-y-3">
                 {versions.map((v) => (
-                  <li key={v.id} className="flex items-center justify-between text-xs">
-                    <div>
-                      <p className="font-medium">v{v.versionNumber}</p>
-                      <p className="text-slate-500">
-                        {new Date(v.createdAt).toLocaleString()}
-                      </p>
-                      {v.notes && <p className="text-slate-600">{v.notes}</p>}
+                  <li key={v.id} className="rounded border border-slate-100 p-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">v{v.versionNumber}</p>
+                        <p className="text-slate-500">
+                          {new Date(v.createdAt).toLocaleString()}
+                        </p>
+                        {v.notes && <p className="text-slate-600">{v.notes}</p>}
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          className="rounded border border-slate-300 px-2 py-0.5 hover:bg-slate-50 disabled:opacity-50"
+                          disabled={exportVersion.isPending}
+                          onClick={async () => {
+                            const out = await exportVersion.mutateAsync({
+                              projectId,
+                              versionId: v.id,
+                              format: "docx",
+                            });
+                            window.open(out.url, "_blank");
+                          }}
+                        >
+                          Export DOCX
+                        </button>
+                        <button
+                          className="rounded bg-brand-600 px-2 py-0.5 text-white hover:bg-brand-700"
+                          onClick={() =>
+                            setOpenSendForVersion((cur) => (cur === v.id ? null : v.id))
+                          }
+                        >
+                          {openSendForVersion === v.id ? "Hide" : "Send"}
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      className="rounded border border-slate-300 px-2 py-0.5 hover:bg-slate-50 disabled:opacity-50"
-                      disabled={exportVersion.isPending}
-                      onClick={async () => {
-                        const out = await exportVersion.mutateAsync({
-                          projectId,
-                          versionId: v.id,
-                          format: "docx",
-                        });
-                        window.open(out.url, "_blank");
-                      }}
-                    >
-                      Export DOCX
-                    </button>
+                    {openSendForVersion === v.id && projectQ.data && (
+                      <div className="mt-2">
+                        <RfqSendPanel
+                          projectId={projectId}
+                          versionId={v.id}
+                          versionNumber={v.versionNumber}
+                          organizationId={projectQ.data.project.organizationId}
+                        />
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
