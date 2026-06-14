@@ -1,39 +1,365 @@
-# Public bidding sources to track.
+# Public bidding sources — Tampa Bay region + Lee County, Florida.
+#
+# "Tampa Bay Area" here = the six-county Tampa Bay Regional Planning Council
+# region (Citrus, Hernando, Hillsborough, Manatee, Pasco, Pinellas), plus
+# Lee County and its cities as requested.
 #
 # Source platform key:
 #   sam_gov — SAM.gov federal Opportunities REST API (needs SAM_GOV_API_KEY)
 #   rss     — RSS / Atom procurement feed (no key, no browser)
-#   ai      — AI-assisted extraction from an arbitrary portal page (needs ANTHROPIC_API_KEY)
+#   ai      — AI-assisted extraction from the portal page (needs ANTHROPIC_API_KEY)
 #
-# NAICS codes and target states for SAM.gov are pulled from criteria.yaml,
-# so you only configure them in one place.
+# Almost every local government here posts on a third-party eProcurement
+# platform (OpenGov, Bonfire/Euna, DemandStar, IonWave, ProcureWare, BidNet) or
+# a CivicPlus "Bids.aspx" page. The `ai` source loads the public listing page
+# and lets Claude extract open solicitations. The hosting platform for each is
+# noted in a comment. URLs were researched June 2026 — re-check if a portal moves.
 
 sources:
 
-  # ── Federal: SAM.gov ────────────────────────────────────────────────────
-  # Pulls construction solicitations (NAICS from criteria.yaml) nationwide,
-  # or restricted to your target states.
+  # ── Federal ──────────────────────────────────────────────────────────────
   - id: sam_gov
     name: "SAM.gov (Federal)"
     type: sam_gov
-    # api_key falls back to SAM_GOV_API_KEY env var
-    # naics_codes / states inherited from criteria.yaml
+    # api_key from SAM_GOV_API_KEY; naics_codes/states inherited from criteria.yaml
 
-  # ── State of Florida Vendor Bid System ──────────────────────────────────
-  # Example RSS feed. Confirm the live feed URL for your agency/category;
-  # many MyFlorida categories expose their own RSS.
-  - id: fl_vbs
-    name: "Florida Vendor Bid System"
-    type: rss
-    feed_url: "https://www.myflorida.com/apps/vbs/vbs_www.rss"
-    state: FL
-    opportunity_type: ITB
-
-  # ── Example: a local agency portal with no API/feed ─────────────────────
-  # Uses Claude to read the active-solicitations page. Update listing_url to
-  # the agency's real bid-listing page.
-  - id: city_tampa
-    name: "City of Tampa Procurement"
+  # ════════════════════════════════════════════════════════════════════════
+  # HILLSBOROUGH COUNTY
+  # ════════════════════════════════════════════════════════════════════════
+  - id: hillsborough_county
+    name: "Hillsborough County"
     type: ai
-    listing_url: "https://www.tampa.gov/purchasing/active-solicitations"
+    listing_url: "https://hillsboroughcounty.bonfirehub.com/portal/?tab=openOpportunities"
     state: FL
+    county: Hillsborough           # Bonfire/Euna portal
+
+  - id: city_tampa
+    name: "City of Tampa"
+    type: ai
+    listing_url: "https://procurement.opengov.com/portal/cityoftampa"
+    state: FL
+    county: Hillsborough           # OpenGov portal
+
+  - id: city_temple_terrace
+    name: "City of Temple Terrace"
+    type: ai
+    listing_url: "https://www.templeterrace.gov/Bids.aspx"
+    state: FL
+    county: Hillsborough           # CivicPlus Bids page (also DemandStar). RSS may exist at /RSSFeed.aspx
+
+  - id: city_plant_city
+    name: "City of Plant City"
+    type: ai
+    listing_url: "https://www.plantcitygov.com/rfps"
+    state: FL
+    county: Hillsborough           # OpenGov portal
+
+  # ════════════════════════════════════════════════════════════════════════
+  # PINELLAS COUNTY
+  # ════════════════════════════════════════════════════════════════════════
+  - id: pinellas_county
+    name: "Pinellas County"
+    type: ai
+    listing_url: "https://procurement.opengov.com/portal/pinellas"
+    state: FL
+    county: Pinellas              # OpenGov portal (landing: pinellas.gov/current-bids)
+
+  - id: city_st_petersburg
+    name: "City of St. Petersburg"
+    type: ai
+    listing_url: "https://procurement.opengov.com/portal/stpete"
+    state: FL
+    county: Pinellas              # OpenGov portal
+
+  - id: city_clearwater
+    name: "City of Clearwater"
+    type: ai
+    listing_url: "https://www.myclearwater.com/Business-Development/Doing-Business-with-the-City/Purchasing-Solicitations"
+    state: FL
+    county: Pinellas              # Own page + DemandStar
+
+  - id: city_largo
+    name: "City of Largo"
+    type: ai
+    listing_url: "https://www.largo.com/financial_center/bids_and_rfps.php"
+    state: FL
+    county: Pinellas              # Own page + DemandStar/PublicPurchase
+
+  - id: city_pinellas_park
+    name: "City of Pinellas Park"
+    type: ai
+    listing_url: "https://www.pinellas-park.com/Bids.aspx"
+    state: FL
+    county: Pinellas              # CivicPlus Bids page + DemandStar
+
+  - id: city_dunedin
+    name: "City of Dunedin"
+    type: ai
+    listing_url: "https://www.dunedingov.com/city-departments/finance/purchasing"
+    state: FL
+    county: Pinellas              # Purchasing page + DemandStar
+
+  - id: city_tarpon_springs
+    name: "City of Tarpon Springs"
+    type: ai
+    listing_url: "https://ctsfl.bonfirehub.com/portal/?tab=openOpportunities"
+    state: FL
+    county: Pinellas              # Bonfire portal (migrated 2024)
+
+  - id: city_seminole
+    name: "City of Seminole"
+    type: ai
+    listing_url: "https://myseminole.com/website/purchasing.html"
+    state: FL
+    county: Pinellas              # Purchasing page + DemandStar
+
+  - id: city_safety_harbor
+    name: "City of Safety Harbor"
+    type: ai
+    listing_url: "https://www.cityofsafetyharbor.com/607/Solicitations"
+    state: FL
+    county: Pinellas              # CivicPlus Solicitations + DemandStar
+
+  - id: city_oldsmar
+    name: "City of Oldsmar"
+    type: ai
+    listing_url: "https://www.myoldsmar.com/133/Purchasing"
+    state: FL
+    county: Pinellas              # CivicPlus Purchasing + DemandStar
+
+  - id: city_gulfport
+    name: "City of Gulfport"
+    type: ai
+    listing_url: "https://mygulfport.us/city-clerk-records-custodian/bids-and-public-hearings-notices/"
+    state: FL
+    county: Pinellas              # Own page + DemandStar
+
+  - id: city_treasure_island
+    name: "City of Treasure Island"
+    type: ai
+    listing_url: "https://www.mytreasureisland.org/finance/purchasing.php"
+    state: FL
+    county: Pinellas              # Purchasing page + DemandStar
+
+  - id: city_madeira_beach
+    name: "City of Madeira Beach"
+    type: ai
+    listing_url: "https://www.demandstar.com/app/agencies/florida/city-of-madeira-beach/procurement-opportunities/cf653e72-e53c-43e2-9bfd-734f9b28d461/"
+    state: FL
+    county: Pinellas              # DemandStar (no dedicated city page)
+
+  - id: city_st_pete_beach
+    name: "City of St. Pete Beach"
+    type: ai
+    listing_url: "https://www.stpetebeach.org/Bids.aspx"
+    state: FL
+    county: Pinellas              # CivicPlus Bids page + DemandStar
+
+  - id: kenneth_city
+    name: "City of Kenneth City"
+    type: ai
+    listing_url: "https://www.demandstar.com/app/agencies/florida/town-of-kenneth-city/procurement-opportunities/b50a6555-e828-427b-846b-a20e8248cd20/"
+    state: FL
+    county: Pinellas              # DemandStar
+
+  - id: town_belleair
+    name: "Town of Belleair"
+    type: ai
+    listing_url: "https://www.townofbelleair.com/519/Bid-Solicitations"
+    state: FL
+    county: Pinellas              # CivicPlus Bid Solicitations + DemandStar
+
+  # Note: the small Pinellas barrier-island towns (Belleair Beach, Belleair
+  # Bluffs, Indian Rocks Beach, Indian Shores, the Redingtons, South Pasadena)
+  # rarely issue construction bids and mostly route through DemandStar — add
+  # them here if you want full coverage.
+
+  # ════════════════════════════════════════════════════════════════════════
+  # PASCO COUNTY
+  # ════════════════════════════════════════════════════════════════════════
+  - id: pasco_county
+    name: "Pasco County"
+    type: ai
+    listing_url: "https://pascocountyfl.bonfirehub.com/portal/?tab=openOpportunities"
+    state: FL
+    county: Pasco                 # Bonfire/Euna portal (since 2022)
+
+  - id: city_dade_city
+    name: "City of Dade City"
+    type: ai
+    listing_url: "https://www.dadecityfl.com/our_government/government_business/bids_quotes_auctions.php"
+    state: FL
+    county: Pasco                 # Own page + DemandStar
+
+  - id: city_new_port_richey
+    name: "City of New Port Richey"
+    type: ai
+    listing_url: "https://www.cityofnewportrichey.org/Government/City-Clerk/Bid-Postings"
+    state: FL
+    county: Pasco                 # City Clerk Bid Postings
+
+  - id: city_port_richey
+    name: "City of Port Richey"
+    type: ai
+    listing_url: "https://www.cityofportrichey.gov/current-bids-rfps/page/open-bids-rfps"
+    state: FL
+    county: Pasco                 # CivicPlus + BidNet Direct
+
+  - id: city_zephyrhills
+    name: "City of Zephyrhills"
+    type: ai
+    listing_url: "https://procurement.opengov.com/portal/embed/zephyrhillsfl"
+    state: FL
+    county: Pasco                 # OpenGov portal
+
+  # - id: city_san_antonio   # ~1,300 pop; no dedicated bid portal found — enable if needed
+  #   name: "City of San Antonio"
+  #   type: ai
+  #   listing_url: "https://www.sanantonioflorida.org/"
+  #   state: FL
+  #   county: Pasco
+
+  # ════════════════════════════════════════════════════════════════════════
+  # HERNANDO COUNTY
+  # ════════════════════════════════════════════════════════════════════════
+  - id: hernando_county
+    name: "Hernando County"
+    type: ai
+    listing_url: "https://procurement.opengov.com/portal/hernandocounty"
+    state: FL
+    county: Hernando             # OpenGov portal + BidNet
+
+  - id: city_brooksville
+    name: "City of Brooksville"
+    type: ai
+    listing_url: "https://www.bidnetdirect.com/florida/cityofbrooksville"
+    state: FL
+    county: Hernando             # BidNet Direct / Florida Purchasing Group
+
+  # ════════════════════════════════════════════════════════════════════════
+  # CITRUS COUNTY
+  # ════════════════════════════════════════════════════════════════════════
+  - id: citrus_county
+    name: "Citrus County"
+    type: ai
+    listing_url: "https://procurement.opengov.com/portal/citrusfl"
+    state: FL
+    county: Citrus              # OpenGov portal + DemandStar
+
+  - id: city_crystal_river
+    name: "City of Crystal River"
+    type: ai
+    listing_url: "https://www.crystalriverfl.org/rfps"
+    state: FL
+    county: Citrus             # Own Bids/RFPs page + DemandStar
+
+  - id: city_inverness
+    name: "City of Inverness"
+    type: ai
+    listing_url: "https://www.inverness-fl.gov/Bids.aspx"
+    state: FL
+    county: Citrus             # CivicPlus Bids page
+
+  # ════════════════════════════════════════════════════════════════════════
+  # MANATEE COUNTY
+  # ════════════════════════════════════════════════════════════════════════
+  - id: manatee_county
+    name: "Manatee County"
+    type: ai
+    listing_url: "https://public.mymanatee.org/rfp_post/controller?view=home&list=all"
+    state: FL
+    county: Manatee            # County RFP Post app + DemandStar
+
+  - id: city_bradenton
+    name: "City of Bradenton"
+    type: ai
+    listing_url: "https://procurement.opengov.com/portal/cityofbradenton"
+    state: FL
+    county: Manatee            # OpenGov portal + DemandStar
+
+  - id: city_palmetto
+    name: "City of Palmetto"
+    type: ai
+    listing_url: "https://www.palmettofl.org/212/Bids-and-Proposals"
+    state: FL
+    county: Manatee            # CivicPlus + DemandStar
+
+  - id: city_anna_maria
+    name: "City of Anna Maria"
+    type: ai
+    listing_url: "https://www.cityofannamaria.com/172/Bids"
+    state: FL
+    county: Manatee            # CivicPlus Bids -> DemandStar
+
+  - id: city_bradenton_beach
+    name: "City of Bradenton Beach"
+    type: ai
+    listing_url: "https://www.demandstar.com/app/agencies/Florida/City-of-Bradenton-Beach/procurement-opportunities/6F30E30A-93C6-4243-A9A0-8EC96CFCEF29"
+    state: FL
+    county: Manatee            # DemandStar
+
+  - id: city_holmes_beach
+    name: "City of Holmes Beach"
+    type: ai
+    listing_url: "https://www.demandstar.com/app/agencies/florida/city-of-holmes-beach/procurement-opportunities/cf492d13-f1a4-4da3-a871-8b5e1de08b50/"
+    state: FL
+    county: Manatee            # DemandStar
+
+  - id: town_longboat_key
+    name: "Town of Longboat Key"
+    type: ai
+    listing_url: "https://www.demandstar.com/app/agencies/florida/town-of-longboat-key/procurement-opportunities/d82a32b2-1353-495d-8f29-5adf5561aa5f/"
+    state: FL
+    county: Manatee            # DemandStar (spans Manatee/Sarasota)
+
+  # ════════════════════════════════════════════════════════════════════════
+  # LEE COUNTY
+  # ════════════════════════════════════════════════════════════════════════
+  - id: lee_county
+    name: "Lee County"
+    type: ai
+    listing_url: "https://www.leegov.com/procurement/projects"
+    state: FL
+    county: Lee               # County Solicitations page + DemandStar
+
+  - id: city_fort_myers
+    name: "City of Fort Myers"
+    type: ai
+    listing_url: "https://procurement.opengov.com/portal/cityftmyers"
+    state: FL
+    county: Lee               # OpenGov portal
+
+  - id: city_cape_coral
+    name: "City of Cape Coral"
+    type: ai
+    listing_url: "https://capecoral.ionwave.net/SourcingEvents.aspx?SourceType=1"
+    state: FL
+    county: Lee               # IonWave portal
+
+  - id: city_bonita_springs
+    name: "City of Bonita Springs"
+    type: ai
+    listing_url: "https://cityofbonitasprings.procureware.com/Bids"
+    state: FL
+    county: Lee               # ProcureWare portal
+
+  - id: village_estero
+    name: "Village of Estero"
+    type: ai
+    listing_url: "https://estero-fl.gov/for-businesses/rfprfq/"
+    state: FL
+    county: Lee               # Own RFP/RFQ page + IonWave
+
+  - id: town_fort_myers_beach
+    name: "Town of Fort Myers Beach"
+    type: ai
+    listing_url: "https://www.fortmyersbeachfl.gov/949/Bids-and-Proposals"
+    state: FL
+    county: Lee               # CivicPlus + DemandStar (Town, not the Fire District)
+
+  - id: city_sanibel
+    name: "City of Sanibel"
+    type: ai
+    listing_url: "https://www.mysanibel.com/297/City-Bids"
+    state: FL
+    county: Lee               # CivicPlus City Bids + DemandStar

@@ -31,7 +31,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
     feedparser = None
 
-from .base import BaseSource, RawDocument, RawOpportunity
+from .base import BROWSER_USER_AGENT, BaseSource, RawDocument, RawOpportunity
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class RssSource(BaseSource):
 
     @retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=2, min=2, max=30))
     def _fetch_raw(self) -> str:
-        resp = requests.get(self.feed_url, timeout=30, headers={"User-Agent": "bid-tracker/0.1"})
+        resp = requests.get(self.feed_url, timeout=30, headers={"User-Agent": BROWSER_USER_AGENT})
         resp.raise_for_status()
         return resp.text
 

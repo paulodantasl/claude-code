@@ -28,7 +28,7 @@ import requests
 from .agents.proposal_agent import ProposalDrafter
 from .agents.qualifier import QualificationResult
 from .agents.requirements_agent import RequirementsExtractor
-from .sources.base import RawOpportunity
+from .sources.base import BROWSER_USER_AGENT, RawOpportunity
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ class BidPackager:
         collected: list[str] = []
         for i, doc in enumerate(opp.documents, 1):
             try:
-                resp = requests.get(doc.url, timeout=60, headers={"User-Agent": "bid-tracker/0.1"})
+                resp = requests.get(doc.url, timeout=60, headers={"User-Agent": BROWSER_USER_AGENT})
                 resp.raise_for_status()
                 name = _slug(doc.name, 50) or f"document-{i}"
                 ext = self._guess_ext(doc.url, resp.headers.get("Content-Type", ""))

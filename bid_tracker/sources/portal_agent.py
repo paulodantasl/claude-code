@@ -26,7 +26,7 @@ from typing import Any
 import requests
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from .base import BaseSource, RawDocument, RawOpportunity
+from .base import BROWSER_USER_AGENT, BaseSource, RawDocument, RawOpportunity
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class PortalAgentSource(BaseSource):
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=2, min=2, max=20))
     def _fetch_html(self) -> str:
-        resp = requests.get(self.listing_url, timeout=45, headers={"User-Agent": "bid-tracker/0.1"})
+        resp = requests.get(self.listing_url, timeout=45, headers={"User-Agent": BROWSER_USER_AGENT})
         resp.raise_for_status()
         return resp.text
 

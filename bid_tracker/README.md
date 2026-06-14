@@ -125,11 +125,29 @@ ephemeral, so commit the resulting packages/DB as an artifact or point
 
 ---
 
+## Coverage (out of the box)
+
+`targets/sources.yaml` ships pre-populated with **45 sources**: SAM.gov (federal)
+plus the procurement portal of every county and incorporated city in the Tampa
+Bay region — Citrus, Hernando, Hillsborough, Manatee, Pasco, Pinellas — and Lee
+County and its cities. Each entry points at that agency's real bid-listing page
+(OpenGov, Bonfire/Euna, DemandStar, IonWave, ProcureWare, BidNet, or a CivicPlus
+Bids page), with the hosting platform noted in a comment.
+
+`targets/criteria.yaml` is tuned for **small construction work, $0–$300K, in
+Florida** — `max_value` is enforced as a hard cap, so anything larger is
+disqualified.
+
 ## Notes & limitations
 
 - The SAM.gov adapter is fully functional against the public v2 API.
-- The RSS and `ai` source entries in `sources.yaml` are examples — point them
-  at the real feeds/portals your agencies use.
+- Most local portals serve their public bid-listing page, which the `ai` source
+  reads via Claude. Some platforms gate full solicitation **documents** behind a
+  free vendor registration — listings are still visible. Requests use a
+  browser User-Agent since these sites block default bot agents.
+- Portal URLs were researched June 2026; if an agency migrates platforms, update
+  its `listing_url`. The small Pinellas barrier-island towns and tiny Pasco
+  municipalities are noted in the YAML and can be enabled if needed.
 - Proposal drafts are **first drafts**. Every firm-specific gap is marked
   `[PLACEHOLDER: …]`; review before submitting. The drafter is instructed not to
   invent licenses, dollar figures, or past projects.
