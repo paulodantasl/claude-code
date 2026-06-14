@@ -80,6 +80,12 @@ class Qualifier:
             if kw in text:
                 out.append(f"Excluded keyword present: '{kw}'")
 
+        if self.max_value and opp.estimated_value and opp.estimated_value > self.max_value:
+            out.append(
+                f"Est. value ${opp.estimated_value:,.0f} exceeds max bid size "
+                f"${self.max_value:,.0f}"
+            )
+
         if self.bonding_capacity and opp.estimated_value and opp.estimated_value > self.bonding_capacity:
             out.append(
                 f"Est. value ${opp.estimated_value:,.0f} exceeds bonding capacity "

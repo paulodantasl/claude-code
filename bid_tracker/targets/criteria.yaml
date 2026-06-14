@@ -43,15 +43,14 @@ criteria:
   # ── Geography (state codes). Empty list = nationwide. ───────────────────
   states:
     - FL
-    - GA
-    - AL
 
-  # ── Contract value sweet spot (USD) ─────────────────────────────────────
-  min_value: 100000
-  max_value: 25000000
+  # ── Contract value (USD). max_value is a HARD cap — bids above it are
+  #    disqualified. Set for small construction work: $0–$300K. ────────────
+  min_value: 0
+  max_value: 300000
 
   # ── Bonding capacity: any single project above this is rejected ─────────
-  bonding_capacity: 30000000
+  bonding_capacity: 1000000
 
   # ── Set-asides you can claim (lowercased substring match). Empty = any. ──
   set_asides: []
@@ -64,7 +63,9 @@ criteria:
   min_days_to_respond: 7
 
   # ── Qualification threshold (0–100) ─────────────────────────────────────
-  score_threshold: 60
+  # Local government bids often omit NAICS codes, so we keep the bar moderate
+  # and lean on keyword + geography + value signals.
+  score_threshold: 50
 
   # ── Download solicitation attachments into each package folder ──────────
   download_documents: true
