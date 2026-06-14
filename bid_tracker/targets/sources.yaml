@@ -1,0 +1,39 @@
+# Public bidding sources to track.
+#
+# Source platform key:
+#   sam_gov — SAM.gov federal Opportunities REST API (needs SAM_GOV_API_KEY)
+#   rss     — RSS / Atom procurement feed (no key, no browser)
+#   ai      — AI-assisted extraction from an arbitrary portal page (needs ANTHROPIC_API_KEY)
+#
+# NAICS codes and target states for SAM.gov are pulled from criteria.yaml,
+# so you only configure them in one place.
+
+sources:
+
+  # ── Federal: SAM.gov ────────────────────────────────────────────────────
+  # Pulls construction solicitations (NAICS from criteria.yaml) nationwide,
+  # or restricted to your target states.
+  - id: sam_gov
+    name: "SAM.gov (Federal)"
+    type: sam_gov
+    # api_key falls back to SAM_GOV_API_KEY env var
+    # naics_codes / states inherited from criteria.yaml
+
+  # ── State of Florida Vendor Bid System ──────────────────────────────────
+  # Example RSS feed. Confirm the live feed URL for your agency/category;
+  # many MyFlorida categories expose their own RSS.
+  - id: fl_vbs
+    name: "Florida Vendor Bid System"
+    type: rss
+    feed_url: "https://www.myflorida.com/apps/vbs/vbs_www.rss"
+    state: FL
+    opportunity_type: ITB
+
+  # ── Example: a local agency portal with no API/feed ─────────────────────
+  # Uses Claude to read the active-solicitations page. Update listing_url to
+  # the agency's real bid-listing page.
+  - id: city_tampa
+    name: "City of Tampa Procurement"
+    type: ai
+    listing_url: "https://www.tampa.gov/purchasing/active-solicitations"
+    state: FL
