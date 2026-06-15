@@ -23,6 +23,25 @@ sources:
     type: sam_gov
     # api_key from SAM_GOV_API_KEY; naics_codes/states inherited from criteria.yaml
 
+  # ── OpenGov Procurement (API) ─────────────────────────────────────────────
+  # Reads open solicitations from the OpenGov Procurement API across the
+  # agencies your OpenGov account can see. Requires OPENGOV_API_KEY (generate it
+  # in your OpenGov account; your account email is the API username). NO login
+  # password is used or stored — open bids are public; the key is only how we
+  # read them programmatically.
+  #
+  # Tampa Bay / Lee agencies on OpenGov: City of Tampa, Pinellas County,
+  # City of St. Petersburg, City of Plant City, City of Zephyrhills,
+  # Hernando County, Citrus County, City of Bradenton, City of Fort Myers.
+  # "Follow" these agencies in your OpenGov account so they surface via the API.
+  # Once this returns results, comment out those agencies' `type: ai` entries
+  # below to avoid duplicate tracking.
+  - id: opengov
+    name: "OpenGov Procurement"
+    type: opengov
+    state: FL
+    # api_key from OPENGOV_API_KEY; email from OPENGOV_EMAIL
+
   # ════════════════════════════════════════════════════════════════════════
   # HILLSBOROUGH COUNTY
   # ════════════════════════════════════════════════════════════════════════

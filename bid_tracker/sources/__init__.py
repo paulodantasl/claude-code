@@ -1,10 +1,12 @@
-from .base import BaseSource, RawDocument, RawOpportunity
+from .base import BROWSER_USER_AGENT, BaseSource, RawDocument, RawOpportunity
+from .opengov import OpenGovSource
 from .portal_agent import PortalAgentSource
 from .rss import RssSource
 from .sam_gov import SamGovSource
 
 SOURCE_REGISTRY = {
     "sam_gov": SamGovSource,
+    "opengov": OpenGovSource,
     "rss": RssSource,
     "ai": PortalAgentSource,
 }
@@ -23,9 +25,11 @@ def get_source(source_config: dict) -> BaseSource:
 
 __all__ = [
     "BaseSource",
+    "BROWSER_USER_AGENT",
     "RawDocument",
     "RawOpportunity",
     "SamGovSource",
+    "OpenGovSource",
     "RssSource",
     "PortalAgentSource",
     "SOURCE_REGISTRY",

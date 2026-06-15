@@ -218,6 +218,9 @@ class BidPipeline:
             cfg.setdefault("api_key", os.environ.get("SAM_GOV_API_KEY"))
             cfg.setdefault("naics_codes", self.criteria.get("naics_codes", []))
             cfg.setdefault("states", self.criteria.get("states", []))
+        if cfg.get("type") == "opengov":
+            cfg.setdefault("api_key", os.environ.get("OPENGOV_API_KEY"))
+            cfg.setdefault("email", os.environ.get("OPENGOV_EMAIL"))
         return cfg
 
     @staticmethod
