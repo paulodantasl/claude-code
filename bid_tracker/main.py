@@ -36,6 +36,16 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.table import Table
 
+# Load environment variables from a .env file (CWD and the package dir) so
+# ANTHROPIC_API_KEY, SAM_GOV_API_KEY, etc. are picked up without exporting them.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+    load_dotenv(Path(__file__).resolve().parent / ".env")
+except ImportError:
+    pass
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(message)s",
