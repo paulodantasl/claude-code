@@ -10,6 +10,7 @@ setup(
         "requests>=2.31.0",
         "feedparser>=6.0.11",
         "beautifulsoup4>=4.12.0",
+        "playwright>=1.40.0",
         "pydantic>=2.5.0",
         "sqlalchemy>=2.0.0",
         "pyyaml>=6.0.1",

@@ -3,6 +3,7 @@ requests>=2.31.0
 feedparser>=6.0.11
 beautifulsoup4>=4.12.0
 lxml>=5.0.0
+playwright>=1.40.0          # renders JS portals (OpenGov, Bonfire, DemandStar); run: playwright install chromium
 pydantic>=2.5.0
 sqlalchemy>=2.0.0
 pyyaml>=6.0.1

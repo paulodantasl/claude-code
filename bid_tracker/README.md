@@ -61,8 +61,14 @@ the folder.
 ```bash
 cd bid_tracker
 pip install -r requirements.txt
+playwright install chromium   # for JS portals (OpenGov, Bonfire, DemandStar, …)
 cp .env.example .env          # add SAM_GOV_API_KEY (and ANTHROPIC_API_KEY)
 ```
+
+> **JS portals (OpenGov, Bonfire, DemandStar, ProcureWare)** are single-page
+> apps, so those sources set `render: true` in `sources.yaml` and are read with
+> a headless browser (Playwright) — no login needed, the bid lists are public.
+> Extraction still uses Claude, so `ANTHROPIC_API_KEY` is required for them.
 
 Then edit the three config files for your company:
 

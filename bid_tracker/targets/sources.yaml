@@ -23,24 +23,18 @@ sources:
     type: sam_gov
     # api_key from SAM_GOV_API_KEY; naics_codes/states inherited from criteria.yaml
 
-  # ── OpenGov Procurement (API) ─────────────────────────────────────────────
-  # Reads open solicitations from the OpenGov Procurement API across the
-  # agencies your OpenGov account can see. Requires OPENGOV_API_KEY (generate it
-  # in your OpenGov account; your account email is the API username). NO login
-  # password is used or stored — open bids are public; the key is only how we
-  # read them programmatically.
+  # ── OpenGov Procurement ────────────────────────────────────────────────────
+  # OpenGov's REST API needs an agency API key, which vendor accounts cannot
+  # generate — so we instead read each agency's PUBLIC OpenGov portal page
+  # (no login required) with browser rendering (render: true). Those agency
+  # entries are in their county sections below. If you ever obtain an agency
+  # API key, set OPENGOV_API_KEY and re-enable this single API source instead:
   #
-  # Tampa Bay / Lee agencies on OpenGov: City of Tampa, Pinellas County,
-  # City of St. Petersburg, City of Plant City, City of Zephyrhills,
-  # Hernando County, Citrus County, City of Bradenton, City of Fort Myers.
-  # "Follow" these agencies in your OpenGov account so they surface via the API.
-  # Once this returns results, comment out those agencies' `type: ai` entries
-  # below to avoid duplicate tracking.
-  - id: opengov
-    name: "OpenGov Procurement"
-    type: opengov
-    state: FL
-    # api_key from OPENGOV_API_KEY; email from OPENGOV_EMAIL
+  # - id: opengov
+  #   name: "OpenGov Procurement"
+  #   type: opengov
+  #   state: FL
+  #   # api_key from OPENGOV_API_KEY; email from OPENGOV_EMAIL
 
   # ════════════════════════════════════════════════════════════════════════
   # HILLSBOROUGH COUNTY
@@ -55,9 +49,10 @@ sources:
   - id: city_tampa
     name: "City of Tampa"
     type: ai
-    listing_url: "https://procurement.opengov.com/portal/cityoftampa"
+    listing_url: "https://procurement.opengov.com/portal/embed/cityoftampa/project-list?departmentId=all&status=all"
+    render: true
     state: FL
-    county: Hillsborough           # OpenGov portal
+    county: Hillsborough           # OpenGov (SPA — rendered via Playwright)
 
   - id: city_temple_terrace
     name: "City of Temple Terrace"
@@ -79,16 +74,18 @@ sources:
   - id: pinellas_county
     name: "Pinellas County"
     type: ai
-    listing_url: "https://procurement.opengov.com/portal/pinellas"
+    listing_url: "https://procurement.opengov.com/portal/embed/pinellas/project-list?departmentId=all&status=all"
+    render: true
     state: FL
-    county: Pinellas              # OpenGov portal (landing: pinellas.gov/current-bids)
+    county: Pinellas              # OpenGov (SPA — rendered via Playwright)
 
   - id: city_st_petersburg
     name: "City of St. Petersburg"
     type: ai
-    listing_url: "https://procurement.opengov.com/portal/stpete"
+    listing_url: "https://procurement.opengov.com/portal/embed/stpete/project-list?departmentId=all&status=all"
+    render: true
     state: FL
-    county: Pinellas              # OpenGov portal
+    county: Pinellas              # OpenGov (SPA — rendered via Playwright)
 
   - id: city_clearwater
     name: "City of Clearwater"
@@ -227,9 +224,10 @@ sources:
   - id: city_zephyrhills
     name: "City of Zephyrhills"
     type: ai
-    listing_url: "https://procurement.opengov.com/portal/embed/zephyrhillsfl"
+    listing_url: "https://procurement.opengov.com/portal/embed/zephyrhillsfl/project-list?departmentId=all&status=all"
+    render: true
     state: FL
-    county: Pasco                 # OpenGov portal
+    county: Pasco                 # OpenGov (SPA — rendered via Playwright)
 
   # - id: city_san_antonio   # ~1,300 pop; no dedicated bid portal found — enable if needed
   #   name: "City of San Antonio"
@@ -244,9 +242,10 @@ sources:
   - id: hernando_county
     name: "Hernando County"
     type: ai
-    listing_url: "https://procurement.opengov.com/portal/hernandocounty"
+    listing_url: "https://procurement.opengov.com/portal/embed/hernandocounty/project-list?departmentId=all&status=all"
+    render: true
     state: FL
-    county: Hernando             # OpenGov portal + BidNet
+    county: Hernando             # OpenGov (SPA — rendered via Playwright)
 
   - id: city_brooksville
     name: "City of Brooksville"
@@ -261,9 +260,10 @@ sources:
   - id: citrus_county
     name: "Citrus County"
     type: ai
-    listing_url: "https://procurement.opengov.com/portal/citrusfl"
+    listing_url: "https://procurement.opengov.com/portal/embed/citrusfl/project-list?departmentId=all&status=all"
+    render: true
     state: FL
-    county: Citrus              # OpenGov portal + DemandStar
+    county: Citrus              # OpenGov (SPA — rendered via Playwright)
 
   - id: city_crystal_river
     name: "City of Crystal River"
@@ -292,9 +292,10 @@ sources:
   - id: city_bradenton
     name: "City of Bradenton"
     type: ai
-    listing_url: "https://procurement.opengov.com/portal/cityofbradenton"
+    listing_url: "https://procurement.opengov.com/portal/embed/cityofbradenton/project-list?departmentId=all&status=all"
+    render: true
     state: FL
-    county: Manatee            # OpenGov portal + DemandStar
+    county: Manatee            # OpenGov (SPA — rendered via Playwright)
 
   - id: city_palmetto
     name: "City of Palmetto"
@@ -344,9 +345,10 @@ sources:
   - id: city_fort_myers
     name: "City of Fort Myers"
     type: ai
-    listing_url: "https://procurement.opengov.com/portal/cityftmyers"
+    listing_url: "https://procurement.opengov.com/portal/embed/cityftmyers/project-list?departmentId=all&status=all"
+    render: true
     state: FL
-    county: Lee               # OpenGov portal
+    county: Lee               # OpenGov (SPA — rendered via Playwright)
 
   - id: city_cape_coral
     name: "City of Cape Coral"

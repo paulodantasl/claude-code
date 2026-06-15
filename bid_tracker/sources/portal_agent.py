@@ -27,6 +27,7 @@ import requests
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from .base import BROWSER_USER_AGENT, BaseSource, RawDocument, RawOpportunity
+from .browser import render_html
 
 logger = logging.getLogger(__name__)
 
@@ -55,12 +56,31 @@ class PortalAgentSource(BaseSource):
         self.listing_url = source_config["listing_url"]
         self.default_state = source_config.get("state")
         self.model = source_config.get("model", "claude-sonnet-4-6")
+        # JS single-page portals (OpenGov, Bonfire, DemandStar, ProcureWare) need
+        # browser rendering; set `render: true` in sources.yaml for those.
+        self.render = bool(source_config.get("render", False))
+        self.wait_selector = source_config.get("wait_selector")
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=2, min=2, max=20))
-    def _fetch_html(self) -> str:
+    def _fetch_requests(self) -> str:
         resp = requests.get(self.listing_url, timeout=45, headers={"User-Agent": BROWSER_USER_AGENT})
         resp.raise_for_status()
         return resp.text
+
+    def _fetch_html(self) -> str:
+        if self.render:
+            html = render_html(
+                self.listing_url,
+                wait_selector=self.wait_selector,
+                user_agent=BROWSER_USER_AGENT,
+            )
+            if html:
+                return html
+            self.logger.warning(
+                "Browser render unavailable/failed for %s — falling back to plain fetch",
+                self.source_name,
+            )
+        return self._fetch_requests()
 
     def fetch(self, days_back: int = 7, keywords: list[str] | None = None) -> list[RawOpportunity]:
         if not os.environ.get("ANTHROPIC_API_KEY"):
