@@ -1,0 +1,44 @@
+{
+  "_comment": "Copy this to <your-project>/loan-package-config.json and edit. Drop your company logo as logo.png in the project folder (or set company.logo to a path).",
+  "company": {
+    "name": "Your Company, Inc.",
+    "logo": "logo.png",
+    "email": "you@example.com",
+    "license": "[CGC#####]",
+    "phone": "[phone]",
+    "address": "[street]",
+    "city_state_zip": "City, ST 00000"
+  },
+  "project": {
+    "name": "Project Name",
+    "address": "Street Address",
+    "city_state_zip": "City, FL 00000",
+    "county": "County",
+    "type": "New Single-Family Residence",
+    "conditioned_sf": 0,
+    "gross_under_roof_sf": 0,
+    "lot_sf": 0,
+    "stories": 1,
+    "occupancy": "R-3 (Single-Family Residential)",
+    "construction_type": "V-B",
+    "flood_zone": "X",
+    "bfe_ft": 0,
+    "vult_mph": 140,
+    "exposure": "C",
+    "fbc_edition": "Florida Building Code 8th Edition (2023)"
+  },
+  "owner":     { "name": "[Owner]", "address": "[addr]", "phone": "[phone]" },
+  "architect": { "name": "[Architect]", "license": "[AR#]", "sealed_date": "" },
+  "engineer":  { "name": "[Engineer]", "principal": "[PE]", "project_no": "", "sealed_date": "" },
+  "geotech":   { "firm": "[Geotech firm]", "report_no": "" },
+  "lender":    { "name": "[Lender]", "contact": "[contact]", "loan_no": "", "loan_officer_email": "" },
+  "schedule":  { "target_start_date": "2026-01-01", "duration_months": 11, "retainage_pct": 10.0 },
+  "loan_assumptions": {
+    "land_cost": 0,
+    "soft_costs_pct_of_hard": 8.0,
+    "owner_soft_contingency_pct_of_hard": 5.0,
+    "owner_equity_pct": 25.0,
+    "interest_reserve_pct_of_loan": 4.0,
+    "lender_fees_pct_of_loan": 1.0
+  }
+}
