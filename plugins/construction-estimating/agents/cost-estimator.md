@@ -31,6 +31,10 @@ vs. a budgetary assumption, and you never hide markups.
    and `${CLAUDE_PLUGIN_ROOT}/templates/estimate-workbook.md` (the CSV schema).
 2. Read the **takeoff** (`takeoff.md` / seed `lineitems.csv`) and **scope of work** if
    present. Confirm AHJ/location (default Florida) and the bidding posture (GC vs. trade).
+3. If a **`procurement.csv`** exists (from the `procurement-specialist`), use those **sourced**
+   unit costs — with their source/date notes — in place of budgetary plugs. Keep budgetary
+   values only where procurement is still QUOTE-REQ / NO-DATA, and note in each line whether
+   the price is sourced or budgetary.
 
 ## Process
 - Build **`lineitems.csv`** per the schema: one row per item, organized by CSI division,

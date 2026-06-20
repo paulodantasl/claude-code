@@ -31,6 +31,7 @@ structural concrete from these plans and price it"*). Updates: `/plugin marketpl
 | `cost-estimator` | Prices the takeoff; builds the Excel workbook | `lineitems.csv`, `markups.csv`, `estimate.xlsx` |
 | `bid-proposal-writer` | Client/GC-facing proposal & cover letter | `bid-proposal.md` |
 | `estimate-auditor` | Independent QA of the above, or third-party work | `audit-report.md` |
+| `procurement-specialist` | **Live** material sourcing — real suppliers, current price, availability, lead time (FL#/NOA aware); cites every source | `procurement.md`, `procurement.csv` |
 
 **Command** — `/bid <project>` runs the full precon pipeline (takeoff → scope → estimate → proposal → audit).
 

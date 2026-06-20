@@ -32,7 +32,7 @@ After PR #4 merges, the cleaner form `paulodantasl/claude-code` (no `@branch`) w
 
 ## What you get
 
-- 5 specialist agents (`takeoff-engineer`, `scope-writer`, `cost-estimator`, `bid-proposal-writer`, `estimate-auditor`) — Claude auto-routes based on your task
+- 6 specialist agents (`takeoff-engineer`, `scope-writer`, `cost-estimator`, `bid-proposal-writer`, `estimate-auditor`, `procurement-specialist`) — Claude auto-routes based on your task
 - `/bid <project>` — full precon pipeline (takeoff → scope → estimate → proposal → audit)
 - Florida code + CSI + estimating-methodology knowledge base
 - Two Excel builders: line-item **estimate workbook** (Detail + Summary, formula-driven) and 13-tab **bank construction-loan package** (Cover, Sources & Uses, AIA G703 Schedule of Values, Draw Schedule, Gantt, etc.)

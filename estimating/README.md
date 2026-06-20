@@ -19,6 +19,7 @@ This complements the lead-generation side of the repo (`permit_scraper/`,
 | `cost-estimator` | Prices the takeoff; builds the Excel workbook | `lineitems.csv`, `markups.csv`, `estimate.xlsx` |
 | `bid-proposal-writer` | Client/GC-facing proposal & cover letter | `bid-proposal.md` |
 | `estimate-auditor` | Independent QA of any/all of the above, or third-party work | `audit-report.md` |
+| `procurement-specialist` | **Live** material sourcing — real suppliers, current price, availability, lead time (FL#/NOA aware); cites every source | `procurement.md`, `procurement.csv` |
 
 These live in `.claude/agents/`. Claude routes to them automatically when you describe a
 task, or invoke the whole pipeline with the `/bid` command (`.claude/commands/bid.md`).

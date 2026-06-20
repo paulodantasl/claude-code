@@ -18,11 +18,18 @@ work yourself. Steps:
 2. **Takeoff** — delegate to the `takeoff-engineer` subagent to produce `takeoff.md`
    (and a seed `lineitems.csv`) from the PDFs and/or to validate any digitized exports.
 
+2a. **(Optional) Live procurement** — if the user wants **real sourced pricing** instead of
+   budgetary numbers, delegate to `procurement-specialist` to source each material online
+   (suppliers, current price, availability, **lead time**, FL#/NOA) and produce `procurement.md`
+   + `procurement.csv`. The cost-estimator then uses these sourced prices in place of budgetary
+   plugs. Skip it if the user just wants a fast budgetary number — it is time-intensive.
+
 3. **Scope of work** — delegate to `scope-writer` to produce `scope-of-work.md`,
    reconciled against the takeoff and bid documents.
 
 4. **Estimate** — delegate to `cost-estimator` to build `lineitems.csv` + `markups.csv`
-   and run the workbook builder to produce `estimate.xlsx`.
+   and run the workbook builder to produce `estimate.xlsx`. Use sourced prices from
+   `procurement.csv` if procurement was run (step 2a); otherwise budgetary unit costs.
 
 5. **Proposal** — delegate to `bid-proposal-writer` to produce `bid-proposal.md`,
    numbers tying out to the estimate and scope.
