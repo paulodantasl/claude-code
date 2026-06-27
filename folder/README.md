@@ -8,7 +8,12 @@ Construction**, built to highlight the company's dental buildout process.
 |------|---------|
 | `ideal-dental-construction-folder.html` | Source. Self-contained — no external fonts, images, or CDNs. |
 | `ideal-dental-construction-folder.pdf`  | Print-ready export, US Letter (8.5 × 11 in), full-bleed backgrounds. |
+| `ideal-dental-construction-folder-300dpi.png` | High-resolution raster, 2550 × 3300 px (300 DPI). |
+| `ideal-dental-construction-folder-600dpi.png` | Extra-high-resolution raster, 5100 × 6600 px (600 DPI). |
 | `preview.png` | Rendered preview image. |
+
+High-res PNGs are rasterized from the PDF with PyMuPDF:
+`python3 -c "import fitz; fitz.open('ideal-dental-construction-folder.pdf')[0].get_pixmap(dpi=300, alpha=False).save('out.png')"`
 
 ## Design — matched to the official brand
 - **Colors** (sampled directly from the logo):
