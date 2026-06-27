@@ -7,24 +7,25 @@
 <style>
   /* ============================================================
      IDEAL DENTAL CONSTRUCTION — One-page folder (US Letter, portrait)
-     Harmonized to the Ideal brand:
-       • Colors  : Navy #1c366c (primary) + Slate #7f7f80 (secondary)
-                   — sourced from the company's brand profile. No gold.
-       • Type    : single clean sans-serif family (web-safe, no webfont),
-                   matching a modern construction/dental site.
-       • Logo    : navy "I" monogram + wordmark (typographic stand-in).
-     Print-ready: 8.5in × 11in, fully self-contained.
+     Brand-matched to the official logo (idealdentalconstruction.com):
+       • Gold  #F6BE1A  — sampled from the "IDEAL" wordmark
+       • Teal  #176C75  — sampled from "Dental Construction"
+       Teal = primary/structure, Gold = accent/energy.
+     The real logo art is embedded in the header (assets/logo.png).
+     Print-ready: 8.5in × 11in, self-contained.
      ============================================================ */
 
   :root{
-    --navy:#1c366c;        /* brand primary */
-    --navy-deep:#142a54;
-    --steel:#3f63a8;       /* lighter tint of navy — subtle accent only */
-    --slate:#7f7f80;       /* brand secondary */
-    --ink:#2b303a;
-    --line:#dce2ec;
-    --tint:#f2f5fb;
-    --tint-2:#e8eef7;
+    --gold:#f6be1a;        /* brand primary accent */
+    --gold-deep:#d99e00;
+    --teal:#176c75;        /* brand primary structure */
+    --teal-mid:#2a8f97;
+    --teal-deep:#0e535a;
+    --ink:#27393c;
+    --slate:#6c7b7d;
+    --line:#d7e4e4;
+    --tint:#eef6f6;
+    --tint-2:#e2efef;
     --paper:#ffffff;
     --sans:"Liberation Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
   }
@@ -32,7 +33,7 @@
   *{ margin:0; padding:0; box-sizing:border-box; }
 
   html,body{
-    background:#5a6072;
+    background:#5a6a6c;
     color:var(--ink);
     font-family:var(--sans);
     -webkit-font-smoothing:antialiased;
@@ -51,10 +52,11 @@
     display:flex;
     flex-direction:column;
   }
-  /* crisp branded top edge */
+  /* crisp branded top edge: teal with a gold tail */
   .page::before{
     content:""; position:absolute; top:0; left:0; right:0; height:5px;
-    background:var(--navy); z-index:5;
+    background:linear-gradient(90deg, var(--teal) 0%, var(--teal) 62%, var(--gold) 62%, var(--gold) 100%);
+    z-index:5;
   }
   /* fixed-height sections must not shrink — only .process flexes */
   header, .hero, .band, footer{ flex:0 0 auto; }
@@ -62,41 +64,24 @@
   /* type helpers */
   .eyebrow{
     font-size:9.5px; letter-spacing:.26em; text-transform:uppercase;
-    font-weight:700; color:var(--slate);
+    font-weight:700; color:var(--teal);
   }
-  .eyebrow.light{ color:#9fb0d0; }
+  .eyebrow.gold{ color:var(--gold-deep); }
+  .eyebrow.light{ color:#9fd0d4; }
 
   /* ============================================================
      HEADER
      ============================================================ */
   header{
     display:flex; align-items:center; justify-content:space-between;
-    padding:20px 46px 15px;
+    padding:16px 46px 14px;
     border-bottom:1px solid var(--line);
   }
-  .brand{ display:flex; align-items:center; gap:13px; }
-  .mark{
-    width:44px; height:44px; flex:0 0 44px;
-    background:var(--navy);
-    border-radius:9px;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .mark span{
-    font-family:var(--sans); font-weight:800; font-size:22px;
-    color:#fff; line-height:1; letter-spacing:.02em;
-  }
-  .wordmark .name{
-    font-size:20px; font-weight:800;
-    letter-spacing:.15em; color:var(--navy); line-height:1;
-  }
-  .wordmark .sub{
-    font-size:8px; letter-spacing:.32em; text-transform:uppercase;
-    color:var(--slate); margin-top:5px; font-weight:600;
-  }
+  .logo{ height:60px; width:auto; display:block; }
   .header-meta{ text-align:right; }
   .header-meta .loc{
     font-size:10px; letter-spacing:.12em; text-transform:uppercase;
-    color:var(--navy); font-weight:700;
+    color:var(--teal); font-weight:700;
   }
   .header-meta .lic{
     font-size:9px; letter-spacing:.05em; color:var(--slate);
@@ -116,25 +101,25 @@
   .hero::before{
     content:""; position:absolute; inset:0;
     background-image:
-      linear-gradient(rgba(28,54,108,.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(28,54,108,.05) 1px, transparent 1px);
+      linear-gradient(rgba(23,108,117,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(23,108,117,.06) 1px, transparent 1px);
     background-size:26px 26px;
     -webkit-mask-image:linear-gradient(120deg, transparent 38%, #000 100%);
             mask-image:linear-gradient(120deg, transparent 38%, #000 100%);
   }
   .hero-inner{ position:relative; max-width:6.1in; }
   .hero h1{
-    font-size:35px; line-height:1.1; color:var(--navy);
+    font-size:35px; line-height:1.1; color:var(--teal);
     font-weight:800; letter-spacing:-.02em;
     margin:12px 0 0;
   }
-  .hero h1 em{ font-style:italic; color:var(--steel); }
+  .hero h1 em{ font-style:italic; color:var(--gold-deep); }
   .hero p.lede{
     margin-top:13px; font-size:13px; line-height:1.6;
-    color:#454d5c; max-width:5.4in;
+    color:#3f5052; max-width:5.4in;
   }
   .hero-rule{
-    width:54px; height:3px; background:var(--navy); margin-top:10px;
+    width:54px; height:3px; background:var(--gold); margin-top:10px;
   }
 
   /* ============================================================
@@ -146,7 +131,7 @@
   }
   .section-head{ display:flex; align-items:baseline; gap:16px; margin-bottom:20px; }
   .section-head h2{
-    font-size:21px; color:var(--navy);
+    font-size:21px; color:var(--teal);
     font-weight:800; letter-spacing:-.01em; white-space:nowrap;
   }
   .section-head .ln{ flex:1; height:1px; background:var(--line); position:relative; top:-4px; }
@@ -157,30 +142,33 @@
     grid-template-columns:repeat(5, 1fr);
     gap:0;
   }
-  /* connecting spine */
+  /* connecting spine: teal -> gold */
   .steps::before{
     content:""; position:absolute;
     top:17px; left:8%; right:8%;
     height:2px;
-    background:var(--navy); opacity:.28;
+    background:linear-gradient(90deg, var(--teal) 0%, var(--gold) 100%);
+    opacity:.55;
   }
   .step{ position:relative; padding:0 11px; text-align:center; }
   .step .node{
     width:36px; height:36px; border-radius:50%;
-    background:var(--paper);
-    border:2px solid var(--navy);
-    color:var(--navy);
+    background:var(--teal); color:#fff;
+    border:2px solid var(--teal);
     font-weight:800; font-size:15px;
     display:flex; align-items:center; justify-content:center;
     margin:0 auto; position:relative; z-index:2;
   }
-  .step:nth-child(odd) .node{ background:var(--navy); color:#fff; border-color:var(--navy); }
+  /* alternate nodes in brand gold for rhythm */
+  .step:nth-child(even) .node{
+    background:var(--gold); border-color:var(--gold); color:var(--teal-deep);
+  }
   .step h3{
     font-size:11.5px; letter-spacing:.04em; text-transform:uppercase;
-    color:var(--navy); font-weight:700; margin:14px 0 7px;
+    color:var(--teal); font-weight:700; margin:14px 0 7px;
   }
   .step p{
-    font-size:10.3px; line-height:1.5; color:#5b6473;
+    font-size:10.3px; line-height:1.5; color:#56686a;
   }
 
   /* ============================================================
@@ -194,32 +182,32 @@
     padding:20px 40px 20px 46px;
   }
   .services h2, .why h2{
-    font-size:18px; color:var(--navy);
+    font-size:18px; color:var(--teal);
     font-weight:800; letter-spacing:-.01em; margin-bottom:4px;
   }
   .services .eyebrow, .why .eyebrow{ margin-bottom:12px; display:block; }
   .svc-list{ list-style:none; margin-top:14px; }
   .svc-list li{
     display:flex; gap:11px; align-items:flex-start;
-    padding:9px 0; border-top:1px solid #d8e0ee;
-    font-size:11.5px; line-height:1.45; color:#39414f;
+    padding:9px 0; border-top:1px solid #cfe1e1;
+    font-size:11.5px; line-height:1.45; color:#36484a;
   }
   .svc-list li:first-child{ border-top:none; }
-  .svc-list li b{ color:var(--navy); font-weight:700; }
+  .svc-list li b{ color:var(--teal); font-weight:700; }
   .tick{
     flex:0 0 16px; width:16px; height:16px; margin-top:1px;
-    border:1.5px solid var(--navy); border-radius:50%;
-    position:relative;
+    border:1.5px solid var(--gold-deep); border-radius:50%;
+    background:var(--gold); position:relative;
   }
   .tick::after{
     content:""; position:absolute; left:4.5px; top:1.5px;
-    width:4px; height:8px; border:solid var(--navy);
-    border-width:0 1.6px 1.6px 0; transform:rotate(43deg);
+    width:4px; height:8px; border:solid #fff;
+    border-width:0 1.7px 1.7px 0; transform:rotate(43deg);
   }
 
   .why{
-    background:var(--navy);
-    color:#dfe5f1;
+    background:var(--teal);
+    color:#d7ecee;
     padding:20px 40px 20px 38px;
     position:relative;
   }
@@ -229,32 +217,32 @@
     font-size:30px; font-weight:800; letter-spacing:-.02em;
     color:#fff; line-height:1;
   }
-  .stat .num small{ font-size:17px; color:#9fb6e0; font-weight:700; }
+  .stat .num small{ font-size:17px; color:var(--gold); font-weight:800; }
   .stat .lab{
     font-size:9px; letter-spacing:.11em; text-transform:uppercase;
-    color:#9fb0d0; margin-top:7px; line-height:1.4;
+    color:#a7d2d6; margin-top:7px; line-height:1.4;
   }
   .pledge{
-    margin-top:22px; padding-top:18px; border-top:1px solid rgba(255,255,255,.16);
-    font-size:11px; line-height:1.6; color:#c7d2e6; font-style:italic;
+    margin-top:22px; padding-top:18px; border-top:1px solid rgba(255,255,255,.18);
+    font-size:11px; line-height:1.6; color:#cfe6e8; font-style:italic;
   }
 
   /* ============================================================
      FOOTER / CTA
      ============================================================ */
   footer{
-    background:var(--navy-deep);
+    background:var(--teal-deep);
     color:#fff;
     padding:16px 46px;
     display:flex; align-items:center; justify-content:space-between;
   }
-  .cta-left .eyebrow{ color:#9fb0d0; }
+  .cta-left .eyebrow{ color:var(--gold); }
   .cta-left .big{
     font-size:17px; font-weight:800; letter-spacing:-.01em;
     color:#fff; margin-top:5px;
   }
-  .cta-right{ text-align:right; font-size:10.5px; line-height:1.7; color:#c7d2e6; }
-  .cta-right .web{ color:#fff; font-weight:700; letter-spacing:.02em; font-size:12px; }
+  .cta-right{ text-align:right; font-size:10.5px; line-height:1.7; color:#c4e0e2; }
+  .cta-right .web{ color:var(--gold); font-weight:700; letter-spacing:.02em; font-size:12px; }
   .cta-right a{ color:inherit; text-decoration:none; }
 
   /* ---- print ---- */
@@ -270,13 +258,7 @@
 
     <!-- ============ HEADER ============ -->
     <header>
-      <div class="brand">
-        <div class="mark"><span>I</span></div>
-        <div class="wordmark">
-          <div class="name">IDEAL</div>
-          <div class="sub">Dental&nbsp;Construction</div>
-        </div>
-      </div>
+      <img class="logo" src="assets/logo.png" alt="Ideal Dental Construction" />
       <div class="header-meta">
         <div class="loc">Tampa Bay, Florida</div>
         <div class="lic">Licensed &amp; Insured · CGC1537480 · MRSR5016</div>
@@ -303,7 +285,7 @@
       <div class="section-head">
         <h2>Our Building Process</h2>
         <div class="ln"></div>
-        <span class="eyebrow">Five clear stages</span>
+        <span class="eyebrow gold">Five clear stages</span>
       </div>
 
       <div class="steps">
