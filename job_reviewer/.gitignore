@@ -1,0 +1,22 @@
+# Private candidate documents — never commit these
+profile/*
+!profile/README.md
+!profile/profile.example.yaml
+
+# Generated application drafts (may contain personal details)
+packets/
+review_screenshots/
+queue.csv
+queue.md
+
+# Local database + secrets
+*.db
+*.db-wal
+*.db-shm
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
