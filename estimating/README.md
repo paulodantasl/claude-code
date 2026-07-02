@@ -26,7 +26,8 @@ task, or invoke the whole pipeline with the `/bid` command (`.claude/commands/bi
 
 ## Quick start
 ```
-/bid Acme Distribution Center, Orlando FL
+/bid Acme Distribution Center, Orlando FL        # auto-detects sector
+/bid-public | /bid-residential | /bid-commercial | /bid-ti   # sector-tuned
 ```
 …or just ask: *"Take off the structural concrete from these plans and price it."*
 
@@ -38,6 +39,8 @@ The agents read these for Florida-precise, consistent results:
 - `florida-code.md` — HVHZ, FBC, wind/flood, NOA/FL#, termite, threshold, sales tax, bonds, soils.
 - `csi-divisions.md` — MasterFormat division map + the scope-gap checklist that prevents holes/double-counts between trades.
 - `estimating-methodology.md` — units, labor burden, waste factors, General Conditions, the markup waterfall, and reasonableness checks.
+- `takeoff-accuracy-protocol.md` / `estimating-accuracy-protocol.md` — **mandatory accuracy gates** (plan-graphics-govern, two-direction recounts, full-schedule reads, benchmark bands, scope↔estimate tie-out, zero-qty guards) encoding real observed failure modes.
+- `sector-public-bidding.md` / `sector-residential-new.md` / `sector-commercial-new.md` / `sector-tenant-improvement.md` — **market-sector profiles** (what changes per pipeline stage, division emphasis, markup posture, red flags). Invoked by `/bid-public`, `/bid-residential`, `/bid-commercial`, `/bid-ti`, or auto-detected by `/bid`.
 
 ## Templates (`estimating/templates/`)
 Deliverable skeletons for takeoff, scope, estimate-workbook schema, proposal, and the
@@ -49,6 +52,7 @@ Summary sheets, division subtotals, full markup waterfall). Requires `openpyxl`
 (in `requirements.txt`):
 ```
 python estimating/scripts/build_estimate_xlsx.py estimating/projects/<slug>/
+python estimating/scripts/validate_estimate.py estimating/projects/<slug>/ --sector <sector>   # deterministic QA
 ```
 
 ## Important limits (read this)

@@ -47,6 +47,15 @@ exactly with the estimate.
 - No fabricated commitments — where the documents are silent, write a clarification or
   assumption, not a guess presented as fact.
 
+- **Allowance sync rule:** every allowance you name carries a dollar value that must equal the
+  estimator's ALLOW line **to the dollar** — coordinate before release, or mark the value
+  "TBD — sync with estimate" rather than committing a number the estimate doesn't carry.
+  (Observed failure: a scope committing $522k of allowances over a CSV carrying $291k.)
+- **Sector posture:** if the sector is stated (public / new-residential / new-commercial / TI),
+  read the matching `estimating/reference/sector-*.md` and walk its sector red-flags + deliverable-additions lists
+  (e.g., public: strict addenda acknowledgment + bid-form compliance; TI: landlord work-letter
+  reconciliation, building-standard compliance, restoration clauses).
+
 ## Output
 Write `scope-of-work.md` in the project folder following the template. End with a short
 list of the scope items most likely to be contested and any mismatches you found between

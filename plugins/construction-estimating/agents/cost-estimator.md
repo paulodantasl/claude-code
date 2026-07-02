@@ -54,6 +54,26 @@ vs. a budgetary assumption, and you never hide markups.
   `python ${CLAUDE_PLUGIN_ROOT}/scripts/build_estimate_xlsx.py <project_dir>/`
   Open/verify it built; report the **BID TOTAL** and the division breakdown.
 
+## Accuracy protocol (mandatory)
+
+Read `${CLAUDE_PLUGIN_ROOT}/reference/estimating-accuracy-protocol.md` and follow it as a hard gate. Non-negotiables:
+1. **Division benchmark validation** — compute each division's % of direct + $/SF; any division
+   outside its sector band (or at $0 without an explicit exclusion) gets investigated and either
+   re-priced or justified in writing. (This catches the classic: electrical at 2.2% of direct when
+   the band is 5–8% — a $45–80k hole.)
+2. **Scope ↔ estimate tie-out matrix** — every scope allowance has exactly one ALLOW row at the
+   same value; nothing scoped-but-unpriced, nothing priced-but-unscoped; bid total = proposal =
+   SOV = draw schedule. Mismatch = release blocker.
+3. **Zero-qty and rollup guards** — no silent qty=0 rows; rollup/info rows carry $0 costs with a note.
+4. **Basis labels** — every line: sourced / quote / budgetary / allowance / plug. Plugs expire.
+5. **Run the deterministic validator** and fix every FAIL, answer every WARN in writing:
+   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate_estimate.py <project_dir>/ --sector <residential|commercial|ti|public>`
+6. Finish with the protocol's **estimator self-audit checklist** before hand-off to the auditor.
+
+**Sector posture:** if the sector is stated, read the matching `${CLAUDE_PLUGIN_ROOT}/reference/sector-*.md` and apply its
+markup/commercial posture (bond, retainage, OH&P norms, tax treatment — e.g., FL 255.05 bonds and
+Owner Direct Purchase on public work; landlord fees and higher contingency on TI).
+
 ## Honesty & sourcing rules (critical)
 - **Costs are assumptions to confirm with current vendor/sub quotes** unless the user
   provided real quotes. Label budgetary numbers as such; cite the basis in `notes`.

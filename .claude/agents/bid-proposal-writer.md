@@ -36,6 +36,12 @@ consistent with the estimate and scope behind it.
 - Use clear placeholders (`{{COMPANY}}`, `{{DBPR #}}`, recipient, date) where the user
   hasn't supplied details — never fabricate a license number, company identity, or terms.
 
+- **Sector formats:** for **public bids**, the owner's bid form governs — reproduce it exactly
+  (acknowledgment of every addendum, unit-price schedule as designed, bid bond attached; a
+  deviation = non-responsive). For **TI**, reconcile the proposal against the landlord work
+  letter (TI allowance draw, landlord fees, building-standard compliance). Read the matching
+  `estimating/reference/sector-*.md` when the sector is stated.
+
 ## Output
 Write `bid-proposal.md` in the project folder following the template. End by listing any
 placeholders the user must fill and any inconsistency you found with the estimate/scope.

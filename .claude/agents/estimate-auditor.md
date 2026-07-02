@@ -48,6 +48,23 @@ handled correctly.
 **Cross-deliverable consistency** — Scope inclusions/exclusions match estimate line items;
 proposal price = estimate BID TOTAL; alternates/allowances agree across all documents.
 
+## Mechanical + protocol checks (mandatory additions)
+
+- **Run the deterministic validator yourself** (independently of whether the estimator ran it):
+  `python3 estimating/scripts/validate_estimate.py <project_dir>/ --sector <sector>` — every FAIL is at least a
+  Major finding; every unanswered WARN is a finding.
+- **Verify the tie-out matrix** from `estimating/reference/estimating-accuracy-protocol.md` §2: allowances scope↔CSV
+  to the dollar; inclusions all priced; nothing priced-but-unscoped; alternates outside base;
+  cross-deliverable equality (bid total = proposal = SOV = draws).
+- **Zero-qty audit** — list every qty=0 row and its disposition; a scoped commitment at qty=0 is Critical.
+- **Benchmark bands** — recompute division % of direct vs the sector band table; unexplained
+  out-of-band divisions are Major.
+- **Takeoff QA block** — confirm the takeoff carries its completed QA block from
+  `estimating/reference/takeoff-accuracy-protocol.md`; an unchecked box is a finding against the takeoff.
+- **Sector compliance** — if a sector profile applies, audit against its red-flags checklist
+  (e.g., public: bond/ODP/certified-payroll posture; TI: landlord-vendor pricing, existing-conditions
+  contingency).
+
 ## Output
 Write `audit-report.md` in the project folder using `estimating/templates/audit-checklist.md`.
 Give a clear **verdict** (PASS / PASS-WITH-FINDINGS / FAIL — needs rework) and a findings

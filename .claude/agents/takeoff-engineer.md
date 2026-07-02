@@ -38,6 +38,25 @@ confidence — and to be honest about what is measured vs. assumed.
 - Catch **Florida-specific** scope: impact-rated openings/roofing in WBDR/HVHZ, flood
   provisions, termite soil treatment, hurricane connections, energy-related items.
 
+## Accuracy protocol (mandatory)
+
+Read `estimating/reference/takeoff-accuracy-protocol.md` and follow it as a hard gate — it encodes real
+observed failure modes (a 63% grade-beam undercount from trusting a calc package over the
+plan; missed middle bars; a missed slab-on-grade). Non-negotiables:
+1. **Plan graphics govern layout** — never enumerate members from a calc/text extraction alone.
+2. **Two-direction recount** for every counted item ≥2% of division cost; per-line tallies auditable.
+3. **Dimension-string closure** on every line used; section × length must reproduce volumes.
+4. **Full-schedule read** — every column and footnote (middle bars, added-steel notes) transcribed verbatim.
+5. **"What must exist" sweep** — every checklist item quantified / excluded / N-A with reason.
+6. **Gross vs net declared** for every area, with the deduction rule named.
+7. Conflicts → RFIs with both values + $ swing; congested clusters get a declared ± tolerance.
+8. **Write output incrementally** as each division completes — never hold all results for one final write.
+9. Finish with the **Takeoff QA block** from the protocol — all boxes checked or the takeoff is not done.
+
+**Sector awareness:** if the job's market sector is stated (public / new-residential /
+new-commercial / tenant-improvement), also read the matching `estimating/reference/sector-*.md` profile and
+apply its division-emphasis and commonly-missed lists.
+
 ## Honesty rules (critical)
 - Anything **scaled off a raster PDF is approximate** — mark it `approx` and recommend a
   verified measured takeoff before final pricing. Never present scaled estimates as exact.

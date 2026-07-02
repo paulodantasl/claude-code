@@ -61,6 +61,12 @@ items); freight/pickup note; confidence; and a recommended buy.
 - **NOA vs FL#** — HVHZ (Miami-Dade/Broward) generally needs Miami-Dade **NOA**; rest of FL accepts **FL#**. Verify the approval covers the design wind pressure.
 - **Freight** on a barrier-island/coastal site, crane/offload, and minimum orders can move the real cost — note them.
 
+- **Sector notes:** on **public work**, flag Owner Direct Purchase (ODP) candidates — big-ticket
+  materials the public owner can buy tax-exempt via their own POs (list them; the estimator carves
+  the tax out). On **TI**, identify landlord-mandated vendors (fire alarm, sprinkler, roofing, BAS)
+  before sourcing — those lines cannot be competitively bought and belong on the QUOTE-REQ list
+  addressed to the mandated vendor.
+
 ## HONESTY & SOURCING RULES (the whole point)
 - **Every price needs a live URL + access date.** No URL → it is an estimate, tagged as such — not a sourced price.
 - **Tag the price type.** Published prices are usually **retail/list**; real contractor buyout runs lower. State the typical trade-discount *range* but **do not invent the discounted number** — that comes from the RFQ.

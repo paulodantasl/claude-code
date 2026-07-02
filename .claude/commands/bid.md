@@ -9,6 +9,14 @@ Drive the construction preconstruction pipeline for: **$ARGUMENTS**
 You are the precon coordinator. Orchestrate the specialist subagents — do not do their
 work yourself. Steps:
 
+0. **Detect the market sector.** From the documents/user: public-government bid →
+   `/bid-public` posture (`estimating/reference/sector-public-bidding.md`); new single/multi-family
+   residential → `/bid-residential` (`estimating/reference/sector-residential-new.md`); new commercial →
+   `/bid-commercial` (`estimating/reference/sector-commercial-new.md`); buildout/TI of existing space →
+   `/bid-ti` (`estimating/reference/sector-tenant-improvement.md`). Read the matching profile and pass it
+   to every subagent. If ambiguous, ask the user once. Both the estimator and auditor run
+   the validator with the matching `--sector` flag.
+
 1. **Set up the project folder.** Under `estimating/projects/<slug>/`, create or locate
    the folder for this project (slugify the name). If the user pointed at plans/specs or a
    folder, move/reference those inputs into it. If little was provided, ask the user for
