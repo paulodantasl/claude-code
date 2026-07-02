@@ -14,7 +14,8 @@ forms) and note it. If a project is outside Florida, say so explicitly and adjus
   sheet; older drawings may cite the 7th Edition (2020).
 - Volumes: FBC-**Building**, FBC-**Residential**, FBC-**Existing Building**,
   FBC-**Mechanical**, FBC-**Plumbing**, FBC-**Fuel Gas**, FBC-**Energy Conservation**,
-  FBC-**Accessibility** (Florida amends the 2017 ADA), and the **Florida Fire
+  FBC-**Accessibility** (based on the 2010 ADA Standards with Florida-specific
+  enhancements, FL 553.501–.513), and the **Florida Fire
   Prevention Code** (NFPA-based, enforced by the State Fire Marshal / local FD).
 - The code-summary sheet (usually G-series) states occupancy classification,
   construction type (I-A … V-B), allowable area/height, sprinkler status, occupant
