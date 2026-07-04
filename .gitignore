@@ -9,4 +9,5 @@ __pycache__/
 *.db-wal
 credentials.json
 token.json
+procurement/plans_registry.json
 
