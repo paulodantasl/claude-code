@@ -135,6 +135,33 @@ interior; cores and patio/balcony walls stack at identical coordinates).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
 
+### 2026-07-04 (4) — Job 2025-227 — MEP E1–E3/M1/P1 (06.25 set) — Claude
+- **Scope:** 16 MEP parameters (7 E, 6 M, 3 P) → job total 90; 5 plan pages calibrated
+  (all true ¼″, k=18 — verified on the deck envelope 721 pt / 40′).
+- **MEP counting toolkit:** device labels that ARE real text anchor exact counts (GFCI ×13,
+  CU-1/2/3, EF-3, WH, CHARGE) — extract positions and mark them verbatim. Symbols with
+  outlined text (SD/CO, switch letters, diffuser CFM tags) need the montage-classify
+  pipeline: circle-radius classes separate recessed cans (12pt (R)) from vanity stems
+  (9pt), exhaust hubs (21pt), grid bubbles (24pt); furniture/cloud curves pollute 18pt+.
+  Letter glyphs strike again: none this round, but margin LABELS vs equipment SYMBOLS did
+  — text-extracted CU/AHU positions were the leader notes, not the units; always re-anchor
+  markers to the drawn equipment on the overlay pass.
+- **Panel schedules are the electrical truth:** E3.0 gave 400A service, 2×200A panels,
+  EV ×2 (12.3 KVA), AHU×3 + CU×3 circuits, demand calc — count-anchored these even where
+  plan symbols were ambiguous. Read schedules BEFORE counting symbols.
+- **Set-completeness check per discipline:** M and P sheets cover GF+FF only — SF + roof
+  distribution (3 baths, roof PWDR, outdoor kitchen/shower, AHU-2/3 ductwork) is missing
+  from the permit set → headline RFI. An MEP takeoff that doesn't state what the set
+  DOESN'T cover understates scope by whole floors.
+- **API/harness lessons:** point-marker styling (fillColor/strokeColor/strokeWidth) is
+  OPTIONAL — measurement `color` drives display; stripping it cut the 90-param payload
+  27%. Full-replace saves at this scale exceed a single response budget if anything else
+  shares the turn: generate the payload to a file, print it in chunks for verbatim copy,
+  then send the updateJob as the ONLY output of its turn with a minimal selection
+  (`job{id}`), and verify via a separate read query parsed from the persisted result file.
+- **State after run: 90 parameters** (GF 10, FF 9, openings 8, SF 10, Roof 7, structural
+  30, MEP 16), 13 plan pages calibrated. Cost-item wiring still the open next capability.
+
 ### 2026-07-04 (3) — Job 2025-227 — STRUCTURAL S1.0–S6.0 (04.10 S0.0 set) — Claude
 - **Scope:** full structural takeoff → 30 parameters across 6 plan pages (foundation, GF
   columns/walls, FF/SF floor structure, roof deck, top canopy). Job now carries 74 params.
