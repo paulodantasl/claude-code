@@ -123,13 +123,41 @@ interior; cores and patio/balcony walls stack at identical coordinates).
 
 - **Cost items wired to parameters** (`createCostItem` + quantity formulas referencing
   parameter names) — the estimate then updates when a measurement changes.
-- Second floor + roof pass; per-room breakdowns; `areaVolume` for slabs (depth-verified),
-  `linearArea` for wall areas by height zone.
+- Per-room breakdowns; `areaVolume` for slabs (depth-verified), `linearArea` for wall
+  areas by height zone. (GF+FF+SF+Roof passes complete — see Run Log.)
 - Batch calibration of every plan page in a job (scale table §1 makes this mechanical).
 - Elevations-page markers (bind the same parameter to multiple planIds — one measurement
   per plan page).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
+
+### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
+- **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
+  **94.4%** of nominal ¼″ — apparent 40′ spans measured 680 pt, not 720. Solved
+  **k = 17.00 pt/ft** by least-squares on consecutive dimension-text center spacings
+  (6 estimates within ±0.03), → `scale = 17.0 × 3.28084 = 55.77427821522309` pt/m.
+  Verified against 40′-0″ (680.0 pt) and 64′-8″ (1,099.2 pt) printed overalls exactly.
+  **Never assume the §1 nominal table — measure a known dim first, every sheet.**
+- **Plans queries paginate:** a size-25 default hid existing page records → created a
+  duplicate plan for page 4 (deleted via `deletePlan`). Query `plans` with `size:40`+ and
+  check for the page BEFORE `createPlan` — the whole file is usually already imported.
+- **Elevations killed 5 phantom windows:** first pass placed 12 SF window markers; the
+  four elevations + 300-DPI wall strips proved 7 openings (2 W, 3 E, ribbon S, 1 in SE
+  balcony back wall) — the north-face "windows" were the balcony door-M assemblies' own
+  glazing. Two-source rule (§4.4) is the difference between 12 and 7.
+- **Congested-core guard paid again:** roof bulkhead first drawn as a rectangle (202 SF);
+  300-DPI zoom showed a **T-shape incl. the door-J vestibule** → 8-pt polygon, 221.7 SF,
+  reconciling the printed tab's 220. Multi-point polygons work fine as `isNegative` too
+  (bulkhead subtracted from covered zone as an 8-pt negative path).
+- **API nit:** `area`-type parameters REQUIRE non-null `unit` ("foot") — count types don't.
+  Error surfaces as `A non-null value is required at ...parameters.N.unit`.
+- **Cross-checks vs printed roof tabulation:** open 1,606 (tab 1,650), covered-net 650
+  (tab 723 — different zone splits; tab's open+covered+bulkhead sums to the gross deck),
+  bulkhead 221.7 (tab 220 ✓). Differences stated in measurement names.
+- **Version-mismatch RFI raised:** SF/Roof measured on the 04.10 A0.0 set; GF/FF basis is
+  the 06.25 A0.1 permit set — confirm no A2.0 revision between sets.
+- **State after run: 44 parameters** on the job (10 GF + 9 FF + 8 openings + 10 SF + 7 Roof),
+  both plan pages calibrated, one note per page. Full-replace merge preserved all 27.
 
 ### 2026-07-04 — Job 2025-227 (655 115th Ave, Treasure Island) — GF+FF+openings — Claude
 - **Discovered/verified:** everything in §1 (first run; coordinate space, scale=pt/m,
