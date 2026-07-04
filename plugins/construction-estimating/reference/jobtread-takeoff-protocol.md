@@ -135,6 +135,35 @@ interior; cores and patio/balcony walls stack at identical coordinates).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
 
+### 2026-07-04 (6) — Job 2025-227 — FUEL GAS FG0.0-FG2.0 (03.10 G set) — Claude
+- **Scope:** user pointed at the already-uploaded 03.10 G0.0.pdf for the WH answer → 3 gas
+  parameters (meter+GF run, appliance connections ×3, E-wall riser ×2) → **job total 103**;
+  FG1.0/FG2.0 calibrated (k=17.0, grid 1-3 = 669 pt / 39′-4″), FG0.0 cover note-annotated.
+- **WH RFI RESOLVED: gas tankless.** FG0.0 schedule: GWH DOMESTIC WATER HEAT TANKLESS
+  650 MBH 1-1/4″ NPT; also RNG range 399 MBH, GRILL outdoor BBQ *at ground level* (rear
+  patio, drawn on FG1.0), roof kitchen 900 MBH, fire place 116 MBH. Updated the two P-param
+  notes in the same full-replace instead of leaving stale RFI text — when a new sheet
+  answers an old RFI, resolve it in the data, not just the chat.
+- **Cover sheets carry boilerplate:** the FG0.0 sizing tables reference POOL/BOILERS/
+  "RETAIL 137" and TOTAL GAS DEMAND = XXXXXXX (literally unfilled) — engineer copy-paste
+  from another project. Count from the appliance schedule + drawn connections; RFI the
+  demand and the undrawn GWH/FP locations. A schedule row is not a location.
+- **Output-token ceiling lesson (the hard one):** the ~110K-char full-replace crossed the
+  per-response output max (the 108K save had barely fit). Failed fix: stripping ALL path
+  styling — `strokeWidth`+`strokeColor` are REQUIRED on path annotations (server 400).
+  Working fix, from schema introspection (`root.updatePlan.$.annotations` expand):
+  `page` has defaultValue 1 → drop it from every annotation (~9%); path `fillColor`/
+  `fillOpacity` are optional → drop those. 109.8K → 99.5K chars, saved first try, and the
+  server re-adds `page:1` on echo so the canonical read-back round-trips. Order of
+  payload-slimming levers: (1) drop `"page":1` everywhere, (2) drop point styling,
+  (3) drop path fill styling. NEVER drop path stroke fields. Introspect optionality
+  BEFORE stripping — a failed 100K-char call costs a whole turn.
+- **State after run: 103 parameters** (arch 44, structural 30, MEP 16, M/P completion 10,
+  gas 3), 19 plan pages calibrated/annotated. Open RFIs: gas demand + GWH/FP locations;
+  BBQ level split (FG says GF patio, A2/P2 show roof outdoor kitchen — likely both);
+  slab 6″/8″; grid-9 GB tag; A2.0 version confirmations. Cost-item wiring still the open
+  next capability.
+
 ### 2026-07-04 (5) — Job 2025-227 — M/P COMPLETION M2/P2/P3/P4 (03.10 sets) — Claude
 - **Scope:** user dropped the previously-missing M and P sets (03.10 M0.0.pdf ×3pp,
   P0.0-2.pdf ×7pp) → 10 new parameters close the SF+roof M/P RFI: M2.0 AHU-2/3, supply ×20,
