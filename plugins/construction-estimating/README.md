@@ -61,6 +61,7 @@ as plugin skills in Claude Code and **individually zip-deployable to Claude Cowo
 
 **Scripts** (`scripts/`)
 - `build_estimate_xlsx.py <project_dir>` → formula-driven estimate workbook (Detail + Summary, division subtotals, markup waterfall).
+- `jobtread_takeoff.py` — JobTread on-screen-takeoff builders (Pave API): verified coordinate/scale conventions, parameter/annotation composers, read-merge-write guards, overlay verifier. Protocol + run log: `reference/jobtread-takeoff-protocol.md` (takeoffs written directly into JobTread's Plans tab as calibrated parameters).
 - `validate_estimate.py <project_dir> [--sector residential|commercial|ti|public]` → deterministic estimate QA: schema, zero-qty/rollup guards, waste placement, markup sanity, division benchmark bands, allowance tie-out vs scope. Exit 1 on FAIL.
 - `build_loan_package_xlsx.py <project_dir>` → 13-tab bank construction-loan package (Cover, Inputs control panel, Executive Summary, Sources & Uses, Budget Summary + Detail, AIA G703 Schedule of Values, monthly Draw Schedule, Gantt Timeline, Scope, Allowances, Alternates + Unit Prices, Documents Checklist). Logo optional/configurable.
 

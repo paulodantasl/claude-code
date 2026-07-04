@@ -68,6 +68,16 @@ plan; missed middle bars; a missed slab-on-grade). Non-negotiables:
 new-commercial / tenant-improvement), also read the matching `${CLAUDE_PLUGIN_ROOT}/reference/sector-*.md` profile and
 apply its division-emphasis and commonly-missed lists.
 
+## JobTread integration (when the job lives in JobTread)
+
+If the project's plans are in JobTread's Plans tab and a Pave API connector is available,
+perform the takeoff DIRECTLY into JobTread as calibration + drawn measurements + takeoff
+parameters: follow `${CLAUDE_PLUGIN_ROOT}/reference/jobtread-takeoff-protocol.md` (verified conventions: PDF-point
+coordinates, scale = points per meter, values recomputed from geometry, FULL-REPLACE
+semantics -> read-merge-write + read-back) and use the builders in
+`${CLAUDE_PLUGIN_ROOT}/scripts/jobtread_takeoff.py`. Overlay-verify geometry on the sheet BEFORE saving; append a
+Run Log entry to the protocol afterward with anything learned.
+
 ## Honesty rules (critical)
 - Anything **scaled off a raster PDF is approximate** — mark it `approx` and recommend a
   verified measured takeoff before final pricing. Never present scaled estimates as exact.
