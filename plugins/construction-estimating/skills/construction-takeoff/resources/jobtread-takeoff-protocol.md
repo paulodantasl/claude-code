@@ -135,6 +135,37 @@ interior; cores and patio/balcony walls stack at identical coordinates).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
 
+### 2026-07-04 (3) — Job 2025-227 — STRUCTURAL S1.0–S6.0 (04.10 S0.0 set) — Claude
+- **Scope:** full structural takeoff → 30 parameters across 6 plan pages (foundation, GF
+  columns/walls, FF/SF floor structure, roof deck, top canopy). Job now carries 74 params.
+- **Mixed plot factors in ONE file:** S1.0 & S4.0 at k=17.0 (94.4%), S2.0/S3.0/S5.0/S6.0 at
+  k=18.0 (true ¼″). Measure EVERY page — never carry a sheet's k to its neighbor.
+- **Dashed-symbol detection:** pile circles = ~16 tiny 2-3-segment dashes each → union-find
+  cluster on dash centers (6pt radius), filter 10–20pt square bboxes. 61 found + 5 verified
+  under labels/junctions via spacing-gap analysis (median ~6′-4″ oc; gap ≈ 2× median ⇒
+  hidden pile — confirm each with a zoom montage before adding). **9 false positives were
+  letter glyphs (O in OVER, e in TERMITE)** — montage-verify every candidate class.
+- **Outlined tag reading at scale:** hexagon GB tags & column marks don't text-extract —
+  batch-crop ALL instances into one PIL montage and read once (38 tags in one image).
+- **Fill-fragment merging:** solid column symbols split into fill bands around white rebar
+  dots — merge dark fills within 5pt to blobs; C-3 = ~24pt blob, C-1 = ~9pt dotted square
+  (multi-frag + density>0.5 separates them from dim ticks). One C-3 evaded the vector merge
+  and was caught only on the overlay — always ring-and-count on the sheet.
+- **Cross-discipline reconciliation caught the big ones:** (a) S-set shows GF front
+  wall/foundation at 59′-8″ + 5′-0″ drive-under apron to the 64′-8″ column line (SW corner
+  column on a beam stub) — resolves the A-vs-S "conflict" as a porte-cochère front, RFI'd
+  for door-line confirmation; (b) S3/S4 north+south strips are CONCRETE balcony decks
+  (#5@12 mat EW) not wood trusses — S4's three decks sum 406.8 SF vs A2.0 balconies
+  406.7 SF (independent reproduction!); (c) S6 canopy = exactly the A2.0 covered zone
+  (20′ × 43′-7″, 4 bays @ 10′-11″).
+- **Document conflicts RFI'd, priced conservative:** note 4 "FLOOR SLAB TO BE EIGHT (6)
+  INCHES" vs plan labels 6″ (±15 CY); grid-9-west grade beam tagged BOTH GB1 (above, std
+  convention) and GB2 (below) — priced as heavier GB2.
+- **API nits:** plain `linear` measurements REJECT `unit` (only linearArea/areaVolume/
+  linearVolume take it); large updateJob echoes get persisted to a tool-result file —
+  parse it programmatically for the read-back diff instead of re-reading inline.
+- **State after run: 74 parameters**, 8 plan pages calibrated. Cost-item wiring still open.
+
 ### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
 - **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
   **94.4%** of nominal ¼″ — apparent 40′ spans measured 680 pt, not 720. Solved
