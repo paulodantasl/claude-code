@@ -135,6 +135,40 @@ interior; cores and patio/balcony walls stack at identical coordinates).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
 
+### 2026-07-04 (5) — Job 2025-227 — M/P COMPLETION M2/P2/P3/P4 (03.10 sets) — Claude
+- **Scope:** user dropped the previously-missing M and P sets (03.10 M0.0.pdf ×3pp,
+  P0.0-2.pdf ×7pp) → 10 new parameters close the SF+roof M/P RFI: M2.0 AHU-2/3, supply ×20,
+  returns/chases ×8, exhaust ×4, bulkhead mech ×5; P2.0 SF fixtures ×12, sanitary/vents ×8,
+  deck rough-ins ×5; P3.0 scuppers ×6; P4.0 water service + hose bibbs ×5. **Job total 100
+  parameters**, 17 plan pages calibrated/annotated.
+- **March batch = k=17.0:** both 03.10 files plot at 94.4% (680-pt envelopes) like the other
+  March/April sheets; the June 06.25 sheets are k=18. The batch date predicts the factor,
+  but measure anyway.
+- **Vintage guard in notes:** the new sheets are OLDER (03.10) than the governing 06.25
+  M0.1/P0.1 for GF+FF — took off ONLY the pages the June set lacks (SF/roof/water), marked
+  the overlapping 03.10 p1s "SUPERSEDED for takeoff" via plan notes, and p5–p7 risers as
+  reference-only. A dropped set that back-fills a gap must not silently re-take-off floors
+  a newer issue governs.
+- **Label vs symbol, plumbing edition:** "3/4″ C.W." riser callouts pattern-match hose
+  bibbs at wall lines — text-extract the clip first (H.B. present vs absent) before
+  marking; one riser demoted, one true H.B. found hiding by the E.METER. Scupper markers
+  belong on the parapet notch symbols, not the SCUPPER text.
+- **P3.0 answers the S6.0 circular-features RFI:** the drainage plan shows the 6 scuppers +
+  tapered slopes; deck circles = drains/posts. Cross-discipline sheets close each other's
+  RFIs — recheck the open-RFI list every time a new set drops.
+- **Multi-page plan records:** a multi-page upload creates one plan record per page
+  (`plan.page` = source page) but annotations are plan-local — always `page: 1`
+  (precedent: A0.1(2), S0.0(2..7), A0.0(4) all render with page:1). `updatePlan`
+  return selections need `readPlan` (blocked) — send mutations with EMPTY selection `{}`;
+  several updatePlan mutations batch fine in one query via `_` aliases.
+- **Giant-save discipline held:** 107.9K-char full-replace (100 params) worked first try
+  using the run-(4) recipe — payload file → 6 printed chunks → bare-turn updateJob with
+  `job{id}` selection → separate read-back parsed from the persisted tool-result file.
+- **State after run: 100 parameters** (GF 10, FF 9, openings 8, SF 10, Roof 7, structural
+  30, MEP 16, M/P completion 10). Open RFIs: WH gas vs electric; slab 6″/8″ note; grid-9
+  GB1/GB2 tag; 03.10-vs-06.25 A2.0/M/P version confirmations. Cost-item wiring still the
+  open next capability.
+
 ### 2026-07-04 (4) — Job 2025-227 — MEP E1–E3/M1/P1 (06.25 set) — Claude
 - **Scope:** 16 MEP parameters (7 E, 6 M, 3 P) → job total 90; 5 plan pages calibrated
   (all true ¼″, k=18 — verified on the deck envelope 721 pt / 40′).
