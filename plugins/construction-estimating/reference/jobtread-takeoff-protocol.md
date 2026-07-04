@@ -57,6 +57,10 @@ global types by name (`parameters`, `plan`).
    and measure it in the **vector** line work (PyMuPDF `get_drawings()`): e.g. 40′-0″ must be
    720.0 pt on a true ¼″ sheet (18 pt/ft). If it isn't, the sheet is plotted off-scale —
    calibrate `scale` from the measured pt-per-ft × 3.28084 instead of the nominal table.
+   *UI equivalent (user-taught):* Plans tab → **Manual Scale (Select Points)** — click the two
+   endpoints of a printed dimension line and type its length; JobTread computes the same
+   pt/m scale. Use it for quick per-sheet calibration by hand, or to verify an API-written
+   scale against a known dimension in seconds.
 2. **Extract, don't squint.** `get_text("words")` for room labels, dimension strings, tag
    counts (e.g. counting "SMART VENT" labels gave the exact flood-vent count); `get_drawings()`
    for wall lines (long H/V segments, parallel face pairs ~wall-thickness apart), diagonals,
