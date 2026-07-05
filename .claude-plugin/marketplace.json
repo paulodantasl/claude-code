@@ -145,6 +145,17 @@
       },
       "source": "./plugins/security-guidance",
       "category": "security"
+    },
+    {
+      "name": "construction-estimating",
+      "description": "Construction takeoff, scope of work, cost estimating, bid proposals, independent QA audit, and bank construction-loan packages (Florida-default, CSI-organized, formula-driven Excel)",
+      "version": "1.0.0",
+      "author": {
+        "name": "Ideal Construction",
+        "email": "tampa@idealcgc.com"
+      },
+      "source": "./plugins/construction-estimating",
+      "category": "productivity"
     }
   ]
 }
