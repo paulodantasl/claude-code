@@ -6,7 +6,9 @@ description: >
   quantities, counts, material lists, "how much concrete/block/lumber", or wants imported
   quantities checked before pricing. Florida-aware (FBC, HVHZ, wind/flood, NOA/FL#,
   termite). Produces a CSI-organized takeoff with source, method, and confidence per line,
-  plus a seed line-item CSV for pricing.
+  plus a seed line-item CSV for pricing. Also use when the plans live in JobTread and the
+  takeoff should be performed directly into the job via the Pave API (calibrated plans +
+  geometry-anchored parameters) — see the bundled JobTread protocol.
 ---
 
 # Construction Quantity Takeoff
@@ -42,6 +44,25 @@ quantities — and be ruthlessly honest about what is measured vs. assumed.
 - A seed CSV for the estimator with exactly this header (cost columns blank, no
   rollup/total rows):
   `division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes`
+
+## JobTread mode (when the job lives in JobTread)
+If the plans are in a JobTread job's Plans tab and a JobTread **Pave API** MCP connector
+is available in the session, perform the takeoff DIRECTLY into JobTread — page
+calibration + drawn measurements + geometry-anchored takeoff parameters — instead of (or
+in addition to) the markdown/CSV output:
+1. **Read `resources/jobtread-takeoff-protocol.md` first — it governs.** Verified
+   conventions: coordinates are native PDF points (page-local, `page` defaults to 1),
+   `plan.scale` = PDF points per METER, measure the plot factor on EVERY sheet,
+   `updateJob.parameters` is FULL-REPLACE → read-merge-write + read-back verify, and
+   payload-slimming rules for saves near the output-token ceiling.
+2. Compose parameters with the builders in `scripts/jobtread_takeoff.py` (bundled here).
+3. Overlay-verify all geometry on sheet renders BEFORE saving; calibrate takeoff pages
+   with scale + meta + a summary text note.
+4. Afterward, append a Run Log entry to the protocol (and sync its canonical copy at
+   `estimating/reference/jobtread-takeoff-protocol.md` when working in the main repo) —
+   the run log is the improvement loop.
+Prerequisite: the Pave API connector is granted at the account level and cannot be
+bundled with this skill — if it is absent, say so and fall back to the standard output.
 
 ## Honesty rules
 Never invent a quantity. Missing/illegible detail → RFI or explicit assumption. Cite the
