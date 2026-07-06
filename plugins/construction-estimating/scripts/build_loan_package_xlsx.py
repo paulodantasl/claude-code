@@ -2,13 +2,15 @@
 """Build a bank-ready Construction Loan Package workbook for a project.
 
 Usage:
-    python3 estimating/scripts/build_loan_package_xlsx.py <project_dir>
+    python3 build_loan_package_xlsx.py <project_dir>
+    (run the copy under estimating/scripts/ in the repo checkout, or
+     ${CLAUDE_PLUGIN_ROOT}/scripts/ on a plugin install)
 
 Reads:
     <project_dir>/lineitems.csv
     <project_dir>/markups.csv
     <project_dir>/loan-package-config.json
-    <project_dir>/Ideal_Construction_logo.png   (or company logo named in config)
+    <project_dir>/logo.png                       (optional; or company.logo in config)
 
 Writes:
     <project_dir>/construction-loan-package.xlsx
@@ -135,7 +137,14 @@ def add_logo(ws, logo_path, anchor="A1"):
     ws.row_dimensions[3].height = 18
     if not logo_path or not Path(logo_path).exists():
         return            # logo is optional — workbook still builds without it
-    img = XLImage(str(logo_path))
+    try:
+        img = XLImage(str(logo_path))
+    except ImportError:
+        if not getattr(add_logo, "_warned_no_pillow", False):
+            add_logo._warned_no_pillow = True
+            print("Note: Pillow not installed — building without the logo image "
+                  "(fix: pip install pillow).")
+        return
     img.width = 220
     img.height = 70
     img.anchor = anchor

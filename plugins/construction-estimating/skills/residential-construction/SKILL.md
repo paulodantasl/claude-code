@@ -3,8 +3,8 @@ name: residential-construction
 description: >
   New residential construction (Florida-default) — single-family, townhomes, custom
   and spec homes. Use when the user has house plans, a residential lot, a construction
-  loan, or asks for a residential takeoff, home-building estimate, draw schedule, or
-  selections/allowance budget. Runs the precon pipeline with residential gates: FBC-R vs
+  loan, or asks for a residential takeoff, home-building estimate, draw schedule,
+  loan package, lender package, bank draw package, or selections/allowance budget. Runs the precon pipeline with residential gates: FBC-R vs
   FBC-B code path, impact/flood/termite/energy items, lender draw alignment, and
   selections-allowance discipline.
 ---
@@ -43,6 +43,15 @@ price labeled sourced/quote/budgetary/allowance. Deliverables: CSI-organized tak
 confidence flags + QA block; scope of work with the sector's deliverable additions; line-item
 CSV (`division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes`)
 + markup waterfall + bid total with $/SF vs the sector band; severity-ranked audit findings.
+
+## Loan / draw package (closing deliverable)
+
+When the buyer's lender needs the bank package (Sources & Uses, AIA G703 SOV, draw
+schedule, Gantt), build it from the priced CSVs with
+`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/build_loan_package_xlsx.py" <project_dir>/`
+(config: copy `${CLAUDE_PLUGIN_ROOT}/templates/loan-package-config.template.json` into
+the project folder and fill borrower/loan terms with the user — never invent them;
+`logo.png` is optional). In Claude Code the `/loan-package` command wraps these steps.
 
 ## Honesty rules
 Costs are budgetary until quoted — label them. Scaled quantities are approximate — flag

@@ -8,6 +8,7 @@ description: >
   user wants real sourced pricing, vendor options, a buyout, a lead-time check, "find this
   online / where can I buy," or to replace budgetary plugs with sourced or quote-ready numbers.
 tools: WebSearch, WebFetch, Read, Write, Edit, Bash, Grep, Glob
+model: sonnet
 ---
 
 ## Knowledge base & where work goes (plugin)

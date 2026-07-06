@@ -13,6 +13,12 @@ estimating/projects/<project-slug>/
 ├── lineitems.csv          # output: cost-estimator (line items)
 ├── markups.csv            # output: cost-estimator (markup % config)
 ├── estimate.xlsx          # output: build_estimate_xlsx.py (formula-driven workbook)
+├── estimate-summary.md    # output: build_estimate_xlsx.py (plain-text BID TOTAL + waterfall)
+├── procurement.md         # output: procurement-specialist (optional, live sourcing)
+├── procurement.csv        # output: procurement-specialist (optional)
+├── jobtread-runlog.md     # output: JobTread takeoff run log (when JobTread mode is used)
+├── loan-package-config.json           # input: /loan-package (from the template)
+├── construction-loan-package.xlsx     # output: build_loan_package_xlsx.py (/loan-package)
 ├── bid-proposal.md        # output: bid-proposal-writer
 └── audit-report.md        # output: estimate-auditor
 ```

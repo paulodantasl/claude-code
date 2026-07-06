@@ -27,6 +27,9 @@ Organized by CSI division. Be specific and quantity-anchored where useful.
 - {{Geotech, existing conditions, schedule duration, escalation window, quote validity.}}
 
 ## 6. Allowances
+
+*(The **Amount** column is the only column that may contain a $ figure — the
+validator's text scan and the §2 tie-out both key on it.)*
 | # | Description | Amount | Basis |
 |---|-------------|-------:|-------|
 

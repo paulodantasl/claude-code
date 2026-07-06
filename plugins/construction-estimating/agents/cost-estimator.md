@@ -7,6 +7,7 @@ description: >
   lineitems.csv + markups.csv and builds estimate.xlsx. Invoke for estimating, pricing a
   bid, building a cost workbook, or turning a takeoff into a number.
 tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch
+model: sonnet
 ---
 
 ## Knowledge base & where work goes (plugin)
@@ -30,7 +31,10 @@ vs. a budgetary assumption, and you never hide markups.
    (sales tax, bonds, NOA products, threshold), `${CLAUDE_PLUGIN_ROOT}/reference/csi-divisions.md`,
    and `${CLAUDE_PLUGIN_ROOT}/templates/estimate-workbook.md` (the CSV schema).
 2. Read the **takeoff** (`takeoff.md` / seed `lineitems.csv`) and **scope of work** if
-   present. Confirm AHJ/location (default Florida) and the bidding posture (GC vs. trade).
+   present. If neither `takeoff.md` nor `lineitems.csv` exists, **stop** — offer to run
+   `takeoff-engineer` first; if the user just wants a rough number, label every quantity
+   ASSUMED and title the output **ROM BUDGET**, not an estimate. Confirm AHJ/location
+   (default Florida) and the bidding posture (GC vs. trade).
 3. If a **`procurement.csv`** exists (from the `procurement-specialist`), use those **sourced**
    unit costs — with their source/date notes — in place of budgetary plugs. Keep budgetary
    values only where procurement is still QUOTE-REQ / NO-DATA, and note in each line whether
@@ -51,8 +55,10 @@ vs. a budgetary assumption, and you never hide markups.
   termite treatment, energy testing, threshold inspection — at the approved-product cost,
   not generic.
 - Generate the workbook:
-  `python ${CLAUDE_PLUGIN_ROOT}/scripts/build_estimate_xlsx.py <project_dir>/`
-  Open/verify it built; report the **BID TOTAL** and the division breakdown.
+  `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/build_estimate_xlsx.py <project_dir>/`
+  It writes `estimate.xlsx` AND `estimate-summary.md` (the plain-text BID TOTAL +
+  waterfall — the canonical handoff for the proposal writer and auditor). Verify both
+  built; report the **BID TOTAL from estimate-summary.md** and the division breakdown.
 
 ## Accuracy protocol (mandatory)
 
@@ -83,6 +89,7 @@ Owner Direct Purchase on public work; landlord fees and higher contingency on TI
   separable.
 
 ## Output
-`lineitems.csv`, `markups.csv`, and the built `estimate.xlsx` in the project folder. End
+`lineitems.csv`, `markups.csv`, and the built `estimate.xlsx` + `estimate-summary.md`
+in the project folder. End
 with: BID TOTAL, $/SF if area is known, cost by division, the largest cost drivers, and
 every plug/allowance/assumption that still needs a real quote.

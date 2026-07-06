@@ -43,17 +43,30 @@ The agents read these for Florida-precise, consistent results:
 - `sector-public-bidding.md` / `sector-residential-new.md` / `sector-commercial-new.md` / `sector-tenant-improvement.md` — **market-sector profiles** (what changes per pipeline stage, division emphasis, markup posture, red flags). Invoked by `/bid-public`, `/bid-residential`, `/bid-commercial`, `/bid-ti`, or auto-detected by `/bid`.
 
 ## Templates (`estimating/templates/`)
-Deliverable skeletons for takeoff, scope, estimate-workbook schema, proposal, and the
-audit checklist.
+Deliverable skeletons for takeoff, scope, estimate-workbook schema, proposal, procurement,
+the audit checklist, and the loan-package config (`loan-package-config.template.json`).
 
 ## Workbook builder (`estimating/scripts/build_estimate_xlsx.py`)
 Turns `lineitems.csv` + `markups.csv` into a formula-driven `estimate.xlsx` (Detail +
 Summary sheets, division subtotals, full markup waterfall). Requires `openpyxl`
 (in `requirements.txt`):
 ```
-python estimating/scripts/build_estimate_xlsx.py estimating/projects/<slug>/
-python estimating/scripts/validate_estimate.py estimating/projects/<slug>/ --sector <sector>   # deterministic QA
+python3 estimating/scripts/build_estimate_xlsx.py estimating/projects/<slug>/   # + estimate-summary.md
+python3 estimating/scripts/validate_estimate.py estimating/projects/<slug>/ --sector <sector>   # deterministic QA
+python3 estimating/scripts/build_loan_package_xlsx.py estimating/projects/<slug>/   # 13-tab bank loan package (/loan-package)
 ```
+
+## Source of truth & sync topology
+
+`estimating/{reference,templates,scripts}` are **canonical**. Every same-named file
+under `plugins/construction-estimating/` (plugin `reference/ templates/ scripts/`,
+each skill's `resources/`, `claude-ai-project/knowledge/`) is a **generated copy** —
+never hand-edit a copy. After editing a canonical file run
+`python3 estimating/scripts/sync_plugin.py --write`, and run `--check` before any
+commit (agents/ and commands/ under the plugin are intentionally path-adapted and NOT
+synced; `claude-ai-project/PROJECT_INSTRUCTIONS.md` and `deliverable-templates.md` are
+chat transforms maintained by hand). The Claude.ai Project knowledge does NOT update
+from git — re-upload changed knowledge files there after each release.
 
 ## Important limits (read this)
 - **Costs are budgetary assumptions**, not quotes, until backed by real vendor/sub

@@ -1,5 +1,7 @@
 # Florida Construction Reference
 
+*(facts as-of: 2026-07 — re-verify dated items: code editions, tax rates, statutes, $/SF bands)*
+
 Shared knowledge base for the takeoff / scope / estimating / audit agents.
 **Default jurisdiction is Florida.** Always confirm the actual Authority Having
 Jurisdiction (AHJ) from the documents (title block, code-summary sheet, permit
@@ -10,8 +12,10 @@ forms) and note it. If a project is outside Florida, say so explicitly and adjus
 ## 1. Florida Building Code (FBC)
 
 - Florida operates under the **Florida Building Code**, currently the **8th Edition
-  (2023)**, based on the I-Codes (IBC/IRC). Verify the edition on the code-summary
-  sheet; older drawings may cite the 7th Edition (2020).
+  (2023)**, based on the I-Codes (IBC/IRC). On the triennial cycle the **9th Edition
+  (2026)** is expected to take effect around **Dec 31, 2026** — verify the governing
+  edition on the code-summary sheet before pricing; older drawings may cite the 7th
+  Edition (2020).
 - Volumes: FBC-**Building**, FBC-**Residential**, FBC-**Existing Building**,
   FBC-**Mechanical**, FBC-**Plumbing**, FBC-**Fuel Gas**, FBC-**Energy Conservation**,
   FBC-**Accessibility** (based on the 2010 ADA Standards with Florida-specific

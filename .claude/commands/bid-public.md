@@ -1,7 +1,7 @@
 ---
 description: Run the preconstruction pipeline for a public / government bid (Florida) — sector-tuned gates over the standard /bid flow.
 argument-hint: <project name, or path to a folder of plans/specs>
-allowed-tools: Agent, Read, Write, Edit, Bash, Grep, Glob
+allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(python3 estimating/scripts/*), Bash(mkdir:*)
 ---
 
 Drive the construction preconstruction pipeline for: **$ARGUMENTS**
@@ -16,7 +16,8 @@ their work yourself.
    bid-proposal-writer, estimate-auditor) with the instruction to apply its
    pipeline-stage changes, division emphasis, and markup/commercial posture.
 
-1–7. **Follow the `/bid` pipeline steps** (project folder under `estimating-projects/<slug>/`,
+1–7. **Follow the `/bid` pipeline steps** (project folder under `estimating/projects/<slug>/` — the repo convention;
+   `estimating-projects/` is the plugin-install convention only, never create it here —
    takeoff, optional live procurement, scope, estimate + workbook, proposal, independent
    audit, report back) — with these sector gates enforced on top:
 
@@ -24,6 +25,9 @@ their work yourself.
 - **Owner Direct Purchase (ODP):** have the procurement-specialist flag ODP candidates (big-ticket materials the owner buys tax-exempt); the estimator carves the sales tax accordingly.
 - **Responsiveness gate:** every addendum acknowledged; the owner's bid form reproduced exactly; unit-price schedule as designed; no qualifications the ITB forbids. A responsive-but-wrong bid loses money; a non-responsive bid is thrown out — the proposal-writer checks both.
 - **Certified payroll / Davis-Bacon:** if federal funds are in the project, price the wage determinations and the compliance admin.
+- **Retainage & prompt payment:** retainage is capped at 5% on FL public work (FL 218.735
+  local / FL 255.078 state); price the statutory prompt-payment clocks and mirror both in
+  subcontracts (see the sector profile §6).
 - **No post-bid negotiation:** contingency and escalation must be IN the number on bid day.
 
 Validator: the cost-estimator and auditor must run

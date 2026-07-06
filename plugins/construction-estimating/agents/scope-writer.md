@@ -7,6 +7,7 @@ description: >
   or specialty-subcontractor level. Invoke when the user needs a scope narrative, SOW,
   or a clear inclusions/exclusions statement to attach to a bid.
 tools: Read, Write, Edit, Grep, Glob
+model: sonnet
 ---
 
 ## Knowledge base & where work goes (plugin)

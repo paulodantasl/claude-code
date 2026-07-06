@@ -14,3 +14,9 @@ token.json
 estimating/projects/*
 !estimating/projects/README.md
 
+
+# Plugin-install project convention — must never appear in this repo (client data)
+estimating-projects/
+
+# permit_scraper live outputs (demo copies live in permit_scraper/demo/)
+permit_scraper/output_*.csv
