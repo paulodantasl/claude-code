@@ -11,11 +11,14 @@ lives in Claude Code; this is the chat-friendly subset.
 2. **New Project** → name it e.g. *"Construction Estimating — FL"*.
 3. **Custom instructions** → open `PROJECT_INSTRUCTIONS.md` in this folder and paste the
    entire body (everything after the first heading) into the Project's *Instructions* field.
-4. **Project knowledge** → upload these four files from the `knowledge/` folder:
+4. **Project knowledge** → upload these seven files from the `knowledge/` folder:
    - `florida-code.md`
    - `csi-divisions.md`
    - `estimating-methodology.md`
    - `deliverable-templates.md`
+   - `takeoff-accuracy-protocol.md`
+   - `estimating-accuracy-protocol.md`
+   - `sector-profiles.md`
 5. Done. Start a new conversation **in this Project** for every job.
 
 ## Typical chat workflows
@@ -38,26 +41,24 @@ lives in Claude Code; this is the chat-friendly subset.
 
 ## What still happens locally (in Claude Code)
 
-When you have an estimate CSV from chat, drop it into a local project folder and run:
+When you have an estimate CSV from chat, open **Claude Code** (with the
+construction-estimating plugin installed) in your working folder, drop the CSV into
+your project folder, and ask: *"build the estimate workbook for this project"* —
+Claude runs the bundled builder and produces the formula-driven `estimate.xlsx`
+plus `estimate-summary.md`. For the 13-tab bank loan package, run `/loan-package`
+there instead (it walks the config + optional logo).
 
-```
-python3 plugins/construction-estimating/scripts/build_estimate_xlsx.py <project_dir>/
-```
-
-…to get the formula-driven `estimate.xlsx`. For the 13-tab bank loan package, copy
-`templates/loan-package-config.template.json` to your project folder, fill it in, add a
-`logo.png`, and run:
-
-```
-python3 plugins/construction-estimating/scripts/build_loan_package_xlsx.py <project_dir>/
-```
+(Do NOT try to run `python3 plugins/...` paths by hand — those paths don't exist on
+a marketplace install; the plugin's scripts live where Claude Code installed it.)
 
 ## Notes & honest limits
 
 - The Project's knowledge gives the chat Florida-correct defaults; **for out-of-state
   jobs**, tell the chat the AHJ and code edition in your first message.
 - Chat can't run code or build Excel files — it produces CSV/markdown for you to
-  finish locally.
+  finish locally. The deterministic validator also only runs in Claude Code; in chat,
+  the accuracy-protocol gates are performed manually and any chat takeoff/estimate is
+  preliminary until re-run through the Code pipeline.
 - Each conversation in a Project is independent — for a multi-step job, keep the same
   conversation open and feed all docs at the start.
 - Don't paste confidential pricing into the Project Knowledge — keep the Knowledge as

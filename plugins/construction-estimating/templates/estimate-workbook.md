@@ -1,9 +1,12 @@
 # Estimate Workbook — data schema
 
 The `cost-estimator` agent produces two CSVs in the project folder, then runs
-the bundled `scripts/build_estimate_xlsx.py` to generate a formatted, formula-driven
-`estimate.xlsx`. Keeping the source as CSV makes the estimate diff-able and lets the
-auditor recompute everything independently.
+`build_estimate_xlsx.py` to generate a formatted, formula-driven `estimate.xlsx`
+**plus `estimate-summary.md`** (the plain-text BID TOTAL + waterfall the proposal
+and audit read). Keeping the source as CSV makes the estimate diff-able and lets the
+auditor recompute everything independently. Where Python can't run (e.g. chat),
+deliver the CSVs and hand them to Claude Code with the plugin installed to build
+the workbook.
 
 ## `lineitems.csv`
 
@@ -62,7 +65,8 @@ ohp_pct,8
   total, all as formulas referencing Detail. Waterfall **Rate** cells (column E) are
   live — edit a rate and the workbook recomputes.
 
-Run:
+Run (from the repo checkout; on a plugin install substitute
+`${CLAUDE_PLUGIN_ROOT}/scripts/` and `estimating-projects/<project>/`):
 ```
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/build_estimate_xlsx.py" <project-folder>/
+python3 estimating/scripts/build_estimate_xlsx.py estimating/projects/<project>/
 ```

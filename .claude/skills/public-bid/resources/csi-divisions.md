@@ -1,5 +1,7 @@
 # CSI MasterFormat Divisions & Scope-Gap Guide
 
+*(facts as-of: 2026-07 — re-verify dated items: code editions, tax rates, statutes, $/SF bands)*
+
 Organize every takeoff, scope, and estimate by **CSI MasterFormat division** so nothing
 is missed and trades reconcile cleanly. Below: the divisions, typical bid items, and the
 **scope gaps** that most often cause double-counts or holes between trades.

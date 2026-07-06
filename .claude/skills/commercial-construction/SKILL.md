@@ -6,7 +6,8 @@ description: >
   development package, shell/core-and-shell scope, or asks for a commercial takeoff or
   estimate. Runs the precon pipeline with commercial gates: threshold + special
   inspections, fire protection + fire alarm always evaluated, delegated designs priced,
-  site/civil + impact fees, shell definition locked.
+  site/civil + impact fees, shell definition locked. Ground-up/shell work only — for
+  work inside an existing building use the tenant-improvement skill.
 ---
 
 # New Commercial Construction (Florida)

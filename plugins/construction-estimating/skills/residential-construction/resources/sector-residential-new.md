@@ -1,5 +1,7 @@
 # New Residential Construction (Florida)
 
+*(facts as-of: 2026-07 — re-verify dated items: code editions, tax rates, statutes, $/SF bands)*
+
 Sector reference for **new single-family, duplex, and townhouse construction** —
 custom, semi-custom, and spec/production homes. Builds on
 [florida-code.md](florida-code.md), [estimating-methodology.md](estimating-methodology.md),

@@ -1,5 +1,7 @@
 # Estimating Accuracy Protocol
 
+*(facts as-of: 2026-07 — re-verify dated items: code editions, tax rates, statutes, $/SF bands)*
+
 Mandatory pricing-quality gates layered on top of `estimating-methodology.md`. Each rule
 traces to a **real observed failure**: a Div 26 priced at 2.2% of direct when the
 benchmark band is 5–8% (a $45–80k hole), a scope that committed **$522k of allowances
@@ -13,7 +15,10 @@ After pricing, compute each division's **% of direct cost** and **$/SF** and com
 the band for the sector. Any division outside its band → investigate and either fix or
 justify **in writing** in the estimate notes. A division at $0 that isn't explicitly
 excluded is a finding, not a default. Bands (FL, order-of-magnitude — widen for unusual
-programs, see sector profiles for sector-specific overrides):
+programs, see sector profiles for sector-specific overrides). **Two-tier semantics:**
+the bands here are the *investigate* threshold you apply by hand; the validator's
+coded bands are a looser *WARN floor* — passing the validator does not excuse this
+table:
 
 | Div | Scope | Custom res (% of direct) | New commercial | TI/buildout |
 |---|---|---|---|---|
@@ -88,7 +93,9 @@ unpriced commitment is free work you just promised.
 Before calling any estimate done:
 
 ```
-python3 estimating/scripts/validate_estimate.py <project_dir>/ [--sector residential|commercial|ti|public]
+python3 <scripts>/validate_estimate.py <project_dir>/ [--sector residential|commercial|ti|public]
+# <scripts> = estimating/scripts/ in the repo checkout;
+#             ${CLAUDE_PLUGIN_ROOT}/scripts/ (or the skill's resources/) on a plugin install
 ```
 
 It mechanically checks: CSV schema, zero-qty dispositions, rollup pricing, waste
@@ -96,6 +103,10 @@ placement, unit whitelist, division benchmark bands, allowance/scope tie-out (wh
 scope file is present), and waterfall recompute. **Fix every FAIL; answer every WARN in
 writing.** Prompt discipline catches most errors; the validator catches the rest at $0
 marginal cost — there is no reason to skip it.
+
+Note: the validator's allowance scan is **best-effort** (±2% tolerance, text
+matching against the scope); the to-the-dollar allowance tie-out in §2 remains a
+manual matrix check — the scan passing does not satisfy §2.
 
 ## 7. Estimator self-audit (before hand-off to the independent auditor)
 

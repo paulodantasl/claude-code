@@ -1,5 +1,7 @@
 # Public / Government Bidding (Florida)
 
+*(facts as-of: 2026-07 — re-verify dated items: code editions, tax rates, statutes, $/SF bands)*
+
 Sector reference for hard-bid public work in Florida — state agencies, counties,
 municipalities, school boards, and special districts. Public bids are won or lost on
 **responsiveness and price**, not relationships: the forms, bonds, and acknowledgments
@@ -62,11 +64,11 @@ pipeline in `estimating-methodology.md`, `florida-code.md`, and `csi-divisions.m
 - **Florida has NO state prevailing wage law** (repealed 1979). State/county/city-funded
   work: bid open-shop market wages.
 - **Local wage mandates are preempted:** FL **HB 433 (2024)** preempts local government
-  regulation of wages/benefits for contractors; full preemption of local wage mandates
-  takes effect **September 30, 2026**. Legacy ordinances (Miami-Dade, Orlando, etc.)
-  may still appear in older solicitations in the transition window — **verify with
-  counsel/AHJ** whether a local wage requirement in the bid docs is still enforceable,
-  and price what the contract requires either way.
+  regulation of wages/benefits for contractors; full preemption took effect
+  **September 30, 2026** (if bidding before that date, legacy ordinances — Miami-Dade,
+  Orlando, etc. — may still be enforceable in the transition window). Either side of
+  the date: if a local wage requirement appears in the bid docs, **verify with
+  counsel/AHJ** whether it is enforceable, and price what the contract requires.
 - **Davis-Bacon (federal)** applies when **federal funds are in the project** — contracts
   > **$2,000** for construction/alteration/repair (direct federal or federally assisted:
   FDOT federal-aid, HUD, FEMA, ARPA/IIJA grants, USDA, FAA). **How to tell:** look for
@@ -126,6 +128,10 @@ directly and skip the sales tax:
   made outside the ODP mechanics (your own POs) and for materials you manufacture/
   fabricate yourself. Follow the rule's mechanics exactly so purchases stay inside the
   protected structure.
+
+**Wiring note:** bond posture goes INTO the numbers — set `bond_pct` > 0 in
+`markups.csv` unless the solicitation waives bonding; the validator flags
+`--sector public` with bond at 0.
 
 ## 6. Retainage & prompt payment
 

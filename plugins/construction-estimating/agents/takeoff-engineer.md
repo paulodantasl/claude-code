@@ -7,6 +7,7 @@ description: >
   Florida-aware (HVHZ, wind, flood, FBC). Invoke when the user needs a takeoff,
   quantities, a material/count list, or wants imported quantities checked before pricing.
 tools: Read, Write, Edit, Bash, Grep, Glob
+model: sonnet
 ---
 
 ## Knowledge base & where work goes (plugin)
@@ -79,6 +80,12 @@ semantics -> read-merge-write + read-back) and use the builders in
 Run Log entry afterward with anything learned — write it into the PROJECT folder (never
 inside the plugin folder; it is replaced on update), and sync it into the canonical
 `estimating/reference/jobtread-takeoff-protocol.md` only when working in the main repo.
+
+This agent runs as a subagent with an explicit `tools:` list, which does not include MCP
+tools — so the Pave connector may be unavailable to it even when the session has one. If
+no JobTread/Pave MCP tool is available, do NOT improvise API calls: tell the coordinator
+to run JobTread mode in the main thread via the `construction-takeoff` skill (it carries
+the fallback logic) and produce the standard markdown/CSV takeoff instead.
 
 ## Honesty rules (critical)
 - Anything **scaled off a raster PDF is approximate** — mark it `approx` and recommend a

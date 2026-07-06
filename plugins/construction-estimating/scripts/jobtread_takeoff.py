@@ -215,7 +215,10 @@ def render_overlay(pdf_path: str, page_index: int, out_png: str,
     """Draw proposed geometry on the sheet and save a PNG to READ before saving.
     rects/neg_rects: [(x0,y0,x1,y1,'#hex')], lines: [(x0,y0,x1,y1,'#hex')],
     polylines: [([(x,y),...], '#hex')], dots: [(x,y,'#hex')]."""
-    import fitz  # PyMuPDF
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
+        raise SystemExit("overlay-verify requires PyMuPDF — fix: pip install pymupdf")
     hx = lambda h: tuple(int(h.lstrip('#')[i:i+2], 16) / 255 for i in (0, 2, 4))
     doc = fitz.open(pdf_path)
     pg = doc[page_index]

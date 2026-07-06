@@ -1,5 +1,7 @@
 # JobTread On-Screen Takeoff via API — Protocol & Run Log
 
+*(facts as-of: 2026-07 — re-verify dated items: code editions, tax rates, statutes, $/SF bands)*
+
 How to perform plan takeoffs **directly inside JobTread's Plans tab** (calibration, drawn
 measurements, and takeoff **parameters**) through the Pave API — no UI clicking. Every
 convention below was **empirically verified** on live org data (first on Job 2025-227,

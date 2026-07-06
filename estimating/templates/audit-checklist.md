@@ -20,12 +20,15 @@
 
 ## Checks performed
 
-**Mechanical / protocol gates (run these, don't eyeball them)**
-- [ ] `validate_estimate.py --sector <sector>` run on the workbook inputs — PASS (attach output)
-- [ ] Scope ↔ estimate tie-out matrix verified line-by-line
-- [ ] Zero-qty / zero-cost line audit (no silent placeholders)
-- [ ] Benchmark bands checked against the sector profile table
+**Mechanical / protocol gates (release blockers — run these, don't eyeball them)**
+- [ ] `validate_estimate.py --sector <sector>` run on the workbook inputs — 0 FAIL (attach output)
+- [ ] `estimate-summary.md` present; BID TOTAL matches the validator recompute AND the proposal
+- [ ] Scope ↔ estimate tie-out matrix verified line-by-line, **to the dollar** (allowances ⇔ ALLOW rows)
+- [ ] Zero-qty / zero-cost line audit — every qty=0 row dispositioned; rollup rows carry $0
+- [ ] Basis labels present (sourced/quote/budgetary/allowance/plug); no live plugs
+- [ ] Benchmark bands recomputed against the sector profile table (protocol §1, not just validator WARNs)
 - [ ] Takeoff QA block present and complete (or its failures explained)
+- [ ] Price-validity window stated in the proposal
 - [ ] Sector red-flag list walked (from the matching sector-*.md profile)
 
 **Math & structure**
