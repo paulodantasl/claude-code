@@ -1,5 +1,7 @@
 # Takeoff Accuracy Protocol
 
+*(facts as-of: 2026-07 — re-verify dated items: code editions, tax rates, statutes, $/SF bands)*
+
 Mandatory quality gates for every quantity takeoff. These rules exist because each one
 maps to a **real observed failure mode** — the kind that swings a bid by 5–60%. Follow
 them in order; the takeoff is not done until the QA block at the end is complete.
@@ -105,9 +107,18 @@ shows up at buyout, in the sub's favor, not yours.
 ## 8. Confidence + reasonableness gates
 
 Every line: `med-high/measured` · `med` (schedule) · `approx` (derived/scaled) ·
-`assumed` · `RFI`. Then run the ratio table (from `estimating-methodology.md`) —
-rebar lb/CY, CMU/SF, duct lb/CFM, fixtures/SF, tons/SF, pile spacing — and explain any
-outlier **in writing** before release.
+`assumed` · `RFI`. Then run the ratio table below — these are **screens, not specs**
+(they flag lines to investigate; they never override a measured quantity) — and explain
+any out-of-band value **in writing** before release.
+
+| Ratio | Directional band | Applies to |
+|---|---|---|
+| Rebar | 50–120 lb/CY footings & SOG · 100–200 lb/CY elevated decks / grade beams · 150–300 lb/CY columns | structural concrete |
+| CMU | ~1.125 block / SF of net wall (8×16 face) | masonry walls |
+| Ductwork | 0.5–1.5 lb/CFM | commercial low-pressure systems |
+| Cooling | ~1 ton per 400–600 SF (FL residential; commercial varies by occupancy — see sector profile) | HVAC |
+| Plumbing fixtures | FBC-Plumbing Table 403.1 minimums for the occupancy | fixture counts |
+| Piles | typically 5–8 ft o.c. — verify against the structural layout | deep foundations |
 
 ## 9. Takeoff QA block (append to every takeoff — all boxes or it isn't done)
 
@@ -120,7 +131,7 @@ outlier **in writing** before release.
 □ Gross vs net stated for every area; deduction rule named
 □ All conflicts logged as RFIs with both values + $ swing
 □ Congested-area tolerances declared (± and where)
-□ Ratio checks run; outliers explained
+□ Ratio table in §8 run; every out-of-band value explained in writing
 □ Illegible/unread items listed (not guessed)
 □ Confidence flag on every line; single-source lines flagged
 ```

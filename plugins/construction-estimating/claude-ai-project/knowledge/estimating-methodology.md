@@ -1,5 +1,7 @@
 # Estimating Methodology
 
+*(facts as-of: 2026-07 — re-verify dated items: code editions, tax rates, statutes, $/SF bands)*
+
 How the estimator and auditor agents price work and sanity-check numbers. Pricing
 varies by market, time, and project — these are **conventions and reasonableness
 ranges, not quoted prices.** Always treat costs as assumptions to confirm with current
@@ -17,6 +19,10 @@ quotes, and label them as such.
 | TON / LBS | Steel, rebar, asphalt, HVAC tonnage |
 | MBF | Lumber (1,000 board feet) |
 | LS | Lump sum |
+
+**Rounding convention (use everywhere):** CY and TON to 0.1; SF/LF/EA to whole
+numbers; unit costs to the cent; cross-document totals (estimate = proposal = SOV =
+draws) compared **to the dollar**.
 | ALLOW | Allowance |
 
 Cross-check quantities for reasonableness (e.g., rebar lbs per CY of concrete; CMU per
@@ -103,7 +109,8 @@ sales tax is already inside material costs. **Never double-mark-up subcontractor
 - **Trade % of total** is plausible (e.g., on commercial: structure, MEP ~25–40% combined,
   finishes, etc. — flag a division that is implausibly large or tiny/missing).
 - **Every CSI division** is either priced or explicitly excluded — no silent gaps.
-- **Quantity ratios** (rebar/CY, CMU/SF, duct lbs/CFM, fixtures/SF) within norms.
+- **Quantity ratios** within norms — the band table lives in
+  `takeoff-accuracy-protocol.md` §8 (single source; don't restate values here).
 - **Florida items present:** wind/impact products, flood provisions, termite treatment,
   energy testing, threshold inspection (if applicable), sales tax on materials, bonds.
 - **Markups applied once, in order; no double-markup; subs not re-burdened.**

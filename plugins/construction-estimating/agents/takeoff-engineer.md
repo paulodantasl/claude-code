@@ -7,6 +7,7 @@ description: >
   Florida-aware (HVHZ, wind, flood, FBC). Invoke when the user needs a takeoff,
   quantities, a material/count list, or wants imported quantities checked before pricing.
 tools: Read, Write, Edit, Bash, Grep, Glob
+model: sonnet
 ---
 
 ## Knowledge base & where work goes (plugin)
@@ -75,8 +76,15 @@ perform the takeoff DIRECTLY into JobTread as calibration + drawn measurements +
 parameters: follow `${CLAUDE_PLUGIN_ROOT}/reference/jobtread-takeoff-protocol.md` (verified conventions: PDF-point
 coordinates, scale = points per meter, values recomputed from geometry, FULL-REPLACE
 semantics -> read-merge-write + read-back) and use the builders in
-`${CLAUDE_PLUGIN_ROOT}/scripts/jobtread_takeoff.py`. Overlay-verify geometry on the sheet BEFORE saving; append a
-Run Log entry to the protocol afterward with anything learned.
+`${CLAUDE_PLUGIN_ROOT}/scripts/jobtread_takeoff.py`. Overlay-verify geometry on the sheet BEFORE saving; append a Run Log entry to
+`estimating-projects/<project-slug>/jobtread-runlog.md` afterward with anything learned,
+and report durable lessons back to the plugin maintainer — never write inside the plugin
+folder (it is replaced on update).
+
+This agent runs as a subagent and may not have the Pave MCP connector in its tool list.
+If no JobTread/Pave MCP tool is available, do NOT improvise API calls — tell the
+coordinator to run JobTread mode in the main thread via the `construction-takeoff` skill
+(it has the fallback logic) and produce the standard markdown/CSV takeoff instead.
 
 ## Honesty rules (critical)
 - Anything **scaled off a raster PDF is approximate** — mark it `approx` and recommend a
@@ -90,8 +98,10 @@ Run Log entry to the protocol afterward with anything learned.
 Write `takeoff.md` in the project folder using the structure in
 `${CLAUDE_PLUGIN_ROOT}/templates/takeoff-template.md` (header block, quantities-by-division table,
 assumptions, exclusions, RFIs, reasonableness checks). If useful for the estimator, also
-emit a `lineitems.csv` seed (division, section, item, description, qty, unit, notes) with
-cost columns left blank. Keep it tabular and diff-friendly.
+emit a `lineitems.csv` seed with the exact 12-column header
+`division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes`
+(cost columns left blank; no rollup/total rows — the validator FAILs on any other header).
+Keep it tabular and diff-friendly.
 
 End with a short summary: total line count, divisions covered, # of approximate items,
 and the top RFIs/assumptions the estimator must resolve.

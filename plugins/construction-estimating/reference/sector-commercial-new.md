@@ -1,5 +1,7 @@
 # New Commercial Construction (Florida)
 
+*(facts as-of: 2026-07 — re-verify dated items: code editions, tax rates, statutes, $/SF bands)*
+
 Sector reference for ground-up commercial work (retail, office, industrial/flex,
 medical office) in Florida. Builds on `florida-code.md`, `estimating-methodology.md`,
 and `csi-divisions.md` — this file covers only what **changes** for this sector; do not
@@ -80,7 +82,8 @@ re-derive wind/flood/HVHZ or markup mechanics here, cross-reference them.
   between the electrician and the sprinkler sub.
 - Governing code: **Florida Fire Prevention Code, 8th Edition (2023)** — Florida
   editions of **NFPA 1 and NFPA 101 (2021)**, adopted triennially by the State Fire
-  Marshal under **FL 633.202** (verified).
+  Marshal under **FL 633.202** (verified 2026-07; a 9th Edition follows the same
+  triennial cycle — confirm the edition in force at permit time).
 - **The AHJ fire marshal is a separate reviewer** from the building official: separate
   plan review, separate fees, separate inspections, and often underground fire-line
   work by a licensed fire-line contractor (Div 21 vs. Div 33 scope-gap — assign it).

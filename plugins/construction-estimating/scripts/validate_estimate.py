@@ -33,7 +33,9 @@ UNIT_WHITELIST = {
 }
 
 # Division benchmark bands: {sector: {div: (lo_pct, hi_pct)}} — % of direct cost.
-# Mirrors estimating-accuracy-protocol.md §1. WARN (not FAIL) when outside.
+# Looser WARN floor than estimating-accuracy-protocol.md §1 (the protocol table is
+# the hand-applied *investigate* threshold; these coded bands only catch gross misses).
+# WARN (not FAIL) when outside.
 BANDS = {
     "residential": {
         "01": (0, 12), "03": (5, 20), "04": (1, 10), "05": (0.5, 8), "06": (4, 16),
@@ -119,6 +121,10 @@ def main():
         print(f"FAIL: {li_path} not found"); sys.exit(1)
     with li_path.open(newline="", encoding="utf-8-sig") as f:
         rows = list(csv.reader(f))
+
+    if not rows:
+        print(f"FAIL: {li_path} is empty — expected header: {','.join(HEADER)}")
+        sys.exit(1)
 
     # --- schema ---
     if rows[0] != HEADER:

@@ -58,9 +58,12 @@ in addition to) the markdown/CSV output:
 2. Compose parameters with the builders in `scripts/jobtread_takeoff.py` (bundled here).
 3. Overlay-verify all geometry on sheet renders BEFORE saving; calibrate takeoff pages
    with scale + meta + a summary text note.
-4. Afterward, append a Run Log entry to the protocol (and sync its canonical copy at
-   `estimating/reference/jobtread-takeoff-protocol.md` when working in the main repo) —
-   the run log is the improvement loop.
+4. Afterward, append a Run Log entry to `estimating-projects/<project-slug>/jobtread-runlog.md`
+   in the project folder — never to the bundled protocol file (the plugin directory is
+   replaced on update, which silently deletes anything written there). Working in the
+   main repo checkout, ALSO append durable lessons to the canonical
+   `estimating/reference/jobtread-takeoff-protocol.md`; on a plugin install, report the
+   lessons back to the plugin maintainer instead. The run log is the improvement loop.
 Prerequisite: the Pave API connector is granted at the account level and cannot be
 bundled with this skill — if it is absent, say so and fall back to the standard output.
 

@@ -1,7 +1,7 @@
 ---
 description: Run the preconstruction pipeline for a new commercial construction (Florida) — sector-tuned gates over the standard /bid flow.
 argument-hint: <project name, or path to a folder of plans/specs>
-allowed-tools: Agent, Read, Write, Edit, Bash, Grep, Glob
+allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/*), Bash(mkdir:*)
 ---
 
 ## Plugin paths (read first)

@@ -1,7 +1,7 @@
 ---
 description: Run the preconstruction pipeline for a new commercial construction (Florida) — sector-tuned gates over the standard /bid flow.
 argument-hint: <project name, or path to a folder of plans/specs>
-allowed-tools: Agent, Read, Write, Edit, Bash, Grep, Glob
+allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(python3 estimating/scripts/*), Bash(mkdir:*)
 ---
 
 Drive the construction preconstruction pipeline for: **$ARGUMENTS**
@@ -16,7 +16,8 @@ their work yourself.
    bid-proposal-writer, estimate-auditor) with the instruction to apply its
    pipeline-stage changes, division emphasis, and markup/commercial posture.
 
-1–7. **Follow the `/bid` pipeline steps** (project folder under `estimating-projects/<slug>/`,
+1–7. **Follow the `/bid` pipeline steps** (project folder under `estimating/projects/<slug>/` — the repo convention;
+   `estimating-projects/` is the plugin-install convention only, never create it here —
    takeoff, optional live procurement, scope, estimate + workbook, proposal, independent
    audit, report back) — with these sector gates enforced on top:
 

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 estimating/scripts/*)",
+      "Bash(mkdir:*)",
+      "Task(takeoff-engineer)",
+      "Task(scope-writer)",
+      "Task(cost-estimator)",
+      "Task(bid-proposal-writer)",
+      "Task(estimate-auditor)",
+      "Task(procurement-specialist)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./permit_scraper/.env)",
+      "Bash(./scripts/comment-on-duplicates.sh:*)"
+    ]
+  }
+}

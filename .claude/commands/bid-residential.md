@@ -1,7 +1,7 @@
 ---
 description: Run the preconstruction pipeline for a new residential construction (Florida) — sector-tuned gates over the standard /bid flow.
 argument-hint: <project name, or path to a folder of plans/specs>
-allowed-tools: Agent, Read, Write, Edit, Bash, Grep, Glob
+allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(python3 estimating/scripts/*), Bash(mkdir:*)
 ---
 
 Drive the construction preconstruction pipeline for: **$ARGUMENTS**
@@ -16,13 +16,17 @@ their work yourself.
    bid-proposal-writer, estimate-auditor) with the instruction to apply its
    pipeline-stage changes, division emphasis, and markup/commercial posture.
 
-1–7. **Follow the `/bid` pipeline steps** (project folder under `estimating-projects/<slug>/`,
+1–7. **Follow the `/bid` pipeline steps** (project folder under `estimating/projects/<slug>/` — the repo convention;
+   `estimating-projects/` is the plugin-install convention only, never create it here —
    takeoff, optional live procurement, scope, estimate + workbook, proposal, independent
    audit, report back) — with these sector gates enforced on top:
 
 - **Code path:** confirm FBC-Residential vs FBC-Building applicability up front (stories/type edge cases).
-- **Lender alignment:** structure the estimate + SOV so it maps to the construction-loan draw schedule; the loan-package builder (`build_loan_package_xlsx.py`) is the standard closing deliverable.
+- **Lender alignment:** structure the estimate + SOV so it maps to the construction-loan draw schedule; the loan-package builder is the standard closing deliverable — run it with the `/loan-package` command.
 - **Selections discipline:** every owner-selection is an ALLOW line with a cap and a reconciliation rule — allowance creep is the classic residential margin-killer.
+- **Warranty / FL Ch. 558 posture:** the proposal and contract carry the warranty statement
+  (typ. 1yr workmanship / 2yr systems / structural per program) and FL Ch. 558 statutory notice
+  language, with subs' warranty obligations flowing down (see the sector profile §legal).
 - **FL envelope items:** impact/NOA openings, flood (zone/BFE/vents), termite, energy testing (blower door + duct leakage) all priced, never assumed away.
 
 Validator: the cost-estimator and auditor must run
