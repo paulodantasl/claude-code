@@ -136,6 +136,30 @@ interior; cores and patio/balcony walls stack at identical coordinates).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
 
+### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
+- **Scope:** full-system accuracy audit. JobTread leg: re-derived every measurement
+  value from raw annotation geometry (shoelace areas, polyline lengths, marker counts)
+  × current plan scale × dims and compared to the server's stored values.
+- **Result: 139/139 measurements at 0.000% deviation; zero param-vs-sum mismatches;
+  all count params marker-exact.** Cross-discipline ties: GF↔SF envelopes 0.02% across
+  independently calibrated sheets; arch balconies vs structural decks 0.03%; S3
+  truss+decks+core vs envelope 0.003%; perimeter exact. Only variance = S6 canopy
+  post-to-post 44′-9″ vs bay-chain 43′-7″ (2.6%) — the ±1′ already flagged as RFI.
+- **Discovery institutionalized (see §1 table):** the server RECOMPUTES values —
+  volume types store ft³, `linearArea` stores SF, and the user's manual A2.0
+  recalibration (Δ0.004%) flowed into every value on that sheet. Audit scripts must
+  apply these semantics or 29 phantom "failures" appear (exact 0.5×/2×/3.11× ratios
+  are the tell: that's depth / w×d, not error).
+- **Tie-formula lesson:** cross-checks must mirror each param's drawn convention
+  (overlap-clipped negatives, envelope vs interior baselines) — 4 of 9 first-pass ties
+  "failed" on formula convention, 0 on data.
+- **Companion system audit (same date, non-JobTread):** validator gained an xlsx
+  tie-out stage + hard FAILs (blank division, non-numeric/missing markups) after a
+  seeded-corruption exercise showed the old one missed workbook-level errors; loan
+  builder de-fabricated and aligned to the estimate builder; Florida reference facts
+  verified against primary sources (FBC/FFPC 9th Ed. eff. 12/31/2026 flagged; surtax
+  $5k single-item cap added). See PR #10.
+
 ### 2026-07-04 (6) — Job 2025-227 — FUEL GAS FG0.0-FG2.0 (03.10 G set) — Claude
 - **Scope:** user pointed at the already-uploaded 03.10 G0.0.pdf for the WH answer → 3 gas
   parameters (meter+GF run, appliance connections ×3, E-wall riser ×2) → **job total 103**;

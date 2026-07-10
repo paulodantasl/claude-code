@@ -11,7 +11,10 @@ forms) and note it. If a project is outside Florida, say so explicitly and adjus
 
 - Florida operates under the **Florida Building Code**, currently the **8th Edition
   (2023)**, based on the I-Codes (IBC/IRC). Verify the edition on the code-summary
-  sheet; older drawings may cite the 7th Edition (2020).
+  sheet; older drawings may cite the 7th Edition (2020). **Transition: the 9th
+  Edition (2026) takes effect Dec 31, 2026** — permits applied for after that date
+  fall under the 9th Ed. (updated ASCE 7 loads/wind maps, energy, roofing); price
+  2027-permitting work accordingly (FFPC 9th Edition targets the same date).
 - Volumes: FBC-**Building**, FBC-**Residential**, FBC-**Existing Building**,
   FBC-**Mechanical**, FBC-**Plumbing**, FBC-**Fuel Gas**, FBC-**Energy Conservation**,
   FBC-**Accessibility** (based on the 2010 ADA Standards with Florida-specific
@@ -41,8 +44,9 @@ forms) and note it. If a project is outside Florida, say so explicitly and adjus
 - Typical V_ult: ~**170–185 mph** in HVHZ/coastal South FL, ~**150–170 mph** along
   much of the coast, ~**130–150 mph** inland. Higher speed → heavier connections,
   thicker glazing, more anchorage.
-- **Windborne Debris Region (WBDR):** within ~1 mi of coast where V_ult ≥ 130 mph (or
-  ≥ 140 mph elsewhere). Requires **impact-resistant glazing or approved shutters**
+- **Windborne Debris Region (WBDR):** within 1 mi of the coastal mean-high-water line
+  **where an Exposure D condition exists upwind of the waterline** and V_ult ≥ 130 mph;
+  or anywhere V_ult ≥ 140 mph (FBC-B §1609.2 / ASCE 7-22). Requires **impact-resistant glazing or approved shutters**
   (large-missile below 30 ft, small-missile above). This is a frequent scope-and-cost
   driver — confirm whether impact glazing OR shutters are specified.
 - Distinguish **MWFRS** (main wind-force resisting system) from **Components &
@@ -53,7 +57,9 @@ forms) and note it. If a project is outside Florida, say so explicitly and adjus
 - Coastal FL has extensive **Special Flood Hazard Areas**. Zones: **VE** (coastal high
   hazard, wave action), **AE/A** (1% annual flood), **X** (outside). Drawings/civil
   give the **Base Flood Elevation (BFE)** and the **Design Flood Elevation (DFE = BFE +
-  freeboard)**; many FL communities require **1–2 ft freeboard**.
+  freeboard)**. **FBC-R R322.2.1 itself requires the lowest floor at BFE + 1 ft (or DFE
+  if higher) statewide for dwellings** — freeboard is a state code minimum, and many FL
+  communities require more (1–2 ft+) on top.
 - Cost/scope drivers: elevated structure, **flood vents** (AE) or **breakaway walls**
   (VE), flood-damage-resistant materials below DFE, no mechanical/electrical below DFE,
   stem-wall vs. pile foundations. Confirm zone and DFE from the civil/architectural set.
@@ -65,7 +71,8 @@ forms) and note it. If a project is outside Florida, say so explicitly and adjus
 - **FBC-Energy** compliance: envelope, fenestration U-factor/SHGC, duct sealing, blower
   door / duct leakage testing on many projects.
 - **Threshold buildings** (FL Statute 553.71/553.79): generally > 3 stories or > 50 ft,
-  or assembly > 5,000 sf / occupant load > 500. Require a **Special Inspector
+  or assembly occupancy exceeding 5,000 sf **AND** occupant content > 500 (conjunctive
+  test — both must be true, FS 553.71). Require a **Special Inspector
   (threshold inspection)** — a budgeted cost, usually owner- or GC-carried.
 - **Private Provider inspections** (FL 553.791) — an alternative to AHJ inspectors;
   sometimes used to accelerate schedule (a GC cost).
@@ -74,8 +81,12 @@ forms) and note it. If a project is outside Florida, say so explicitly and adjus
   pool, etc.). Affects who can legally self-perform vs. must subcontract.
 - **Florida sales tax on materials:** for real-property improvement contracts the
   contractor is generally the **consumer** of materials and pays sales tax (state **6%**
-  + **county discretionary surtax**, ~0.5–1.5%). **Tax materials, not the marked-up
+  + **county discretionary surtax**, currently **0–1.5%** — rates change annually,
+  check DOR form **DR-15DSS** each November; Pinellas: 1% → **7% combined**). **Tax materials, not the marked-up
   contract price.** (Retail sale + installation can differ — note the contract type.)
+  The surtax applies only to the first **$5,000** of a single-item sale (FL
+  212.054(2)(b)), so a flat combined percent slightly over-taxes big-ticket single
+  items — conservative, but note it on large single-item equipment buys.
 - **Construction lien law (FL Ch. 713):** Notice to Owner, lien rights, conditional/
   unconditional releases. Not a takeoff item but belongs in proposal qualifications.
 - **Public-work bonds (FL 255.05 "Little Miller Act"):** payment & performance bonds

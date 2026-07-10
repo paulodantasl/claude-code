@@ -40,5 +40,12 @@
     "owner_equity_pct": 25.0,
     "interest_reserve_pct_of_loan": 4.0,
     "lender_fees_pct_of_loan": 1.0
-  }
+  },
+  "_comment_optional": "alternates: [{no, description, add_deduct, amount, notes}]; unit_prices: [{no, item, unit, price, notes}] — empty lists render 'None carried this bid.' code_features / exclusions / clarifications / timeline_phases: empty -> sensible generic defaults; timeline_phases entries are [description, division, start_month, duration_months] on an 11-month template scale.",
+  "alternates": [],
+  "unit_prices": [],
+  "code_features": [],
+  "exclusions": [],
+  "clarifications": [],
+  "timeline_phases": []
 }

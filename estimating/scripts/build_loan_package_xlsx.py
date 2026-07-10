@@ -130,14 +130,16 @@ def section_header(ws, row, text, span=12, fill_rgb=NAVY):
 # ---------------------------------------------------------------------------
 # Logo placement (skip first ~3 rows on every sheet for the brand strip)
 def add_logo(ws, logo_path, anchor="A1"):
+    ws.row_dimensions[1].height = 18
+    ws.row_dimensions[2].height = 18
+    ws.row_dimensions[3].height = 18
+    if not logo_path or not Path(logo_path).exists():
+        return            # logo is optional — workbook still builds without it
     img = XLImage(str(logo_path))
     img.width = 220
     img.height = 70
     img.anchor = anchor
     ws.add_image(img)
-    ws.row_dimensions[1].height = 18
-    ws.row_dimensions[2].height = 18
-    ws.row_dimensions[3].height = 18
 
 
 def page_header(ws, title, subtitle, span=12):
@@ -345,12 +347,12 @@ def build_cover(wb, cfg, logo):
     ws.merge_cells("F14:H14"); ws["F14"] = "Prepared For"
     ws["F14"].font = F_H2(); ws["F14"].fill = fill(NAVY); ws["F14"].alignment = Alignment(horizontal="center")
     rows = [
-        ("=Inputs!C20", True),         # lender name
-        ("=Inputs!C21", False),        # lender contact
-        ("=Inputs!C22", False),        # loan #
+        ("=Lender_Name", True),
+        ("=Lender_Contact", False),
+        ("=Loan_No", False),
         ("", False),
         ("Borrower:", False),
-        ("=Inputs!C16", True),         # owner name
+        ("=Owner_Name", True),
     ]
     for i, (val, bold) in enumerate(rows):
         ws.merge_cells(start_row=15 + i, start_column=6, end_row=15 + i, end_column=8)
@@ -473,7 +475,7 @@ def build_inputs(wb, cfg, logo):
     # Section: Markups (linked to markups.csv loaded values, but user can override here)
     section_header(ws, 39, "MARKUPS & WATERFALL", span=10)
     row(40, "Material sales tax %", "=Material_Tax_Pct_Source", "Material_Tax_Pct", PCT1,
-        "FL 6% + Pinellas 1%")
+        "From markups.csv — state + county surtax, materials only")
     row(41, "General Conditions %", "=GC_Pct_Source", "GC_Markup_Pct", PCT1)
     row(42, "Contingency %", "=Cont_Pct_Source", "Contingency_Pct", PCT1)
     row(43, "Insurance %", "=Ins_Pct_Source", "Insurance_Pct", PCT1)
@@ -524,7 +526,8 @@ def build_executive_summary(wb, cfg, logo):
     ws = wb.create_sheet("Executive Summary")
     ws.sheet_view.showGridLines = False
     add_logo(ws, logo)
-    page_header(ws, "Executive Summary", "655 115th Ave, Treasure Island, FL")
+    page_header(ws, "Executive Summary",
+                f'{cfg["project"]["address"]}, {cfg["project"]["city_state_zip"]}')
 
     section_header(ws, 5, "PROJECT OVERVIEW", span=10)
     overview = [
@@ -612,17 +615,15 @@ def build_executive_summary(wb, cfg, logo):
         c.alignment = Alignment(horizontal="left", indent=1)
         c.border = BORDER
 
-    section_header(ws, 45, "KEY FLORIDA CODE FEATURES (FBC 2023)", span=10, fill_rgb=GRAY)
-    fl = [
-        "• Coastal Pinellas (NOT HVHZ — Miami-Dade/Broward only)",
-        f'• Wind design V_ult {cfg["project"]["vult_mph"]} mph, Exposure {cfg["project"]["exposure"]}, Risk Cat II per ASCE 7',
-        f'• Flood Zone {cfg["project"]["flood_zone"]}, BFE {cfg["project"]["bfe_ft"]} ft (NGVD 1988) — structure elevated on driven timber piles',
-        "• Garage / open porch is non-habitable below DFE (FBC flood-vented, equipment-restricted)",
-        "• Impact-resistant windows/doors per Windborne Debris Region (FBC 1609.1.2)",
-        "• Subterranean termite soil treatment (FBC 1816)",
-        "• Pre-engineered wood trusses (delegated design), hurricane-strapped (continuous load path)",
-        "• Threshold inspection allowance carried (3-story / 47 ft borderline FL 553.79)",
+    section_header(ws, 45, f'KEY FLORIDA CODE FEATURES ({cfg["project"]["fbc_edition"]})',
+                   span=10, fill_rgb=GRAY)
+    fl = cfg.get("code_features") or [
+        f'Wind design V_ult {cfg["project"]["vult_mph"]} mph, Exposure {cfg["project"]["exposure"]} per ASCE 7',
+        f'Flood Zone {cfg["project"]["flood_zone"]}, BFE {cfg["project"]["bfe_ft"]} ft — verify DFE with the AHJ',
+        "Impact protection per FBC wind-borne debris provisions where applicable — confirm with design docs",
+        "Subterranean termite soil treatment (FBC 1816)",
     ]
+    fl = [t if str(t).startswith("•") else f"• {t}" for t in fl]
     for i, t in enumerate(fl):
         ws.merge_cells(start_row=46 + i, start_column=2, end_row=46 + i, end_column=10)
         c = ws.cell(46 + i, 2, t)
@@ -648,13 +649,13 @@ def build_sources_uses(wb, cfg, logo):
     uses_rows = [
         (7,  "Land Acquisition",                "=Land_Cost",                                              "Lot owned outright? Enter $0 if not loan-funded"),
         (8,  "Hard Construction Cost (Bid)",    "=Bid_Total",                                     "From Budget Summary (auto-linked)"),
-        (9,  "  — Architectural & Engineering", "=C8*0.04",                                                "~4% A&E"),
-        (10, "  — Survey, Geotech, Soils",      "=C8*0.005",                                               "Geotech + survey"),
-        (11, "  — Permit / Impact fees (outside GC)", "=C8*0.015",                                         "Above-and-beyond GC permit allowance"),
-        (12, "  — Legal / Title / Closing",     "=C8*0.005",                                               "Closing costs"),
-        (13, "Soft Costs Subtotal",             "=SUM(C9:C12)",                                            "Sum of A&E, survey, permits, legal"),
+        (9,  "  — Architectural & Engineering", "=C13*4/6.5",                                              "Informational split of the subtotal"),
+        (10, "  — Survey, Geotech, Soils",      "=C13*0.5/6.5",                                            "Informational split of the subtotal"),
+        (11, "  — Permit / Impact fees (outside GC)", "=C13*1.5/6.5",                                      "Informational split of the subtotal"),
+        (12, "  — Legal / Title / Closing",     "=C13*0.5/6.5",                                            "Informational split of the subtotal"),
+        (13, "Soft Costs Subtotal",             "=C8*Soft_Costs_Pct",                                      "Per Inputs: soft costs % of hard cost"),
         (14, "Owner Soft Contingency",          "=C8*Owner_Contingency_Pct",                               "Additional contingency above GC bid"),
-        (15, "Interest Reserve",                "=C8*Interest_Reserve_Pct",                                "Budgetary ~3-5% of hard cost (breaks circular ref vs loan)"),
+        (15, "Interest Reserve",                "=(C7+C8+C13+C14)/(1-Interest_Reserve_Pct*(1-Owner_Equity_Pct))-(C7+C8+C13+C14)", "Closed-form: reserve = Interest_Reserve_Pct x construction loan (no circular ref)"),
         (16, "TOTAL PROJECT COST",              "=C7+C8+C13+C14+C15",                                      "Land + Hard + Soft + Owner Cont. + Interest"),
     ]
     for r, label, val, note in uses_rows:
@@ -699,7 +700,7 @@ def build_sources_uses(wb, cfg, logo):
     setval(ws, 26, 2, "Total Sources", font=F_LABEL(), align=Alignment(horizontal="right"))
     setval(ws, 26, 3, "=C22", fmt=CURRENCY0, font=F_TOTAL(), align=Alignment(horizontal="right"))
     setval(ws, 27, 2, "Difference (must be $0)", font=F_LABEL(), align=Alignment(horizontal="right"))
-    c = setval(ws, 27, 3, "=C26-C25", fmt=CURRENCY, font=F_TOTAL(), align=Alignment(horizontal="right"))
+    c = setval(ws, 27, 3, "=C22-(C7+C8+C13+C14+C15)", fmt=CURRENCY, font=F_TOTAL(), align=Alignment(horizontal="right"))
     c.fill = fill(LIGHT_GRAY)
 
     # Lender quick metrics
@@ -793,14 +794,16 @@ def build_budget_summary(wb, items, markups, logo, detail_start, detail_last):
     # also keep them in a small "Markup Source" panel here for transparency)
     # Pre-stage the named ranges that Inputs' formulas reference back to here
     section_header(ws, 5, "MARKUP SOURCES (mirror of Inputs)", span=8, fill_rgb=GRAY)
+    # Missing keys default to 0.0 — the same convention as build_estimate_xlsx.py,
+    # so the two deliverables can never diverge on a missing markups.csv key.
     markup_panel = [
-        ("Material sales tax %",       "Material_Tax_Pct_Source", markups.get("material_sales_tax_pct", 7.0) / 100),
-        ("General Conditions %",       "GC_Pct_Source",            markups.get("general_conditions_pct", 10) / 100),
-        ("Contingency %",              "Cont_Pct_Source",          markups.get("contingency_pct", 5) / 100),
-        ("Insurance %",                "Ins_Pct_Source",           markups.get("insurance_pct", 1.2) / 100),
-        ("Bond %",                     "Bond_Pct_Source",          markups.get("bond_pct", 0) / 100),
-        ("Permit %",                   "Permit_Pct_Source",        markups.get("permit_pct", 2) / 100),
-        ("OH&P %",                     "OHP_Pct_Source",           markups.get("ohp_pct", 15) / 100),
+        ("Material sales tax %",       "Material_Tax_Pct_Source", markups.get("material_sales_tax_pct", 0.0) / 100),
+        ("General Conditions %",       "GC_Pct_Source",            markups.get("general_conditions_pct", 0.0) / 100),
+        ("Contingency %",              "Cont_Pct_Source",          markups.get("contingency_pct", 0.0) / 100),
+        ("Insurance %",                "Ins_Pct_Source",           markups.get("insurance_pct", 0.0) / 100),
+        ("Bond %",                     "Bond_Pct_Source",          markups.get("bond_pct", 0.0) / 100),
+        ("Permit %",                   "Permit_Pct_Source",        markups.get("permit_pct", 0.0) / 100),
+        ("OH&P %",                     "OHP_Pct_Source",           markups.get("ohp_pct", 0.0) / 100),
     ]
     for i, (label, name, val) in enumerate(markup_panel):
         r = 6 + i
@@ -884,8 +887,8 @@ def build_budget_summary(wb, items, markups, logo, detail_start, detail_last):
     line("Direct Cost",                f"={direct_F}", bold=True)
     subtotal_F = f"F{r-1}"
     tax_r = line("Material Sales Tax (materials only)",
-                 f"={total_material_ref}*Material_Tax_Pct_Source",
-                 rate=f"=Material_Tax_Pct_Source")
+                 f"={total_material_ref}*Material_Tax_Pct",
+                 rate=f"=Material_Tax_Pct")
     setval(ws, r, 1, "Subtotal", font=F_TOTAL(),
            align=Alignment(horizontal="right"), fill_rgb=LIGHT_GRAY)
     setval(ws, r, 6, f"={subtotal_F}+F{tax_r}", fmt=CURRENCY,
@@ -958,8 +961,6 @@ def build_sov(wb, items, markups, logo, schedule_months):
         ws.cell(r, 1, f"{item_no:03d}")
         ws.cell(r, 2, div)
         ws.cell(r, 3, DIV_NAMES.get(div, ""))
-        ws.cell(r, 4, f'=SUMIF(Detail_Div,A{r}*1,Detail_Total)' if div.lstrip("0") else "")
-        # use A{r}+0 trick (text-to-number) — actually our Detail Div column is text
         ws.cell(r, 4, f'=SUMIF(Detail_Div,B{r},Detail_Total)')
         ws.cell(r, 5, 0); ws.cell(r, 6, 0); ws.cell(r, 7, 0)         # Editable green
         ws.cell(r, 8, f"=E{r}+F{r}+G{r}")
@@ -1075,9 +1076,14 @@ def build_draw_schedule(wb, items, markups, logo, schedule_months):
         ws.cell(r, 2, DIV_NAMES.get(div, ""))
         ws.cell(r, 3, f'=SUMIF(Detail_Div,A{r},Detail_Total)')
         curve = phasing.get(div, [100 / schedule_months] * schedule_months)
-        # If the division has its own curve, use it; else even spread
+        # If the division has its own curve, use it; else even spread.
+        # Last month = remainder so the row foots to its scheduled value exactly.
         for m in range(schedule_months):
-            ws.cell(r, 4 + m, f"=C{r}*{curve[m]/100:.6f}")
+            if m == schedule_months - 1 and schedule_months > 1:
+                ws.cell(r, 4 + m, f"=C{r}-SUM({get_column_letter(4)}{r}:"
+                                  f"{get_column_letter(2 + schedule_months)}{r})")
+            else:
+                ws.cell(r, 4 + m, f"=C{r}*{curve[m]/100:.6f}")
         check_col = 4 + schedule_months
         ws.cell(r, check_col, f"=SUM({get_column_letter(4)}{r}:{get_column_letter(3+schedule_months)}{r})")
         ws.cell(r, check_col + 1, f"=IF(Bid_Total=0,0,SUM({get_column_letter(4)}{r}:{get_column_letter(3+schedule_months)}{r})/Bid_Total)")
@@ -1106,9 +1112,13 @@ def build_draw_schedule(wb, items, markups, logo, schedule_months):
     ws.cell(r, 3, f"=Bid_Total-SUM(C7:C{last_div_row})")
     for m in range(schedule_months):
         col = get_column_letter(4 + m)
-        # proportional to monthly direct draw
-        ws.cell(r, 4 + m,
-                f"=IFERROR(C{r} * SUM({col}7:{col}{last_div_row}) / SUM(C7:C{last_div_row}), 0)")
+        # proportional to monthly direct draw; last month = remainder (exact footing)
+        if m == schedule_months - 1 and schedule_months > 1:
+            ws.cell(r, 4 + m, f"=C{r}-SUM({get_column_letter(4)}{r}:"
+                              f"{get_column_letter(2 + schedule_months)}{r})")
+        else:
+            ws.cell(r, 4 + m,
+                    f"=IFERROR(C{r} * SUM({col}7:{col}{last_div_row}) / SUM(C7:C{last_div_row}), 0)")
     check_col = 4 + schedule_months
     ws.cell(r, check_col, f"=SUM({get_column_letter(4)}{r}:{get_column_letter(3+schedule_months)}{r})")
     ws.cell(r, check_col + 1, f"=IF(Bid_Total=0,0,SUM({get_column_letter(4)}{r}:{get_column_letter(3+schedule_months)}{r})/Bid_Total)")
@@ -1191,29 +1201,31 @@ def build_draw_schedule(wb, items, markups, logo, schedule_months):
            font=F_NOTE(), align=Alignment(horizontal="left"))
 
 
-def build_timeline(wb, items, logo, schedule_months):
+def build_timeline(wb, items, cfg, logo, schedule_months):
     ws = wb.create_sheet("Construction_Timeline")
     add_logo(ws, logo)
     page_header(ws, "Construction Timeline", "Gantt-style phasing by major work category", span=2 + schedule_months)
 
-    phases = [
-        ("Mobilization, permits, layout, dewatering",                  "31", 1, 2),
-        ("Pile driving, grade-beam excavation",                        "31", 2, 2),
-        ("Foundation: grade beams, slab, termite, flood vents rough",  "03", 3, 2),
-        ("Concrete columns + masonry bearing walls (lower)",           "04", 3, 3),
-        ("Tie beams + roof trusses + sheathing",                       "06", 4, 3),
-        ("Roof dry-in (NOA membrane) + parapet flashing",              "07", 5, 2),
-        ("Window/door install (impact-rated)",                          "08", 6, 2),
-        ("MEP rough-in (plumbing, HVAC, electrical, gas)",              "22", 5, 4),
-        ("Insulation (R-30 closed-cell foam) + drywall",               "07", 7, 2),
-        ("Exterior stucco + paint",                                    "09", 7, 2),
-        ("Interior finishes (tile, flooring, paint)",                  "09", 8, 3),
-        ("Cabinetry, millwork, appliances",                            "06", 9, 2),
-        ("MEP trim + fixtures + elevator install",                     "23", 9, 2),
-        ("Pool shell + equipment + barrier",                           "13", 5, 4),
-        ("Site finishes (driveway, walks, fence, landscape)",          "32", 10, 2),
-        ("Punch list, final clean, Certificate of Occupancy",          "01", 11, 1),
+    # Generic default phases (11-month template, scaled below to the actual
+    # duration); override per project via cfg["timeline_phases"]:
+    # [description, division, start_month, duration_months].
+    phases = cfg.get("timeline_phases") or [
+        ("Mobilization, permits, layout",                        "01", 1, 2),
+        ("Sitework / earthwork / foundation prep",               "31", 1, 3),
+        ("Foundations (incl. termite pretreat)",                 "03", 3, 2),
+        ("Structure / shell (walls, floors, roof framing)",      "06", 4, 3),
+        ("Roof dry-in + waterproofing",                          "07", 5, 2),
+        ("Openings: windows / exterior doors",                   "08", 6, 2),
+        ("MEP rough-in",                                         "22", 5, 4),
+        ("Insulation + drywall",                                 "09", 7, 2),
+        ("Exterior finishes",                                    "09", 7, 2),
+        ("Interior finishes",                                    "09", 8, 3),
+        ("Cabinetry / millwork / equipment set",                 "06", 9, 2),
+        ("MEP trim + fixtures",                                  "23", 9, 2),
+        ("Site finishes / exterior improvements",                "32", 10, 2),
+        ("Punch list, final clean, CO",                          "01", 11, 1),
     ]
+    scale = schedule_months / 11.0
 
     # Header row
     setval(ws, 6, 1, "Phase", font=F_H2(), fill_rgb=NAVY,
@@ -1228,13 +1240,15 @@ def build_timeline(wb, items, logo, schedule_months):
 
     # Phase rows
     for i, (desc, div, start_m, dur) in enumerate(phases):
+        s_m = max(1, min(schedule_months, int(round((start_m - 1) * scale)) + 1))
+        s_dur = max(1, int(round(dur * scale)))
         r = 7 + i
         setval(ws, r, 1, f"P{i+1:02d}", font=F_LABEL(), align=Alignment(horizontal="center"))
         setval(ws, r, 2, desc, font=F_BODY(),
                align=Alignment(wrap_text=True, vertical="center", indent=1))
         for m in range(schedule_months):
             month_num = m + 1
-            if start_m <= month_num < start_m + dur:
+            if s_m <= month_num < s_m + s_dur:
                 c = ws.cell(r, 3 + m, "█")
                 c.fill = fill(NAVY); c.font = Font(color=NAVY)
                 c.alignment = Alignment(horizontal="center", vertical="center")
@@ -1262,14 +1276,13 @@ def build_scope(wb, items, cfg, logo):
     page_header(ws, "Scope of Work", "Inclusions / exclusions by CSI division", span=8)
 
     section_header(ws, 5, "PROJECT UNDERSTANDING", span=8)
-    para = (f'{cfg["company"]["name"]} ({cfg["company"].get("license","")}) proposes to construct '
+    para = (f'{cfg["company"]["name"]} ({cfg["company"].get("license", "")}) proposes to construct '
             f'the {cfg["project"]["type"]} at {cfg["project"]["address"]}, {cfg["project"]["city_state_zip"]}. '
             f'The project is in FEMA Flood Zone {cfg["project"]["flood_zone"]} (BFE {cfg["project"]["bfe_ft"]} ft) '
-            f'and the Windborne Debris Region (V_ult {cfg["project"]["vult_mph"]} mph, Exp {cfg["project"]["exposure"]}). '
-            f'Foundation = driven 10″ timber piles + reinforced concrete grade beams; superstructure = '
-            f'CMU bearing walls + pre-engineered wood trusses, Type V-B, fully hurricane-strapped. '
-            f'Conditioned area ≈ {cfg["project"]["conditioned_sf"]:,} SF; total gross under roof ≈ '
-            f'{cfg["project"]["gross_under_roof_sf"]:,} SF over 4 plates (garage / 1st / 2nd / roof deck) with elevator.')
+            f'with wind design V_ult {cfg["project"]["vult_mph"]} mph, Exposure {cfg["project"]["exposure"]}. '
+            + (f'{cfg["project"]["structure_desc"]} ' if cfg["project"].get("structure_desc") else '')
+            + f'Conditioned area = {cfg["project"]["conditioned_sf"]:,} SF; total gross under roof = '
+            f'{cfg["project"]["gross_under_roof_sf"]:,} SF.')
     ws.merge_cells("B6:H8")
     c = ws.cell(6, 2, para)
     c.font = F_BODY()
@@ -1311,20 +1324,12 @@ def build_scope(wb, items, cfg, logo):
     # Exclusions
     section_header(ws, r, "EXCLUSIONS (NOT included in this scope)", span=8, fill_rgb=GRAY)
     r += 1
-    exclusions = [
+    exclusions = cfg.get("exclusions") or [
         "Land acquisition costs",
-        "Owner-furnished items (refrigerator, washer/dryer, free-standing furniture, art, AV equipment)",
-        "Architectural & engineering design fees (covered under soft costs)",
-        "Surveys and FEMA Elevation Certificate (post-construction surveyor — owner's responsibility)",
-        "Threshold special inspector fees (if applicable; allowance carried for budget transparency)",
-        "Impact / school / transportation / utility impact fees (paid by owner outside contract)",
-        "Generator and standby power (not shown on drawings — add via Alternate)",
-        "Existing structure demolition / hazmat / abatement (vacant-lot basis assumed)",
-        "Hurricane-shutter alternative (impact-rated openings are base; shutters available as deduct alternate)",
-        "Pool deck heaters, automation, lighting beyond pool sub's standard package",
-        "Smart-home / structured AV / security beyond the carried allowances",
-        "Site dewatering beyond the carried allowance",
-        "Off-site or jurisdictional improvements (sidewalks, curbing, easement work outside lot)",
+        "Architectural & engineering design fees (owner soft costs)",
+        "Impact / school / utility connection fees (owner-carried unless noted)",
+        "Owner-furnished items (appliances, furnishings, AV) unless listed as included",
+        "Hazardous materials abatement / unforeseen below-grade conditions (by change order)",
         "Builder's risk insurance after substantial completion",
         "Maintenance, warranty repairs, or change-of-scope work after CO",
     ]
@@ -1339,17 +1344,13 @@ def build_scope(wb, items, cfg, logo):
     r += 1
     section_header(ws, r, "CLARIFICATIONS & QUALIFICATIONS", span=8, fill_rgb=GRAY)
     r += 1
-    clarifications = [
-        f'Basis of bid: signed/sealed drawings as listed in the Plans index + Structural Calcs (Calc Engineering C-26225); no addenda.',
-        f'Pricing valid for 30 days from issuance; material escalation reserved beyond.',
-        f'Florida sales tax (6% state + 1% Pinellas surtax = 7%) applied to materials only per FBC Ch 212.',
-        f'Florida lien-law (Ch. 713) notice rights reserved.',
-        f'Contractor License: {cfg["company"].get("license","[CGC# pending]")}.',
-        f'Bond not carried (private SFR — no FL 255.05 trigger). Add via Alternate if lender requires.',
-        f'GL + Builder’s Risk insurance carried by GC per Inputs.',
-        f'Stairs (3 runs) and frameless glass guardrails per A5.0 "by others" — carried as allowances.',
-        f'Pool shell + equipment + barrier carried as allowances under Div 13; final scope per pool sub package.',
-        f'Impact-rated openings carried as code-required (FBC WBDR); FL# / NOA approvals to be confirmed at submittal.',
+    clarifications = cfg.get("clarifications") or [
+        "Basis of bid: the drawing set and documents identified on the Inputs tab; addenda as listed in the proposal.",
+        "Pricing valid for 30 days from issuance; commodity escalation reserved beyond.",
+        "Florida sales tax applied to materials only (state + county surtax per markups.csv; contractor is the consumer of materials, FL Ch. 212).",
+        "Florida lien-law (Ch. 713) notice rights reserved.",
+        f'Contractor License: {cfg["company"].get("license", "")}.',
+        "Bond and retainage per contract / Inputs tab.",
     ]
     for x in clarifications:
         ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=8)
@@ -1382,7 +1383,7 @@ def build_allowances(wb, items, logo):
     total_rows = []
     for it in items:
         unit = (it.get("unit") or "").strip().upper()
-        if unit in ("ALLOW", "LS"):
+        if unit == "ALLOW":
             ws.cell(r, 2, str(it.get("division","")).strip())
             ws.cell(r, 3, it.get("item",""))
             ws.cell(r, 4, it.get("description",""))
@@ -1404,6 +1405,12 @@ def build_allowances(wb, items, logo):
             total_rows.append(r)
             r += 1
 
+    if not total_rows:
+        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
+        setval(ws, r, 2, "None carried this bid.", font=F_NOTE(),
+               align=Alignment(horizontal="left", indent=1))
+        r += 1
+
     # Total
     setval(ws, r, 2, "TOTAL ALLOWANCES", font=F_BIG_TOTAL(), fill_rgb=NAVY,
            align=Alignment(horizontal="right", indent=1))
@@ -1423,7 +1430,7 @@ def build_allowances(wb, items, logo):
     ws.freeze_panes = "A7"
 
 
-def build_alternates(wb, logo):
+def build_alternates(wb, cfg, logo):
     ws = wb.create_sheet("Alternates_and_Unit_Prices")
     ws.sheet_view.showGridLines = False
     add_logo(ws, logo)
@@ -1437,67 +1444,63 @@ def build_alternates(wb, logo):
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = BORDER
 
-    alts = [
-        ("1", "Pool screen enclosure (in lieu of standard pool barrier)",            "ADD",     30000, "Removed; carries pool enclosure allowance"),
-        ("2", "Standby generator + transfer switch (whole-house)",                   "ADD",     22000, "Typical FL coastal upgrade"),
-        ("3", "Hurricane-shutter system in lieu of impact-rated openings (entire envelope)", "DEDUCT", -28000, "Code permits either path"),
-        ("4", "TPO membrane in lieu of SBS modified bitumen roofing",                "DEDUCT",  -8000, "VE — both NOA approved"),
-        ("5", "Site-finished hardwood in lieu of LVT in living/bedroom areas",       "ADD",     18000, "Owner preference"),
-        ("6", "Glass shower enclosures upgrade (frameless, all baths)",              "ADD",      9000, "From standard semi-frameless"),
-        ("7", "Solar-ready conduit + roof attachments (PV-ready, no panels)",        "ADD",      4500, "Future PV"),
-        ("8", "EV charger + Level 2 panel upgrade (per stall above 2)",              "ADD/EA",   2400, "Per added Level 2 location"),
-    ]
-    for i, (no, desc, ad, amt, notes) in enumerate(alts):
-        r = 7 + i
-        setval(ws, r, 2, no, align=Alignment(horizontal="center"))
-        setval(ws, r, 3, desc, align=Alignment(wrap_text=True, indent=1, vertical="center"))
-        setval(ws, r, 4, ad, align=Alignment(horizontal="center"))
-        c = setval(ws, r, 5, amt, fmt=CURRENCY,
-                   font=F_BODY(),
+    # Alternates come from cfg["alternates"]; never invent pricing in a bank package.
+    alts = cfg.get("alternates", [])
+    r = 7
+    if not alts:
+        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
+        setval(ws, r, 2, "None carried this bid.", font=F_NOTE(),
+               align=Alignment(horizontal="left", indent=1))
+        r += 1
+    for i, alt in enumerate(alts):
+        amt = _num(alt.get("amount"))
+        setval(ws, r, 2, str(alt.get("no", i + 1)), align=Alignment(horizontal="center"))
+        setval(ws, r, 3, alt.get("description", ""), align=Alignment(wrap_text=True, indent=1, vertical="center"))
+        setval(ws, r, 4, alt.get("add_deduct", ""), align=Alignment(horizontal="center"))
+        c = setval(ws, r, 5, amt, fmt=CURRENCY, font=F_BODY(),
                    align=Alignment(horizontal="right"))
         if amt < 0:
             c.font = Font(name="Calibri", size=10, color=ACCENT_GREEN, bold=True)
-        setval(ws, r, 6, notes, align=Alignment(wrap_text=True, indent=1, vertical="center"))
+        setval(ws, r, 6, alt.get("notes", ""), align=Alignment(wrap_text=True, indent=1, vertical="center"))
         if i % 2:
-            for c in range(2, 7):
-                ws.cell(r, c).fill = fill(ROW_ZEBRA)
+            for cc in range(2, 7):
+                ws.cell(r, cc).fill = fill(ROW_ZEBRA)
+        r += 1
 
-    # Unit Prices
-    section_header(ws, 18, "UNIT PRICES (Owner add/deduct authorizations)", span=6)
+    # Unit Prices (cfg["unit_prices"]), empty-safe
+    r += 1
+    section_header(ws, r, "UNIT PRICES (Owner add/deduct authorizations)", span=6)
+    r += 1
     headers = ["#", "Item", "Unit", "$ / Unit", "Notes"]
     for c, h in enumerate(headers, start=2):
-        cell = ws.cell(19, c, h)
+        cell = ws.cell(r, c, h)
         cell.fill = fill(NAVY); cell.font = F_H2()
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = BORDER
-
-    units = [
-        ("1", "Slab thickness over base 6\" (incremental fill + concrete)",  "per inch",  4000,  "RFI: General Note 4 says 8\""),
-        ("2", "Impact window/door (added beyond base count)",                "per SF",    105,   "Avg $100-120/SF installed"),
-        ("3", "Timber pile (over-pile beyond 60)",                           "per EA",    1620,  "Mat + driving + cutoff"),
-        ("4", "Timber pile length (deeper driving)",                         "per LF",    35,    "Same unit price as base"),
-        ("5", "Concrete grade beam concrete (over)",                         "per CY",    280,   "Includes pump + finish"),
-        ("6", "Grade-beam rebar (over)",                                     "per ton",   3400,  "Material + labor"),
-        ("7", "Dewatering (added)",                                          "per week",  3500,  "Pump + filtration"),
-        ("8", "CMU 8\" wall (over base SF)",                                 "per SF",    8,     "Block + grout + reinf + labor"),
-    ]
-    for i, (no, item, unit, price, notes) in enumerate(units):
-        r = 20 + i
-        setval(ws, r, 2, no, align=Alignment(horizontal="center"))
-        setval(ws, r, 3, item, align=Alignment(wrap_text=True, indent=1, vertical="center"))
-        setval(ws, r, 4, unit, align=Alignment(horizontal="center"))
-        setval(ws, r, 5, price, fmt=CURRENCY, align=Alignment(horizontal="right"))
-        setval(ws, r, 6, notes, align=Alignment(wrap_text=True, indent=1, vertical="center"))
+    r += 1
+    units = cfg.get("unit_prices", [])
+    if not units:
+        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
+        setval(ws, r, 2, "None carried this bid.", font=F_NOTE(),
+               align=Alignment(horizontal="left", indent=1))
+        r += 1
+    for i, up in enumerate(units):
+        setval(ws, r, 2, str(up.get("no", i + 1)), align=Alignment(horizontal="center"))
+        setval(ws, r, 3, up.get("item", ""), align=Alignment(wrap_text=True, indent=1, vertical="center"))
+        setval(ws, r, 4, up.get("unit", ""), align=Alignment(horizontal="center"))
+        setval(ws, r, 5, _num(up.get("price")), fmt=CURRENCY, align=Alignment(horizontal="right"))
+        setval(ws, r, 6, up.get("notes", ""), align=Alignment(wrap_text=True, indent=1, vertical="center"))
         if i % 2:
-            for c in range(2, 7):
-                ws.cell(r, c).fill = fill(ROW_ZEBRA)
+            for cc in range(2, 7):
+                ws.cell(r, cc).fill = fill(ROW_ZEBRA)
+        r += 1
 
     widths = [2, 5, 52, 14, 16, 36, 4]
     for i, w in enumerate(widths, start=1):
         ws.column_dimensions[get_column_letter(i)].width = w
 
 
-def build_documents(wb, logo):
+def build_documents(wb, cfg, logo):
     ws = wb.create_sheet("Documents_Checklist")
     ws.sheet_view.showGridLines = False
     add_logo(ws, logo)
@@ -1510,34 +1513,31 @@ def build_documents(wb, logo):
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = BORDER
 
-    docs = [
-        ("GC Documents",  "Certified General Contractor license (current)",     "Pending", "Attach copy"),
-        ("GC Documents",  "GL Insurance Certificate (with lender as additional insured)", "Pending", "Attach"),
-        ("GC Documents",  "Workers' Compensation Insurance Certificate",        "Pending", "Attach"),
+    docs = cfg.get("documents_checklist") or [
+        ("GC Documents",  "Contractor license (current)",                          "Pending", "Attach copy"),
+        ("GC Documents",  "GL Insurance Certificate (lender as additional insured)", "Pending", "Attach"),
+        ("GC Documents",  "Workers' Compensation Insurance Certificate",           "Pending", "Attach"),
         ("GC Documents",  "Builder's Risk Insurance Certificate (during construction)", "Pending", "Attach"),
-        ("GC Documents",  "Performance & Payment Bond (if required by lender)", "N/A — private SFR", "Add if lender requires"),
-        ("GC Documents",  "W-9 + EIN",                                          "Pending", "Attach"),
-        ("Project Docs",  "Signed contract (AIA A101/A102 or custom)",          "Pending", "Borrower + GC"),
-        ("Project Docs",  "Notice of Commencement (FL 713.13)",                 "After NTP", "Recorded copy"),
-        ("Drawings",      "Architectural set (A0.0–A5.0)",                      "✓ On hand", "Signed/sealed"),
-        ("Drawings",      "Structural set (S1.0–S8.0)",                         "✓ Partial", "S6/S7/S8 pending visual takeoff confirm"),
-        ("Drawings",      "MEP set (M, E, P, FG)",                              "✓ On hand", "Signed/sealed"),
-        ("Drawings",      "Civil / Site plan (ST0.0)",                          "✓ On hand", "Within A-set"),
-        ("Engineering",   "Structural calculations (Calc Engineering C-26225)", "✓ On hand", "Sealed 2026-04-22"),
-        ("Engineering",   "Geotech report (Central FL Testing #249419)",        "✓ On hand", "Per project basis"),
-        ("Engineering",   "Energy calcs (FBC-Energy Form R405)",                "✓ Per project", "Confirm"),
-        ("Permits",       "Building permit application",                        "Pending", "AHJ: Treasure Island / Pinellas County"),
-        ("Permits",       "Plumbing / Mechanical / Electrical sub-permits",     "Pending", "Per discipline"),
-        ("Permits",       "Pool permit",                                        "Pending", "Pool sub package"),
-        ("Permits",       "FEMA Elevation Certificate (proposed)",              "Pending", "Pre-construction by owner surveyor"),
-        ("Compliance",    "Florida Product Approval / NOA — impact openings",   "RFI",     "FL # to be supplied with submittal"),
-        ("Compliance",    "Florida Product Approval / NOA — roofing",           "RFI",     "Per FBC Ch 15"),
-        ("Compliance",    "Threshold Inspector engagement letter (if applicable)", "TBD", "3-story / 47 ft borderline FL 553.79"),
-        ("Compliance",    "Subterranean termite treatment certificate",         "After application", "FL Memo 173"),
-        ("Lender",        "Appraisal (subject-to-completion)",                  "Pending", "Lender-ordered"),
-        ("Lender",        "Title commitment",                                   "Pending", "Title company"),
-        ("Lender",        "Construction loan agreement",                        "Pending", "Lender"),
-        ("Lender",        "Draw request form (AIA G702/G703 or lender)",        "Pending", "First draw at NTP"),
+        ("GC Documents",  "Performance & Payment Bond (if required by lender)",    "Per contract", "Add if lender requires"),
+        ("GC Documents",  "W-9 + EIN",                                             "Pending", "Attach"),
+        ("Project Docs",  "Signed contract (AIA A101/A102 or custom)",             "Pending", "Borrower + GC"),
+        ("Project Docs",  "Notice of Commencement (FL 713.13)",                    "After NTP", "Recorded copy"),
+        ("Drawings",      "Architectural set (signed/sealed)",                     "Pending", ""),
+        ("Drawings",      "Structural set (signed/sealed)",                        "Pending", ""),
+        ("Drawings",      "MEP set (signed/sealed)",                               "Pending", ""),
+        ("Drawings",      "Civil / site plan",                                     "Pending", ""),
+        ("Engineering",   f'Structural calculations ({cfg["engineer"]["name"]})',  "Pending", ""),
+        ("Engineering",   f'Geotech report ({cfg["geotech"]["firm"]})',            "Pending", ""),
+        ("Engineering",   "Energy calcs (FBC-Energy)",                             "Pending", ""),
+        ("Permits",       "Building permit application",                           "Pending", f'AHJ: {cfg["project"]["county"]}'),
+        ("Permits",       "Trade sub-permits (P/M/E)",                             "Pending", "Per discipline"),
+        ("Permits",       "FEMA Elevation Certificate (if flood-zone sited)",      "Pending", "Owner surveyor"),
+        ("Compliance",    "Florida Product Approval / NOA — openings & roofing",   "Pending", "FL#/NOA with submittals"),
+        ("Compliance",    "Subterranean termite treatment certificate",            "After application", "FBC 1816"),
+        ("Lender",        "Appraisal (subject-to-completion)",                     "Pending", "Lender-ordered"),
+        ("Lender",        "Title commitment",                                      "Pending", "Title company"),
+        ("Lender",        "Construction loan agreement",                           "Pending", "Lender"),
+        ("Lender",        "Draw request form (AIA G702/G703 or lender form)",      "Pending", "First draw at NTP"),
     ]
     for i, (cat, doc, status, notes) in enumerate(docs):
         r = 7 + i
@@ -1570,9 +1570,21 @@ def main():
     items   = load_lineitems(proj / "lineitems.csv")
     markups = load_markups(proj / "markups.csv")
     cfg     = load_config(proj / "loan-package-config.json")
-    logo    = proj / "Ideal_Construction_logo.png"
-    if not logo.exists():
-        sys.exit(f"Logo not found: {logo}")
+    # Logo is optional & configurable: config company.logo, else logo.png in the
+    # project folder, else a legacy name. If none found, the workbook still builds.
+    logo = None
+    cfg_logo = (cfg.get("company", {}) or {}).get("logo")
+    candidates = []
+    if cfg_logo:
+        lp = Path(cfg_logo)
+        candidates.append(lp if lp.is_absolute() else (proj / cfg_logo))
+    candidates += [proj / "logo.png", proj / "Ideal_Construction_logo.png"]
+    for cand in candidates:
+        if cand and Path(cand).exists():
+            logo = cand
+            break
+    if logo is None:
+        print("Note: no logo found (config company.logo / logo.png) — building without a logo image.")
 
     wb = Workbook()
     # Remove default Sheet
@@ -1589,11 +1601,11 @@ def main():
     months = int(cfg["schedule"]["duration_months"])
     build_sov(wb, items, markups, logo, months)
     build_draw_schedule(wb, items, markups, logo, months)
-    build_timeline(wb, items, logo, months)
+    build_timeline(wb, items, cfg, logo, months)
     build_scope(wb, items, cfg, logo)
     build_allowances(wb, items, logo)
-    build_alternates(wb, logo)
-    build_documents(wb, logo)
+    build_alternates(wb, cfg, logo)
+    build_documents(wb, cfg, logo)
 
     # Reorder tabs for bank-friendly navigation
     order = ["Cover", "Inputs", "Executive Summary", "Sources_and_Uses",
