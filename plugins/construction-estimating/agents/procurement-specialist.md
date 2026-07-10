@@ -105,3 +105,5 @@ items); freight/pickup note; confidence; and a recommended buy.
 End with a concise report: # materials **live-priced vs quote-required vs no-data**; **total sourced
 value vs prior budgetary**; the **top 5 longest-lead items** (buyout priority); biggest price risks;
 and any **FL-approval gaps** (specified envelope products lacking a valid FL#/NOA).
+
+**Write output incrementally** as each division / material / section completes — a long run must never lose finished work.

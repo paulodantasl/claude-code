@@ -13,7 +13,8 @@ the bottom each time this runs. Companion helpers: `estimating/scripts/jobtread_
 | Annotation coordinate space | **Native PDF points (72/in), page-local**; `meta` annotation `{width,height,rotation}` mirrors the PDF MediaBox | Org plan stored meta 792×612 = exactly its letter-size page |
 | `plan.scale` semantics | **PDF points per real METER** (calibration) | Every org value decodes as a standard imperial scale (below); UI displayed my computed values exactly |
 | Scale for imperial drawings | `scale = inches_per_foot × 3.28084 × 72` → **¼″=1′-0″ → 59.05511811; ⅛″ → 29.5275591; 3/16″ → 44.2913386; ½″ → 118.1102362; ⅜″ → 88.5826772; 1″ → 236.2204724** | All recurring org values matched; 40′-0″ printed dim measured exactly 720 pt on a true-scale ¼″ sheet |
-| Values are **recomputed from geometry** | The `value` you send is advisory; JobTread recomputes from annotations × scale | Sent 96.22 LF hand-sum; read back 96.825 (app measured the polyline, including a 10.7-pt jog) |
+| Values are **recomputed from geometry** | The `value` you send is advisory; JobTread recomputes from annotations × **current** plan scale. Recalibrating a plan silently updates every value measured on it (feature: the takeoff self-corrects) — so printed values in notes can drift from live values | Sent 96.22 LF hand-sum; read back 96.825; A2.0 user recalibration (Δ0.004%) shifted all its param values on the next read |
+| **Derived-value semantics by type** | `area`→SF, `linear`→LF, `count`→n markers, `linearArea`→**SF** (length×depth), `areaVolume`→**ft³** (area×depth), `linearVolume`→**ft³** (length×width×depth). Send LF/SF if you like — the server stores the derived total. Cost formulas on volume params get ft³: **divide by 27 for CY** | 2026-07-10 audit: all 139 measurements re-derived at 0.000% deviation only after applying these semantics (ratios exactly = depth, w×d) |
 | `isNegative` subtraction | Closed path with `isNegative: true` inside a measurement subtracts exactly | GF net area read back = interior − patio − core to full precision |
 | **Full-replace semantics** | `updateJob.parameters` and `updatePlan.annotations` REPLACE the whole array | Read-backs always mirror exactly what was last sent |
 | Where geometry belongs | **Parameter measurements embed their own annotations** (+ `planId`, `color`); `plan.annotations` = free markup only (meta + notes). Don't duplicate shapes in both — they'd render twice | UI-created takeoff (632 Boca Ciega) + our own saves |
@@ -134,6 +135,30 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   per plan page).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
+
+### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
+- **Scope:** full-system accuracy audit. JobTread leg: re-derived every measurement
+  value from raw annotation geometry (shoelace areas, polyline lengths, marker counts)
+  × current plan scale × dims and compared to the server's stored values.
+- **Result: 139/139 measurements at 0.000% deviation; zero param-vs-sum mismatches;
+  all count params marker-exact.** Cross-discipline ties: GF↔SF envelopes 0.02% across
+  independently calibrated sheets; arch balconies vs structural decks 0.03%; S3
+  truss+decks+core vs envelope 0.003%; perimeter exact. Only variance = S6 canopy
+  post-to-post 44′-9″ vs bay-chain 43′-7″ (2.6%) — the ±1′ already flagged as RFI.
+- **Discovery institutionalized (see §1 table):** the server RECOMPUTES values —
+  volume types store ft³, `linearArea` stores SF, and the user's manual A2.0
+  recalibration (Δ0.004%) flowed into every value on that sheet. Audit scripts must
+  apply these semantics or 29 phantom "failures" appear (exact 0.5×/2×/3.11× ratios
+  are the tell: that's depth / w×d, not error).
+- **Tie-formula lesson:** cross-checks must mirror each param's drawn convention
+  (overlap-clipped negatives, envelope vs interior baselines) — 4 of 9 first-pass ties
+  "failed" on formula convention, 0 on data.
+- **Companion system audit (same date, non-JobTread):** validator gained an xlsx
+  tie-out stage + hard FAILs (blank division, non-numeric/missing markups) after a
+  seeded-corruption exercise showed the old one missed workbook-level errors; loan
+  builder de-fabricated and aligned to the estimate builder; Florida reference facts
+  verified against primary sources (FBC/FFPC 9th Ed. eff. 12/31/2026 flagged; surtax
+  $5k single-item cap added). See PR #10.
 
 ### 2026-07-04 (6) — Job 2025-227 — FUEL GAS FG0.0-FG2.0 (03.10 G set) — Claude
 - **Scope:** user pointed at the already-uploaded 03.10 G0.0.pdf for the WH answer → 3 gas

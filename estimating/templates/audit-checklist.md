@@ -20,6 +20,14 @@
 
 ## Checks performed
 
+**Mechanical / protocol gates (run these, don't eyeball them)**
+- [ ] `validate_estimate.py --sector <sector>` run on the workbook inputs — PASS (attach output)
+- [ ] Scope ↔ estimate tie-out matrix verified line-by-line
+- [ ] Zero-qty / zero-cost line audit (no silent placeholders)
+- [ ] Benchmark bands checked against the sector profile table
+- [ ] Takeoff QA block present and complete (or its failures explained)
+- [ ] Sector red-flag list walked (from the matching sector-*.md profile)
+
 **Math & structure**
 - [ ] All extensions (qty × unit) recomputed and tie out
 - [ ] Division subtotals and grand total foot

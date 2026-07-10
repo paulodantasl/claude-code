@@ -117,7 +117,9 @@ Wind, HVHZ, WBDR, and flood-zone fundamentals: **see florida-code.md §§2–4.*
 - **Buyer deposits (FL 501.1375):** on 1–2 family new-home purchase contracts the
   buyer has the right (waivable **in writing**) to have deposits **up to 10% of the
   purchase price** held in escrow; builder may use escrowed funds for construction
-  only after notice + posting a surety bond. Related permit-timing rules on deposits
+  only after notice + posting a surety bond. The statute **excepts builders who sell or
+  construct fewer than 10 units per year statewide** — small custom builders may sit
+  outside 501.1375 entirely (verify applicability). Related permit-timing rules on deposits
   > 10% under FL 489.126 (verify with counsel) — build deposit handling into the
   contract, not the estimate.
 

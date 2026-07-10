@@ -19,23 +19,12 @@ Then in any project folder: `/bid <project name>`, or just describe the task
 - **Python 3** with **openpyxl** for the Excel builders — `pip install openpyxl` (or `pip3`).
 - **Read access** to the `paulodantasl/claude-code` GitHub repo. If it's private, an invite is required. (If you want this hosted under an Ideal org repo for tighter control, fork there and adjust the marketplace install URL.)
 
-## Pre-merge install (until PR #4 lands on `main`)
-
-Until the plugin entry is merged to the default branch, install from the working branch:
-
-```
-/plugin marketplace add paulodantasl/claude-code@claude/eager-tesla-G40LH
-/plugin install construction-estimating@claude-code-plugins
-```
-
-After PR #4 merges, the cleaner form `paulodantasl/claude-code` (no `@branch`) will work.
-
 ## What you get
 
 - 6 specialist agents (`takeoff-engineer`, `scope-writer`, `cost-estimator`, `bid-proposal-writer`, `estimate-auditor`, `procurement-specialist`) — Claude auto-routes based on your task
 - `/bid <project>` — full precon pipeline with market-sector auto-detection; sector-tuned variants: `/bid-public`, `/bid-residential`, `/bid-commercial`, `/bid-ti`
 - Accuracy protocols + a deterministic validator (`validate_estimate.py`) enforcing benchmark bands, scope↔estimate tie-out, and zero-qty guards
-- 8 Agent Skills (also individually deployable to Claude Cowork / claude.ai — see skills/ and the release zips)
+- 8 Agent Skills (also individually deployable to Claude Cowork / claude.ai — each folder under skills/ zips cleanly for upload)
 - Florida code + CSI + estimating-methodology knowledge base
 - Two Excel builders: line-item **estimate workbook** (Detail + Summary, formula-driven) and 13-tab **bank construction-loan package** (Cover, Sources & Uses, AIA G703 Schedule of Values, Draw Schedule, Gantt, etc.)
 

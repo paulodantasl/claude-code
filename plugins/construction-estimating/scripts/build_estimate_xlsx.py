@@ -48,6 +48,9 @@ MARKUP_ORDER = [
     ("ohp_pct", "Overhead & Profit"),
 ]
 
+# CSI MasterFormat division codes accepted in lineitems.csv (zero-padded 01-49).
+CSI_DIVS = {f"{i:02d}" for i in range(1, 50)}
+
 
 def _num(value, default=0.0):
     try:
@@ -55,6 +58,12 @@ def _num(value, default=0.0):
         return float(s) if s else default
     except (TypeError, ValueError):
         return default
+
+
+def _num_strict(value):
+    """Like _num but refuses to coerce garbage to 0 (raises ValueError)."""
+    s = str(value).strip().replace("$", "").replace(",", "").replace("%", "")
+    return float(s) if s else 0.0
 
 
 def read_lineitems(path: Path):
@@ -67,6 +76,15 @@ def read_lineitems(path: Path):
             rows.append(r)
     if not rows:
         sys.exit(f"No line items found in {path}")
+    # Refuse to build if a line would silently drop out of the Summary rollup:
+    # the Summary sums by division, so a blank/non-CSI division is money the
+    # Detail sheet shows but the BID TOTAL misses.
+    bad = [f"CSV row ~{i}: {r.get('item', '')!r} division={str(r.get('division', '')).strip()!r}"
+           for i, r in enumerate(rows, start=2)
+           if str(r.get("division", "")).strip() not in CSI_DIVS]
+    if bad:
+        sys.exit("lineitems.csv has blank/non-CSI division codes (use zero-padded 01-49):\n  "
+                 + "\n  ".join(bad))
     # stable sort by division then section so the workbook reads cleanly
     rows.sort(key=lambda r: (str(r.get("division", "")).zfill(3),
                              str(r.get("section", ""))))
@@ -79,7 +97,14 @@ def read_markups(path: Path):
         with path.open(newline="", encoding="utf-8-sig") as fh:
             for r in csv.reader(fh):
                 if len(r) >= 2 and r[0].strip() and not r[0].strip().startswith("#"):
-                    mk[r[0].strip()] = _num(r[1])
+                    key = r[0].strip()
+                    if key.lower() == "key":      # header row
+                        continue
+                    try:
+                        mk[key] = _num_strict(r[1])
+                    except (TypeError, ValueError):
+                        sys.exit(f"markups.csv: {key} value is not numeric: {r[1]!r} "
+                                 "(a silent 0% here would understate the bid)")
     return mk
 
 
@@ -202,7 +227,7 @@ def build_summary(wb, items, last_detail_row, markups):
         if rate_cell_pct is not None:
             ws.cell(row, 5, rate_cell_pct)
             ws.cell(row, 5).number_format = PCT
-        ws.cell(row, 6, formula)
+        ws.cell(row, 6, formula.replace("{ROW}", str(row)))
         ws.cell(row, 6).number_format = CURRENCY
         if bold:
             ws.cell(row, 1).font = Font(bold=True)
@@ -217,13 +242,13 @@ def build_summary(wb, items, last_detail_row, markups):
 
     tax_pct = markups.get("material_sales_tax_pct", 0.0)
     r = add_line("Material Sales Tax (materials only)",
-                 f"={total_material_ref}*{tax_pct}/100", rate_cell_pct=tax_pct)
+                 f"={total_material_ref}*E{{ROW}}/100", rate_cell_pct=tax_pct)
     add_line("Subtotal", f"={subtotal_ref}+F{r}", bold=True)
     subtotal_ref = f"F{row}"
 
     for key, label in MARKUP_ORDER:
         pct = markups.get(key, 0.0)
-        r = add_line(label, f"={subtotal_ref}*{pct}/100", rate_cell_pct=pct)
+        r = add_line(label, f"={subtotal_ref}*E{{ROW}}/100", rate_cell_pct=pct)
         add_line("Subtotal", f"={subtotal_ref}+F{r}", bold=True)
         subtotal_ref = f"F{row}"
 

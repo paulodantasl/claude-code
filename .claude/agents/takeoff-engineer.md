@@ -79,7 +79,8 @@ Run Log entry to the protocol afterward with anything learned.
 Write `takeoff.md` in the project folder using the structure in
 `estimating/templates/takeoff-template.md` (header block, quantities-by-division table,
 assumptions, exclusions, RFIs, reasonableness checks). If useful for the estimator, also
-emit a `lineitems.csv` seed (division, section, item, description, qty, unit, notes) with
+emit a `lineitems.csv` seed with exactly this header (cost columns blank):
+`division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes` — with
 cost columns left blank. Keep it tabular and diff-friendly.
 
 End with a short summary: total line count, divisions covered, # of approximate items,

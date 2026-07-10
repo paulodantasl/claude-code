@@ -56,12 +56,13 @@ ohp_pct,8
 
 ## Output: `estimate.xlsx`
 
-- **Detail** sheet — every line with computed material (incl. waste + tax), labor,
+- **Detail** sheet — every line with computed material (incl. waste, pre-tax), labor,
   equipment, sub, and a row total, via live formulas.
 - **Summary** sheet — subtotals by CSI division, then the markup waterfall to the bid
-  total, all as formulas referencing Detail.
+  total, all as formulas referencing Detail. Waterfall **Rate** cells (column E) are
+  live — edit a rate and the workbook recomputes.
 
 Run:
 ```
-python estimating/scripts/build_estimate_xlsx.py estimating/projects/<project>/
+python3 estimating/scripts/build_estimate_xlsx.py estimating/projects/<project>/
 ```

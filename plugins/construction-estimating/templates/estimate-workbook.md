@@ -1,7 +1,7 @@
 # Estimate Workbook — data schema
 
 The `cost-estimator` agent produces two CSVs in the project folder, then runs
-`estimating/scripts/build_estimate_xlsx.py` to generate a formatted, formula-driven
+the bundled `scripts/build_estimate_xlsx.py` to generate a formatted, formula-driven
 `estimate.xlsx`. Keeping the source as CSV makes the estimate diff-able and lets the
 auditor recompute everything independently.
 
@@ -56,12 +56,13 @@ ohp_pct,8
 
 ## Output: `estimate.xlsx`
 
-- **Detail** sheet — every line with computed material (incl. waste + tax), labor,
+- **Detail** sheet — every line with computed material (incl. waste, pre-tax), labor,
   equipment, sub, and a row total, via live formulas.
 - **Summary** sheet — subtotals by CSI division, then the markup waterfall to the bid
-  total, all as formulas referencing Detail.
+  total, all as formulas referencing Detail. Waterfall **Rate** cells (column E) are
+  live — edit a rate and the workbook recomputes.
 
 Run:
 ```
-python estimating/scripts/build_estimate_xlsx.py estimating/projects/<project>/
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/build_estimate_xlsx.py" <project-folder>/
 ```

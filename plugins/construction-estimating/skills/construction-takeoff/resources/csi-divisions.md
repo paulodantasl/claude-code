@@ -22,7 +22,7 @@ is missed and trades reconcile cleanly. Below: the divisions, typical bid items,
 | 11 | Equipment | Foodservice, loading dock, residential/commercial appliances, specialty equipment |
 | 12 | Furnishings | Casework, countertops, window treatments, FF&E, entrance mats |
 | 13 | Special Construction | Pre-engineered metal buildings, pools, cold storage, integrated assemblies |
-| 14 | Conveying | Elevators, escalators, lifts |
+| 14 | Conveying Equipment | Elevators, escalators, lifts |
 | 21 | Fire Suppression | Sprinklers (wet/dry), standpipe, fire pump, clean agent |
 | 22 | Plumbing | DWV, domestic water, fixtures, water heaters, gas, roof drainage, medical gas |
 | 23 | HVAC | Equipment (RTU/split/VRF/chillers), ductwork, piping, controls, TAB, insulation |

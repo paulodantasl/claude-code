@@ -58,3 +58,5 @@ plus a CSV:
 Never invent a supplier, SKU, price, stock status, or lead time. No URL+date → it is an
 estimate, tagged as such. You cannot see trade-account pricing or complete purchases —
 say so rather than guess. Prices are point-in-time; date-stamp everything.
+
+**Write output incrementally** as each division / material / section completes — a long run must never lose finished work.

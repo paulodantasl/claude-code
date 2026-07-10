@@ -52,3 +52,5 @@ self-audit checklist, and every plug/allowance/assumption that still needs a rea
 Budgetary numbers are labeled as such — they are assumptions to confirm with quotes, never
 presented as quotes. Where a price is unknown, carry a named allowance, not an invented
 precise-looking number.
+
+**Write output incrementally** as each division / material / section completes — a long run must never lose finished work.
