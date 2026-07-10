@@ -1,0 +1,10 @@
+{
+  "name": "construction-estimating",
+  "description": "Construction takeoff, scope of work, cost estimating, bid proposals, independent QA audit, and bank construction-loan packages. Florida-default (HVHZ/FBC/wind/flood/NOA/termite/tax), CSI-organized, formula-driven Excel output.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Ideal Construction",
+    "email": "tampa@idealcgc.com"
+  },
+  "keywords": ["construction", "estimating", "takeoff", "scope-of-work", "bid", "preconstruction", "florida", "csi", "construction-loan"]
+}
