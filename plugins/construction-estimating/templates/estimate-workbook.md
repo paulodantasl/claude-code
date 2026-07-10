@@ -1,7 +1,7 @@
 # Estimate Workbook — data schema
 
 The `cost-estimator` agent produces two CSVs in the project folder, then runs
-`estimating/scripts/build_estimate_xlsx.py` to generate a formatted, formula-driven
+the bundled `scripts/build_estimate_xlsx.py` to generate a formatted, formula-driven
 `estimate.xlsx`. Keeping the source as CSV makes the estimate diff-able and lets the
 auditor recompute everything independently.
 
@@ -63,5 +63,5 @@ ohp_pct,8
 
 Run:
 ```
-python estimating/scripts/build_estimate_xlsx.py estimating/projects/<project>/
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/build_estimate_xlsx.py" <project-folder>/
 ```

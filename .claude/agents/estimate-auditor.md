@@ -72,3 +72,5 @@ table **ranked by severity** (Critical / Major / Minor) with evidence (sheet #, 
 section) and a recommended fix and dollar impact where you can estimate it. Be specific
 and actionable; a finding without evidence and a fix is not done. Lead your summary with
 the items that change the number or create legal/code exposure.
+
+**Write output incrementally** as each division / material / section completes — a long run must never lose finished work.

@@ -1,6 +1,6 @@
 # Construction Estimating — Deliverable Templates
 
-Copies of the 5 template skeletons the GPT-side specialists fill in.
+Copies of the 5 template skeletons the specialist roles fill in.
 Use these formats for your takeoff / scope / estimate workbook / proposal / audit outputs.
 
 ---
@@ -106,7 +106,7 @@ Organized by CSI division. Be specific and quantity-anchored where useful.
 # Estimate Workbook — data schema
 
 The `cost-estimator` agent produces two CSVs in the project folder, then runs
-`estimating/scripts/build_estimate_xlsx.py` to generate a formatted, formula-driven
+the plugin's bundled `build_estimate_xlsx.py` to generate a formatted, formula-driven
 `estimate.xlsx`. Keeping the source as CSV makes the estimate diff-able and lets the
 auditor recompute everything independently.
 
@@ -168,7 +168,8 @@ ohp_pct,8
 
 Run:
 ```
-python estimating/scripts/build_estimate_xlsx.py estimating/projects/<project>/
+# chat-only mode: produce lineitems.csv + markups.csv and the totals table;
+# workbook build runs in Claude Code via the plugin's bundled build_estimate_xlsx.py
 ```
 
 ---
@@ -246,6 +247,14 @@ Sincerely,
 | 2 | | | | | |
 
 ## Checks performed
+
+**Mechanical / protocol gates (run these, don't eyeball them)**
+- [ ] `validate_estimate.py --sector <sector>` run on the workbook inputs — PASS (attach output)
+- [ ] Scope ↔ estimate tie-out matrix verified line-by-line
+- [ ] Zero-qty / zero-cost line audit (no silent placeholders)
+- [ ] Benchmark bands checked against the sector profile table
+- [ ] Takeoff QA block present and complete (or its failures explained)
+- [ ] Sector red-flag list walked (from the matching sector-*.md profile)
 
 **Math & structure**
 - [ ] All extensions (qty × unit) recomputed and tie out

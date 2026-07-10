@@ -63,5 +63,5 @@ ohp_pct,8
 
 Run:
 ```
-python estimating/scripts/build_estimate_xlsx.py estimating/projects/<project>/
+python3 estimating/scripts/build_estimate_xlsx.py estimating/projects/<project>/
 ```

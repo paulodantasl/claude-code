@@ -40,7 +40,7 @@ vs. a budgetary assumption, and you never hide markups.
   termite treatment, energy testing, threshold inspection — at the approved-product cost,
   not generic.
 - Generate the workbook:
-  `python estimating/scripts/build_estimate_xlsx.py <project_dir>/`
+  `python3 estimating/scripts/build_estimate_xlsx.py <project_dir>/`
   Open/verify it built; report the **BID TOTAL** and the division breakdown.
 
 ## Accuracy protocol (mandatory)
@@ -75,3 +75,5 @@ Owner Direct Purchase on public work; landlord fees and higher contingency on TI
 `lineitems.csv`, `markups.csv`, and the built `estimate.xlsx` in the project folder. End
 with: BID TOTAL, $/SF if area is known, cost by division, the largest cost drivers, and
 every plug/allowance/assumption that still needs a real quote.
+
+**Write output incrementally** as each division / material / section completes — a long run must never lose finished work.

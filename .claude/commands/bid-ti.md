@@ -16,7 +16,7 @@ their work yourself.
    bid-proposal-writer, estimate-auditor) with the instruction to apply its
    pipeline-stage changes, division emphasis, and markup/commercial posture.
 
-1–7. **Follow the `/bid` pipeline steps** (project folder under `estimating-projects/<slug>/`,
+1–7. **Follow the `/bid` pipeline steps** (project folder under `estimating/projects/<slug>/`,
    takeoff, optional live procurement, scope, estimate + workbook, proposal, independent
    audit, report back) — with these sector gates enforced on top:
 

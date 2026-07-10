@@ -49,3 +49,5 @@ FAIL — needs rework), findings ranked Critical/Major/Minor with evidence (shee
 cell, doc section), recommended fix, and $ impact where estimable. Lead with whatever
 changes the bid total or creates legal/code exposure. A finding without evidence and a
 fix is not done.
+
+**Write output incrementally** as each division / material / section completes — a long run must never lose finished work.
