@@ -46,8 +46,9 @@ Baseline rules live in `florida-code.md`, `estimating-methodology.md`, and
 ## 3. Asbestos / lead (Div 02)
 
 - **Florida requires a written asbestos survey before renovation or demolition of a
-  commercial building**, performed by a **licensed asbestos consultant** (FL Ch. 469 —
-  licensing and survey requirement; survey report must be on site during renovation).
+  commercial building**, performed by a **licensed asbestos consultant** (mandate: **FDEP Rule 62-257, F.A.C. /
+  NESHAP**, administered locally — e.g. Pinellas County Air Quality; **FL Ch. 469**
+  licenses who may perform it; survey report must be on site during renovation).
 - **Federal NESHAP (40 CFR 61 Subpart M):** notification to DEP/local program
   **10 working days** before demolition (required even if no asbestos) or before
   renovation disturbing RACM ≥ **260 LF pipe / 160 SF other components / 35 CF**.
@@ -67,7 +68,8 @@ Baseline rules live in `florida-code.md`, `estimating-methodology.md`, and
 
 ## 4. Code triggers — FBC-Existing Building & ADA
 
-- TI work is governed by **FBC-Existing Building (8th Ed., 2023)**. Classification of work:
+- TI work is governed by **FBC-Existing Building (8th Ed., 2023; 9th Ed. effective
+  Dec 31, 2026 for later permits)**. Classification of work:
   **Level 1** (Ch. 7 — finishes/equipment replacement, no space reconfiguration),
   **Level 2** (Ch. 8 — reconfiguration of space, doors/windows, systems work), **Level 3**
   (Ch. 9 — work area exceeds **50% of building area**; pulls in building-wide upgrades).
@@ -234,7 +236,7 @@ Reasonableness bands only — confirm with current quotes (see `estimating-metho
 | **Retainage** | Private: **no FL statutory cap — per contract** (commonly 10%, reduce to 5% at 50%; negotiate). Public work: **5% cap** (FS 218.735 local / FS 255.078 state). |
 | **GC/OH&P** | Combined OH&P **8–15%** — small, fast jobs sit at the high end; negotiated/CM work often fee + GCs open-book. |
 | **Insurance** | GL per LL lease exhibit (limits + additional insureds: LL, property manager, lender). Builder's risk often via LL's property policy — **confirm, don't double-carry**. |
-| **Tax** | Real-property improvement: contractor pays FL sales tax on materials (6% + surtax) — see `florida-code.md` §5. Watch trade-fixture/FF&E scope (can be taxed as retail sale — confirm contract structure). |
+| **Tax** | Real-property improvement: contractor pays FL sales tax on materials (6% + surtax) — see `florida-code.md` §5. County surtax applies only to the **first $5,000 per single item** (FS 212.054(2)(b)) — flat combined rates over-tax big-ticket units (RTUs, switchgear). Watch trade-fixture/FF&E scope (can be taxed as retail sale — confirm contract structure). |
 | **Payment** | Private: FL Ch. 713 lien law fully applies — **NTO to owner AND lessee/LL as applicable**. Check public records for a recorded **FS 713.10 notice** — if the lease prohibits liens on the fee, **your lien attaches to the leasehold only** (weak security on tenant default). Evaluate tenant credit; on thin-credit tenants require allowance escrow/joint checks, LL joinder, deposit, or personal guaranty. Pay apps often routed through LL's TI-allowance disbursement (draw conditions, lien releases per draw). |
 | **Wage rules** | Davis-Bacon (**federal**) only if federally funded/leased; no FL prevailing wage on private TI. |
 

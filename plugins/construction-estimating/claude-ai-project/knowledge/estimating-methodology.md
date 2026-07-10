@@ -40,6 +40,9 @@ Each line carries up to four cost types: **M** material, **L** labor, **E** equi
 
 **Material:** unit material cost × quantity × (1 + **waste factor**). Add freight and
 **Florida sales tax** (6% + county surtax) on materials for real-property contracts.
+County surtax applies only to the **first $5,000 of a single item** (FS 212.054(2)(b));
+current county rates span **0–1.5%** and change annually — check DOR form **DR-15DSS**
+(reissued each November). Pinellas: 1% → 7% combined.
 
 **Equipment:** owned (internal rate) or rented (hourly/daily/weekly/monthly). Include
 **mobilization/demobilization**, fuel, operator (if not in labor), and small tools

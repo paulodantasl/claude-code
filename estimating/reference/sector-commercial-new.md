@@ -23,7 +23,9 @@ re-derive wind/flood/HVHZ or markup mechanics here, cross-reference them.
 ## 2. Code & classification (FBC-Building)
 
 - Commercial new work runs under **FBC-Building** (current 8th Edition 2023 — confirm
-  edition on the code-summary sheet, per `florida-code.md`).
+  edition on the code-summary sheet, per `florida-code.md`). **Transition: the 9th
+  Edition (2026) FBC takes effect Dec 31, 2026** — work permitting after that date is
+  designed/priced under the 9th Ed. (updated ASCE 7 wind maps, energy, roofing).
 - **Occupancy classification** drives everything: B (office), M (mercantile), A
   (assembly), S/F (storage/factory), I (institutional). **Mixed-use** buildings use
   separated or non-separated provisions (FBC Ch. 5) — separated occupancies add **rated
@@ -80,7 +82,8 @@ re-derive wind/flood/HVHZ or markup mechanics here, cross-reference them.
   between the electrician and the sprinkler sub.
 - Governing code: **Florida Fire Prevention Code, 8th Edition (2023)** — Florida
   editions of **NFPA 1 and NFPA 101 (2021)**, adopted triennially by the State Fire
-  Marshal under **FL 633.202** (verified).
+  Marshal under **FL 633.202** (verified). **9th Edition FFPC (NFPA 1/101 2024) is
+  targeted effective Dec 31, 2026** — same permit-date transition as the FBC.
 - **The AHJ fire marshal is a separate reviewer** from the building official: separate
   plan review, separate fees, separate inspections, and often underground fire-line
   work by a licensed fire-line contractor (Div 21 vs. Div 33 scope-gap — assign it).
@@ -191,13 +194,13 @@ special-inspection hooks each package triggers.
 |------|--------------------|-------|
 | Contract form | **AIA A101 (lump sum) / A102 (GMP w/ shared savings) + A201 general conditions** | Read supplementary conditions for risk shifts (weather days, concealed conditions) |
 | Retainage — private | **10% dropping to 5% at 50% complete** (market norm, contractual — no FL statutory cap on private; verify contract) | Negotiate release at substantial completion |
-| Retainage — public (FL) | **Capped at 5%** throughout (**FL 218.735** local / **FL 255.078** state; SB 346, eff. 7/1/2023 — verified) | Doesn't apply to contracts ≤ $200,000 or some federally funded work |
+| Retainage — public (FL) | **Capped at 5%** throughout (**FL 218.735** local / **FL 255.078** state; 5% cap since **HB 101, eff. 10/1/2020**; SB 346 (2023) revised punch-list creation and prompt-pay/dispute timelines) | Doesn't apply to contracts ≤ $200,000 or some federally funded work |
 | Bonds — public | **FL 255.05**: bond required above **$200k**. State work: not required at ≤$100k; agencies may waive $100k–$200k (DMS delegation). Local government work: awarding authority MAY waive at ≤$200k but can still require a bond at any amount — confirm bid docs. ~1–3% sliding scale | Private: per contract only |
 | GC/GR (Div 01) | **6–10% of direct cost** typical at this scale — below the base **8–15%** band in `estimating-methodology.md` §4 because commercial-new direct-cost denominators are large; **always build it from schedule + staffing** | Absolute Div 01 dollars are HIGHER than interior work: full-time super, PM, PE, safety on 12–24 mo durations |
 | OH&P | **5–8%** on mid-size competitive-bid commercial — low end of the base **5–15%** band per `estimating-methodology.md` §5; higher on small/negotiated | Never double-markup subs |
 | Insurance | GL + **builder's risk** (~0.5–1.5%); confirm **OCIP/CCIP wrap** — if wrapped, back insurance OUT of sub quotes | Wind/named-storm deductibles are large in FL; note who owns the deductible |
 | Escalation | Explicit line on 12–24 mo schedules — index long-lead (gear, RTUs, glazing) to delivery dates | Not a hidden contingency; show it |
-| Payment terms | Monthly SOV billing (G702/G703); private prompt pay **FL 715.12** (owner pays within 14 days of due date unless contract modifies; interest thereafter — verified); public per FL Prompt Payment Act | Pay-when-paid clauses common — flag |
+| Payment terms | Monthly SOV billing (G702/G703); private prompt pay **FL 715.12** (payment due per the CONTRACT terms; the statutory 14-day mechanics attach to FINAL payment after substantial completion/punch list, and interest — s.55.03 rate +12%/yr or the contract rate if greater — accrues from 14 days after payment is due; applies to written lienable contracts); public per FL Prompt Payment Act | Pay-when-paid clauses common — flag |
 | LDs | Common on retail/build-to-suit (tenant lease triggers) — price schedule risk or negotiate grace | Ask for mutual delay relief |
 | Lien law | **FL Ch. 713** applies on private commercial: NTO within **45 days** of first furnishing; claim of lien within **90 days** of final furnishing (verified) | Public work: bond claims under 255.05 instead |
 | Sales tax | Contractor consumes materials — 6% + county surtax on materials (see `florida-code.md` §5) | |
