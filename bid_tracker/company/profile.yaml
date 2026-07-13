@@ -1,0 +1,56 @@
+# Company profile used to populate proposal drafts and cover letters.
+# Fill in your real data. Anything left blank shows up as a [PLACEHOLDER]
+# in the generated proposal so it's easy to spot what still needs editing.
+
+name: "Your Construction Company"
+legal_name: "Your Construction Company, LLC"
+address: "123 Main St, Suite 100, Tampa, FL 33601"
+years_in_business: 15
+
+contact_name: "Jane Doe"
+contact_title: "Director of Preconstruction"
+contact_email: "estimating@yourcompany.com"
+contact_phone: "(813) 555-0100"
+
+specialties:
+  - commercial building
+  - public works
+  - site development
+  - concrete & structural
+
+licenses:
+  - "FL Certified General Contractor CGC-000000"
+
+certifications:
+  - "SBA Small Business"
+  # - "Minority Business Enterprise (MBE)"
+
+bonding_capacity: "$30M single / $60M aggregate"
+emr: "0.85"
+safety_program: "OSHA 30 site supervision; written IIPP; weekly toolbox talks"
+
+# DUNS / UEI / registration identifiers
+uei: "[PLACEHOLDER: SAM.gov UEI]"
+cage_code: "[PLACEHOLDER]"
+
+key_personnel:
+  - name: "John Smith"
+    role: "Project Manager"
+    years: 20
+  - name: "Maria Garcia"
+    role: "Superintendent"
+    years: 18
+  - name: "Sam Lee"
+    role: "Safety Officer"
+    years: 12
+
+past_projects:
+  - name: "County Operations Center"
+    value: "$12.4M"
+    description: "45,000 SF municipal office, design-build, completed on schedule"
+  - name: "SR-50 Roadway Widening"
+    value: "$8.1M"
+    description: "2.3-mile FDOT roadway and drainage improvements"
+  - name: "Regional Fire Station No. 7"
+    value: "$5.6M"
+    description: "Essential-facility new construction, LEED Silver"
