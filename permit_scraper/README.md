@@ -3,6 +3,12 @@
 Get ahead of the market by tracking new commercial and industrial building permit applications
 before news breaks. Know where the next Publix, Amazon warehouse, or data center will open.
 
+> **Monitoring your *own* pending permits?** See **[MONITORING.md](MONITORING.md)** —
+> it re-checks a watch-list of pending residential/commercial permits for **status
+> updates** and sends **instant notifications to the assigned field manager**
+> (`python -m permit_scraper monitor`). That's a different job from the discovery
+> pipeline below, which finds *new* big-company permits.
+
 ---
 
 ## How It Works
@@ -254,8 +260,21 @@ permit_scraper/
 │   └── database.py          # DB init + session management
 ├── notifications/
 │   └── alerts.py            # Console / email / Slack / webhook / CSV
+├── monitoring/              # ── Permit-update monitoring (see MONITORING.md) ──
+│   ├── monitor.py           #   Orchestrator: fetch → diff → notify → persist
+│   ├── differ.py            #   Detects meaningful status changes
+│   ├── status.py            #   Normalises portal statuses → lifecycle phases
+│   ├── notifier.py          #   Instant field-manager alerts (SMS/Slack/email/…)
+│   ├── state_store.py       #   JSON snapshot store + JSONL event log (no DB)
+│   ├── fetchers.py          #   Live-scraper / injectable current-state fetchers
+│   ├── config.py            #   Loads + validates tracked/managers/counties
+│   └── demo.py              #   End-to-end self-test (no browser/network/DB)
+├── targets/
+│   ├── tracked_permits.yaml #   Pending permits to monitor for updates
+│   └── field_managers.yaml  #   Who gets notified, and on which channels
 ├── pipeline.py              # Main orchestration
-├── main.py                  # CLI (click)
+├── main.py                  # CLI (click) — run / watch / export / monitor / tracked
 ├── requirements.txt
+├── MONITORING.md            # Guide for the permit-update monitoring feature
 └── .env.example
 ```

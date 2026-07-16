@@ -1,0 +1,38 @@
+# Field managers who receive instant permit-update notifications.
+#
+# Each manager lists the channels they want, in the order they should fire.
+#   console  — prints to the run log (always works; good for testing)
+#   sms      — text message (needs SMS_WEBHOOK_URL, or Twilio env vars)
+#   slack    — Slack message (per-manager slack_webhook, or global SLACK_WEBHOOK_URL)
+#   email    — email (needs SMTP_* env vars)
+#   webhook  — generic JSON POST (Teams / Zapier / your dispatcher; WEBHOOK_URL)
+#
+# Phone numbers must be E.164 (e.g. +13055551234). Secrets (webhooks, SMTP
+# passwords) live in environment variables / .env — never commit real ones here.
+
+field_managers:
+  - id: jdoe
+    name: "Jane Doe"
+    email: "jane.doe@example.com"
+    phone: "+13055550111"
+    channels: [sms, email]
+
+  - id: msmith
+    name: "Marcus Smith"
+    email: "marcus.smith@example.com"
+    phone: "+18135550122"
+    # Manager-specific Slack channel overrides the global default:
+    slack_webhook: "https://hooks.slack.com/services/REPLACE/WITH/YOURS"
+    channels: [sms, slack]
+
+  - id: rlee
+    name: "Rosa Lee"
+    email: "rosa.lee@example.com"
+    phone: "+14075550133"
+    channels: [email]
+
+  # Ops desk / dispatcher that should see everything (assign to every permit).
+  - id: ops_desk
+    name: "Operations Desk"
+    email: "permits@example.com"
+    channels: [email, console]

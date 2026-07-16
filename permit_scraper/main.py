@@ -277,6 +277,122 @@ def counties(ctx: click.Context) -> None:
     console.print(t)
 
 
+@cli.command()
+@click.option("--config-dir", default=None,
+              help="Dir with tracked_permits.yaml / field_managers.yaml / counties.yaml")
+@click.option("--state-file", default="permit_monitor_state.json", show_default=True,
+              help="JSON file holding last-known permit snapshots + event log")
+@click.option("--interval", "-i", default=None,
+              help="Run continuously every e.g. 30m, 6h (omit for a single pass)")
+@click.option("--dry-run", is_flag=True, default=False,
+              help="Render notifications without actually sending them")
+@click.option("--notify-first-seen", is_flag=True, default=False,
+              help="Also notify the first time a permit is seen (default: silent baseline)")
+@click.option("--lookback-days", default=180, show_default=True,
+              help="Bulk-scrape lookback for portals without direct record lookup")
+def monitor(
+    config_dir: str | None,
+    state_file: str,
+    interval: str | None,
+    dry_run: bool,
+    notify_first_seen: bool,
+    lookback_days: int,
+) -> None:
+    """Monitor tracked pending permits for status updates and notify field managers."""
+    from .monitoring import build_monitor
+
+    mon = build_monitor(
+        config_dir=config_dir,
+        state_file=state_file,
+        dry_run=dry_run,
+        notify_on_first_seen=notify_first_seen,
+        lookback_days=lookback_days,
+    )
+
+    n_tracked = len(mon.config.active_tracked())
+    console.print(
+        f"[bold cyan]Monitoring {n_tracked} tracked permit(s)[/]"
+        + (" [yellow](dry-run)[/]" if dry_run else "")
+    )
+    for w in mon.config.warnings:
+        console.print(f"  [yellow]![/] {w}")
+    if n_tracked == 0:
+        console.print("[yellow]No active tracked permits — edit targets/tracked_permits.yaml[/]")
+        return
+
+    def _print_summary(summary: dict) -> None:
+        t = Table(show_header=False)
+        t.add_column("Metric", style="bold")
+        t.add_column("Value")
+        t.add_row("Checked", str(summary["checked"]))
+        t.add_row("Found on portal", str(summary["found"]))
+        t.add_row("Not found this run", str(summary["missing"]))
+        t.add_row("New baselines", str(summary["baselined"]))
+        t.add_row("[green]Updates detected[/]", str(summary["updates"]))
+        t.add_row("Notifications sent", str(summary["notifications_sent"]))
+        if summary["notification_failures"]:
+            t.add_row("[red]Notify failures[/]", str(summary["notification_failures"]))
+        if summary["errors"]:
+            t.add_row("[red]Errors[/]", str(len(summary["errors"])))
+        console.print(t)
+        for err in summary["errors"]:
+            console.print(f"  [red]✗[/] {err}")
+
+    if interval:
+        hours = _parse_interval(interval)
+        seconds = int(hours * 3600)
+        console.print(f"[bold green]Watch mode:[/] checking every {interval}. Ctrl-C to stop.")
+        try:
+            while True:
+                summary = mon.run_once()
+                console.rule(f"[cyan]Pass complete — next check in {interval}")
+                _print_summary(summary)
+                time.sleep(seconds)
+        except KeyboardInterrupt:
+            console.print("\n[bold]Stopped.[/]")
+    else:
+        summary = mon.run_once()
+        console.rule("[bold cyan]Monitor pass complete")
+        _print_summary(summary)
+
+
+@cli.command()
+@click.option("--config-dir", default=None)
+@click.option("--state-file", default="permit_monitor_state.json", show_default=True)
+def tracked(config_dir: str | None, state_file: str) -> None:
+    """List tracked permits and their last-known status."""
+    from pathlib import Path as _Path
+
+    from .monitoring import JsonStateStore, load_config
+
+    cfg = load_config(config_dir=_Path(config_dir) if config_dir else None)
+    store = JsonStateStore(state_file)
+    store.load()
+
+    t = Table(title="Tracked Permits", show_header=True)
+    t.add_column("Permit #", style="cyan")
+    t.add_column("Project")
+    t.add_column("County")
+    t.add_column("Cat.", style="yellow")
+    t.add_column("Managers")
+    t.add_column("Last Status", style="green")
+    t.add_column("Phase")
+
+    for p in cfg.tracked:
+        snap = store.get(p.key)
+        managers = ", ".join(m.name for m in cfg.managers_for(p)) or "[red]none[/]"
+        t.add_row(
+            p.permit_number,
+            (p.project_name or "")[:32],
+            p.county,
+            (p.category or "")[:4],
+            managers,
+            (snap.status if snap else "—") or "—",
+            (snap.phase if snap else "—"),
+        )
+    console.print(t)
+
+
 def _parse_interval(s: str) -> float:
     """Parse interval string like '6h', '30m' to hours."""
     s = s.lower().strip()

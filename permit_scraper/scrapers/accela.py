@@ -206,6 +206,13 @@ class AccelaPlaywrightScraper(BaseScraper):
             "valuation": "estimated_value",
             "filed date": "filed_date",
             "application date": "filed_date",
+            "opened date": "filed_date",
+            "issued date": "issued_date",
+            "issue date": "issued_date",
+            "date issued": "issued_date",
+            "expiration": "expiry_date",
+            "expiration date": "expiry_date",
+            "expires": "expiry_date",
         }
 
         rows = page.locator("table tr")
@@ -221,6 +228,119 @@ class AccelaPlaywrightScraper(BaseScraper):
                         break
 
         return data
+
+    # ── Per-permit lookup (monitoring) ──────────────────────────────────────
+
+    def fetch_permits(self, refs: list[Any], lookback_days: int = 180) -> dict[str, RawPermit | None]:
+        """
+        Look up specific permits by record number via the Accela search page.
+
+        More precise than the bulk scrape and reaches permits filed before the
+        lookback window (important for long-pending projects). Falls back to the
+        generic bulk-scrape indexing if the targeted search is unavailable or
+        finds nothing.
+        """
+        results: dict[str, RawPermit | None] = {
+            getattr(r, "permit_number", None): None for r in refs
+        }
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=self.headless, executable_path=CHROMIUM_PATH)
+                context = browser.new_context(
+                    user_agent=(
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/120.0.0.0 Safari/537.36"
+                    )
+                )
+                page = context.new_page()
+                page.set_default_timeout(30_000)
+                try:
+                    for ref in refs:
+                        pnum = getattr(ref, "permit_number", None)
+                        if not pnum:
+                            continue
+                        try:
+                            results[pnum] = self._search_by_record_number(page, pnum)
+                        except Exception as exc:
+                            self.logger.debug("Record search failed for %s: %s", pnum, exc)
+                finally:
+                    browser.close()
+        except Exception as exc:
+            self.logger.error("Accela targeted lookup failed (%s); using bulk fallback", exc)
+            return super().fetch_permits(refs, lookback_days=lookback_days)
+
+        # Safety net: if nothing resolved, try the bulk approach once.
+        if not any(results.values()):
+            self.logger.info("Targeted search matched nothing; trying bulk scrape fallback")
+            return super().fetch_permits(refs, lookback_days=lookback_days)
+        return results
+
+    def _search_by_record_number(self, page: Page, permit_number: str) -> RawPermit | None:
+        search_url = f"{self.base_url}{SEARCH_PATH}?module=Building&Type=Cap"
+        page.goto(search_url)
+        page.wait_for_load_state("networkidle")
+
+        # Fill the record/permit-number field (IDs vary across Accela versions).
+        filled = False
+        for field_id in [
+            "ctl00_PlaceHolderMain_generalSearchForm_txtGSPermitNumber",
+            "ctl00_PlaceHolderMain_txtGSPermitNumber",
+            "ctl00_PlaceHolderMain_txtPermitNumber",
+            "txtGSPermitNumber",
+        ]:
+            loc = page.locator(f"#{field_id}")
+            if loc.count():
+                loc.fill(permit_number)
+                filled = True
+                break
+        if not filled:
+            generic = page.locator(
+                "input[id*='PermitNumber'], input[id*='RecordNumber'], input[name*='PermitNumber']"
+            )
+            if generic.count():
+                generic.first.fill(permit_number)
+
+        submit = page.locator("input[type=submit][value*='Search'], button:has-text('Search')")
+        if submit.count():
+            submit.first.click()
+            page.wait_for_load_state("networkidle")
+
+        # If we landed on a results list, click into the first detail link.
+        detail_link = page.locator("a[href*='CapDetail'], table.ACA_Grid_HeaderFooter a")
+        if detail_link.count():
+            try:
+                detail_link.first.click()
+                page.wait_for_load_state("networkidle")
+            except Exception:
+                pass
+
+        detail_data = self._parse_detail_page(page)
+        if not detail_data:
+            return None
+
+        return RawPermit(
+            source_id=permit_number,
+            county_id=self.county_id,
+            county_name=self.county_name,
+            permit_number=detail_data.get("permit_number") or permit_number,
+            permit_type=detail_data.get("permit_type"),
+            status=detail_data.get("status"),
+            description=detail_data.get("description"),
+            applicant_name=detail_data.get("applicant_name") or detail_data.get("owner_name"),
+            owner_name=detail_data.get("owner_name"),
+            contractor_name=detail_data.get("contractor_name"),
+            address=detail_data.get("address"),
+            state=self.config.get("state"),
+            zip_code=detail_data.get("zip_code"),
+            parcel_number=detail_data.get("parcel_number"),
+            estimated_value=self._parse_float(detail_data.get("estimated_value")),
+            filed_date=self._parse_date(detail_data.get("filed_date")),
+            issued_date=self._parse_date(detail_data.get("issued_date")),
+            expiry_date=self._parse_date(detail_data.get("expiry_date")),
+            source_url=f"{self.base_url}{SEARCH_PATH}",
+            raw_data=detail_data,
+        )
 
 
 class AccelaApiScraper(BaseScraper):
@@ -273,14 +393,48 @@ class AccelaApiScraper(BaseScraper):
 
         return results
 
+    def fetch_permits(self, refs: list[Any], lookback_days: int = 180) -> dict[str, RawPermit | None]:
+        """Look up specific permits directly by their customId (record number)."""
+        import requests
+
+        headers = {"Authorization": f"Bearer {self.api_token}"} if self.api_token else {}
+        fields = (
+            "id,customId,type,status,description,applicant,location,value,"
+            "openedDate,issuedDate,expiredDate"
+        )
+        results: dict[str, RawPermit | None] = {
+            getattr(r, "permit_number", None): None for r in refs
+        }
+        for ref in refs:
+            pnum = getattr(ref, "permit_number", None)
+            if not pnum:
+                continue
+            try:
+                resp = requests.get(
+                    f"{self.api_base}/records",
+                    headers=headers,
+                    params={"customId": pnum, "limit": 1, "fields": fields},
+                    timeout=30,
+                )
+                if resp.status_code == 401:
+                    self.logger.error("Accela API: unauthorized. Set accela_api_token in config.")
+                    break
+                resp.raise_for_status()
+                records = resp.json().get("result", [])
+                if records:
+                    results[pnum] = self._normalise_api(records[0])
+            except Exception as exc:
+                self.logger.debug("Accela API lookup for %s failed: %s", pnum, exc)
+        return results
+
     def _normalise_api(self, rec: dict) -> RawPermit | None:
         loc = rec.get("location", {})
         applicant = rec.get("applicant", {})
         return RawPermit(
-            source_id=str(rec.get("id", "")),
+            source_id=str(rec.get("customId") or rec.get("id", "")),
             county_id=self.county_id,
             county_name=self.county_name,
-            permit_number=rec.get("id"),
+            permit_number=rec.get("customId") or rec.get("id"),
             permit_type=rec.get("type", {}).get("text"),
             status=rec.get("status", {}).get("text"),
             description=rec.get("description"),
@@ -293,6 +447,8 @@ class AccelaApiScraper(BaseScraper):
             parcel_number=loc.get("parcel"),
             estimated_value=self._parse_float(rec.get("value")),
             filed_date=self._parse_date(rec.get("openedDate")),
+            issued_date=self._parse_date(rec.get("issuedDate")),
+            expiry_date=self._parse_date(rec.get("expiredDate")),
             source_url=self.api_base,
             raw_data=rec,
         )
