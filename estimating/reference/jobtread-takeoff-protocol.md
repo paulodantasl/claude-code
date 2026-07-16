@@ -136,6 +136,14 @@ interior; cores and patio/balcony walls stack at identical coordinates).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
 
+### 2026-07-14 — Job 2026-374 (Advantage Dental+ / Nova Dental, Wesley Chapel) — DENTAL TI TAKEOFF + PARAMETER WRITE — Claude
+- **Scope:** first-gen dental fit-out takeoff on the GastingerWalker& 1-July-2026 test fit (1 sheet, ⅛″=1′-0″, scale 29.529 pt/m = 9.0006 pt/ft, verified 108.0 pt on printed 12′-0″ dims). Wrote **44 measured takeoff parameters** to `job.parameters`; ran the full `/bid-ti` pipeline off them.
+- **CDN blocked → Google Drive fetch worked (§3):** `cdn.jobtread.com` egress-denied (confirmed) AND WebFetch fully policy-gated this session (403 even on example.com). Pulled the **byte-identical** plan (351,766 B exact match to the Plans-tab file) from Google Drive by filename via the Drive MCP; >256 KB base64 lands in a persisted tool-result file → `jq -r .content | base64 -d`. Same trick recovered the 72-pp lease (work letter: $40/RSF TI allowance).
+- **`number`-type params for a value-only takeoff:** where geometric annotation tracing wasn't warranted on a live job, wrote `{name, value}` `number` params (no `measurementType`/`measurements[]`) — the oneOf resolves by shape; stored + read back exactly (test-2-then-full-replace-44). Units/flags in the name per §5. Reversible, low-risk, nothing to mis-draw.
+- **Measured beats parametric (guard #1 confirmed):** an SF-scaled first pass (from sister Job 2026-343 — same operator's Lutz build, found via the lease's tenant notice address) assumed 10 operatories; the test fit draws **7 open-plan positions** (3 left bay + 4 right run; 6×"Exam 123 SF" + 1×"635 SF" = 7) — ~−$54.6k. Open-plan (casework peninsulas, not enclosed op walls) also cut door/partition counts.
+- **Pipeline:** measured takeoff → scope → estimate (`validate_estimate.py --sector ti` = 0 FAIL) → proposal + filled Exhibit B xlsx → independent audit (recompute **$810,374 to the dollar**). GMP **$810,374 / $270/SF / 7 positions / 2,827 SF gross**.
+- **State after run: 44 parameters** on Job 2026-374 (plan already calibrated; scale untouched). Open next: geometric annotation write (drawn measurements on the sheet) + cost-item wiring (`createCostItem` + quantity formulas referencing these param names). Note: **subagents had no Pave MCP — do parameter writes from the coordinator (main loop),** which does.
+
 ### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
 - **Scope:** full-system accuracy audit. JobTread leg: re-derived every measurement
   value from raw annotation geometry (shoelace areas, polyline lengths, marker counts)
