@@ -3,6 +3,17 @@
 Get ahead of the market by tracking new commercial and industrial building permit applications
 before news breaks. Know where the next Publix, Amazon warehouse, or data center will open.
 
+> **Two related workflows built on the same scrapers:**
+> - **[MONITORING.md](MONITORING.md)** — watch your *own* pending permits for
+>   **status updates** and text the assigned **field manager**
+>   (`python -m permit_scraper monitor`).
+> - **[LEADS.md](LEADS.md)** — catch permits the moment they're **issued** and
+>   turn each into a **sales lead** (GC of record + owner) as a CSV call-list /
+>   Google Sheet (`python -m permit_scraper leads`).
+>
+> Both differ from the discovery pipeline below, which finds *new* big-company
+> permits by watch-list.
+
 ---
 
 ## How It Works
@@ -254,8 +265,35 @@ permit_scraper/
 │   └── database.py          # DB init + session management
 ├── notifications/
 │   └── alerts.py            # Console / email / Slack / webhook / CSV
-├── pipeline.py              # Main orchestration
-├── main.py                  # CLI (click)
+├── monitoring/              # ── Permit-update monitoring (see MONITORING.md) ──
+│   ├── monitor.py           #   Orchestrator: fetch → diff → notify → persist
+│   ├── differ.py            #   Detects meaningful status changes
+│   ├── status.py            #   Normalises portal statuses → lifecycle phases
+│   ├── notifier.py          #   Instant field-manager alerts (SMS/Slack/email/…)
+│   ├── state_store.py       #   JSON snapshot store + JSONL event log (no DB)
+│   ├── fetchers.py          #   Live-scraper / injectable current-state fetchers
+│   ├── config.py            #   Loads + validates tracked/managers/counties
+│   └── demo.py              #   End-to-end self-test (no browser/network/DB)
+├── leads/                   # ── Issued-permit lead generation (see LEADS.md) ──
+│   ├── pipeline.py          #   Scan issued permits → dedupe → enrich → CSV/Sheet
+│   ├── classifier.py        #   Qualify issued+in-scope permits; build GC/owner lead
+│   ├── models.py            #   Lead + LeadConfig
+│   ├── store.py             #   JSON dedupe store + JSONL lead history
+│   ├── exporters.py         #   CSV call-list + Google Sheet export
+│   ├── enrichment/          #   Contact enrichment (opt-in)
+│   │   ├── dbpr.py          #     GC via FL DBPR (data-file or web)
+│   │   ├── appraiser.py     #     Owner mailing via county property appraiser
+│   │   ├── manager.py       #     Orchestration + persistent cache + rate limit
+│   │   └── base.py          #     Enricher interface, result merge, cache
+│   └── demo.py              #   End-to-end self-test (no browser/network/DB)
+├── targets/
+│   ├── tracked_permits.yaml #   Pending permits to monitor for updates
+│   ├── field_managers.yaml  #   Who gets notified, and on which channels
+│   └── leads.yaml           #   Lead scope: categories, $ floors, noise filter
+├── pipeline.py              # Main orchestration (discovery)
+├── main.py                  # CLI (click) — run / watch / export / monitor / tracked / leads
 ├── requirements.txt
+├── MONITORING.md            # Guide for the permit-update monitoring feature
+├── LEADS.md                 # Guide for issued-permit lead generation
 └── .env.example
 ```

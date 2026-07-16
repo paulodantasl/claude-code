@@ -121,6 +121,26 @@ class HillsboroughPropertyScraper:
         logger.info("Hillsborough PA: fetched %d recent sales", len(results))
         return results
 
+    def lookup_by_parcel(self, parcel_id: str) -> RawProperty | None:
+        """Look up a single parcel by folio/parcel number."""
+        if not parcel_id:
+            return None
+        safe = str(parcel_id).upper().replace("'", "''")
+        params = {
+            "where": f"UPPER(FOLIO) = '{safe}' OR UPPER(PARCELID) = '{safe}'",
+            "outFields": "*",
+            "resultRecordCount": 1,
+            "f": "json",
+        }
+        try:
+            data = self._query(HCPA_LAYERS["parcels"], params)
+            feats = data.get("features", [])
+            if feats:
+                return self._normalise(feats[0].get("attributes", {}), feats[0].get("geometry", {}))
+        except Exception as exc:
+            logger.error("HCPA parcel lookup failed for %r: %s", parcel_id, exc)
+        return None
+
     def scrape_by_owner(self, owner_names: list[str]) -> list[RawProperty]:
         """Look up parcels owned by specific names (fuzzy LIKE search)."""
         results: list[RawProperty] = []
