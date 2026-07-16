@@ -36,6 +36,8 @@ class LeadConfig:
     min_value: dict[str, float] = field(default_factory=dict)
     # Only surface permits issued within this many days (None = no recency gate).
     issued_within_days: int | None = None
+    # Raw contact-enrichment config block (parsed by leads.enrichment).
+    enrichment: dict = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> "LeadConfig":
@@ -47,6 +49,7 @@ class LeadConfig:
             exclude_keywords=d.get("exclude_keywords") or list(DEFAULT_EXCLUDE_KEYWORDS),
             min_value=d.get("min_value") or {},
             issued_within_days=d.get("issued_within_days"),
+            enrichment=d.get("enrichment") or {},
         )
 
 
@@ -99,6 +102,13 @@ class Lead:
     portal_url: str | None
     first_seen: str = field(default_factory=utcnow_iso)
     lead_status: str = "new"
+    # ── Enrichment (DBPR / property appraiser) — filled when enabled ──
+    gc_address: str | None = None            # GC business address (DBPR)
+    gc_license_status: str | None = None     # e.g. "Current, Active" (DBPR)
+    gc_license_type: str | None = None       # e.g. "Certified General Contractor"
+    gc_license_expiry: str | None = None     # license expiration date (DBPR)
+    gc_email: str | None = None
+    enriched_from: list[str] = field(default_factory=list)  # which sources contributed
 
     def to_dict(self) -> dict[str, Any]:
         return {k: getattr(self, k) for k in LEAD_FIELDS}
@@ -119,13 +129,19 @@ LEAD_FIELDS: list[str] = [
     "total_sqft",
     "gc_name",
     "gc_license",
+    "gc_license_type",
+    "gc_license_status",
+    "gc_license_expiry",
     "gc_phone",
+    "gc_address",
+    "gc_email",
     "owner_name",
     "owner_mailing_address",
     "owner_phone",
     "applicant_name",
     "parcel_number",
     "portal_url",
+    "enriched_from",
     "lead_status",
     "first_seen",
     "lead_id",

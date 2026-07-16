@@ -30,3 +30,28 @@ leads:
   # addition, alteration, TI, shell) is KEPT even if it mentions a trade word.
   # Leave empty to fall back to the built-in default list.
   exclude_keywords: []
+
+  # ── Contact enrichment (optional) ───────────────────────────────────────
+  # Fills GC/owner contact details that aren't on the permit, from public data.
+  # Off by default; enable here or pass --enrich on the CLI.
+  enrichment:
+    enabled: false
+    cache_file: permit_leads_enrichment_cache.json
+
+    # FL DBPR (MyFloridaLicense) — general contractor of record.
+    dbpr:
+      enabled: true
+      # 'data_file' (recommended): read a DBPR licensee extract you download
+      # once from MyFloridaLicense. Adds GC business address + license
+      # type/status/expiry. The public extract has no phone numbers.
+      # 'web': best-effort live lookup (fragile; may be rate-limited/blocked).
+      mode: data_file
+      data_file: /path/to/dbpr_cilb_licensee_extract.csv
+      # columns: {license: "License Number", name: "Name (Last First)", ...}  # optional overrides
+      rate_limit_seconds: 1.5   # only used in 'web' mode
+
+    # County property appraiser — owner mailing address (by parcel).
+    appraiser:
+      enabled: true
+      counties: [hillsborough_county, pasco_county]   # counties with a supported scraper
+      rate_limit_seconds: 1.0

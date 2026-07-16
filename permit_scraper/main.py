@@ -404,6 +404,9 @@ def tracked(config_dir: str | None, state_file: str) -> None:
               help="CSV call-list path (new leads are appended)")
 @click.option("--google-sheet", is_flag=True, default=False,
               help="Also push new leads to Google Sheets (needs Drive creds)")
+@click.option("--enrich", is_flag=True, default=False,
+              help="Enrich GC/owner contacts via DBPR + property appraiser "
+                   "(also honoured if enabled in leads.yaml)")
 @click.option("--interval", "-i", default=None,
               help="Run continuously every e.g. 6h, 24h (omit for a single pass)")
 def leads(
@@ -413,12 +416,15 @@ def leads(
     state_file: str,
     output: str,
     google_sheet: bool,
+    enrich: bool,
     interval: str | None,
 ) -> None:
     """Scan portals for newly ISSUED permits and export GC/owner sales leads."""
     from .leads import build_pipeline
 
-    pipe = build_pipeline(config_dir=config_dir, state_file=state_file)
+    pipe = build_pipeline(config_dir=config_dir, state_file=state_file, enrich=enrich)
+    if pipe.enricher is not None:
+        console.print("[cyan]Contact enrichment enabled[/] (DBPR / property appraiser)")
     if not pipe.counties:
         console.print("[yellow]No counties configured in targets/counties.yaml[/]")
         return
@@ -438,6 +444,8 @@ def leads(
         t.add_row("Qualified (issued + in scope)", str(summary["qualified"]))
         t.add_row("[green]New leads[/]", str(summary["new_leads"]))
         t.add_row("Duplicates skipped", str(summary["duplicates"]))
+        if summary.get("enriched"):
+            t.add_row("Contacts enriched", str(summary["enriched"]))
         if summary["csv_path"]:
             t.add_row("CSV", summary["csv_path"])
         if summary["google_sheet_url"]:

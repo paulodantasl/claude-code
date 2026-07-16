@@ -35,6 +35,12 @@ from permit_scraper.leads import (  # noqa: E402
     LeadStore,
 )
 from permit_scraper.leads.models import DEFAULT_EXCLUDE_KEYWORDS  # noqa: E402
+from permit_scraper.leads.enrichment import (  # noqa: E402
+    DBPRDataFileEnricher,
+    EnrichmentCache,
+    EnrichmentManager,
+    PropertyAppraiserEnricher,
+)
 
 COUNTY = {"id": "pasco_county", "name": "Pasco County, FL", "type": "accela"}
 d = datetime
@@ -185,11 +191,102 @@ def scenario_classifier():
     _check("application-received does not qualify", clf.qualifies(not_issued)[0] is False)
 
 
+_DBPR_EXTRACT = """\
+License Number,Name (Last First),DBA Name,License Type,Primary Status,Secondary Status,Address 1,City,State,Zip,Expiration Date
+CGC012345,WELBRO BUILDING CORPORATION,,Certified General Contractor,Current,Active,1000 Legion Pl,Orlando,FL,32801,08/31/2026
+CBC059752,LENNAR HOMES LLC,,Certified Building Contractor,Current,Active,730 NW 107th Ave,Miami,FL,33172,08/31/2027
+"""
+
+# County configs for the enrichment scenario.
+_H = {"id": "hillsborough_county", "name": "Hillsborough County, FL", "type": "accela"}
+_P = {"id": "pasco_county", "name": "Pasco County, FL", "type": "accela"}
+
+
+def _ep(num, county, contractor, license_, owner, value, parcel, owner_mailing=None):
+    cfg = {"hillsborough_county": _H, "pasco_county": _P}[county]
+    return RawPermit(
+        source_id=num, county_id=county, county_name=cfg["name"],
+        permit_number=num, permit_type="Commercial New Construction", status="Permit Issued",
+        description="New commercial building", estimated_value=value,
+        contractor_name=contractor, contractor_license=license_,
+        owner_name=owner, owner_mailing_address=owner_mailing, parcel_number=parcel,
+        address="100 Job Site Rd", city="Tampa", state="FL", zip_code="33601",
+        source_url=f"https://portal.example.gov/{num}",
+    )
+
+
+def scenario_enrichment():
+    print("\n=== Scenario 4: DBPR + property-appraiser contact enrichment ===")
+    tmp = Path(tempfile.mkdtemp())
+    extract = tmp / "dbpr.csv"
+    extract.write_text(_DBPR_EXTRACT, encoding="utf-8")
+
+    # Injected appraiser lookup (no network) — records how often it's called.
+    calls = {"n": 0}
+    mailing = {"U-1234": "PO BOX 111, TAMPA, FL 33601", "U-5678": "PO BOX 222, TAMPA, FL 33602"}
+
+    def fake_lookup(county_id, parcel, owner_name):
+        calls["n"] += 1
+        addr = mailing.get(parcel)
+        return type("P", (), {"mailing_address": addr})() if addr else None
+
+    dbpr = DBPRDataFileEnricher(extract)
+    appraiser = PropertyAppraiserEnricher(
+        counties=["hillsborough_county", "pasco_county"], lookup_fn=fake_lookup
+    )
+    manager = EnrichmentManager(
+        enrichers=[dbpr, appraiser], cache=EnrichmentCache(tmp / "cache.json")
+    )
+
+    permits = [
+        # GC on DBPR, owner mailing missing → both enrichers fire
+        _ep("EP-1", "hillsborough_county", "Welbro Building Corporation", "CGC012345",
+            "Publix Realty LLC", 7_400_000, "U-1234"),
+        # SAME GC (cache hit) + different parcel
+        _ep("EP-2", "hillsborough_county", "Welbro Building Corporation", "CGC012345",
+            "Another Owner LLC", 3_000_000, "U-5678"),
+        # Owner mailing already present → appraiser must NOT be called for it
+        _ep("EP-3", "pasco_county", "Lennar Homes LLC", "CBC059752",
+            "John Homeowner", 460_000, "P-9", owner_mailing="999 Existing St, Land O Lakes FL"),
+    ]
+
+    def factory(county_cfg):
+        matching = [p for p in permits if p.county_id == county_cfg["id"]]
+        return _FakeScraper(matching)
+
+    store = LeadStore(tmp / "state.json")
+    csv_path = tmp / "leads.csv"
+    pipe = LeadPipeline(config=_config(), store=store, counties=[_H, _P],
+                        scraper_factory=factory, enricher=manager)
+    s = pipe.run(days_back=30, csv_path=csv_path)
+
+    _check("3 new leads emitted", s["new_leads"] == 3)
+    _check("all 3 were enriched", s["enriched"] == 3)
+
+    rows = {r["permit_number"]: r for r in csv.DictReader(open(csv_path, encoding="utf-8"))}
+    r1 = rows["EP-1"]
+    _check("EP-1 GC business address from DBPR", "Orlando" in r1["gc_address"] and "Legion" in r1["gc_address"])
+    _check("EP-1 GC license type from DBPR", r1["gc_license_type"] == "Certified General Contractor")
+    _check("EP-1 GC license status from DBPR", "Current" in r1["gc_license_status"])
+    _check("EP-1 owner mailing from appraiser", "PO BOX 111" in r1["owner_mailing_address"])
+    _check("EP-1 records both enrichment sources",
+           "dbpr_datafile" in r1["enriched_from"] and "property_appraiser" in r1["enriched_from"])
+
+    r3 = rows["EP-3"]
+    _check("EP-3 keeps permit-provided owner mailing (fields win)",
+           r3["owner_mailing_address"].startswith("999 Existing St"))
+    _check("EP-3 GC (Lennar) still enriched from DBPR", "Miami" in r3["gc_address"])
+
+    _check("appraiser lookup called only for the 2 missing-owner leads", calls["n"] == 2)
+    _check("DBPR result cached for repeated GC (>=1 cache hit)", manager.cache_hits >= 1)
+
+
 def main() -> int:
     print("Issued-permit lead-generation demo (no browser / network / DB)")
     try:
         scenario_pipeline()
         scenario_classifier()
+        scenario_enrichment()
     except AssertionError as exc:
         print(f"\n✗ DEMO FAILED: {exc}")
         return 1

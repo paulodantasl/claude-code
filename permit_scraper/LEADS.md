@@ -107,17 +107,64 @@ Import it straight into your CRM, or share the Google Sheet with the sales team.
 
 ---
 
-## What you get, and the honest limits
+## Contact enrichment (DBPR + property appraiser)
 
-- **GC of record** — name + state license number come off the permit reliably on
-  Accela portals; a phone appears only when the portal lists one.
-- **Owner** — name + mailing address when the permit exposes them.
-- **Phones/emails are often absent** on the permit itself. You chose "permit
-  fields only" to ship fast — the natural next step is enrichment: look up the
-  contractor's license on **FL DBPR (MyFloridaLicense)** for a business phone, and
-  the owner's mailing address via the **county property appraiser** (the package
-  already has property-appraiser scrapers). That can be layered on without
-  changing this pipeline.
+Permits list *names* but rarely phone/address. Enrichment fills the gaps from
+public data — **off by default**, enable with `--enrich` or in `leads.yaml`:
+
+```bash
+python -m permit_scraper leads --enrich
+```
+
+```yaml
+leads:
+  enrichment:
+    enabled: true
+    cache_file: permit_leads_enrichment_cache.json
+    dbpr:                       # general contractor of record
+      enabled: true
+      mode: data_file           # data_file (recommended) | web
+      data_file: /path/to/dbpr_cilb_licensee_extract.csv
+    appraiser:                  # owner
+      enabled: true
+      counties: [hillsborough_county, pasco_county]
+```
+
+**GC → FL DBPR (MyFloridaLicense).** Two modes:
+- `data_file` **(recommended)** — download a DBPR licensee **extract** once from
+  MyFloridaLicense and point `data_file` at it. Matched by license # then name, it
+  adds the GC's **business address, license type, status, and expiration**. Fully
+  offline and deterministic. (The public extract has **no phone numbers**, so this
+  never invents one.) Column headers are auto-detected; override with a `columns:`
+  map if your extract differs.
+- `web` — best-effort live lookup against the public search. The site is an
+  ASP.NET form that changes and may rate-limit/block automation, so treat results
+  as best-effort and verify. Rate-limited and cached.
+
+**Owner → county property appraiser.** Looks up the permit's parcel to fill the
+owner's **mailing address**, reusing the package's appraiser scrapers
+(`hillsborough_county` via public ArcGIS, `pasco_county` via web scrape). Other
+counties are skipped until a scraper exists for them.
+
+How it behaves:
+- **Non-destructive** — enrichment only fills *empty* fields; anything already on
+  the permit wins.
+- **Cached & polite** — a persistent JSON cache (`cache_file`) means each GC /
+  parcel is looked up once across all runs; live lookups are rate-limited.
+- **Fail-soft** — a source that errors or finds nothing never breaks the lead; the
+  `enriched_from` column records which sources contributed.
+
+New CSV columns from enrichment: `gc_license_type`, `gc_license_status`,
+`gc_license_expiry`, `gc_address`, `gc_email`, `enriched_from`.
+
+## Honest limits
+
+- **Phone numbers** still aren't guaranteed — DBPR's public extract omits them and
+  permits rarely include them. Enrichment gives you a verified **mailing/business
+  address** and confirms the license is active, which is usually enough to reach
+  the GC or owner by mail/known channels.
+- **Appraiser coverage** is currently Hillsborough + Pasco; add more by extending
+  `scrapers/property_appraiser.py` and listing the county under `appraiser.counties`.
 - **Issue-date coverage** depends on the portal. API sources (Socrata / ArcGIS)
   can filter precisely by issue date; the browser scrapers search by application
   date, so the dedupe store (not the date window) is what guarantees you never

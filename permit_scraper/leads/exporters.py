@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 def _fmt(value) -> str:
     if value is None:
         return ""
+    if isinstance(value, (list, tuple)):
+        return "; ".join(str(v) for v in value)
     if isinstance(value, float):
         # Whole dollars / sqft read better without trailing .0
         return f"{value:,.0f}" if value == int(value) else f"{value:,.2f}"

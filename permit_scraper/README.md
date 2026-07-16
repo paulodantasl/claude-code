@@ -275,11 +275,16 @@ permit_scraper/
 │   ├── config.py            #   Loads + validates tracked/managers/counties
 │   └── demo.py              #   End-to-end self-test (no browser/network/DB)
 ├── leads/                   # ── Issued-permit lead generation (see LEADS.md) ──
-│   ├── pipeline.py          #   Scan issued permits → dedupe → CSV/Sheet leads
+│   ├── pipeline.py          #   Scan issued permits → dedupe → enrich → CSV/Sheet
 │   ├── classifier.py        #   Qualify issued+in-scope permits; build GC/owner lead
 │   ├── models.py            #   Lead + LeadConfig
 │   ├── store.py             #   JSON dedupe store + JSONL lead history
 │   ├── exporters.py         #   CSV call-list + Google Sheet export
+│   ├── enrichment/          #   Contact enrichment (opt-in)
+│   │   ├── dbpr.py          #     GC via FL DBPR (data-file or web)
+│   │   ├── appraiser.py     #     Owner mailing via county property appraiser
+│   │   ├── manager.py       #     Orchestration + persistent cache + rate limit
+│   │   └── base.py          #     Enricher interface, result merge, cache
 │   └── demo.py              #   End-to-end self-test (no browser/network/DB)
 ├── targets/
 │   ├── tracked_permits.yaml #   Pending permits to monitor for updates

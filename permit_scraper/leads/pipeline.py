@@ -62,12 +62,14 @@ class LeadPipeline:
         store: LeadStore | None = None,
         counties: list[dict] | None = None,
         scraper_factory: Callable[[dict], Any] | None = None,
+        enricher: Any | None = None,
     ):
         self.config = config or LeadConfig()
         self.classifier = LeadClassifier(self.config)
         self.store = store or LeadStore()
         self.counties = counties if counties is not None else []
         self._scraper_factory = scraper_factory
+        self.enricher = enricher  # optional EnrichmentManager
 
     def _get_scraper(self, county_cfg: dict):
         if self._scraper_factory:
@@ -96,6 +98,7 @@ class LeadPipeline:
             "qualified": 0,
             "new_leads": 0,
             "duplicates": 0,
+            "enriched": 0,
             "errors": [],
             "csv_path": None,
             "google_sheet_url": None,
@@ -125,6 +128,15 @@ class LeadPipeline:
                 if not self.store.is_new(lead.lead_id):
                     summary["duplicates"] += 1
                     continue
+
+                # Enrich contact info before recording (best-effort).
+                if self.enricher is not None:
+                    try:
+                        if self.enricher.enrich_lead(lead):
+                            summary["enriched"] += 1
+                    except Exception as exc:
+                        logger.error("Enrichment failed for %s: %s", lead.permit_number, exc)
+
                 self.store.add(lead)
                 new_leads.append(lead)
 
@@ -140,6 +152,12 @@ class LeadPipeline:
                     sheet_title=f"Issued-Permit Leads — {utcnow_iso()[:10]}",
                 )
 
+        if self.enricher is not None:
+            try:
+                self.enricher.save()
+            except Exception as exc:
+                logger.error("Could not save enrichment cache: %s", exc)
+
         self.store.save()
         return summary
 
@@ -147,8 +165,13 @@ class LeadPipeline:
 def build_pipeline(
     config_dir: str | Path | None = None,
     state_file: str | Path = "permit_leads_state.json",
+    enrich: bool = False,
 ) -> LeadPipeline:
-    """Factory: load leads.yaml + counties.yaml + .env and wire the pipeline."""
+    """Factory: load leads.yaml + counties.yaml + .env and wire the pipeline.
+
+    Enrichment runs if it's enabled in leads.yaml OR ``enrich=True`` (the CLI
+    ``--enrich`` flag) forces it on.
+    """
     try:
         from dotenv import load_dotenv
 
@@ -157,4 +180,19 @@ def build_pipeline(
         pass
 
     cfg, counties = load_lead_config(Path(config_dir) if config_dir else None)
-    return LeadPipeline(config=cfg, store=LeadStore(state_file), counties=counties)
+
+    enricher = None
+    try:
+        from .enrichment import EnrichmentConfig, build_enrichment_manager
+
+        enricher = build_enrichment_manager(
+            EnrichmentConfig.from_dict(cfg.enrichment),
+            config_dir=config_dir,
+            force_enable=enrich,
+        )
+    except Exception as exc:
+        logger.error("Could not initialise enrichment: %s", exc)
+
+    return LeadPipeline(
+        config=cfg, store=LeadStore(state_file), counties=counties, enricher=enricher
+    )
