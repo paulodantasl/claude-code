@@ -174,6 +174,9 @@ class AccelaPlaywrightScraper(BaseScraper):
             applicant_name=detail_data.get("applicant_name") or detail_data.get("owner_name"),
             owner_name=detail_data.get("owner_name"),
             contractor_name=detail_data.get("contractor_name"),
+            contractor_license=detail_data.get("contractor_license"),
+            contractor_phone=detail_data.get("contractor_phone"),
+            owner_mailing_address=detail_data.get("owner_mailing_address"),
             address=detail_data.get("address"),
             city=detail_data.get("city"),
             state=self.config.get("state"),
@@ -188,31 +191,48 @@ class AccelaPlaywrightScraper(BaseScraper):
     def _parse_detail_page(self, page: Page) -> dict:
         """Extract labelled fields from an Accela detail page."""
         data: dict = {}
+        # NOTE: matching is first-substring-wins, so more specific labels MUST
+        # precede the generic ones they contain (e.g. "owner mailing" before
+        # "owner", "contractor license" before "contractor", "…" before
+        # "address").
         label_map = {
-            "permit number": "permit_number",
             "record number": "permit_number",
+            "permit number": "permit_number",
+            "project name": "description",
+            "description": "description",
             "type": "permit_type",
             "status": "status",
-            "description": "description",
-            "project name": "description",
-            "applicant": "applicant_name",
-            "owner": "owner_name",
+            # parties — specific contact fields before generic name fields
+            "owner mailing": "owner_mailing_address",
+            "owner address": "owner_mailing_address",
+            "mailing address": "owner_mailing_address",
             "primary owner": "owner_name",
+            "owner": "owner_name",
+            "contractor license": "contractor_license",
+            "license number": "contractor_license",
+            "state license": "contractor_license",
+            "license #": "contractor_license",
+            "business phone": "contractor_phone",
+            "phone": "contractor_phone",
             "contractor": "contractor_name",
-            "address": "address",
+            "applicant": "applicant_name",
+            # location / identifiers
             "parcel": "parcel_number",
             "folio": "parcel_number",
-            "value": "estimated_value",
+            "address": "address",
+            # money
             "valuation": "estimated_value",
-            "filed date": "filed_date",
-            "application date": "filed_date",
-            "opened date": "filed_date",
+            "value": "estimated_value",
+            # dates
             "issued date": "issued_date",
             "issue date": "issued_date",
             "date issued": "issued_date",
-            "expiration": "expiry_date",
             "expiration date": "expiry_date",
+            "expiration": "expiry_date",
             "expires": "expiry_date",
+            "application date": "filed_date",
+            "opened date": "filed_date",
+            "filed date": "filed_date",
         }
 
         rows = page.locator("table tr")
@@ -330,6 +350,9 @@ class AccelaPlaywrightScraper(BaseScraper):
             applicant_name=detail_data.get("applicant_name") or detail_data.get("owner_name"),
             owner_name=detail_data.get("owner_name"),
             contractor_name=detail_data.get("contractor_name"),
+            contractor_license=detail_data.get("contractor_license"),
+            contractor_phone=detail_data.get("contractor_phone"),
+            owner_mailing_address=detail_data.get("owner_mailing_address"),
             address=detail_data.get("address"),
             state=self.config.get("state"),
             zip_code=detail_data.get("zip_code"),

@@ -3,11 +3,16 @@
 Get ahead of the market by tracking new commercial and industrial building permit applications
 before news breaks. Know where the next Publix, Amazon warehouse, or data center will open.
 
-> **Monitoring your *own* pending permits?** See **[MONITORING.md](MONITORING.md)** —
-> it re-checks a watch-list of pending residential/commercial permits for **status
-> updates** and sends **instant notifications to the assigned field manager**
-> (`python -m permit_scraper monitor`). That's a different job from the discovery
-> pipeline below, which finds *new* big-company permits.
+> **Two related workflows built on the same scrapers:**
+> - **[MONITORING.md](MONITORING.md)** — watch your *own* pending permits for
+>   **status updates** and text the assigned **field manager**
+>   (`python -m permit_scraper monitor`).
+> - **[LEADS.md](LEADS.md)** — catch permits the moment they're **issued** and
+>   turn each into a **sales lead** (GC of record + owner) as a CSV call-list /
+>   Google Sheet (`python -m permit_scraper leads`).
+>
+> Both differ from the discovery pipeline below, which finds *new* big-company
+> permits by watch-list.
 
 ---
 
@@ -269,12 +274,21 @@ permit_scraper/
 │   ├── fetchers.py          #   Live-scraper / injectable current-state fetchers
 │   ├── config.py            #   Loads + validates tracked/managers/counties
 │   └── demo.py              #   End-to-end self-test (no browser/network/DB)
+├── leads/                   # ── Issued-permit lead generation (see LEADS.md) ──
+│   ├── pipeline.py          #   Scan issued permits → dedupe → CSV/Sheet leads
+│   ├── classifier.py        #   Qualify issued+in-scope permits; build GC/owner lead
+│   ├── models.py            #   Lead + LeadConfig
+│   ├── store.py             #   JSON dedupe store + JSONL lead history
+│   ├── exporters.py         #   CSV call-list + Google Sheet export
+│   └── demo.py              #   End-to-end self-test (no browser/network/DB)
 ├── targets/
 │   ├── tracked_permits.yaml #   Pending permits to monitor for updates
-│   └── field_managers.yaml  #   Who gets notified, and on which channels
-├── pipeline.py              # Main orchestration
-├── main.py                  # CLI (click) — run / watch / export / monitor / tracked
+│   ├── field_managers.yaml  #   Who gets notified, and on which channels
+│   └── leads.yaml           #   Lead scope: categories, $ floors, noise filter
+├── pipeline.py              # Main orchestration (discovery)
+├── main.py                  # CLI (click) — run / watch / export / monitor / tracked / leads
 ├── requirements.txt
 ├── MONITORING.md            # Guide for the permit-update monitoring feature
+├── LEADS.md                 # Guide for issued-permit lead generation
 └── .env.example
 ```

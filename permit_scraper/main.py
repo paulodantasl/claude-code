@@ -393,6 +393,84 @@ def tracked(config_dir: str | None, state_file: str) -> None:
     console.print(t)
 
 
+@cli.command()
+@click.option("--county", "-c", multiple=True, help="County IDs to scan (default: all)")
+@click.option("--days", "-d", default=30, show_default=True, help="Days of permits to scan")
+@click.option("--config-dir", default=None,
+              help="Dir with leads.yaml / counties.yaml")
+@click.option("--state-file", default="permit_leads_state.json", show_default=True,
+              help="JSON dedupe store so each permit becomes a lead only once")
+@click.option("--output", "-o", default="permit_leads.csv", show_default=True,
+              help="CSV call-list path (new leads are appended)")
+@click.option("--google-sheet", is_flag=True, default=False,
+              help="Also push new leads to Google Sheets (needs Drive creds)")
+@click.option("--interval", "-i", default=None,
+              help="Run continuously every e.g. 6h, 24h (omit for a single pass)")
+def leads(
+    county: tuple[str, ...],
+    days: int,
+    config_dir: str | None,
+    state_file: str,
+    output: str,
+    google_sheet: bool,
+    interval: str | None,
+) -> None:
+    """Scan portals for newly ISSUED permits and export GC/owner sales leads."""
+    from .leads import build_pipeline
+
+    pipe = build_pipeline(config_dir=config_dir, state_file=state_file)
+    if not pipe.counties:
+        console.print("[yellow]No counties configured in targets/counties.yaml[/]")
+        return
+
+    def _do_pass() -> dict:
+        summary = pipe.run(
+            county_ids=list(county) or None,
+            days_back=days,
+            csv_path=output,
+            google_sheet=google_sheet,
+        )
+        t = Table(show_header=False)
+        t.add_column("Metric", style="bold")
+        t.add_column("Value")
+        t.add_row("Counties scanned", str(summary["counties_processed"]))
+        t.add_row("Permits scanned", str(summary["permits_scanned"]))
+        t.add_row("Qualified (issued + in scope)", str(summary["qualified"]))
+        t.add_row("[green]New leads[/]", str(summary["new_leads"]))
+        t.add_row("Duplicates skipped", str(summary["duplicates"]))
+        if summary["csv_path"]:
+            t.add_row("CSV", summary["csv_path"])
+        if summary["google_sheet_url"]:
+            t.add_row("[green]Google Sheet[/]", summary["google_sheet_url"])
+        if summary["errors"]:
+            t.add_row("[red]Errors[/]", str(len(summary["errors"])))
+        console.print(t)
+        for row in summary["new_lead_rows"][:15]:
+            console.print(
+                f"  [green]•[/] {row['issued_date'] or '—'} {row['permit_number']} "
+                f"[{row['category']}] {row['project_address'] or ''} "
+                f"— GC: {row['gc_name'] or '—'} | Owner: {row['owner_name'] or '—'}"
+            )
+        for err in summary["errors"]:
+            console.print(f"  [red]✗[/] {err['county']}: {err['error']}")
+        return summary
+
+    if interval:
+        hours = _parse_interval(interval)
+        seconds = int(hours * 3600)
+        console.print(f"[bold green]Lead watch:[/] scanning every {interval}. Ctrl-C to stop.")
+        try:
+            while True:
+                _do_pass()
+                console.rule(f"[cyan]Next scan in {interval}")
+                time.sleep(seconds)
+        except KeyboardInterrupt:
+            console.print("\n[bold]Stopped.[/]")
+    else:
+        console.rule("[bold cyan]Scanning for newly issued permits")
+        _do_pass()
+
+
 def _parse_interval(s: str) -> float:
     """Parse interval string like '6h', '30m' to hours."""
     s = s.lower().strip()

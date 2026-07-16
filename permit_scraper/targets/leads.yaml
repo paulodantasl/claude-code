@@ -1,0 +1,32 @@
+# Issued-permit lead generation — scope & filters.
+#
+# Every permit that reaches ISSUED status in your configured counties
+# (counties.yaml) is scanned; the rules below decide which ones become leads.
+# Tune these to your services so the call-list stays workable.
+
+leads:
+  # Which permit categories to keep. A permit is categorised from its type +
+  # description. Options: commercial, residential, industrial.
+  include_categories: [commercial, residential, industrial]
+
+  # Which normalised lifecycle phases qualify. Default: only newly issued.
+  # Add "inspections" to also catch projects already under construction.
+  qualifying_phases: [issued]
+
+  # Only surface permits issued within this many days (keeps leads fresh).
+  # Set to null to disable the recency gate.
+  issued_within_days: 45
+
+  # Minimum estimated value to qualify, per category (omit a category for no
+  # floor). Filters out tiny jobs that aren't worth a GC/owner pitch.
+  min_value:
+    commercial: 100000
+    residential: 150000
+    industrial: 250000
+
+  # Standalone trade / low-value permit keywords to exclude. These are the
+  # "everything issued" noise (re-roofs, water heaters, fences, signs, …).
+  # A permit whose scope also names real project work (new construction,
+  # addition, alteration, TI, shell) is KEPT even if it mentions a trade word.
+  # Leave empty to fall back to the built-in default list.
+  exclude_keywords: []

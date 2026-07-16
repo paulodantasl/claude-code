@@ -40,6 +40,11 @@ class RawPermit:
     applicant_name: str | None = None
     owner_name: str | None = None
     contractor_name: str | None = None
+    # Contact details as they appear on the permit (for lead outreach).
+    contractor_license: str | None = None
+    contractor_phone: str | None = None
+    owner_mailing_address: str | None = None
+    owner_phone: str | None = None
     address: str | None = None
     city: str | None = None
     state: str | None = None
