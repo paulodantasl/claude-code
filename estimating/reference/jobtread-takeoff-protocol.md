@@ -19,7 +19,11 @@ the bottom each time this runs. Companion helpers: `estimating/scripts/jobtread_
 | **Full-replace semantics** | `updateJob.parameters` and `updatePlan.annotations` REPLACE the whole array | Read-backs always mirror exactly what was last sent |
 | Where geometry belongs | **Parameter measurements embed their own annotations** (+ `planId`, `color`); `plan.annotations` = free markup only (meta + notes). Don't duplicate shapes in both — they'd render twice | UI-created takeoff (632 Boca Ciega) + our own saves |
 | Parameter types | `area, linear, count, linearArea(depth), areaVolume(depth), linearVolume(width+depth), areaPitch, linearPitch(pitchX/Y), linearDrop(startDrop/endDrop), formula(name+formula), number, option` | Schema introspection `parameters` type |
-| Path structure | `path.points` = array of `{annotationId}` refs to sibling `point` annotations; `isClosed` for areas; for a **perimeter as linear**, use an open path with N+1 points (repeat the first coordinate as a new point id) | Org example + our saves |
+| Path structure | `path.points` = array of `{annotationId}` refs to sibling `point` annotations; for a **perimeter as linear**, use an open path with N+1 points (repeat the first coordinate as a new point id) | Org example + our saves |
+| **`depth`/`width` live on the MEASUREMENT, not the parameter** | `linearArea`→`depth`+`unit`; `linearVolume`→`width`+`depth`+`unit`; `areaVolume`→`depth`+`unit`. Plain `linear`/`area`/`count` measurements take NONE of them. The PARAMETER object carries only `name, measurementType, value, unit, measurements` | 2026-08-02: `The value 18 was found at "updateJob"."$"."parameters"."10"."depth" but no value is ever expected there` |
+| **`isClosed` is a constant `true`, never `false`** | Omit it entirely on open polylines; set `true` only on closed polygons | 2026-08-02: `Expected false at …annotations."80"."isClosed" to be true` |
+| `isManual: true` on a measurement | Holds the stated `value` verbatim with `annotations: []` (and `planId` omitted) — the escape hatch for derived/assumed quantities and for shrinking an oversized payload **without** thinning geometry | Job 2025-227 + 2026-386 saves |
+| Introspect before composing | `{"schema":{"$":{"path":"parameters","expand":true}}}` gives per-type measurement keys; `…"path":"parameters._on_linear.measurements.annotations"` gives the path/text/point/meta variants and their required fields | Cheaper than discovering each rule via a rejected 100K-char save |
 | Text annotations | Require non-null `fontWeight`, `fontStyle`, `fillColor`, `fillOpacity`, `rotation` (API errors one missing field at a time) | updatePlan error `A non-null value is required … fontWeight` |
 | Mutation returns | `updatePlan`/`updateJob` return **root** — select a root field (e.g. re-query the job) or the call fails validation | `The field "id" does not exist at "updatePlan"` |
 | Permissions quirk | Grant may block root `plan{}` (`readPlan`) while **`job → plans` works** (`readJobPlans`) | Live 403 on root query; job-path succeeded |
@@ -113,6 +117,9 @@ global types by name (`parameters`, `plan`).
 | 8 | Text annotation rejected (`fontWeight` non-null) | Send the full text field set (§1) |
 | 9 | CDN download blocked / Drive big-file failures | §3 fallbacks; ask user to allowlist cdn.jobtread.com |
 | 10 | Hand-summed values ≠ app-computed | Expected — geometry is truth; values are advisory (state this to the user) |
+| 11 | **Payload compaction silently decimated area polygons → JobTread would have shown 1,422.7 SF instead of the measured 2,198.9 SF (−35%), while the note still claimed "<0.1% drift"** | **MANDATORY pre-save gate:** for every non-`isManual` measurement, recompute the value locally from the exact geometry in the payload (shoelace ÷ k² / polyline ÷ k / marker count) and diff vs the stated value; >0.5% is a defect. **Never thin a path that drives a value** — to shrink a payload, convert the parameter to `isManual` with an honest note instead |
+| 12 | Calibrated k off the drawn dimension LINE (endpoints overshoot the ticks ~3.4 pt/end) → 0.69% high on every quantity | Measure tick-to-tick, or a known interior bay face-to-face, and cross-check against the nominal table in §1 — a "near-miss" k that isn't a standard scale is a red flag |
+| 13 | Wall LF wrong twice: fills gave exterior only (219 LF), face-pairing picked up casework (1,450 LF) | Discriminate by **stroke width** — read the legend/details, then filter the vector set to the partition stroke (1.59 pt on the Ahmed set; 0.24 pt = hatch/dims/leaders) |
 
 ## 7. What good looks like (reference result)
 
@@ -135,6 +142,64 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   per plan page).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
+
+### 2026-08-02 (8) — Job 2026-386 (Dr. Ahmed dental TI, Lutz) — FULL 8-SHEET TAKEOFF — Claude
+- **Scope:** whole bid set in one pass — partitions, doors, millwork, flooring, ceilings,
+  plumbing/vacuum/air/N2O, underground trenching, HVAC terminals, power/lighting.
+  **71 parameters saved** (62 quantities + 9 registers; 30 with drawn geometry, 41
+  value-only via `isManual`). 94.4K → 100.3K chars, one full-replace call.
+
+#### NEW SCHEMA FACTS (each one cost a rejected save — introspect before composing)
+- **`depth` / `width` belong on the MEASUREMENT object, never on the PARAMETER object.**
+  `The value 18 was found at "updateJob"."$"."parameters"."10"."depth" but no value is
+  ever expected there`. Parameter level carries only name/measurementType/value/unit/
+  measurements.
+- **`isClosed` is an optional constant `true` — `false` is REJECTED.**
+  `Expected false at ...annotations."80"."isClosed" to be true`. Omit it on open
+  polylines; set it only on closed polygons. (Also saves ~18 chars × every open path.)
+- **`updateJob` returns the ROOT type, so it takes no `id` sub-selection.** Use
+  `{"updateJob":{"$":{...},"job":{"$":{"id":"<jobId>"},"name":{},"number":{}}}}` for a
+  cheap echo-back confirmation in the same call.
+- **Introspect the real shapes before composing, not after failing:**
+  `{"schema":{"$":{"path":"parameters","expand":true}}}` and
+  `{"schema":{"$":{"path":"parameters._on_linear.measurements.annotations","expand":true}}}`.
+  These give the exact per-type measurement keys (`linearArea` → depth+unit;
+  `linearVolume` → width+depth+unit; plain `linear`/`area`/`count` → none of them) and the
+  annotation variants (path/text/point/meta) with their required fields.
+- Limits confirmed: ≤100 measurements per parameter, ≤1000 annotations per measurement,
+  ≤1000 parameters per job.
+
+#### THE BIG LESSON — verify the SERVER's recompute, not just your own arithmetic
+Payload compaction decimated the flooring polygons (dropped every other vertex). The
+stated value still said 2,198.9 SF and the note even claimed "area drift <0.1%", but the
+geometry actually sent would have made JobTread display **1,422.7 SF (−35%)**. Tile was
+−14.5%. Nothing in the save would have flagged it.
+**New mandatory gate — run BEFORE every save:** for every non-`isManual` measurement,
+recompute the value locally from the exact geometry in the payload (shoelace ÷ k² for
+area, polyline length ÷ k for linear, marker count for count) and diff against the stated
+value. Anything over ~0.5% is a defect. On this run 28/30 passed at ≤0.2% and the two
+failures were caught and fixed by restoring full-fidelity polygons.
+Corollary: **never decimate a path that drives a value.** If the payload must shrink,
+convert the parameter to `isManual` with an honest note — do not thin its geometry.
+
+#### Other confirmations
+- **Calibration:** an adversarial verifier caught me measuring k off dimension-LINE
+  endpoints (which overshoot the ticks ~3.4 pt/end) → 18.125, 0.69% high. True value is
+  **k = 18.000 pt/ft exactly** (¼″=1'-0"), proven by three 8'-0" operatory bays at
+  144.02/144.06/144.52 pt. `plan.scale` = **59.05511811023622**. Measure tick-to-tick or
+  a known interior bay, never the drawn dimension line.
+- **Wall-type discrimination by stroke width worked** where fills and face-pairing both
+  failed: on this set new partitions are **1.59 pt** (1.55/1.8 secondary); 0.24 pt is
+  hatch/dimensions/leaders. Fills alone gave 219 LF (exterior only); naive face-pairing
+  gave 1,450 LF (polluted by casework). Correct answer 435.3 LF.
+- **Payload budget:** 94.4K and 100.3K chars both saved successfully; the practical
+  ceiling is still ~100K. Cheapest lossless savings, in order: drop `isClosed:false`,
+  drop `page` (defaults to 1), integer-round coordinates, shorten annotation ids.
+- **Registers work well** for non-dimensional findings: one `count` parameter whose name
+  packs `[qty] item || [qty] item || …`. Nine of them carried ~60 flags/RFIs without
+  cluttering the panel.
+- **State after run: 71 parameters**, five plan pages calibrated to 59.05511811023622,
+  one note per page. Full-replace merge preserved all 5 pre-existing TI parameters.
 
 ### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
 - **Scope:** full-system accuracy audit. JobTread leg: re-derived every measurement
