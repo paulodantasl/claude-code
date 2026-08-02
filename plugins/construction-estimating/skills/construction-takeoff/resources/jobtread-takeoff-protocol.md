@@ -131,10 +131,37 @@ partitions 96.8 / 130.0 LF; vents ×8; full openings schedule (2 OH + entry + 2 
 all geometry-anchored, cross-floor reconciled (both floors sum to the same 2,448.9 SF
 interior; cores and patio/balcony walls stack at identical coordinates).
 
-## 8. Next capabilities (not yet built — pick up here)
+## 8. Pushing the estimate to the Budget tab (verified 2026-08-02, Job 2026-386)
 
-- **Cost items wired to parameters** (`createCostItem` + quantity formulas referencing
-  parameter names) — the estimate then updates when a measurement changes.
+The budget is `updateJob.$.lineItems` — a **separate array from `parameters`**, same
+FULL-REPLACE semantics. `job.costItems` / `job.costGroups` read it back
+(`job.lineItems` does **not** exist). Always read `job.costItems{count}` before writing.
+
+| Fact | Detail |
+|---|---|
+| Shape | `lineItems: [ {_type:"costGroup", name, showChildren, showChildCosts, lineItems:[ {_type:"costItem", …} ]} ]` — groups nest items; use one group per CSI division |
+| Required on an item | `name` only. Everything else is optional/defaulted |
+| Cost vs price | `unitCost` = our cost, `unitPrice` = customer price. JobTread derives margin — put GC/insurance/OH&P into the price, keep real costs in `unitCost` so job costing stays honest |
+| `isTaxable` | Defaults **true**. Set `false` on FL real-property contracts — the contractor is the consumer of materials and tax is already inside the sub/material cost |
+| `showQuantity: false` | Cleanest for a customer-facing budget: quantity 1 × Lump Sum, real quantities written into `description` |
+| **Internal notes** | No native field — it is a **custom field on `costItem`**. Ideal's is `22P6cW9xtHTQ` ("Internal Notes", type text). Write via `customFieldValues: {"<fieldId>": "<text>"}` |
+| Discover custom fields | `{"currentGrant":{"organization":{"customFields":{"$":{"size":60},"nodes":{"id":{},"name":{},"targetType":{},"type":{}}}}}}` — filter `targetType == "costItem"` |
+| Unit / cost-type / cost-code IDs | `organization.units`, `organization.costTypes`, `organization.costCodes`. Ideal: Lump Sum `22P6bRnrzcnx`, Each `22P6bRnrzcnt`, LF `22P6bRnrzcnw`, SF `22P6bRnrzcnz`, CY `22P6bRnrzcnr`; cost types Labor `22P6bRnrzzhu` / Materials `…hv` / Subcontractor `…hw` / Other `…hx` |
+| Read-back sums | `job.costItems{count, totalCost:{_:"sum",$:"unitCost"}, totalPrice:{_:"sum",$:"unitPrice"}}` — the alias-sum trick works on `costItems`, **not** on `costGroups.nodes` |
+| Size | 51 items in 18 groups with long internal notes ≈ 44.6K chars — far below the parameters ceiling |
+
+**Markup decomposition that ties exactly.** A cascading waterfall cannot be shown as
+separate line items without restating it. Split the chain: load trade lines with the
+markups that apply to everything (`× insurance × OH&P`), then show each markup you want
+visible as its own line carrying only the markups that come *after* it. For Job 2026-386:
+trade+GC+contingency lines × 1.011 × 1.12; permit line × 1.12 only. Reconcile to the cent
+against the workbook before saving, and absorb rounding drift in the contingency line.
+
+## 8b. Next capabilities (not yet built — pick up here)
+
+- **Cost items wired to parameters** — `quantityFormula` / `unitCostFormula` referencing
+  parameter names, so the budget updates when a measurement changes. The formula fields
+  exist on `newCostItem`; the reference syntax is still unverified.
 - Per-room breakdowns; `areaVolume` for slabs (depth-verified), `linearArea` for wall
   areas by height zone. (GF+FF+SF+Roof passes complete — see Run Log.)
 - Batch calibration of every plan page in a job (scale table §1 makes this mechanical).
@@ -200,6 +227,19 @@ convert the parameter to `isManual` with an honest note — do not thin its geom
   cluttering the panel.
 - **State after run: 71 parameters**, five plan pages calibrated to 59.05511811023622,
   one note per page. Full-replace merge preserved all 5 pre-existing TI parameters.
+
+#### Addendum — same job, BUDGET TAB pushed (first time this pipeline has done it)
+- Estimate → JobTread budget: **18 CSI cost groups, 51 cost items, cost $1,108,297 /
+  price $1,254,650.23**, tying to `estimate.xlsx` to the cent. Conventions now in §8.
+- **`Internal Notes` is a costItem CUSTOM FIELD, not a native field** (Ideal:
+  `22P6cW9xtHTQ`). Every line carries a customer-facing `description` plus an internal
+  note in INCLUDED / NEEDS CONFIRMATION form — that split is what makes a preliminary-set
+  budget defensible in a client meeting.
+- `job.lineItems` does not exist for reading; use `job.costItems` / `job.costGroups`.
+- The alias-sum (`{"_":"sum","$":"unitCost"}`) works on `costItems` but **not** on
+  `costGroups.nodes` — two failed selections before finding it.
+- Consolidation matters: 96 estimate lines → 51 budget lines. A customer budget is a
+  communication document; the 96-line detail stays in the workbook.
 
 ### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
 - **Scope:** full-system accuracy audit. JobTread leg: re-derived every measurement
