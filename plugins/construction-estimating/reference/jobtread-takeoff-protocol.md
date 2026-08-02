@@ -145,6 +145,7 @@ FULL-REPLACE semantics. `job.costItems` / `job.costGroups` read it back
 | `isTaxable` | Defaults **true**. Set `false` on FL real-property contracts — the contractor is the consumer of materials and tax is already inside the sub/material cost |
 | `showQuantity: false` | Cleanest for a customer-facing budget: quantity 1 × Lump Sum, real quantities written into `description` |
 | **Internal notes** | No native field — it is a **custom field on `costItem`**. Ideal's is `22P6cW9xtHTQ` ("Internal Notes", type text). Write via `customFieldValues: {"<fieldId>": "<text>"}` |
+| **Custom-field length cap: 1024 chars** | `Unable to save custom field "Internal Notes": Value cannot be more than 1024 characters`. The whole write is rejected atomically — nothing lands. Check every note length BEFORE emitting; native `description` allows 4096 |
 | Discover custom fields | `{"currentGrant":{"organization":{"customFields":{"$":{"size":60},"nodes":{"id":{},"name":{},"targetType":{},"type":{}}}}}}` — filter `targetType == "costItem"` |
 | Unit / cost-type / cost-code IDs | `organization.units`, `organization.costTypes`, `organization.costCodes`. Ideal: Lump Sum `22P6bRnrzcnx`, Each `22P6bRnrzcnt`, LF `22P6bRnrzcnw`, SF `22P6bRnrzcnz`, CY `22P6bRnrzcnr`; cost types Labor `22P6bRnrzzhu` / Materials `…hv` / Subcontractor `…hw` / Other `…hx` |
 | Read-back sums | `job.costItems{count, totalCost:{_:"sum",$:"unitCost"}, totalPrice:{_:"sum",$:"unitPrice"}}` — the alias-sum trick works on `costItems`, **not** on `costGroups.nodes` |
