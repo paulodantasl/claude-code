@@ -42,6 +42,12 @@ XactAnalysis ──(official notification email)──► claims@yourdomain
 Details, trade-offs, and sources for each are in
 [`docs/INTEGRATION_OPTIONS.md`](docs/INTEGRATION_OPTIONS.md).
 
+> **Current status:** rolling out **option 2 first** — follow the step-by-step
+> runbook in [`docs/ZAPIER_NOCODE_OPTION.md`](docs/ZAPIER_NOCODE_OPTION.md).
+> The Python bridge below stays ready as the $0 replacement if Zapier's
+> per-task cost becomes annoying; the XactAnalysis notification setup is
+> identical for both.
+
 ## Quick start (option 1)
 
 1. **XactAnalysis side (one-time, done by a human in the portal):** add a
