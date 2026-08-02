@@ -1,0 +1,4 @@
+# Runtime artifacts — never commit claim data or credentials
+state.json
+processed/
+.env
