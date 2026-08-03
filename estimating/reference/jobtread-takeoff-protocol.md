@@ -12,7 +12,7 @@ the bottom each time this runs. Companion helpers: `estimating/scripts/jobtread_
 |---|---|---|
 | Annotation coordinate space | **Native PDF points (72/in), page-local**; `meta` annotation `{width,height,rotation}` mirrors the PDF MediaBox | Org plan stored meta 792×612 = exactly its letter-size page |
 | `plan.scale` semantics | **PDF points per real METER** (calibration) | Every org value decodes as a standard imperial scale (below); UI displayed my computed values exactly |
-| Scale for imperial drawings | `scale = inches_per_foot × 3.28084 × 72` → **¼″=1′-0″ → 59.05511811; ⅛″ → 29.5275591; 3/16″ → 44.2913386; ½″ → 118.1102362; ⅜″ → 88.5826772; 1″ → 236.2204724** | All recurring org values matched; 40′-0″ printed dim measured exactly 720 pt on a true-scale ¼″ sheet |
+| Scale for imperial drawings | `scale = inches_per_foot × 3.28084 × 72` → **¼″=1′-0″ → 59.05511811; ⅛″ → 29.5275591; 3/16″ → 44.2913386; ½″ → 118.1102362; ⅜″ → 88.5826772; ¾″ → 177.16535433; 1″ → 236.2204724. Engineering (civil): 1″=10′ → 23.62204724; 1″=20′ → 11.81102362; 1″=30′ → 7.87401575; 1″=40′ → 5.90551181; 1″=50′ → 4.72440945** | All recurring org values matched; 40′-0″ printed dim measured exactly 720 pt on a true-scale ¼″ sheet |
 | Values are **recomputed from geometry** | The `value` you send is advisory; JobTread recomputes from annotations × **current** plan scale. Recalibrating a plan silently updates every value measured on it (feature: the takeoff self-corrects) — so printed values in notes can drift from live values | Sent 96.22 LF hand-sum; read back 96.825; A2.0 user recalibration (Δ0.004%) shifted all its param values on the next read |
 | **Derived-value semantics by type** | `area`→SF, `linear`→LF, `count`→n markers, `linearArea`→**SF** (length×depth), `areaVolume`→**ft³** (area×depth), `linearVolume`→**ft³** (length×width×depth). Send LF/SF if you like — the server stores the derived total. Cost formulas on volume params get ft³: **divide by 27 for CY** | 2026-07-10 audit: all 139 measurements re-derived at 0.000% deviation only after applying these semantics (ratios exactly = depth, w×d) |
 | `isNegative` subtraction | Closed path with `isNegative: true` inside a measurement subtracts exactly | GF net area read back = interior − patio − core to full precision |
@@ -170,6 +170,44 @@ against the workbook before saving, and absorb rounding drift in the contingency
   per plan page).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
+
+### 2026-08-03 (9) — Job 2026-373 (SK Dental, St. Petersburg) — GROUND-UP CIVIL + ARCH — Claude
+- **Scope:** first GROUND-UP job through the pipeline: 6-sheet civil (C1–C8) + 5-sheet
+  arch prelim + 1 superseded standalone sheet → **75 parameters** (33 with geometry,
+  332 annotations), five civil pages calibrated, saved in one full-replace call
+  (~58.5K chars), read-back verified — every recomputed value within 2% of stated.
+- **NEW — engineering-scale calibration:** civil sheets at 1″=10′ → **k = 7.2 pt/ft →
+  23.62204724409449 pt/m** (add to the §1 table: 1″=20′ → 11.81102362; 1″=30′ →
+  7.87401575; 1″=10′ → 23.62204724; 1″=40′ → 5.90551181 [pt/m = 72/ft-per-inch ×
+  3.28084]). Verified by measuring the 100′ building rectangle = 720.0 pt exact.
+  Raster pixel-histogram on a 72-DPI render (px == pt) found the wall lines when
+  vector rect/segment search failed — dashed/polyline property lines poison
+  segment-length approaches; measure a known DRAWN RECTANGLE, not the property line.
+- **NEW — same-sheet revision supersession:** the standalone C4 upload (plot 6/19) and
+  civil-set p3 (plot 7/27) were DIFFERENT revisions of the same sheet: 105 → **160
+  StormTech chambers**, Duraslot layout re-routed, stone base lowered 2.3′. Caught by
+  pixmap-hash + text-set diff (`PLOT DATE` lines + line-set symmetric difference).
+  Guard: when the same sheet name appears twice in a Plans tab, DIFF THE REVISIONS
+  before anchoring; put a red SUPERSEDED text note on the old plan page (updatePlan,
+  annotations were null so no merge risk).
+- **NEW — printed-callout vs drawn-geometry gate policy:** on engineer-quantified civil
+  sheets, printed LF callouts are the pricing authority; agent-traced geometry is the
+  drawn record. Gate rule used: attach geometry only when recompute is within 2% of the
+  printed value; otherwise isManual with the printed value and the conflict stated in
+  the note (e.g., "PRINTED 121, DRAWN 58"). Three real conflicts (~65 LF pipe swing)
+  became RFIs instead of silently wrong values either way.
+- **areaVolume convention reaffirmed:** store CF (server derives ft³), put CY in the
+  NAME, set measurement depth = CF/polygon-area so server recompute lands on the stated
+  number (pad fill 5,616 CF @ depth 1.404′ over the 4,000 SF civil pad).
+- **Workflow shape (2nd validation):** 6 extractors + 3 adversarial verifiers + 1
+  consolidator (10 agents, 0 errors, ~1.68M subagent tokens, ~2h). Verifier catches this
+  run: duplicated pipe label (121 LF appears twice, second run draws 58), outfall 33
+  vs 17, Duraslot W 24 vs 42, cover-sheet transposition typo (existing impervious 8,569
+  vs components 8,956), N1 storefront 21 not 24 SF, roof-drain marker pins 76–105 pt
+  off (corrected), maples schedule 12 vs 16 drawn, adverse storm invert (uphill 0.20′).
+- **State after run:** Job 2026-373 = 75 parameters, 10 calibrated/annotated plan pages,
+  budget tab untouched. Headline RFI: civil site designed for a 100′×40′ = 4,000 SF
+  building vs arch 48′-4″×40′ = 1,934 SF.
 
 ### 2026-08-02 (8) — Job 2026-386 (Dr. Ahmed dental TI, Lutz) — FULL 8-SHEET TAKEOFF — Claude
 - **Scope:** whole bid set in one pass — partitions, doors, millwork, flooring, ceilings,
