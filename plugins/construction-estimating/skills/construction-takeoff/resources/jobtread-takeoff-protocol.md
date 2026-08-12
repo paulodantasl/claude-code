@@ -23,6 +23,8 @@ the bottom each time this runs. Companion helpers: `estimating/scripts/jobtread_
 | **`depth`/`width` live on the MEASUREMENT, not the parameter** | `linearArea`→`depth`+`unit`; `linearVolume`→`width`+`depth`+`unit`; `areaVolume`→`depth`+`unit`. Plain `linear`/`area`/`count` measurements take NONE of them. The PARAMETER object carries only `name, measurementType, value, unit, measurements` | 2026-08-02: `The value 18 was found at "updateJob"."$"."parameters"."10"."depth" but no value is ever expected there` |
 | **`isClosed` is a constant `true`, never `false`** | Omit it entirely on open polylines; set `true` only on closed polygons | 2026-08-02: `Expected false at …annotations."80"."isClosed" to be true` |
 | `isManual: true` on a measurement | Holds the stated `value` verbatim with `annotations: []` (and `planId` omitted) — the escape hatch for derived/assumed quantities and for shrinking an oversized payload **without** thinning geometry | Job 2025-227 + 2026-386 saves |
+| **`color` is REQUIRED on EVERY measurement, including `isManual`** | Non-null even when there is no geometry to colour. Omitting it on an isManual measurement rejects the whole save | 2026-08-12: `A non-null value is required at "updateJob"."$"."parameters"."1"."measurements"."0"."color"` |
+| `path.points` has a **`freedraw`** variant | Flat `arrayOf number` (min 2, max 2000) instead of `{annotationId}` refs — far more compact for dense polylines. Length-derivation behaviour **not yet verified**; the annotation-ref form is the proven one | 2026-08-12 schema introspection |
 | Introspect before composing | `{"schema":{"$":{"path":"parameters","expand":true}}}` gives per-type measurement keys; `…"path":"parameters._on_linear.measurements.annotations"` gives the path/text/point/meta variants and their required fields | Cheaper than discovering each rule via a rejected 100K-char save |
 | Text annotations | Require non-null `fontWeight`, `fontStyle`, `fillColor`, `fillOpacity`, `rotation` (API errors one missing field at a time) | updatePlan error `A non-null value is required … fontWeight` |
 | Mutation returns | `updatePlan`/`updateJob` return **root** — select a root field (e.g. re-query the job) or the call fails validation | `The field "id" does not exist at "updatePlan"` |
@@ -186,6 +188,41 @@ against the workbook before saving, and absorb rounding drift in the contingency
   per plan page).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
+
+### 2026-08-12 (11) — Job 2026-374 (Advantage Dental+, Wesley Chapel) — DENTAL TI, arch takeoff — Claude
+- **Scope:** unblocked by the user uploading the sets directly (CDN still 403 — the allowlist is
+  still the right permanent fix). 38 unique sheets scoped; **9 parameters saved**, 44 drawn
+  partition runs (132 annotations) on A1, plan records calibrated **7 → 11**. Read-back clean.
+- **NEW — WALL POCHE FILL beats stroke width as the wall discriminator, and it carries scope.**
+  Failure mode #13's stroke-width trick did NOT work on this Revit-exported set — partitions and
+  casework share the 0.48 pt stroke. The **grey poche fill `rgb(0.498,0.498,0.498)`** isolated
+  walls exactly (46 paths, 44 clean linear bodies at 5.52–5.64 pt = 4.91–5.01″). Better still it
+  splits scope for free: **poche = NEW partition, no poche = EXISTING shell wall** — which matched
+  the sheet's own "level 4 finish on all *existing* gypsum board walls" callout. On any set,
+  check fills before stroke widths.
+- **NEW — dimension ticks are drawn as PAIRED strokes; use the pair's midpoint.** Each tick came
+  through as two 3.14 pt slashes 2.22 pt apart. Taking the outer strokes over-measures; the pair
+  midpoints gave 214.71 pt for a printed 15′-11″ → k = 13.489 vs nominal 13.500 (−0.08%). Also
+  re-confirmed #12 live: the dimension **line** was 219.24 pt, i.e. **+2.0%** if measured
+  end-to-end instead of tick-to-tick.
+- **NEW — the inch-snap sweep can lock onto the 4/3 HARMONIC. Always cross-check an invariant.**
+  Sweeping k for "how many segments land on whole inches" peaked at **17.995 (¼″) on A2**, which
+  would have meant a 33% calibration error on a live sheet. It was false: **18.0 = 13.5 × 4/3**,
+  and A2's dense furniture geometry fed the harmonic. Disproved in one step by a **physical
+  invariant — wall poche thickness**: A2's poche is 5.64/5.52 pt, identical to A1/A6, i.e.
+  4.91–5.01″ at 3/16″ but an impossible 3.68–3.76″ at ¼″. **Never accept a sweep peak alone;
+  confirm against something whose real-world size you already know.**
+- **NEW — outlined text is a whole-sheet property, not just tags (#5 generalised).** A0–S1
+  (p1–10) returned **zero** extractable words against 8K–58K vector drawings per page; the
+  1,510 black fills ARE the glyphs. The MEP sheets p11–31 carried normal text. Plan the pass
+  accordingly: montage-render title blocks and schedules on the outlined sheets, text-extract
+  the MEP ones. A title-block montage read all 10 sheet names in one image.
+- **Confirmed:** rot270 pages report `pg.rect` 2592×1728 but MediaBox 1728×2592 — write annotation
+  coordinates in **unrotated MediaBox space** (do NOT apply `rotation_matrix` to what you save;
+  use it only to reason in display space).
+- **State after run:** 9 parameters, 11 calibrated plan pages, budget tab still duplicated
+  (22 groups, untouched — no authorisation to write). Not yet taken off: A5 doors, A6 finishes,
+  RCP ceiling areas, millwork, FP1 heads, Henry Schein F2A equipment, wall-type tag split.
 
 ### 2026-08-12 (10) — Job 2026-374 (Advantage Dental+, Wesley Chapel) — BLOCKED, no takeoff — Claude
 - **Outcome: zero parameters written.** `cdn.jobtread.com` 403'd at the egress proxy and
