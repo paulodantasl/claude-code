@@ -21,18 +21,33 @@ This complements the lead-generation side of the repo (`permit_scraper/`,
 | `estimate-auditor` | Independent QA of any/all of the above, or third-party work | `audit-report.md` |
 | `procurement-specialist` | **Live** material sourcing — real suppliers, current price, availability, lead time (FL#/NOA aware); cites every source | `procurement.md`, `procurement.csv` |
 
-These live in `.claude/agents/`. Claude routes to them automatically when you describe a
-task, or invoke the whole pipeline with the `/bid` command (`.claude/commands/bid.md`).
+These live in `.claude/agents/`, and are mirrored into the portable plugin bundle at
+`plugins/construction-estimating/`. Claude routes to them automatically when you describe
+a task, or invoke the whole pipeline with the `/bid` command (`.claude/commands/bid.md`).
+
+To use them **outside this repo** — in any folder on your machine, or in claude.ai /
+Cowork chat — see **[INSTALL.md](INSTALL.md)**.
 
 ## Quick start
 ```
 /bid Acme Distribution Center, Orlando FL        # auto-detects sector
 /bid-public | /bid-residential | /bid-commercial | /bid-ti   # sector-tuned
 ```
+…or run a single stage on demand:
+```
+/takeoff  /scope  /estimate  /proposal  /audit  /procure  /loan-package
+```
 …or just ask: *"Take off the structural concrete from these plans and price it."*
 
 Per-project files live in `estimating/projects/<slug>/` — see that folder's README for
 the layout.
+
+## Maintaining the copies
+`estimating/{reference,templates,scripts}` is canonical; the plugin bundle, the 8 skills,
+and `.claude/skills/` are derived from it. After editing canonical, run:
+```
+python3 estimating/sync.py --write     # regenerate derived copies (--check to gate)
+```
 
 ## Knowledge base (`estimating/reference/`)
 The agents read these for Florida-precise, consistent results:

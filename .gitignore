@@ -14,3 +14,7 @@ token.json
 estimating/projects/*
 !estimating/projects/README.md
 
+# Estimating: bid data written outside the repo layout, and build output
+estimating-projects/
+dist/
+

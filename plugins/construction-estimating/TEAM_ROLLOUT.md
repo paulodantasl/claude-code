@@ -13,6 +13,10 @@ pip install openpyxl
 Then in any project folder: `/bid <project name>`, or just describe the task
 ("take off the structural concrete from these plans"). Done.
 
+Prefer an offline install, or want this in claude.ai chat on your phone? Both are in
+[`estimating/INSTALL.md`](../../estimating/INSTALL.md) — a `~/.claude/` installer that
+needs no marketplace, and one-zip-per-skill uploads that live on your account.
+
 ## Prerequisites
 
 - **Claude Code** installed — web (claude.ai/code), desktop (Mac/Windows), CLI, or VS Code / JetBrains extension. Any one works.
@@ -23,6 +27,7 @@ Then in any project folder: `/bid <project name>`, or just describe the task
 
 - 6 specialist agents (`takeoff-engineer`, `scope-writer`, `cost-estimator`, `bid-proposal-writer`, `estimate-auditor`, `procurement-specialist`) — Claude auto-routes based on your task
 - `/bid <project>` — full precon pipeline with market-sector auto-detection; sector-tuned variants: `/bid-public`, `/bid-residential`, `/bid-commercial`, `/bid-ti`
+- Per-stage commands when you only need one piece: `/takeoff`, `/scope`, `/estimate`, `/proposal`, `/audit`, `/procure`, `/loan-package`
 - Accuracy protocols + a deterministic validator (`validate_estimate.py`) enforcing benchmark bands, scope↔estimate tie-out, and zero-qty guards
 - 8 Agent Skills (also individually deployable to Claude Cowork / claude.ai — each folder under skills/ zips cleanly for upload)
 - Florida code + CSI + estimating-methodology knowledge base
