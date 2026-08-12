@@ -20,6 +20,10 @@ structural concrete from these plans and price it"*). Updates: `/plugin marketpl
 
 > **Dependency:** the Excel builders need `openpyxl` → `pip install openpyxl`.
 
+Three other ways to have this — an offline install into `~/.claude/` that works in every
+folder, automatic loading in Claude Code on the web, and uploadable skill zips for
+claude.ai / Cowork chat — are in **[estimating/INSTALL.md](../../estimating/INSTALL.md)**.
+
 ## What's inside
 
 **Subagents** (auto-routed when you describe a task)
@@ -40,6 +44,10 @@ Sector-tuned variants apply the matching profile and gates:
 (new residential — lender draws, selections discipline), `/bid-commercial` (new commercial —
 threshold, delegated designs, site/civil), `/bid-ti` (buildouts/tenant improvement — existing
 conditions, landlord ecosystem, logistics premiums).
+
+When you only need one stage, each runs on its own and delegates to the matching
+specialist: `/takeoff`, `/scope`, `/estimate`, `/proposal`, `/audit`, `/procure`, and
+`/loan-package` (the 13-tab bank construction-loan workbook).
 
 **Knowledge base** (`reference/`) — Florida code (HVHZ, FBC, wind/flood, NOA/FL#, termite,
 threshold, sales tax, soils), CSI division + scope-gap guide, estimating methodology
