@@ -13,7 +13,8 @@ the bottom each time this runs. Companion helpers: `estimating/scripts/jobtread_
 | Annotation coordinate space | **Native PDF points (72/in), page-local**; `meta` annotation `{width,height,rotation}` mirrors the PDF MediaBox | Org plan stored meta 792×612 = exactly its letter-size page |
 | `plan.scale` semantics | **PDF points per real METER** (calibration) | Every org value decodes as a standard imperial scale (below); UI displayed my computed values exactly |
 | Scale for imperial drawings | `scale = inches_per_foot × 3.28084 × 72` → **¼″=1′-0″ → 59.05511811; ⅛″ → 29.5275591; 3/16″ → 44.2913386; ½″ → 118.1102362; ⅜″ → 88.5826772; ¾″ → 177.16535433; 1″ → 236.2204724. Engineering (civil): 1″=10′ → 23.62204724; 1″=20′ → 11.81102362; 1″=30′ → 7.87401575; 1″=40′ → 5.90551181; 1″=50′ → 4.72440945** | All recurring org values matched; 40′-0″ printed dim measured exactly 720 pt on a true-scale ¼″ sheet |
-| Values are **recomputed from geometry** | The `value` you send is advisory; JobTread recomputes from annotations × **current** plan scale. Recalibrating a plan silently updates every value measured on it (feature: the takeoff self-corrects) — so printed values in notes can drift from live values | Sent 96.22 LF hand-sum; read back 96.825; A2.0 user recalibration (Δ0.004%) shifted all its param values on the next read |
+| ~~Values are recomputed from geometry~~ **CORRECTED 2026-08-12: the API stores `value` VERBATIM** | Probe: sent a 135.0 pt path (true 10.00 LF) with `value: 999` — read back **999**, in BOTH the annotation-ref and freedraw forms. The API does **not** recompute on write or read. (The UI may recompute when a measurement is opened/edited, which is what the earlier 96.22→96.825 and Δ0.004% observations actually were.) **Consequences: (1) your stated number is what the team sees — the server will not fix your arithmetic; (2) a read-back that matches what you sent proves NOTHING. The only real checks are a local recompute from the emitted geometry and a visual overlay.** | 2026-08-12 999-probe, Job 2026-374 |
+| **Coordinate space on ROTATED pages = the RENDERED page, not the MediaBox** | Every `meta` in the org reads `{width 2592, height 1728, rotation 0}` — the landscape *rendered* size. A `/Rotate 270` page whose MediaBox is 1728×2592 renders 2592×1728, and geometry must be written in that rendered space (apply PyMuPDF's `rotation_matrix`). Writing MediaBox coords puts every line in the wrong place while the stated value still looks right — invisible without an overlay. | 2026-08-12: 8 org metas inspected; A1 partitions drawn wrong first pass, fixed and overlay-confirmed |
 | **Derived-value semantics by type** | `area`→SF, `linear`→LF, `count`→n markers, `linearArea`→**SF** (length×depth), `areaVolume`→**ft³** (area×depth), `linearVolume`→**ft³** (length×width×depth). Send LF/SF if you like — the server stores the derived total. Cost formulas on volume params get ft³: **divide by 27 for CY** | 2026-07-10 audit: all 139 measurements re-derived at 0.000% deviation only after applying these semantics (ratios exactly = depth, w×d) |
 | `isNegative` subtraction | Closed path with `isNegative: true` inside a measurement subtracts exactly | GF net area read back = interior − patio − core to full precision |
 | **Full-replace semantics** | `updateJob.parameters` and `updatePlan.annotations` REPLACE the whole array | Read-backs always mirror exactly what was last sent |
@@ -187,7 +188,64 @@ against the workbook before saving, and absorb rounding drift in the contingency
 - Elevations-page markers (bind the same parameter to multiple planIds — one measurement
   per plan page).
 
+## 10. Measuring MEP linework (added 2026-08-12, Job 2026-374)
+
+The architectural tricks in §4 don't transfer to MEP sheets. What works:
+
+1. **Colour is the layer.** On Revit-exported MEP sheets the screened architectural
+   background is **grey `rgb(0.4,0.4,0.4)`** and all new work is **black `rgb(0,0,0)`**.
+   Filter on colour FIRST, then stroke width. On Job 2026-374: P1 piping = black 1.2;
+   M1 duct outline = black 1.68; FP1 sprinkler = black 1.68.
+2. **MERGE BEFORE MEASURING — raw segment sums under-measure badly.** Pipe/duct runs are
+   emitted as many short collinear segments (dash patterns are drawn as discrete dashes,
+   and lines break at every crossing). Band-and-merge collinear segments with a gap
+   tolerance (~9 pt worked) and measure end-to-end. On P1 this recovered **+23%**
+   (1,101 → 1,355 LF). Summing raw segments is simply wrong.
+3. **Do NOT infer above/below slab from "solid vs dashed".** Tried it; the classifier
+   actually separated water/waste (which break at crossings) from vacuum/air (which
+   don't) — nothing to do with elevation. It produced a confident, wrong "773 LF of
+   underground". **Classify by the printed system LABEL instead** (nearest
+   `<size> CW|HW|W|V|VAC|CA|VTR` line within ~45 pt); that is defensible and it is what
+   pricing needs anyway.
+4. **Duct is drawn as parallel side pairs** — the measured outline is ~2× the run length.
+   State outline and centreline separately, or you will double the sheetmetal.
+5. **Heavy-stroke classes pick up curved architecture.** FP1's black-1.68 class included
+   the curved storefront wall as a chain of short diagonal chords. Filter diagonals (or
+   overlay-verify) before reporting — 42.8 LF of "sprinkler pipe" was building wall.
+6. **Counts: markers at real tag positions beat manual counts**, and the text layer gives
+   them for free on MEP sheets. Validate the tag alphabet against the schedule first —
+   E2 yielded types A–E, but the E6 luminaire schedule lists only A–D, so the 'E' was a
+   false positive. Note that a marker sits at the TAG, which can be offset from the device.
+7. **Payload:** `freedraw` points (flat number array) is ~60% smaller than
+   point-annotation refs and is accepted and stored exactly. Drop sub-8 pt fragments
+   (arrowheads, fitting ticks) — on P1 that removed 235 paths for 0% length loss — but
+   **log the threshold**, and never raise it to the point of dropping real length
+   (12 pt would have silently discarded 3.4%).
+
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
+
+### 2026-08-12 (12) — Job 2026-374 — MULTI-TRADE MEASURED TAKEOFF (corrective) — Claude
+- **Why:** the user rejected run (11): "none of the measurements are correct, some were
+  manual count parameters." Both complaints were right. Root causes found and fixed.
+- **ROOT CAUSE 1 — geometry was written in MediaBox space on a `/Rotate 270` page**, so
+  the partition lines rendered in the wrong place. See the new §1 row. Fixed by writing
+  rendered-space coords; confirmed by rendering the page and overlaying the exact payload.
+- **ROOT CAUSE 2 — the API does not recompute values**, so run (11)'s "read-back returned
+  418.23, confirmed" was self-deception: the server echoed the number I sent while the
+  geometry sat in the wrong place. See the corrected §1 row. **A read-back is not a
+  verification.** Local recompute + visual overlay are the only real gates.
+- **ROOT CAUSE 3 — 8 of 9 parameters in run (11) were `isManual` registers**, i.e. typed
+  counts, not takeoff. Replaced with measured geometry and markers at real positions.
+- **Delivered:** 15 parameters — plumbing measured and split by system from the drawn
+  labels (W 287.5 / V 238.2 / CW 220.8 / HW 196.5 / VAC 131.2 / CA 76.3 LF), partitions
+  418.2 LF re-anchored correctly, duct 595 LF outline (~297.5 centreline), sprinkler
+  336.7 LF provisional, and marker counts for 96 luminaires, 46 air terminals/exhaust
+  fans, 21 plumbing fixtures, 31 junction boxes. Pre-save gate: max drift 0.202%.
+- **New technique section §10** captures the MEP method (colour-as-layer, merge-before-
+  measure, label-based system classification, duct pair handling, curve contamination).
+- **Still open:** E1 receptacle/switch symbols (not text), FP1 overlay verify, duct
+  centreline trace + sheetmetal SF, A5 doors, A6 finishes, RCP ceilings, millwork,
+  Henry Schein F2A equipment.
 
 ### 2026-08-12 (11) — Job 2026-374 (Advantage Dental+, Wesley Chapel) — DENTAL TI, arch takeoff — Claude
 - **Scope:** unblocked by the user uploading the sets directly (CDN still 403 — the allowlist is
