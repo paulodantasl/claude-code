@@ -50,10 +50,26 @@ global types by name (`parameters`, `plan`).
 
 - `cdn.jobtread.com` is typically **blocked by the environment egress allowlist** — the API
   rides the MCP connector, file downloads don't. Fix permanently: add `cdn.jobtread.com` to
-  the environment's network settings.
-- Workaround: pull the **identical file from Google Drive** (teams store the same PDFs).
-  Match by exact filename. Drive MCP downloads ≳8 MB may fail ("session expired") — prefer
-  the smaller per-discipline files.
+  the environment's network settings. **This is the only route that carries a full plan set;
+  treat it as a prerequisite, not a nice-to-have.** Diagnose with
+  `curl -sS "$HTTPS_PROXY/__agentproxy/status"` — a `connect_rejected … 403` on
+  `cdn.jobtread.com:443` is a policy denial, which the proxy README says to report, not
+  route around.
+- **The Google Drive fallback does NOT scale to plan sets (measured 2026-08-12).** Teams do
+  store the same PDFs, and matching by byte size works for *identifying* the right file —
+  but `download_file_content` returns **base64 inline into the agent's context**, not to
+  disk. A 1.9 MB set ≈ 620K tokens; a 25 MB set ≈ 8M. The practical ceiling is ~100 KB
+  (a 26 KB PDF round-trips fine), so Drive is good for **RFI trackers, work letters, and
+  small single-sheet PDFs only**. Do not plan a takeoff around it.
+  - Use `read_file_content` (natural-language text, far cheaper than base64) when you only
+    need the WORDS out of a small-to-mid document — it is how you read an RFI tracker or a
+    work letter without burning context.
+- **Text extraction is not a takeoff.** Anything that yields only text (Drive
+  `read_file_content`, a document-transform service) cannot calibrate scale or trace
+  geometry, so it cannot satisfy source-hierarchy rank 1. Producing "quantities" from it
+  yields fake precision — stop and get the real file instead. Also note that pushing a
+  client's sealed permit set to a third-party transform service is an external disclosure:
+  ask first.
 - Verify you have the SAME file the Plans tab shows (name + page count + page size).
 
 ## 4. The takeoff playbook (per plan page)
@@ -170,6 +186,38 @@ against the workbook before saving, and absorb rounding drift in the contingency
   per plan page).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
+
+### 2026-08-12 (10) — Job 2026-374 (Advantage Dental+, Wesley Chapel) — BLOCKED, no takeoff — Claude
+- **Outcome: zero parameters written.** `cdn.jobtread.com` 403'd at the egress proxy and
+  the §3 Drive fallback turned out to be unusable at plan-set size. Recorded rather than
+  worked around; §3 rewritten above so the next run doesn't spend a cycle rediscovering it.
+- **NEW — the Drive fallback has a hard ceiling (~100 KB), not ~8 MB.** `download_file_content`
+  returns base64 **inline into context**, so a 1.9 MB set ≈ 620K tokens and the 25 MB
+  A-S-MEP set ≈ 8M. Verified by round-tripping a 26 KB RFI tracker (fine) and costing out
+  the rest. §3 previously implied Drive was a viable plan-set workaround — it is not.
+  `read_file_content` (text, not base64) IS the right tool for RFI trackers and work letters.
+- **NEW — read the Plans tab as an inventory before trusting it.** 45 plan records, only
+  **38 unique sheets**: the 31-page A-S-MEP set had been uploaded **twice** under two
+  filenames (identical 25,031,656 bytes), with 7 of those pages existing a second time as
+  the named + calibrated copy. Byte-size equality across two `file.name`s is the tell.
+  Anchor each sheet to exactly ONE plan record or every shared quantity double-counts.
+  (Distinct from run (9)'s *revision* supersession — same trap, different cause.)
+- **NEW — nominal-valued `plan.scale` is a red flag, not a calibration.** Six sheets read
+  exactly 44.29133858267717 and one exactly 29.52755905511811 — the §1 table values to the
+  last digit, i.e. typed, never measured. Failure mode #12 says a plot at 94.4% of nominal
+  is a real occurrence. Treat an exact-nominal scale on an uncalibrated-looking sheet as
+  UNVERIFIED and re-derive tick-to-tick before measuring.
+- **NEW — check `costItems` health while you're in the job.** This job carried 204 items in
+  **22 cost groups with repeating names** ("Trade Costs (Exhibit B AWARDED…)" ×7, "Project
+  Staff Labor" ×5, "Overhead, Fee & Insurance" ×5) and cost $2,278,984.80 vs price
+  $2,279,668.54 — a $684 margin on $2.28M. Signature of repeated full-replace writes
+  landing as duplicates (§8 full-replace semantics cut both ways). A duplicate-name scan
+  over `costGroups` is a cheap standing check.
+- **Confirmed:** `job.parameters` can be `null` on a job that already has a populated budget
+  tab — parameters and lineItems are fully independent arrays.
+- **State after run:** 0 parameters, 7 of 38 sheets carrying unverified nominal scales,
+  budget tab duplicated and untouched. Resume state written to the (gitignored) project
+  folder `estimating/projects/2026-374-advantage-dental-wesley-chapel/RUN-STATE.md`.
 
 ### 2026-08-03 (9) — Job 2026-373 (SK Dental, St. Petersburg) — GROUND-UP CIVIL + ARCH — Claude
 - **Scope:** first GROUND-UP job through the pipeline: 6-sheet civil (C1–C8) + 5-sheet
