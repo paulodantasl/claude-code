@@ -42,4 +42,8 @@
 
 ## Note on JobTread state
 
-`updateJob.parameters` is **FULL REPLACE**. Always read-merge-write. A 2026-08-17 test wipe was restored to 36 value params; geometry re-anchored for finishes/doors/ops; remaining live plumbing/partition/lighting markers reloaded from `jobtread_parameters_final.json`.
+`updateJob.parameters` is **FULL REPLACE**. Always read-merge-write.
+
+**Live geometry (read-back verified):** HVAC×46, fixtures×21, J-boxes×31, doors 10+3, ops×7, T-1/CONC/VCT areas.
+
+**Values-only (geom in `jobtread_parameters_final.json`, MCP ~15KB batch limit):** plumbing W/CW/CA/VAC/V, partitions 418.1 LF, lighting×121. HW remains advisory (RFI).
