@@ -336,3 +336,9 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   values advisory; ± tolerances into names; one text note per plan.
 - **Open for next run:** cost-item wiring; SF/roof pass; cdn.jobtread.com allowlist
   request pending; door/window schedule still absent from design set (± on counts).
+
+### 2026-08-17 (cont.) — geometry re-push lessons (Job 2026-374)
+- MCP `CallMcpTool` embedding reliably accepts ~8–13 KB `updateJob` payloads; ~15 KB+ is flaky.
+- Strategy that worked: push count markers in ≤13 KB batches (fixtures → jbox → doors/ops → HVAC one-at-a-time with full-replace restore).
+- Linear plumbing/partition/lighting geometry (~60 KB full) remains in `jobtread_parameters_final.json` for a follow-up when larger MCP payloads work or when pushed as plan.annotations overlays.
+- Never wipe: always read-merge-write; accidental one-geom pushes require immediate restore of prior live geometry.

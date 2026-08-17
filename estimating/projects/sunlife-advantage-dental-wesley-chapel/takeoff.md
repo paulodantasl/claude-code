@@ -122,3 +122,11 @@
 ## JobTread parameter summary (2026-08-17)
 
 36 parameters on job `22PaqftN7Gtd` after restore from accidental TEST wipe. Live geometry re-anchored for finishes/doors/ops; plumbing/partition/lighting/HVAC marker geometry re-push in progress from `jobtread_parameters_final.json` (read-merge-write). Overlay proofs: `overlays/A1_partitions_overlay.png`, `overlays/A6_LVT_partial_overlay.png`, `overlays/A6_CONC_VCT_rects.png`, `overlays/A1_doors_markers.png`, `overlays/P1_plumb_overlay.png`.
+
+## JobTread geometry status (2026-08-17 late)
+
+**Live on-screen markers/areas:** HVAC×46 (M1), fixtures×21 (P1), J-boxes×31 (E1), T-1/CONC/VCT areas (A6), doors NEW×10 + EX×3 (A1), dental ops×7 (A2).
+
+**Values complete for all 36 params.** Linear plumbing/partition + lighting×121 geometry still in `jobtread_parameters_final.json` (MCP ~15KB batch limit); values match prior live takeoff.
+
+**HW:** advisory only (geometry missing — RFI).

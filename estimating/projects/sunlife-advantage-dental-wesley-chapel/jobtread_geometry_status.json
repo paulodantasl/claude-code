@@ -1,0 +1,22 @@
+{
+  "job_id": "22PaqftN7Gtd",
+  "param_count": 36,
+  "geometry_live_anns": {
+    "HVAC terminals": 46,
+    "PLUMB fixtures": 21,
+    "ELEC J-boxes": 31,
+    "Doors NEW": 10,
+    "Doors EX": 3,
+    "Dental ops": 7,
+    "T-1 areas": 2,
+    "CONC": 1,
+    "VCT": 1
+  },
+  "geometry_values_only": [
+    "PLUMB W/CW/CA/VAC/V linears (values verified; geom in jobtread_parameters_final.json)",
+    "ARCH Partitions 418.1 LF",
+    "ELEC Lighting 121",
+    "PLUMB HW advisory (geom missing \u2014 RFI)"
+  ],
+  "values_complete": true
+}
