@@ -1,0 +1,35 @@
+division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes
+02,024100,demo-mep6,DEMO existing TI / MEP6 allow,1,LS,,,,,,MEP6; slab saw-cut A2
+07,078400,firestop-u419,Firestopping new penetrations existing 1-HR U419 N/E,1,LS,,,,,,A0 demising
+08,081113,doors-new,Doors NEW Type1 x9 + Type2 100B frames Type A,10,EA,,,,,,A5+A1
+08,081113,doors-ex,Doors EXISTING remain 100A/118/125B,3,EA,,,,,,A5+A1
+09,092216,part-new,Partitions NEW centreline,418.1,LF,,,,,5,A1 live geom
+09,092216,part-t1,Partitions Type1 to 6in AFCE,365,LF,,,,,5,approx split
+09,092216,part-t2,Partitions Type2 to deck,14,LF,,,,,5,approx split
+09,092216,part-t3,Partitions Type3 furred,39,LF,,,,,5,approx split
+09,096519,lvt1,Floor LVT-1,2519,SF,,,,,5,2797-233-44; toilets LVT base
+09,033000,conc-seal,Floor CONC sealed IT/Equip/Stor,233,SF,,,,,5,A6 measured
+09,096519,vct1,Floor VCT-1 Pano 110,44,SF,,,,,5,8-4 x 5-4
+09,093000,t1-alt,Floor T-1 ALT toilets,110.1,SF,,,,,5,ALT only
+09,095113,act1,Ceiling ACT-1 Armstrong Calla 2x2,2547,SF,,,,,5,suite-GYP
+09,092900,gyp-ceil,Ceiling GYP IT/Equip+soffits,250,SF,,,,,10,approx RCP
+09,096513,base-b1,Base B-1 Flexco cove 4in,820,LF,,,,,5,approx perimeter
+09,123200,cwk-gc,Casework GC CF/CI,76,LF,,,,,5,A2 hatch approx
+09,123200,cwk-hs,Casework HS OFCI,55,LF,,,,,,GC utilities only
+10,104416,fec,FEC cabinets,2,EA,,,,,,A0/A1
+11,117000,ops,Dental ops chairs HS OFCI,7,EA,,,,,,A2 Hyg3+Exam4
+11,117000,pano,Pano unit,1,EA,,,,,,lead lining RFI
+21,211313,sp-pipe,Sprinkler pipe drawn reconfig,336.7,LF,,,,,,NOT purchase qty
+21,211313,sp-heads,Sprinkler heads approx,34,EA,,,,,,FP1 +/-4; Piper lump
+22,221316,plumb-w,Waste sanitary,287.6,LF,,,,,5,P1 live
+22,221116,plumb-cw,Cold water,220.9,LF,,,,,5,P1 live
+22,221116,plumb-hw,Hot water advisory,196.4,LF,,,,,5,geom missing RFI; no HWR
+22,221316,plumb-v,Vent,196.3,LF,,,,,5,live 196.3 not 238.1
+22,221500,plumb-ca,Compressed air,76.3,LF,,,,,5,P1 live
+22,226000,plumb-vac,Dental vacuum,131.0,LF,,,,,5,P1 live
+22,224000,plumb-fix,Fixtures + equipment,21,EA,,,,,,P1; S-1 OFCI HS
+23,233113,duct-cl,Duct centreline approx,297.5,LF,,,,,10,per-size RFI
+23,233713,hvac-term,Air terminals + EF,46,EA,,,,,,M1/M3
+26,265100,lighting,Lighting fixtures,121,EA,,,,,,E2 types
+26,260533,jboxes,Junction boxes J tags,31,EA,,,,,,E1; receptacles TBD
+01,012100,suite-sf,Suite area printed A0,2797,SF,,,,,,vs permit 2999 RSF RFI

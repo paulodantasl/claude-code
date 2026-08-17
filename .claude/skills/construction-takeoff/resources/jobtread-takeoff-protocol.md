@@ -136,6 +136,22 @@ interior; cores and patio/balcony walls stack at identical coordinates).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
 
+### 2026-08-17 — Job 2026-374 SunLife / Advantage Dental+ (Wesley Chapel TI) — takeoff completion
+- **Job:** `22PaqftN7Gtd` org `22P6bRn5p6Pn` — dental TI in existing retail shell (Pasco COMALT-2026-000467).
+- **Sector:** TI posture (not new commercial shell); Div 21 sprinkler **reconfig** in scope; no site/civil shell.
+- **FULL-REPLACE hazard validated:** a 1-param TEST write wiped 24 live params → immediately restored to **36** corrected params (values + finish/door/ops geometry). Always read-merge-write + read-back.
+- **Corrections vs prior 24-param set:**
+  - LVT **614 SF chair-pad error** → **2,519 SF** (2797−CONC233−VCT44); overlay proved old polygons were dental pads.
+  - Doors **15** (no markers) → **10 NEW + 3 EX** per A5 schedule with A1 markers.
+  - PLUMB V live **196.3 LF** (was labeled 238.1); HW geometry missing → advisory 196.4 + HWR RFI.
+  - Added: CONC/VCT/LVT split, ceiling ACT/GYP, partition type split, HS vs GC casework, ops×7, heads≈34, FEC, demo/firestop flags.
+- **Preserved live (values; geometry re-push staged):** W 287.6, CW 220.9, CA 76.3, VAC 131.0, Partitions 418.1, Lighting 121, HVAC 46, Fixtures 21, J-boxes 31.
+- **Scale:** A0 ⅛″ = 29.527559; A1/A2/A6 3/16″ = 44.2913386 pt/m. CDN worked this run (full set downloaded).
+- **Deliverables:** `estimating/projects/sunlife-advantage-dental-wesley-chapel/{takeoff.md,takeoff_seed.csv,README.md,overlays/,jobtread_parameters_final.json}`.
+- **Open RFIs:** 2797 vs 2999 RSF; HW+HWR re-trace; V 196 vs 238; E1 devices; FA; lead; duct per-size; MEP6 demo counts.
+- **API lesson:** `measurementType: "number"` is invalid — use oneOf `number` shape `{name,value}` only (no unit/measurements). `linear`/`area` require `unit`. Large updateJob payloads: push geometry in ≤15KB batches after values-only restore.
+
+
 ### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
 - **Scope:** full-system accuracy audit. JobTread leg: re-derived every measurement
   value from raw annotation geometry (shoelace areas, polyline lengths, marker counts)
