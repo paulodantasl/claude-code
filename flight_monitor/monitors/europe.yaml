@@ -1,0 +1,65 @@
+# Europe deal alerts — opportunistic, not time-sensitive
+
+id: europe
+name: Tampa/Orlando → Europe promotions
+
+route:
+  origins:
+    - code: TPA
+      name: Tampa
+    - code: MCO
+      name: Orlando
+  destinations:
+    - code: LIS
+      name: Lisbon
+    - code: MAD
+      name: Madrid
+    - code: CDG
+      name: Paris
+    - code: FCO
+      name: Rome
+    - code: LHR
+      name: London
+    - code: AMS
+      name: Amsterdam
+    - code: DUB
+      name: Dublin
+    - code: BCN
+      name: Barcelona
+    - code: FRA
+      name: Frankfurt
+
+passengers:
+  adults: 2
+  children: 2
+
+# Rolling window: scan deals ~6 weeks to 9 months out
+season:
+  mode: rolling
+  days_ahead_min: 45
+  days_ahead_max: 270
+  min_stay_days: 7
+
+search:
+  currency: USD
+  max_offers_per_query: 3
+  max_queries_per_run: 10
+  max_queries_explore: 16
+  travel_class: ECONOMY
+  market: US
+  fetch_booking_links: false
+  departure_step_days: 7
+  refine_window_days: 2
+  stay_lengths: [7, 10, 14, 21]
+
+alerts:
+  # Great deal threshold for 4 pax round-trip to Europe
+  target_price_usd: 2400
+  drop_threshold_usd: 150
+  notify_on_new_best: true
+  notify_emails:
+    - robertavazsantos@gmail.com
+    - paulolimad@gmail.com
+
+schedule:
+  runs_per_day: 1

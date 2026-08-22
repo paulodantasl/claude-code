@@ -1,5 +1,7 @@
-# Flight price monitor: Tampa/Orlando → Natal, Brazil
-# Flexible window: depart from Dec 20, return by Feb 15 — any duration
+# Natal trip — flexible dates Dec 20 – Feb 15
+
+id: natal
+name: Tampa/Orlando → Natal, Brazil
 
 route:
   origins:
@@ -7,15 +9,14 @@ route:
       name: Tampa
     - code: MCO
       name: Orlando
-  destination:
-    code: NAT
-    name: Natal, RN, Brazil
+  destinations:
+    - code: NAT
+      name: Natal, RN
 
 passengers:
   adults: 2
   children: 2
 
-# Trip must fit inside this window. Duration is flexible (driven by price).
 season:
   departure_start: "2026-12-20"
   latest_return: "2027-02-15"
@@ -29,7 +30,6 @@ search:
   travel_class: ECONOMY
   market: US
   fetch_booking_links: false
-  # Adaptive search: coarse grid + refine around cheapest finds
   departure_step_days: 4
   refine_window_days: 3
   stay_lengths: [7, 10, 14, 17, 21, 28, 35, 42, 49, 56]
@@ -37,10 +37,10 @@ search:
 alerts:
   target_price_usd: 3200
   drop_threshold_usd: 100
+  notify_on_new_best: false
   notify_emails:
     - robertavazsantos@gmail.com
     - paulolimad@gmail.com
 
 schedule:
   runs_per_day: 3
-  timezone: America/New_York

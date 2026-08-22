@@ -27,6 +27,7 @@ class FlightOffer:
     booking_link: str
     source: str
     raw_summary: str
+    monitor_id: str = "natal"
 
 
 def _connect() -> sqlite3.Connection:
@@ -42,6 +43,7 @@ def init_db() -> None:
             """
             CREATE TABLE IF NOT EXISTS offers (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                monitor_id TEXT NOT NULL DEFAULT 'natal',
                 checked_at TEXT NOT NULL,
                 origin TEXT NOT NULL,
                 destination TEXT NOT NULL,
@@ -56,7 +58,7 @@ def init_db() -> None:
                 booking_link TEXT,
                 source TEXT NOT NULL,
                 raw_summary TEXT,
-                UNIQUE(origin, destination, departure_date, return_date, stay_days, source, airline, total_price_usd)
+                UNIQUE(monitor_id, origin, destination, departure_date, return_date, stay_days, source, airline, total_price_usd)
             )
             """
         )
@@ -64,17 +66,31 @@ def init_db() -> None:
             """
             CREATE TABLE IF NOT EXISTS run_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                monitor_id TEXT NOT NULL DEFAULT 'natal',
                 checked_at TEXT NOT NULL,
                 queries_run INTEGER NOT NULL,
                 offers_found INTEGER NOT NULL,
                 best_price_usd REAL,
                 best_origin TEXT,
+                best_destination TEXT,
                 best_departure TEXT,
                 best_return TEXT,
                 notes TEXT
             )
             """
         )
+        _migrate_add_monitor_id(conn)
+
+
+def _migrate_add_monitor_id(conn: sqlite3.Connection) -> None:
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(offers)")}
+    if "monitor_id" not in cols:
+        conn.execute("ALTER TABLE offers ADD COLUMN monitor_id TEXT NOT NULL DEFAULT 'natal'")
+    run_cols = {row[1] for row in conn.execute("PRAGMA table_info(run_log)")}
+    if "monitor_id" not in run_cols:
+        conn.execute("ALTER TABLE run_log ADD COLUMN monitor_id TEXT NOT NULL DEFAULT 'natal'")
+    if "best_destination" not in run_cols:
+        conn.execute("ALTER TABLE run_log ADD COLUMN best_destination TEXT")
 
 
 def save_offer(offer: FlightOffer) -> None:
@@ -82,12 +98,13 @@ def save_offer(offer: FlightOffer) -> None:
         conn.execute(
             """
             INSERT OR IGNORE INTO offers (
-                checked_at, origin, destination, departure_date, return_date,
+                monitor_id, checked_at, origin, destination, departure_date, return_date,
                 stay_days, total_price_usd, currency, airline, stops,
                 duration_minutes, booking_link, source, raw_summary
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
+                offer.monitor_id,
                 datetime.now(timezone.utc).isoformat(),
                 offer.origin,
                 offer.destination,
@@ -107,6 +124,7 @@ def save_offer(offer: FlightOffer) -> None:
 
 
 def log_run(
+    monitor_id: str,
     queries_run: int,
     offers_found: int,
     best: FlightOffer | None,
@@ -116,16 +134,18 @@ def log_run(
         conn.execute(
             """
             INSERT INTO run_log (
-                checked_at, queries_run, offers_found, best_price_usd,
-                best_origin, best_departure, best_return, notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                monitor_id, checked_at, queries_run, offers_found, best_price_usd,
+                best_origin, best_destination, best_departure, best_return, notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
+                monitor_id,
                 datetime.now(timezone.utc).isoformat(),
                 queries_run,
                 offers_found,
                 best.total_price_usd if best else None,
                 best.origin if best else None,
+                best.destination if best else None,
                 best.departure_date if best else None,
                 best.return_date if best else None,
                 notes,
@@ -133,26 +153,29 @@ def log_run(
         )
 
 
-def get_searched_combos() -> set[tuple[str, str, str]]:
-    """Return (origin, departure_date, return_date) combos already queried."""
+def get_searched_combos(monitor_id: str) -> set[tuple[str, str, str, str]]:
+    """Return (origin, destination, departure_date, return_date) combos already queried."""
     with _connect() as conn:
         rows = conn.execute(
             """
-            SELECT DISTINCT origin, departure_date, return_date
-            FROM offers
-            """
+            SELECT DISTINCT origin, destination, departure_date, return_date
+            FROM offers WHERE monitor_id = ?
+            """,
+            (monitor_id,),
         ).fetchall()
-    return {(r["origin"], r["departure_date"], r["return_date"]) for r in rows}
+    return {(r["origin"], r["destination"], r["departure_date"], r["return_date"]) for r in rows}
 
 
-def get_all_time_best() -> FlightOffer | None:
+def get_all_time_best(monitor_id: str) -> FlightOffer | None:
     with _connect() as conn:
         row = conn.execute(
             """
             SELECT * FROM offers
+            WHERE monitor_id = ?
             ORDER BY total_price_usd ASC
             LIMIT 1
-            """
+            """,
+            (monitor_id,),
         ).fetchone()
     return _row_to_offer(row) if row else None
 
@@ -174,26 +197,29 @@ def get_recent_best(hours: int = 24) -> FlightOffer | None:
     return best
 
 
-def get_top_offers(limit: int = 10) -> list[FlightOffer]:
+def get_top_offers(monitor_id: str, limit: int = 10) -> list[FlightOffer]:
     with _connect() as conn:
         rows = conn.execute(
             """
-            SELECT origin, destination, departure_date, return_date, stay_days,
+            SELECT monitor_id, origin, destination, departure_date, return_date, stay_days,
                    MIN(total_price_usd) AS total_price_usd, currency,
                    airline, stops, duration_minutes, booking_link, source, raw_summary,
                    MAX(checked_at) AS checked_at
             FROM offers
-            GROUP BY origin, departure_date, return_date, stay_days
+            WHERE monitor_id = ?
+            GROUP BY origin, destination, departure_date, return_date, stay_days
             ORDER BY total_price_usd ASC
             LIMIT ?
             """,
-            (limit,),
+            (monitor_id, limit),
         ).fetchall()
     return [_row_to_offer(r) for r in rows]
 
 
 def _row_to_offer(row: sqlite3.Row) -> FlightOffer:
+    keys = row.keys()
     return FlightOffer(
+        monitor_id=row["monitor_id"] if "monitor_id" in keys else "natal",
         origin=row["origin"],
         destination=row["destination"],
         departure_date=row["departure_date"],
@@ -210,14 +236,15 @@ def _row_to_offer(row: sqlite3.Row) -> FlightOffer:
     )
 
 
-def export_summary() -> dict:
-    best = get_all_time_best()
-    top = get_top_offers(5)
+def export_summary(monitor_id: str) -> dict:
+    best = get_all_time_best(monitor_id)
+    top = get_top_offers(monitor_id, 5)
     return {
+        "monitor_id": monitor_id,
         "all_time_best": asdict(best) if best else None,
         "top_offers": [asdict(o) for o in top],
     }
 
 
-def summary_json() -> str:
-    return json.dumps(export_summary(), indent=2)
+def summary_json(monitor_id: str) -> str:
+    return json.dumps(export_summary(monitor_id), indent=2)
