@@ -1,0 +1,6 @@
+# Keep DB but ignore transient run artifacts
+data/*.db-journal
+__pycache__/
+*.pyc
+.env
+.venv/
