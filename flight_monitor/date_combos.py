@@ -1,4 +1,4 @@
-"""Generate departure/return date pairs for the Natal trip window."""
+"""Generate departure/return date pairs for flexible trip windows."""
 
 from __future__ import annotations
 
@@ -10,29 +10,102 @@ def parse_date(value: str) -> date:
     return datetime.strptime(value, "%Y-%m-%d").date()
 
 
-def iter_date_pairs(
-    departure_anchors: list[str],
-    min_stay_days: int,
-    preferred_stays: list[int] | None = None,
-    departure_start: str | None = None,
-    departure_end: str | None = None,
+def iter_flexible_pairs(
+    departure_start: str,
+    latest_return: str,
+    min_stay_days: int = 7,
+    departure_step_days: int = 1,
+    stay_lengths: list[int] | None = None,
 ) -> Iterator[tuple[str, str, int]]:
-    """Yield (departure, return, stay_days) tuples."""
-    start = parse_date(departure_start) if departure_start else None
-    end = parse_date(departure_end) if departure_end else None
-    stays = preferred_stays or [min_stay_days]
+    """
+    Yield all valid (departure, return, stay) combos where:
+    - departure >= departure_start
+    - return <= latest_return
+    - stay >= min_stay_days
+  Duration is flexible — every valid stay length is tried per departure.
+    """
+    start = parse_date(departure_start)
+    end = parse_date(latest_return)
+    stays = stay_lengths or _default_stay_lengths(start, end, min_stay_days)
 
-    for anchor in departure_anchors:
-        dep = parse_date(anchor)
-        if start and dep < start:
-            continue
-        if end and dep > end:
-            continue
+    dep = start
+    while dep <= end:
+        latest_dep = end - timedelta(days=min_stay_days)
+        if dep > latest_dep:
+            break
         for stay in stays:
             if stay < min_stay_days:
                 continue
             ret = dep + timedelta(days=stay)
+            if ret > end:
+                continue
             yield dep.isoformat(), ret.isoformat(), stay
+        dep += timedelta(days=departure_step_days)
+
+
+def coarse_pairs(
+    departure_start: str,
+    latest_return: str,
+    min_stay_days: int = 7,
+    departure_step_days: int = 4,
+    stay_lengths: list[int] | None = None,
+) -> list[tuple[str, str, int]]:
+    """Sampled grid across the full window for initial exploration."""
+    return list(
+        iter_flexible_pairs(
+            departure_start,
+            latest_return,
+            min_stay_days=min_stay_days,
+            departure_step_days=departure_step_days,
+            stay_lengths=stay_lengths,
+        )
+    )
+
+
+def refine_pairs(
+    center_departure: str,
+    center_return: str,
+    departure_start: str,
+    latest_return: str,
+    min_stay_days: int = 7,
+    window_days: int = 3,
+    stay_lengths: list[int] | None = None,
+) -> list[tuple[str, str, int]]:
+    """Search +/- window_days around a promising (departure, return) combo."""
+    dep0 = parse_date(center_departure)
+    ret0 = parse_date(center_return)
+    start = parse_date(departure_start)
+    end = parse_date(latest_return)
+    stays = stay_lengths or _default_stay_lengths(start, end, min_stay_days)
+
+    pairs: list[tuple[str, str, int]] = []
+    seen: set[tuple[str, str]] = set()
+    for dep_offset in range(-window_days, window_days + 1):
+        dep = dep0 + timedelta(days=dep_offset)
+        if dep < start or dep > end - timedelta(days=min_stay_days):
+            continue
+        for ret_offset in range(-window_days, window_days + 1):
+            ret = ret0 + timedelta(days=ret_offset)
+            if ret <= dep or ret > end:
+                continue
+            stay = (ret - dep).days
+            if stay < min_stay_days:
+                continue
+            key = (dep.isoformat(), ret.isoformat())
+            if key in seen:
+                continue
+            seen.add(key)
+            pairs.append((dep.isoformat(), ret.isoformat(), stay))
+        for stay in stays:
+            ret = dep + timedelta(days=stay)
+            if ret > end:
+                continue
+            key = (dep.isoformat(), ret.isoformat())
+            if key in seen:
+                continue
+            seen.add(key)
+            pairs.append((dep.isoformat(), ret.isoformat(), stay))
+    return pairs
 
 
 def rotate_pairs(
@@ -44,7 +117,10 @@ def rotate_pairs(
     if not pairs:
         return []
     start = (run_index * batch_size) % len(pairs)
-    batch: list[tuple[str, str, int]] = []
-    for i in range(batch_size):
-        batch.append(pairs[(start + i) % len(pairs)])
-    return batch
+    return [pairs[(start + i) % len(pairs)] for i in range(min(batch_size, len(pairs)))]
+
+
+def _default_stay_lengths(start: date, end: date, min_stay: int) -> list[int]:
+    max_stay = (end - start).days
+    candidates = [7, 10, 12, 14, 17, 21, 24, 28, 35, 42, 49, 56]
+    return [s for s in candidates if min_stay <= s <= max_stay] or [min_stay]

@@ -133,6 +133,18 @@ def log_run(
         )
 
 
+def get_searched_combos() -> set[tuple[str, str, str]]:
+    """Return (origin, departure_date, return_date) combos already queried."""
+    with _connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT DISTINCT origin, departure_date, return_date
+            FROM offers
+            """
+        ).fetchall()
+    return {(r["origin"], r["departure_date"], r["return_date"]) for r in rows}
+
+
 def get_all_time_best() -> FlightOffer | None:
     with _connect() as conn:
         row = conn.execute(

@@ -13,10 +13,11 @@ from pathlib import Path
 import yaml
 
 from ignav_client import search_flights
-from date_combos import iter_date_pairs, rotate_pairs
+from search_planner import plan_queries
 from storage import (
     FlightOffer,
     get_all_time_best,
+    get_searched_combos,
     init_db,
     log_run,
     save_offer,
@@ -56,51 +57,23 @@ def run_index_from_clock(runs_per_day: int = 3) -> int:
     return 2
 
 
-def build_queries(config: dict) -> list[dict]:
-    season = config["season"]
-    pairs = list(
-        iter_date_pairs(
-            config["departure_anchors"],
-            min_stay_days=season["min_stay_days"],
-            preferred_stays=season.get("preferred_stays"),
-            departure_start=season["departure_start"],
-            departure_end=season["departure_end"],
-        )
+def build_queries(config: dict, explore: bool = False) -> tuple[list[dict], dict]:
+    searched = get_searched_combos()
+    best = get_all_time_best()
+    best_dict = best.__dict__ if best else None
+    return plan_queries(
+        config,
+        searched=searched,
+        best_offer=best_dict,
+        run_index=run_index_from_clock(),
+        explore=explore,
     )
-    # One stay length per anchor per rotation (use min stay for batching)
-    unique_pairs: list[tuple[str, str, int]] = []
-    seen: set[tuple[str, str]] = set()
-    for dep, ret, stay in pairs:
-        key = (dep, ret)
-        if key in seen:
-            continue
-        seen.add(key)
-        unique_pairs.append((dep, ret, stay))
-
-    batch_size = max(1, config["search"]["max_queries_per_run"] // len(config["route"]["origins"]))
-    rotated = rotate_pairs(unique_pairs, run_index_from_clock(), batch_size)
-
-    queries = []
-    for origin in config["route"]["origins"]:
-        for dep, ret, stay in rotated:
-            queries.append(
-                {
-                    "origin": origin["code"],
-                    "origin_name": origin["name"],
-                    "destination": config["route"]["destination"]["code"],
-                    "departure": dep,
-                    "return": ret,
-                    "stay_days": stay,
-                }
-            )
-    max_q = config["search"]["max_queries_per_run"]
-    return queries[:max_q]
 
 
-def run_monitor(dry_run: bool = False) -> dict:
+def run_monitor(dry_run: bool = False, explore: bool = False) -> dict:
     config = load_config()
     init_db()
-    queries = build_queries(config)
+    queries, search_meta = build_queries(config, explore=explore)
     pax = config["passengers"]
     search_cfg = config["search"]
 
@@ -112,6 +85,7 @@ def run_monitor(dry_run: bool = False) -> dict:
             "dry_run": True,
             "queries": queries,
             "passengers": pax,
+            "search_meta": search_meta,
         }
 
     if not os.environ.get("IGNAV_API_KEY", "").strip():
@@ -173,6 +147,7 @@ def run_monitor(dry_run: bool = False) -> dict:
         "alert_triggered": alert_triggered,
         "alert_reason": alert_reason,
         "notify_emails": notify_emails,
+        "search_meta": search_meta,
         "errors": errors,
         "summary": json.loads(summary_json()),
     }
@@ -181,9 +156,18 @@ def run_monitor(dry_run: bool = False) -> dict:
 def format_report(result: dict) -> str:
     lines = [
         "✈️ Flight Monitor — Tampa/Orlando → Natal (2 adults + 2 children)",
+        "   Flexible dates: best price within Dec 20 – Feb 15 window",
         f"Checked: {result.get('checked_at', 'dry-run')}",
         "",
     ]
+    meta = result.get("search_meta")
+    if meta:
+        lines.append(f"Search: {meta.get('mode', 'adaptive')} | {meta.get('window', '')}")
+        lines.append(
+            f"  Coarse grid: {meta.get('coarse_unsearched', '?')} unsearched / "
+            f"{meta.get('coarse_combos_total', '?')} total combos"
+        )
+        lines.append("")
     if result.get("dry_run"):
         lines.append(f"DRY RUN — {len(result['queries'])} queries planned:")
         for q in result["queries"]:
@@ -236,10 +220,11 @@ def format_report(result: dict) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Monitor TPA/MCO → NAT flight prices")
     parser.add_argument("--dry-run", action="store_true", help="Show planned queries only")
+    parser.add_argument("--explore", action="store_true", help="Deeper search (more queries)")
     parser.add_argument("--json", action="store_true", help="Output JSON")
     args = parser.parse_args()
 
-    result = run_monitor(dry_run=args.dry_run)
+    result = run_monitor(dry_run=args.dry_run, explore=args.explore)
     if args.json:
         print(json.dumps(result, indent=2))
     else:

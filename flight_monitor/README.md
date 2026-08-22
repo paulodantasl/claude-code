@@ -1,6 +1,8 @@
 # Flight Price Monitor — Tampa/Orlando → Natal, Brazil
 
-Monitors round-trip airfare for **4 passengers (2 adults + 2 children)** from **Tampa (TPA)** or **Orlando (MCO)** to **Natal (NAT)**, with departures between **December 20 and January 30** and a **minimum 14-night stay**.
+Monitors round-trip airfare for **4 passengers (2 adults + 2 children)** from **Tampa (TPA)** or **Orlando (MCO)** to **Natal (NAT)**.
+
+**Flexible date search:** finds the cheapest combination of departure and return within **December 20 – February 15**. Trip length is not fixed — the agent tries multiple durations (7–56 nights) and refines around the best prices found.
 
 Runs **3 times per day** via GitHub Actions (or on demand).
 
@@ -20,11 +22,14 @@ cd flight_monitor
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 export IGNAV_API_KEY=your_key_here
 
-# Preview which date/origin combos will be searched
+# Preview planned queries
 .venv/bin/python monitor.py --dry-run
 
-# Live search
+# Live search (adaptive — 12 queries)
 .venv/bin/python monitor.py
+
+# Deeper exploration (24 queries)
+.venv/bin/python monitor.py --explore
 
 # JSON output
 .venv/bin/python monitor.py --json
@@ -49,8 +54,10 @@ Edit `config.yaml`:
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `season.departure_start` | 2026-12-20 | Earliest departure |
-| `season.departure_end` | 2027-01-30 | Latest departure |
-| `season.min_stay_days` | 14 | Minimum trip length |
+| `season.latest_return` | 2027-02-15 | Latest return date |
+| `season.min_stay_days` | 7 | Shortest trip considered |
+| `search.departure_step_days` | 4 | Coarse grid spacing |
+| `search.stay_lengths` | 7–56 nights | Durations tried per departure |
 | `passengers` | 2 adults, 2 children | Party size |
 | `alerts.target_price_usd` | 3200 | Alert when total ≤ this |
 | `alerts.drop_threshold_usd` | 100 | Alert on $100+ drop vs best |
