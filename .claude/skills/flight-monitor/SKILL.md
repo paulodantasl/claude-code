@@ -1,51 +1,30 @@
 ---
 name: flight-monitor
-description: Monitor Tampa/Orlando to Natal Brazil flight prices for 4 passengers (2 adults, 2 children), Dec 20–Jan 30 departures, 14+ night stays. Run 3x daily via Ignav API.
+description: Monitor TPA/MCO flights to Natal (3x daily) and Europe deal alerts (1x daily). Alerts to robertavazsantos@gmail.com and paulolimad@gmail.com.
 ---
 
-# Flight Monitor — TPA/MCO → Natal
+# Flight Monitor
 
-## When to use
+## Monitors
 
-Track round-trip airfare from **Tampa (TPA)** or **Orlando (MCO)** to **Natal, RN, Brazil (NAT)** for **2 adults + 2 children**, departing **December 20 – January 30**, staying **at least 14 nights**.
-
-## Run a check
+| ID | What | Cadence |
+|----|------|---------|
+| `natal` | TPA/MCO → Natal, Dec 20–Feb 15, flexible stay | 3×/day |
+| `europe` | TPA/MCO → 9 EU cities, deal hunting | 1×/day |
 
 ```bash
-cd flight_monitor
-pip install -r requirements.txt
-export IGNAV_API_KEY=your_key
-python monitor.py --dry-run    # preview queries
-python monitor.py              # live search
-python monitor.py --json         # machine-readable output
+cd flight_monitor && export IGNAV_API_KEY=...
+python monitor.py --monitor natal --dry-run
+python monitor.py --monitor europe
 ```
-
-## Credentials
-
-Requires `IGNAV_API_KEY` in environment (or GitHub secret `IGNAV_API_KEY` for Actions).
-
-Sign up free: https://ignav.com
-
-## Scheduled monitoring
-
-**GitHub Actions**: `.github/workflows/flight-monitor.yml` runs at 12:00, 18:00, and 00:00 UTC.
-
-**Cursor timer** prompt:
-
-> Run the Natal flight monitor: `cd flight_monitor && pip install -q -r requirements.txt && IGNAV_API_KEY=$IGNAV_API_KEY python monitor.py --json`. Report best price. If alert_triggered, draft email ONLY to robertavazsantos@gmail.com and paulolimad@gmail.com. Do not send without approval.
 
 ## Alerts
 
-Configured in `flight_monitor/config.yaml`:
+Both monitors notify **only**:
+- robertavazsantos@gmail.com
+- paulolimad@gmail.com
 
-- `target_price_usd: 3200`
-- `drop_threshold_usd: 100`
-- `notify_emails`: robertavazsantos@gmail.com, paulolimad@gmail.com
+Europe: alert on ≤ $2,400 (4 pax) or any new best price.
+Natal: alert on ≤ $3,200 or $100+ drop.
 
-## Troubleshooting
-
-| Problem | Fix |
-|---------|-----|
-| `missing_credentials` | Set `IGNAV_API_KEY` |
-| No offers | NAT is a small airport — connections are normal |
-| Rate limits | Reduce `search.max_queries_per_run` in config |
+Draft emails — never send without Paulo's approval.

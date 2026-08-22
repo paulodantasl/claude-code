@@ -1,76 +1,51 @@
-# Flight Price Monitor — Tampa/Orlando → Natal, Brazil
+# Flight Price Monitor
 
-Monitors round-trip airfare for **4 passengers (2 adults + 2 children)** from **Tampa (TPA)** or **Orlando (MCO)** to **Natal (NAT)**, with departures between **December 20 and January 30** and a **minimum 14-night stay**.
+Monitors flights from **Tampa (TPA)** and **Orlando (MCO)** using the [Ignav API](https://ignav.com).
 
-Runs **3 times per day** via GitHub Actions (or on demand).
+## Monitors
+
+| Monitor | Route | Schedule | Purpose |
+|---------|-------|----------|---------|
+| `natal` | → Natal, Brazil | 3× daily | Fixed trip Dec 20 – Feb 15, flexible duration |
+| `europe` | → 9 European cities | 1× daily | Deal alerts when great promotions appear |
+
+Both alert **robertavazsantos@gmail.com** and **paulolimad@gmail.com**.
 
 ## Quick start
-
-### 1. Get Ignav API key (free)
-
-1. Sign up at [ignav.com](https://ignav.com)
-2. Copy your API key from the dashboard
-3. Add GitHub repository secret: `IGNAV_API_KEY`
-4. For local runs: `cp .env.example .env` and paste the key
-
-### 2. Run locally
 
 ```bash
 cd flight_monitor
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-export IGNAV_API_KEY=your_key_here
+export IGNAV_API_KEY=your_key
 
-# Preview which date/origin combos will be searched
-.venv/bin/python monitor.py --dry-run
-
-# Live search
-.venv/bin/python monitor.py
-
-# JSON output
-.venv/bin/python monitor.py --json
+.venv/bin/python monitor.py --monitor natal --dry-run
+.venv/bin/python monitor.py --monitor europe --dry-run
+.venv/bin/python monitor.py --monitor natal          # live
+.venv/bin/python monitor.py --monitor europe         # live
 ```
 
-### 3. GitHub Actions schedule
+## Europe deal alerts
 
-Workflow: `.github/workflows/flight-monitor.yml`
+- **Destinations:** Lisbon, Madrid, Paris, Rome, London, Amsterdam, Dublin, Barcelona, Frankfurt
+- **Dates:** rolling window 45 days – 9 months out
+- **Alert when:** price ≤ $2,400 (4 pax) OR new all-time best found
+- **Cadence:** once daily (GitHub Actions 14:00 UTC)
 
-| UTC cron | ~Eastern time |
-|----------|---------------|
-| 12:00    | 8:00 AM       |
-| 18:00    | 2:00 PM       |
-| 00:00    | 8:00 PM       |
+## Natal trip
 
-Trigger manually: **Actions → Flight Price Monitor → Run workflow**
+- **Window:** depart Dec 20+, return by Feb 15
+- **Duration:** flexible (7–56 nights)
+- **Alert when:** ≤ $3,200 or $100+ drop
+- **Cadence:** 3× daily
 
 ## Configuration
 
-Edit `config.yaml`:
+Edit `monitors/natal.yaml` or `monitors/europe.yaml`.
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `season.departure_start` | 2026-12-20 | Earliest departure |
-| `season.departure_end` | 2027-01-30 | Latest departure |
-| `season.min_stay_days` | 14 | Minimum trip length |
-| `passengers` | 2 adults, 2 children | Party size |
-| `alerts.target_price_usd` | 3200 | Alert when total ≤ this |
-| `alerts.drop_threshold_usd` | 100 | Alert on $100+ drop vs best |
-| `alerts.notify_emails` | robertavazsantos@gmail.com, paulolimad@gmail.com | Alert recipients |
+## GitHub setup
 
-Date combinations rotate across runs so all anchor departures get covered over time without exceeding API limits.
+Secret: `IGNAV_API_KEY`
 
-## Price history
-
-SQLite database: `flight_monitor/data/prices.db`
-
-Cached in GitHub Actions between runs. Artifacts uploaded per run (90-day retention).
-
-## Cursor Cloud Agent
-
-Use the skill at `.claude/skills/flight-monitor/SKILL.md` to run checks from a Cloud Agent.
-
-## Notes
-
-- Uses [Ignav](https://ignav.com) — 1,000 free requests, then pay-per-use
-- TPA/MCO → NAT typically requires connections (GRU, GIG, FOR). Prices vary by date.
-- Google Flights links generated for each result for manual verification
-- Amadeus self-service was decommissioned July 2026; Ignav replaced it
+Workflows:
+- `.github/workflows/flight-monitor.yml` — Natal
+- `.github/workflows/flight-monitor-europe.yml` — Europe deals

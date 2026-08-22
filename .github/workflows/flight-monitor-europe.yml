@@ -1,8 +1,9 @@
-name: Flight Price Monitor — Natal
+name: Flight Price Monitor — Europe Deals
 
 on:
   schedule:
-    - cron: "0 0,12,18 * * *"
+    # Once daily ~9am Eastern (14:00 UTC)
+    - cron: "0 14 * * *"
   workflow_dispatch:
 
 permissions:
@@ -10,7 +11,7 @@ permissions:
   issues: write
 
 concurrency:
-  group: flight-monitor-natal
+  group: flight-monitor-europe
   cancel-in-progress: false
 
 jobs:
@@ -31,23 +32,23 @@ jobs:
           key: flight-prices-${{ github.run_id }}
           restore-keys: flight-prices-
 
-      - name: Run Natal monitor
+      - name: Run Europe deal monitor
         run: |
           cd flight_monitor
-          python monitor.py --monitor natal --json > ../monitor_natal.json
-          python monitor.py --monitor natal > ../monitor_natal.txt
+          python monitor.py --monitor europe --json > ../monitor_europe.json
+          python monitor.py --monitor europe > ../monitor_europe.txt
         env:
           IGNAV_API_KEY: ${{ secrets.IGNAV_API_KEY }}
 
       - name: Check alert
         id: alert
         run: |
-          echo "triggered=$(python3 -c "import json; print('true' if json.load(open('monitor_natal.json')).get('alert_triggered') else 'false')")" >> "$GITHUB_OUTPUT"
+          echo "triggered=$(python3 -c "import json; print('true' if json.load(open('monitor_europe.json')).get('alert_triggered') else 'false')")" >> "$GITHUB_OUTPUT"
 
-      - run: cat monitor_natal.txt >> $GITHUB_STEP_SUMMARY
+      - run: cat monitor_europe.txt >> $GITHUB_STEP_SUMMARY
 
-      - name: Open issue on alert
+      - name: Open issue on deal alert
         if: steps.alert.outputs.triggered == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 flight_monitor/scripts/create_alert_issue.py monitor_natal.json
+        run: python3 flight_monitor/scripts/create_alert_issue.py monitor_europe.json

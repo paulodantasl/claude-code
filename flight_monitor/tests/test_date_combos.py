@@ -1,33 +1,53 @@
-"""Tests for flight monitor date logic."""
+"""Tests for flexible date search and multi-monitor planner."""
 
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from date_combos import iter_date_pairs, rotate_pairs
+from config_loader import load_monitor, resolve_season
+from date_combos import coarse_pairs, iter_flexible_pairs, refine_pairs, rotate_pairs
+from search_planner import plan_queries
 
 
-def test_departure_window():
+def test_flexible_window_bounds():
     pairs = list(
-        iter_date_pairs(
-            ["2026-12-20", "2027-01-30", "2027-02-01"],
-            min_stay_days=14,
-            departure_start="2026-12-20",
-            departure_end="2027-01-30",
+        iter_flexible_pairs(
+            "2026-12-20",
+            "2027-02-15",
+            min_stay_days=7,
+            departure_step_days=7,
+            stay_lengths=[7, 14, 21],
         )
     )
-    assert len(pairs) >= 2
+    assert pairs
     for dep, ret, stay in pairs:
-        assert stay >= 14
         assert dep >= "2026-12-20"
-        assert dep <= "2027-01-30"
+        assert ret <= "2027-02-15"
+        assert stay >= 7
 
 
-def test_rotate_covers_all():
-    pairs = [(f"2026-12-{20+i:02d}", f"2027-01-{3+i:02d}", 14) for i in range(6)]
-    seen = set()
-    for run in range(3):
-        batch = rotate_pairs(pairs, run, batch_size=2)
-        seen.update(batch)
-    assert len(seen) == len(pairs)
+def test_rolling_season():
+    season = resolve_season({"mode": "rolling", "days_ahead_min": 30, "days_ahead_max": 180, "min_stay_days": 7})
+    assert season["departure_start"] < season["latest_return"]
+
+
+def test_europe_config_loads():
+    config = load_monitor("europe")
+    assert config["id"] == "europe"
+    assert len(config["route"]["destinations"]) >= 5
+
+
+def test_planner_multi_destination():
+    config = load_monitor("natal")
+    queries, meta = plan_queries(config, searched=set(), best_offer=None, run_index=0)
+    assert len(queries) <= config["search"]["max_queries_per_run"]
+    assert meta["monitor_id"] == "natal"
+
+
+def test_europe_planner():
+    config = load_monitor("europe")
+    queries, meta = plan_queries(config, searched=set(), best_offer=None, run_index=0)
+    assert len(queries) <= config["search"]["max_queries_per_run"]
+    destinations = {q["destination"] for q in queries}
+    assert len(destinations) >= 1

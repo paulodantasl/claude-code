@@ -1,0 +1,46 @@
+# Natal trip — flexible dates Dec 20 – Feb 15
+
+id: natal
+name: Tampa/Orlando → Natal, Brazil
+
+route:
+  origins:
+    - code: TPA
+      name: Tampa
+    - code: MCO
+      name: Orlando
+  destinations:
+    - code: NAT
+      name: Natal, RN
+
+passengers:
+  adults: 2
+  children: 2
+
+season:
+  departure_start: "2026-12-20"
+  latest_return: "2027-02-15"
+  min_stay_days: 7
+
+search:
+  currency: USD
+  max_offers_per_query: 5
+  max_queries_per_run: 12
+  max_queries_explore: 24
+  travel_class: ECONOMY
+  market: US
+  fetch_booking_links: false
+  departure_step_days: 4
+  refine_window_days: 3
+  stay_lengths: [7, 10, 14, 17, 21, 28, 35, 42, 49, 56]
+
+alerts:
+  target_price_usd: 3200
+  drop_threshold_usd: 100
+  notify_on_new_best: false
+  notify_emails:
+    - robertavazsantos@gmail.com
+    - paulolimad@gmail.com
+
+schedule:
+  runs_per_day: 3
