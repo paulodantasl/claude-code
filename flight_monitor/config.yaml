@@ -55,7 +55,9 @@ alerts:
   target_price_usd: 3200
   # Notify when price drops by at least this much vs previous best.
   drop_threshold_usd: 100
-  notify_email: office@theidealremodeling.com
+  notify_emails:
+    - robertavazsantos@gmail.com
+    - paulolimad@gmail.com
 
 schedule:
   runs_per_day: 3

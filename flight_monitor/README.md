@@ -56,7 +56,7 @@ Edit `config.yaml`:
 | `passengers` | 2 adults, 2 children | Party size |
 | `alerts.target_price_usd` | 3200 | Alert when total ≤ this |
 | `alerts.drop_threshold_usd` | 100 | Alert on $100+ drop vs best |
-| `alerts.notify_email` | office@theidealremodeling.com | Alert recipient |
+| `alerts.notify_emails` | robertavazsantos@gmail.com, paulolimad@gmail.com | Alert recipients |
 
 Date combinations rotate across runs so all anchor departures get covered over time without exceeding API limits.
 

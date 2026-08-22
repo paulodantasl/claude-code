@@ -37,7 +37,7 @@ Register free: https://developers.amadeus.com/register
 
 Use `subscribe_timer` with cron `0 12,18,0 * * *` and prompt:
 
-> Run the Natal flight monitor: `cd flight_monitor && pip install -q -r requirements.txt && python monitor.py`. Report the best price found. If alert_triggered in JSON output, summarize the deal for Paulo. Do not send email without approval.
+> Run the Natal flight monitor: `cd flight_monitor && pip install -q -r requirements.txt && python monitor.py`. Report the best price found. If alert_triggered in JSON output, summarize the deal and draft an email to robertavazsantos@gmail.com and paulolimad@gmail.com only. Do not send without approval.
 
 ## Alerts
 
@@ -45,9 +45,11 @@ Configured in `flight_monitor/config.yaml`:
 
 - `target_price_usd: 3200` — notify when total ≤ $3,200
 - `drop_threshold_usd: 100` — notify on $100+ improvement
-- `notify_email: office@theidealremodeling.com`
+- `notify_emails`:
+  - robertavazsantos@gmail.com
+  - paulolimad@gmail.com
 
-When alerting Paulo, **draft** the email — do not send without explicit approval.
+When alerting, send **only** to those two addresses. Draft first — do not send without explicit approval.
 
 ## Output interpretation
 

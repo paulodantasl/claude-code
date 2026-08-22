@@ -27,6 +27,19 @@ from storage import (
 CONFIG_PATH = Path(__file__).parent / "config.yaml"
 
 
+def _resolve_notify_emails(alerts: dict) -> list[str]:
+    env_override = os.environ.get("FLIGHT_ALERT_EMAILS", "").strip()
+    if env_override:
+        return [e.strip() for e in env_override.split(",") if e.strip()]
+    emails = alerts.get("notify_emails")
+    if emails:
+        return list(emails)
+    legacy = alerts.get("notify_email")
+    if legacy:
+        return [legacy]
+    return []
+
+
 def load_config() -> dict:
     with open(CONFIG_PATH) as f:
         return yaml.safe_load(f)
@@ -136,6 +149,7 @@ def run_monitor(dry_run: bool = False) -> dict:
 
     prev_best = get_all_time_best()
     alerts = config.get("alerts", {})
+    notify_emails = _resolve_notify_emails(alerts)
     alert_triggered = False
     alert_reason = ""
 
@@ -157,6 +171,7 @@ def run_monitor(dry_run: bool = False) -> dict:
         "all_time_best": get_all_time_best().__dict__ if get_all_time_best() else None,
         "alert_triggered": alert_triggered,
         "alert_reason": alert_reason,
+        "notify_emails": notify_emails,
         "errors": errors,
         "summary": json.loads(summary_json()),
     }
