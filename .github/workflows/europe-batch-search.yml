@@ -1,0 +1,34 @@
+name: Europe Batch Flight Search
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r flight_monitor/requirements.txt
+
+      - name: Run Europe batch search
+        run: python flight_monitor/scripts/europe_batch_search.py | tee europe_batch_report.txt
+        env:
+          IGNAV_API_KEY: ${{ secrets.IGNAV_API_KEY }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: europe-batch-search
+          path: |
+            europe_batch_report.txt
+            europe_batch_results.json
+
+      - run: cat europe_batch_report.txt >> $GITHUB_STEP_SUMMARY
