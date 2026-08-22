@@ -6,30 +6,28 @@ Runs **3 times per day** via GitHub Actions (or on demand).
 
 ## Quick start
 
-### 1. Get Amadeus API credentials (free)
+### 1. Get Ignav API key (free)
 
-1. Register at [developers.amadeus.com](https://developers.amadeus.com/register)
-2. Create an app and copy **API Key** and **API Secret**
-3. Add them as GitHub repository secrets:
-   - `AMADEUS_API_KEY`
-   - `AMADEUS_API_SECRET`
-4. Optional: set repository variable `AMADEUS_ENV` to `production` for live fares (default is `test` sandbox)
+1. Sign up at [ignav.com](https://ignav.com)
+2. Copy your API key from the dashboard
+3. Add GitHub repository secret: `IGNAV_API_KEY`
+4. For local runs: `cp .env.example .env` and paste the key
 
 ### 2. Run locally
 
 ```bash
 cd flight_monitor
-pip install -r requirements.txt
-cp .env.example .env   # fill in keys
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+export IGNAV_API_KEY=your_key_here
 
 # Preview which date/origin combos will be searched
-python monitor.py --dry-run
+.venv/bin/python monitor.py --dry-run
 
 # Live search
-python monitor.py
+.venv/bin/python monitor.py
 
 # JSON output
-python monitor.py --json
+.venv/bin/python monitor.py --json
 ```
 
 ### 3. GitHub Actions schedule
@@ -68,17 +66,11 @@ Cached in GitHub Actions between runs. Artifacts uploaded per run (90-day retent
 
 ## Cursor Cloud Agent
 
-Use the skill at `.claude/skills/flight-monitor/SKILL.md` to run checks from a Cloud Agent, or set up timer subscriptions:
-
-```
-subscribe_timer name=flight-monitor-morning cron="0 12 * * *"
-subscribe_timer name=flight-monitor-afternoon cron="0 18 * * *"
-subscribe_timer name=flight-monitor-evening cron="0 0 * * *"
-```
+Use the skill at `.claude/skills/flight-monitor/SKILL.md` to run checks from a Cloud Agent.
 
 ## Notes
 
-- Amadeus **test** environment returns sample data; use **production** keys for real prices.
-- TPA/MCO → NAT typically requires connections (often via GRU, GIG, or FOR). Prices vary widely by date.
-- Google Flights links are generated for each result for manual price verification.
-- Children are ages 2–11 per Amadeus API rules.
+- Uses [Ignav](https://ignav.com) — 1,000 free requests, then pay-per-use
+- TPA/MCO → NAT typically requires connections (GRU, GIG, FOR). Prices vary by date.
+- Google Flights links generated for each result for manual verification
+- Amadeus self-service was decommissioned July 2026; Ignav replaced it

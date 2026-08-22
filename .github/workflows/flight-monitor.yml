@@ -43,9 +43,7 @@ jobs:
           python monitor.py --json > ../monitor_result.json
           python monitor.py > ../monitor_report.txt
         env:
-          AMADEUS_API_KEY: ${{ secrets.AMADEUS_API_KEY }}
-          AMADEUS_API_SECRET: ${{ secrets.AMADEUS_API_SECRET }}
-          AMADEUS_ENV: ${{ vars.AMADEUS_ENV || 'test' }}
+          IGNAV_API_KEY: ${{ secrets.IGNAV_API_KEY }}
 
       - name: Check for price alert
         id: alert

@@ -12,7 +12,7 @@ from pathlib import Path
 
 import yaml
 
-from amadeus_client import search_flights
+from ignav_client import search_flights
 from date_combos import iter_date_pairs, rotate_pairs
 from storage import (
     FlightOffer,
@@ -114,9 +114,8 @@ def run_monitor(dry_run: bool = False) -> dict:
             "passengers": pax,
         }
 
-    has_amadeus = bool(os.environ.get("AMADEUS_API_KEY") and os.environ.get("AMADEUS_API_SECRET"))
-    if not has_amadeus:
-        errors.append("AMADEUS_API_KEY/SECRET not set — no live search performed.")
+    if not os.environ.get("IGNAV_API_KEY", "").strip():
+        errors.append("IGNAV_API_KEY not set — no live search performed.")
         log_run(0, 0, None, notes="; ".join(errors))
         return {
             "error": "missing_credentials",
@@ -137,6 +136,8 @@ def run_monitor(dry_run: bool = False) -> dict:
                 max_offers=search_cfg["max_offers_per_query"],
                 travel_class=search_cfg.get("travel_class", "ECONOMY"),
                 stay_days=q["stay_days"],
+                market=search_cfg.get("market", "US"),
+                fetch_booking_links=search_cfg.get("fetch_booking_links", False),
             )
             for offer in offers:
                 save_offer(offer)

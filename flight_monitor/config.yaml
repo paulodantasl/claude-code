@@ -49,6 +49,8 @@ search:
   # Queries per run (origins × date pairs); keeps API usage reasonable.
   max_queries_per_run: 12
   travel_class: ECONOMY
+  market: US
+  fetch_booking_links: false
 
 alerts:
   # Email when total price drops below this (4 pax, round trip, USD).
