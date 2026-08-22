@@ -1,0 +1,103 @@
+name: Flight Price Monitor
+
+on:
+  schedule:
+    # 3x daily: ~8am, ~2pm, ~8pm Eastern (12:00, 18:00, 00:00 UTC)
+    - cron: "0 0,12,18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: flight-monitor-natal
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r flight_monitor/requirements.txt
+
+      - name: Restore price database cache
+        uses: actions/cache@v4
+        with:
+          path: flight_monitor/data/prices.db
+          key: flight-prices-natal-${{ github.run_id }}
+          restore-keys: |
+            flight-prices-natal-
+
+      - name: Run flight monitor
+        run: |
+          cd flight_monitor
+          python monitor.py --json > ../monitor_result.json
+          python monitor.py > ../monitor_report.txt
+        env:
+          IGNAV_API_KEY: ${{ secrets.IGNAV_API_KEY }}
+
+      - name: Check for price alert
+        id: alert
+        run: |
+          ALERT=$(python3 -c "import json; print('true' if json.load(open('monitor_result.json')).get('alert_triggered') else 'false')")
+          echo "triggered=$ALERT" >> "$GITHUB_OUTPUT"
+
+      - name: Upload monitor artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flight-monitor-${{ github.run_number }}
+          path: |
+            monitor_result.json
+            monitor_report.txt
+            flight_monitor/data/prices.db
+          retention-days: 90
+
+      - name: Post summary to job
+        run: cat monitor_report.txt >> $GITHUB_STEP_SUMMARY
+
+      - name: Open issue on price alert
+        if: steps.alert.outputs.triggered == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json, os, subprocess
+          with open("monitor_result.json") as f:
+              r = json.load(f)
+          if not r.get("alert_triggered"):
+              exit(0)
+          best = r.get("best_this_run") or r.get("all_time_best") or {}
+          body = f"""## Flight price alert — TPA/MCO → Natal
+
+          **{r.get('alert_reason', 'Price drop')}**
+
+          | Field | Value |
+          |-------|-------|
+          | Price | ${best.get('total_price_usd', 0):,.2f} {best.get('currency', 'USD')} |
+          | Route | {best.get('origin', '?')} → {best.get('destination', 'NAT')} |
+          | Dates | {best.get('departure_date', '?')} – {best.get('return_date', '?')} |
+          | Stay | {best.get('stay_days', '?')} nights |
+          | Airline | {best.get('airline', '?')} |
+          | Stops | {best.get('stops', '?')} |
+
+          [Search on Google Flights]({best.get('booking_link', 'https://www.google.com/travel/flights')})
+
+          _Automated by flight-monitor workflow._
+          """
+          subprocess.run(
+              ["gh", "issue", "create",
+               "--title", f"✈️ Natal flight alert: ${best.get('total_price_usd', 0):,.0f}",
+               "--body", body,
+               "--label", "flight-alert"],
+              check=False,
+          )
+          PY

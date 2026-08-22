@@ -1,0 +1,66 @@
+# Flight price monitor: Tampa/Orlando → Natal, Brazil
+# Season: Dec 20 – Jan 30 (departure window), minimum 14-night stay
+
+route:
+  origins:
+    - code: TPA
+      name: Tampa
+    - code: MCO
+      name: Orlando
+  destination:
+    code: NAT
+    name: Natal, RN, Brazil
+
+passengers:
+  adults: 2
+  children: 2
+
+# Departure dates must fall in this window (inclusive).
+# Return = departure + stay_days (minimum).
+season:
+  year: 2026
+  departure_start: "2026-12-20"
+  departure_end: "2027-01-30"
+  min_stay_days: 14
+  # Also try longer stays on key holiday departures
+  preferred_stays: [14, 17, 21]
+
+# Rotate through these anchor departures across runs (covers holidays + mid-window).
+departure_anchors:
+  - "2026-12-20"
+  - "2026-12-22"
+  - "2026-12-24"
+  - "2026-12-26"
+  - "2026-12-28"
+  - "2026-12-30"
+  - "2027-01-02"
+  - "2027-01-05"
+  - "2027-01-08"
+  - "2027-01-12"
+  - "2027-01-16"
+  - "2027-01-20"
+  - "2027-01-24"
+  - "2027-01-28"
+  - "2027-01-30"
+
+search:
+  currency: USD
+  max_offers_per_query: 5
+  # Queries per run (origins × date pairs); keeps API usage reasonable.
+  max_queries_per_run: 12
+  travel_class: ECONOMY
+  market: US
+  fetch_booking_links: false
+
+alerts:
+  # Email when total price drops below this (4 pax, round trip, USD).
+  target_price_usd: 3200
+  # Notify when price drops by at least this much vs previous best.
+  drop_threshold_usd: 100
+  notify_emails:
+    - robertavazsantos@gmail.com
+    - paulolimad@gmail.com
+
+schedule:
+  runs_per_day: 3
+  timezone: America/New_York
