@@ -156,6 +156,17 @@
       },
       "source": "./plugins/construction-estimating",
       "category": "productivity"
+    },
+    {
+      "name": "eli5",
+      "description": "Explain anything in plain language without dumbing it down — builds a working mental model, names the real vocabulary, and calls out the part people usually get wrong",
+      "version": "1.0.0",
+      "author": {
+        "name": "Ideal Construction",
+        "email": "tampa@idealcgc.com"
+      },
+      "source": "./plugins/eli5",
+      "category": "learning"
     }
   ]
 }
