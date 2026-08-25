@@ -214,6 +214,37 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   a measurement, write nothing and say so.**
 
 
+### 2026-08-25 (b) — Job 2026-374 — WITHDRAWN A PUBLISHED TRACE (Guard #14) — Claude
+- **What happened:** the 45.1 LF "curved storefront" written earlier that same day was **the wrong line**, and it
+  had already been published to the job. It followed the **canopy / sidewalk edge**, not the demising glass.
+- **Guard #14 (new): a clean continuous chain is not evidence it is the right line — bound it against a known
+  interior face.** The tell was decisive and took one check: the chain's west end sits at **x = 400.4**, while the
+  west exterior wall's own verified face pair is **415.9 / 423.7**. A tenant boundary cannot run outside the
+  building's exterior wall. **Before writing any traced perimeter, assert every vertex falls inside the envelope
+  established by the wall pairs you already trust.** That single assertion would have caught this before the write.
+- **Why the chain-walker preferred the wrong line:** an endpoint-snapping longest-path walk over the region returned
+  the canopy edge (8 nodes, 579 pt) because it is drawn as **one uninterrupted polyline**. The real storefront is
+  **broken into panels by mullions**, so no single connected chain spans it. **Continuity selects for the simplest
+  line in the region, which is often an outline, a canopy, or a curb — not the enclosure.** Rank candidates by
+  whether they terminate on known wall faces, not by length.
+- **Distinguishing glass from wall in the same run:** the glazing panels carry a **~1.1 pt twin** (the two faces of
+  the glass at 13.5 pt/ft); solid piers in the same run carry the **~5.5 pt** partition twin. A single line with no
+  twin at either spacing is not part of the enclosure. This storefront alternates glazing and pier, so no one
+  spacing filter finds the whole boundary.
+- **Where the trace ends and the RFI begins — and how to tell the difference.** The three front-of-house spaces
+  (Waiting 100 / Admin 101 / Break 125) resolve to a residual of **626–879 SF** depending on whether A0's 2,797 SF
+  or the lease's 2,544 SF governs. **The entire 253 SF discrepancy lands inside that one space — 34% of it** — while
+  every traced room closes to ~0.05%. A polygon carrying a 34% band is not a measurement. **When the unresolved
+  spread is a large fraction of the space you are about to draw, the deliverable is the residual and the RFI, not
+  the polygon.** Recorded as a value-only parameter naming both bases so the number cannot be mistaken for measured.
+- **Process note:** the error surfaced only because the user pushed back on a "finished" claim. The overlay-verify
+  pass (§4 step 6) had been run on the rooms but **never on the perimeter trace** — it was written from extracted
+  segment coordinates without being rendered back over the sheet. **Overlay-verify every geometry write, including
+  linear ones.** Areas got the check; the polyline did not, and that is exactly where the defect was.
+- **State after run: 64 parameters, 11 geometry-anchored** — 23 rooms wall-to-wall (1,918.4 SF), east exterior wall
+  54.5 LF, trade markers on P1 and M1. South perimeter withdrawn pending a correct glazing trace.
+
+
 ### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
 - **Scope:** full-system accuracy audit. JobTread leg: re-derived every measurement
   value from raw annotation geometry (shoelace areas, polyline lengths, marker counts)
