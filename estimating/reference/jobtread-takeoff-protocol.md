@@ -139,7 +139,7 @@ interior; cores and patio/balcony walls stack at identical coordinates).
 ### 2026-08-24 — Job 2026-374 (Advantage Dental+, Wesley Chapel) — PERMIT-SET PARAMETER WRITE — Claude
 - **Scope:** full `/bid-commercial` pipeline off the 10-Aug-2026 A/S/MEP permit set (31 sheets) + 7-sheet Henry Schein dental set, then **56 measured parameters written** to Job 2026-374. Supersedes the 14-Jul test-fit run: that job's parameters read back **`null`** — the 44 number-params from the test fit are gone, so the permit-set upload replaced them. **Read before you merge: "read-merge-write" assumed a non-empty array and would have silently written nothing to merge.**
 - **The Pave MCP WAS available this session and I nearly missed it.** A ToolSearch for `"jobtread pave takeoff job parameters"` returned nothing; `"jobtread pave plans annotations measurements calibration"` surfaced `mcp__Ideal__query` immediately. **Search on the API's own vocabulary (plans/annotations/calibration), not on the task vocabulary (takeoff/parameters)** — and never conclude "no JobTread this session" from one miss. I told a subagent it was unavailable; that was wrong.
-- **Typed measurement params work WITHOUT geometry — new, and better than bare `number`.** Validation walks one field at a time: `{name, measurementType, value}` → *"non-null required at .measurements"* → add `measurements: []` → **accepted, value holds on read-back**. A *manual* measurement additionally demands `color` (and takes `planId`, `annotations: []`). So there are three working shapes, in increasing order of fidelity: bare `number` `{name,value}`; **typed + empty `measurements: []`** (carries `measurementType` + `unit`, reads as a real takeoff parameter, value stands because there is no geometry to recompute from); and typed + geometry-anchored measurements. **Prefer the middle shape for value-only takeoffs** — §5's unit-in-the-name workaround is no longer needed, the unit is a real field.
+- **⚠ SUPERSEDED — see the 2026-08-25 entry: this bullet is WRONG. `measurements: []` silently DISCARDS the value.** Typed measurement params work WITHOUT geometry — new, and better than bare `number`.** Validation walks one field at a time: `{name, measurementType, value}` → *"non-null required at .measurements"* → add `measurements: []` → **accepted, value holds on read-back**. A *manual* measurement additionally demands `color` (and takes `planId`, `annotations: []`). So there are three working shapes, in increasing order of fidelity: bare `number` `{name,value}`; **typed + empty `measurements: []`** (carries `measurementType` + `unit`, reads as a real takeoff parameter, value stands because there is no geometry to recompute from); and typed + geometry-anchored measurements. **Prefer the middle shape for value-only takeoffs** — §5's unit-in-the-name workaround is no longer needed, the unit is a real field.
 - **Independent scale confirmation, worth doing every time.** The takeoff was measured off the PDF vector layer at **13.5 pt/ft** before JobTread was ever queried. The plans already in the Plans tab carry `scale: 44.29133858267717` on A1/A2/A6 — and 0.1875 in/ft × 3.28084 × 72 = 44.2913386, i.e. **exactly 13.5 pt/ft (3/16″ = 1′-0″)**. Two independent derivations agreeing is a free cross-check on the whole takeoff; A0 sits at 29.5275591 (⅛″), so **scale varies per sheet within one set — never assume one scale for a job.**
 - **Byte-identical file match is checkable and worth checking.** `job.plans.nodes.file.size` returned **25,031,656** for the ASMEP set and **1,858,489** for the Henry Schein set — both exact matches to the local uploads. Confirms the geometry measured locally belongs to the same file the Plans tab renders, without touching the blocked CDN.
 - **Sheet-name → planId map is the useful artifact** (7 ASMEP pages calibrated, 3 Henry Schein pages at `scale: null` — uncalibrated): A0 p1 ⅛″, A1 p2, A2 p3, A6 p7, M1 p17, P1 p20, MEP6 p16, all 3/16″.
@@ -155,6 +155,63 @@ interior; cores and patio/balcony walls stack at identical coordinates).
 - **Scale confirmed three independent ways**, which is worth doing before trusting any traced area: (1) local vector measurement = 13.5 pt/ft; (2) JobTread's stored `scale` 44.29133858 pt/m ÷ 3.28084 ÷ 72 = 13.5 pt/ft; (3) **dimension-chain closure** — printed room dims read 10'-5" while the clear face-to-face measures 134.9 pt = 9.99 ft, the difference being exactly one 4-7/8" partition, i.e. the printed dims are centerline. Cross-check the resulting area both ways: 214.6 × 134.9 pt = 158.8 SF at 13.5 pt/ft, and 158.85 SF via JobTread's pt-per-metre scale — **0.03% apart**.
 - **Geometry lives in the parameter, not on the plan.** After writing 7 area polygons + 7 count markers, `plan.annotations` still reads `[]` — correct per §1. `plan.annotations` carries only `meta` + the summary `text` note; the shapes ride inside `parameter.measurements[].annotations` with `planId` + `color`. Writing both would render the shapes twice.
 - **Result: 7 operatory rooms drawn wall-to-wall on the A1 Dimension Plan** (NOT the RCP — A1 carries both, offset ~1147 pt, so *always* confirm which half you are tracing): Hygiene Flex 116 / 113 / 111 at 158.8 SF each, Exam 120 / 121 / 123 / 124 at 154.7 SF each, **1,095 SF total**, plus 7 count markers at the chair positions. Four y-bands of exactly 134.9 pt each — that regularity is itself a check.
+
+
+### 2026-08-25 — Job 2026-374 — GEOMETRY COMPLETION + WRITE-SHAPE CORRECTION — Claude
+- **⚠ CORRECTION to the 2026-08-24 entry: `measurements: []` does NOT hold a value.** That entry
+  claimed typed params with an empty `measurements` array "read back with the value standing." They
+  do not. Read-back of the 57-param write showed **56 of them with `measurementType` + `unit` present
+  and the `value` key ABSENT** — the server computes a typed parameter's value from its measurements,
+  so an empty array computes to nothing and the supplied number is silently discarded. The write
+  succeeds, the panel shows a unit and no quantity, and nothing errors. **Always read back and assert
+  `'value' in param`, not just that the mutation returned 200.**
+- **There is NO value-only measurement shape.** Walking the validator one field at a time:
+  `measurements[0]` requires `name` → `value` → **`color`** → **`annotations`** (non-null). Since
+  `annotations` is mandatory, a measurement cannot exist without geometry. So the three "shapes" in
+  the prior entry collapse to **two**: bare `{name, value}` (no `measurementType`, no `unit` — the
+  value stands), and typed + genuinely geometry-anchored. **§5's unit-in-the-name convention is NOT
+  obsolete — it is the only way to carry a unit on a value-only quantity.** Reinstated here: 52
+  value-only params were rewritten as `{name: "... = 2,797 SF", value: 2797}`.
+- **`updateJob` is a ROOT mutation, not a field on `job`.** `{"job": {"$": {"id"}, "updateJob": …}}`
+  fails with *"The field \"updateJob\" does not exist at \"job\""*. Correct form:
+  `{"updateJob": {"$": {"id": …, "parameters": […]}, "job": {"$": {"id": …}, "id": {}}}}` — note the
+  output `job` needs **its own `$: {id}`**, since it is a lookup, not a back-reference.
+- **`isClosed: false` is REJECTED — same constant-true class as `isManual`.** *"Expected false … to
+  be true"*. **Omit `isClosed` entirely for an open polyline;** include it as `true` only for closed
+  areas. This is how you draw a `linear` measurement (a polyline path) versus an `area` one.
+- **Validate the envelope with a no-op before sending a 30 KB payload.** Three shape errors cost three
+  full re-sends of the whole parameter array (full-replace means you cannot probe with a subset without
+  destroying the rest). `{"updateJob": {"$": {"id": …, "name": "<current name>"}, …}}` is a free
+  round-trip that proves the envelope. Do that first, every time.
+- **`readPlan` can be denied at root while plans stay readable through the job.** `{"plan": {"$": {"id"}}}`
+  returned *"requires the readPlan action"*, but `{"job": {"$": {"id"}, "plans": {"nodes": {…}}}}`
+  returned everything including `annotations`. Same for mutations: `updatePlan` works, but selecting
+  `plan` in its output trips the same grant check — **select nothing** (`{"updatePlan": {"$": {…}}}`
+  returns `{}` on success) and verify via the job path.
+- **Open polylines let you measure a curved wall exactly.** The storefront is drawn as a **faceted
+  chord chain, not a bezier** — 6 straight segments, 7 vertices, filtered out of `get_drawings()` by
+  taking long NON-axis-aligned lines in the region. 45.14 LF. Hunting for curve items first wasted a
+  pass: 4,935 bezier segments in that region were all 31.5 pt annotation-bubble circles.
+- **Guard #13 (new): a printed dimension may span MORE than the room it sits in.** Corridor 106's
+  vertical "18'-9 1/2"" reads like the room's depth; the room is 14.6 ft. The dimension is a **chain
+  running from Corridor 109's far wall (y 674.5) through to y 928.3** = 18.800 ft vs printed 18.792.
+  Same sheet, "6'-5 1/2"" spans x 543.0→630.2 = 6.459 vs printed 6.458 — **centerline-to-centerline,
+  so the clear width is one 5.5 pt wall less (81.7 pt)**. Test a dimension against *chains* of walls,
+  not just the nearest pair, before concluding your trace is wrong.
+- **Grey out what is already drawn to find what is not.** Rendering the 21 finished rooms as filled
+  rects over the sheet made the remaining white spaces — and their labels — unmistakable in one look.
+  This is the same overlay-verify pass as §4 step 6, used for coverage instead of correctness; it is
+  how the corridor-inside-operatory error was caught, and how Corridor 106 / Admin Storage 102 were
+  found still open.
+- **Result: 63 parameters, 11 geometry-anchored, 194 annotations, 23 rooms drawn wall-to-wall**
+  (1,918.4 SF of A0's 2,797 SF, 69%), plus 45.1 LF storefront + 54.5 LF east wall as open polylines,
+  and trade-device markers on P1 (18 plumbing fixtures) and M1 (23 supply / 15 return / 3 exhaust).
+  `meta` added to P1 and M1 — **without it a plan's markers have no page frame to position against.**
+- **Stopping point, stated honestly:** Waiting 100 / Admin 101 / Break 125 are NOT drawn and should
+  not be. Their mutual boundaries are a reception counter and casework, not walls, and their south
+  edge is the storefront curve — any three-way split would be an invention. The area basis is itself
+  an open RFI (A0 2,797 vs lease 2,544 SF). **When the remaining geometry needs a decision rather than
+  a measurement, write nothing and say so.**
 
 
 ### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
