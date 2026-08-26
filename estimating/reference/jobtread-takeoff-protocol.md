@@ -127,7 +127,7 @@ global types by name (`parameters`, `plan`).
 | 22 | A column-position parse of a spec schedule dropped 8 rows and manufactured 3 false "uncosted" items | Reconcile a parse against its own row count before reporting a gap, then READ the schedule. All three were correctly not separate scope |
 | 23 | Four SPECIFICATION sheets were never opened — the estimate cited MEP5 13x, MEP6 19x and MEP1-MEP4 ZERO times, hiding $15,570 of required scope | Count citations PER SHEET across the whole estimate. A sheet with zero citations has not been read. Verifying what is DRAWN is not verifying what is REQUIRED |
 | 24 | "Implied and not scoped" was recorded for work that had a dedicated full spec section (MEP4 = 260573, an entire sheet) | "Implied" is a claim to verify, not a conclusion. Before inferring scope from a schedule note, go find the section that mandates it |
-| 25 | Three vendor sheets cross-reference SED.1-SED.3; only SED.1 and SED.2 were delivered, and 11 line items were priced against the missing one | Resolve every cross-referenced sheet number against the delivered set, and RFI the gaps before bid |
+| 25 | Raised an RFI for a "missing" sheet SED.3 — every detail it supposedly held was on SED.2, and 14 of OUR OWN citations pointed at the wrong sheet | Resolve the reference before raising the RFI. A citation to a sheet not in the set is evidence of a bad citation at least as often as evidence of a missing document |
 
 ## 7. What good looks like (reference result)
 
@@ -683,6 +683,44 @@ requirement (0 SF is right — RCP note 1 puts ACT or GYP everywhere, nothing is
 
 **No JobTread parameter changed**: nothing *measured* moved. These are specification scope findings and
 they live in `lineitems.csv` and the takeoff.
+
+### 2026-08-26 (g) — Job 2026-374 — WITHDRAWING THE SED.3 RFI I RAISED ONE ENTRY AGO — Claude
+
+The previous entry raised, and I reported to the user, that Henry Schein sheet **SED.3 was never
+delivered** and that eleven line items were priced against a sheet nobody had. **That was wrong and I
+have withdrawn it.**
+
+Resolving every detail number against the two delivered sheets:
+
+| Sheet | Details it carries |
+|---|---|
+| **SED.1** | 3A, 4C, 9B, 9C, 13, 14A, 14C, 14E, 15B |
+| **SED.2** | 16, 25, 27, 29A, 30, 31A, 32, 35 |
+
+**Every detail the drawings actually reference is present.** The *"SEE SHEETS SED.1 – SED.3"* line on
+SA.1/SP.1/SE.1 is vendor boilerplate naming a range, not a promise of a third sheet. What was really
+wrong was **our own citation hygiene**: fourteen references pointed at the wrong sheet — thirteen
+calling SED.2 details "SED.3", one calling a SED.1 detail "SED.2", and one citing a "detail 5" that
+exists nowhere (spec 5 is scheduled on SE.1 and has no detail). All repointed; the bid is unchanged
+because only citations moved.
+
+**Guard #25 rewritten.** It said "resolve every cross-referenced sheet number against the delivered
+set and RFI the gaps." The sharper and more honest version: **resolve the reference before raising the
+RFI — a citation to a sheet that is not in the set is evidence of a bad citation at least as often as
+evidence of a missing document.**
+
+**What actually went wrong in my process.** I wrote Guard #22 earlier in this same review — *a parse
+that drops rows manufactures gaps; reconcile before reporting* — after nearly reporting three
+fictitious scope gaps on the SE.1 schedule. Then I turned around and shipped exactly that failure
+mode on SED.3: I confirmed the sheet was absent from the package and stopped there, without checking
+whether anything it was supposed to contain was actually missing. **Confirming the absence of a label
+is not confirming the absence of the content.**
+
+The method that keeps working is the boring one: enumerate both sides and reconcile them. It found
+the real gap (MEP1–MEP4, $15,570) and it dissolved both false ones (SE.1 specs 6B/14A/39B, and this).
+
+**How the set stands.** Every one of the 38 sheets now carries three or more citations in the estimate,
+which was the check that exposed the unread MEP specs in the first place.
 
 ### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
 - **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
