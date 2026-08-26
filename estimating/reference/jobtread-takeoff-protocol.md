@@ -128,6 +128,7 @@ global types by name (`parameters`, `plan`).
 | 23 | Four SPECIFICATION sheets were never opened — the estimate cited MEP5 13x, MEP6 19x and MEP1-MEP4 ZERO times, hiding $15,570 of required scope | Count citations PER SHEET across the whole estimate. A sheet with zero citations has not been read. Verifying what is DRAWN is not verifying what is REQUIRED |
 | 24 | "Implied and not scoped" was recorded for work that had a dedicated full spec section (MEP4 = 260573, an entire sheet) | "Implied" is a claim to verify, not a conclusion. Before inferring scope from a schedule note, go find the section that mandates it |
 | 25 | Raised an RFI for a "missing" sheet SED.3 — every detail it supposedly held was on SED.2, and 14 of OUR OWN citations pointed at the wrong sheet | Resolve the reference before raising the RFI. A citation to a sheet not in the set is evidence of a bad citation at least as often as evidence of a missing document |
+| 26 | A volunteered alternate carried a **$500 engineer review fee printed on the same sheet as the fixture schedule**, turning a published $572 deduct into $72 | A drawing sets COMMERCIAL terms as well as technical ones. Read substitution, alternate and bid-form notes as priced scope — a fee that attaches to something you volunteered is a cost you chose |
 
 ## 7. What good looks like (reference result)
 
@@ -721,6 +722,53 @@ the real gap (MEP1–MEP4, $15,570) and it dissolved both false ones (SE.1 specs
 
 **How the set stands.** Every one of the 38 sheets now carries three or more citations in the estimate,
 which was the check that exposed the unread MEP specs in the first place.
+
+### 2026-08-26 (h) — Job 2026-374 — THE SCHEDULE PASS, AND A FEE PRINTED ON THE DRAWING — Claude
+
+Entry (f) closed the specification axis; entry (g) withdrew a bad RFI off it. This entry closes the
+last axis I had not enumerated: **the schedules**. A sheet citation proves the sheet was *opened*, not
+that every row on it was priced — so all six schedule sheets were reconciled mark by mark against the
+line items.
+
+**Five of six were clean, and cleanly so.** MEP5's five equipment schedules including the footnote-only
+items (seacoast-coated coil, waffle pads, PLT-12 expansion tank, and the RTU note that says *replace
+the existing 50 A breaker with 30 A and replace the disconnect* — a schedule footnote with no plan
+symbol, already carried). M3's six diffuser marks plus after-hours core drilling and GPR floor
+scanning. P5's ten fixture marks down to the Trubro lav guard and the Haws eye-wash. E5's three
+panels. **That is the boring outcome the method is supposed to produce, and it is worth recording that
+it produced it** — a reconciliation that finds nothing is evidence, not wasted effort.
+
+**E6 was not clean, and the defect was commercial rather than dimensional.** Its substitution notes,
+printed twice on the sheet, state: *"for each and every type of light fixture or control system
+offered as an unsolicited alternate, a $500.00 fee will be charged to the contractor for review …
+in no way a guarantee of approval … must be received by the engineer prior to any review commencing."*
+
+**ALT-9 is exactly one fixture type offered unsolicited.** The proposal published it as a **($572)**
+deduct and told the client *"the $572 deduct is trivial — take it for the lead time."* Net of the fee
+the alternate is worth **($72)**. The reasoning was right; the number was wrong by a factor of eight,
+in the client's disfavour, inside a document that promises "the honest verdict on each rather than a
+sales pitch." Restated to ($72) with the fee disclosed and a withdrawal option offered. Group B
++$7,952 → **+$8,452**; all ten $1,071,527 → **$1,072,027**, $416.80 → **$417.00/SF**. **Base bid
+unchanged at $1,042,947** — ALT-9 sits outside it, and no other alternate is a lighting substitution.
+
+**Guard #26 (new): a drawing sets COMMERCIAL terms as well as technical ones.** I had been reading
+sheets for geometry, then for specified scope, and never for **conditions of bidding**. Substitution
+deadlines, review fees, separate-pricing rules and post-bid-alternate terms are priced scope. The
+sharpest form: **a fee that attaches to something you volunteered is a cost you chose** — and the
+alternate that triggers it has to be re-justified after the fee, not before.
+
+Two further E6 conditions now carried: substitution requests are due **10 days before bid**, and
+*"failure to submit constitutes a guarantee to supply the specified light fixture"* — every fixture
+line is priced on the basis of design, so this is satisfied, but it hard-locks the lighting buyout and
+is *why* ALT-9 must run post-bid and pay. And lighting controls pricing must be **"completely separate
+of any light fixture pricing"** or it is *"immediately rejected in its entirety"* — satisfied
+structurally, controls in 260923, fixtures in 265119, exit signs in 265300, never bundled.
+
+**Where the takeoff now stands.** Three axes enumerated and reconciled: **geometry** (every scaled
+sheet traced and overlay-verified), **specification** (every sheet cited three or more times), and
+**schedule** (every mark on every schedule reconciled). Two RFIs remain open and both are genuinely
+the EOR's call, not mine: NEC 517.13 patient-care grounding (~$1,900 if the operatories are Category
+1 or 2) and MEP6 keynote DP03 (~$505 if it is a second waste stub to cap).
 
 ### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
 - **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
