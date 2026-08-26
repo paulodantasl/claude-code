@@ -853,6 +853,18 @@ recomputed — cost-type split, the four cost drivers, Div 26+27+28 concentratio
 8.3% of bid**. A cross-document tie-out now runs: both tables sum to $817,844 over 271 rows,
 percentages foot to 100%, all four documents carry the same bid.
 
+**One count I tried to improve and deliberately did not.** Row 214's 108 general-use receptacles are
+a *derived* count (panel VA ÷ 180, NEC 220.14(I)), disclosed as such with a field-verify note and a
+stated sensitivity of ≈$114/outlet — ~$12,300 of exposure, worth attacking. **E1 defeated it
+honestly:** the sheet is flattened to **55,224 individual line segments**, every symbol exploded, so
+the symbol-signature clustering that split exit signs from bug-eyes on MEP6 has nothing to cluster.
+Producing a confident-looking count from that is guard 14 in its purest form. Corroborated instead
+from three directions that agree — 64 receptacle circuits on the panel schedules, 69 non-default
+mounting-height tags on E1, 144 devices carried at 2.2 per circuit against an NEC ceiling of 13
+(the expected shape where equipment takes dedicated circuits). **The derived count stands, disclosed.**
+Recording the negative result matters: *"I could not measure this and here is what I checked instead"*
+is a takeoff finding, and leaving it unsaid is how a soft number gets read as a hard one.
+
 **Where it lands.** Direct $806,102 → **$817,844**; bid $1,028,865 → **$1,043,566**. Five axes
 enumerated: **geometry, specification, schedule, general notes, keynotes**. Two RFIs stay open and
 both are the EOR's call: NEC 517.13 patient-care grounding (~$1,900) and MEP6 keynote DP03 (~$505).
