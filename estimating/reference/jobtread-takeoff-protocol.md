@@ -125,6 +125,9 @@ global types by name (`parameters`, `plan`).
 | 20 | A plan-wide assumption ("the floor is LVT") survived because no one opened the room finish SCHEDULE | Read the schedule, not just the plan graphic. 5 of 26 rooms were CONC or VCT; the LVT line said "net room area" and had never been netted |
 | 21 | A vendor sheet is drawn to scale AND stamped "NOT FOR CONSTRUCTION" | Leave it unscaled, like an NTS sheet. A scale invites measuring off a drawing its own author has disclaimed — mine its SCHEDULE instead |
 | 22 | A column-position parse of a spec schedule dropped 8 rows and manufactured 3 false "uncosted" items | Reconcile a parse against its own row count before reporting a gap, then READ the schedule. All three were correctly not separate scope |
+| 23 | Four SPECIFICATION sheets were never opened — the estimate cited MEP5 13x, MEP6 19x and MEP1-MEP4 ZERO times, hiding $15,570 of required scope | Count citations PER SHEET across the whole estimate. A sheet with zero citations has not been read. Verifying what is DRAWN is not verifying what is REQUIRED |
+| 24 | "Implied and not scoped" was recorded for work that had a dedicated full spec section (MEP4 = 260573, an entire sheet) | "Implied" is a claim to verify, not a conclusion. Before inferring scope from a schedule note, go find the section that mandates it |
+| 25 | Three vendor sheets cross-reference SED.1-SED.3; only SED.1 and SED.2 were delivered, and 11 line items were priced against the missing one | Resolve every cross-referenced sheet number against the delivered set, and RFI the gaps before bid |
 
 ## 7. What good looks like (reference result)
 
@@ -630,6 +633,56 @@ reconciled them; a GC working straight off the elevations would not.
 **Takeoff COMPLETE.** All 38 sheets accounted for: 11 traced or measured, 8 verified with no change,
 19 correctly unscaled (NTS details, risers, schedules, specs, and the four not-for-construction
 vendor plans). No parameter changed in this pass — nothing measured moved.
+
+### 2026-08-26 (f) — Job 2026-374 — I VERIFIED WHAT WAS DRAWN, NOT WHAT WAS REQUIRED — Claude
+
+I closed the previous entry with "Takeoff COMPLETE. All 38 sheets accounted for." That was wrong in a
+way worth recording: I had verified every **drawing** and never mined the **specifications**.
+
+**The tell was countable and I never counted it.** Grepping citations per sheet across the estimate:
+MEP5 appears 13 times, MEP6 19 times, and **MEP1, MEP2, MEP3 and MEP4 appear zero times**. Four
+specification sheets had never been opened. A7 and A8 had been (they are cited throughout), which is
+what made the set *look* covered.
+
+Reading them found **eight required items with no line, $15,570 of direct cost** — and for the first
+time in this whole review the bid went **up**, from $1,023,360 to $1,042,947.
+
+- **MEP4 is an entire sheet devoted to SECTION 260573** — short-circuit study (IEEE 399/551),
+  overcurrent coordination study (IEEE 242) and arc-flash hazard analysis (IEEE 1584 / NFPA 70E),
+  **performed by a PE employed by the panelboard manufacturer** (a third-party engineer is expressly
+  not accepted), plus NETA ETT Level III field adjusting with ATS testing on every adjustable OCPD,
+  machine-printed arc-flash labels, and Owner training. **$7,500.**
+  **Guard #24 (new): "implied and not scoped" is a claim to verify, not a conclusion.** The estimate
+  had recorded exactly that, inferring the study from a "SCCR per study" note on a panel schedule
+  rather than finding the dedicated section that mandates it. Also buried in §1.1 B: *"Equipment AIC
+  ratings for coordinated equipment shall be as required by the results of the fault current study **at
+  no additional cost**"* — a risk transfer that belongs in the qualifications, not a footnote.
+- **MEP2 §12.0**: duct liner/wrap on all low-velocity rectangular supply and return duct. Div 23
+  carried 870 lb of *bare* galvanised duct and a single lined return boot. 860 SF, **$2,550**.
+- MEP3 §13.0: plumbing systems testing ($1,700) and domestic water sterilisation with lab results
+  ($650). MEP2 §220100 G.6: NFPA 99 dental gas testing and certification ($1,600) — NFPA 99 appeared
+  twice in the estimate *descriptively* with no testing line. MEP3 §260100 11.0: electrical
+  identification ($960). MEP2 §16.0: escutcheons ($440). MEP1 §8.0: spare filter sets ($170).
+
+**Guard #23 (new): count citations PER SHEET across the whole estimate.** It is a two-line grep and it
+finds unread sheets instantly. Verifying what is *drawn* is not verifying what is *required*; the
+geometry pass and the specification pass are different jobs and finishing one is not finishing the other.
+
+**Guard #25 (new): resolve cross-referenced sheet numbers against the delivered set.** SA.1, SP.1 and
+SE.1 each say *"SEE SHEETS SED.1 – SED.3"*; the package delivers SCV, SA.0, SA.1, SP.1, SE.1, SED.1
+and SED.2. **SED.3 does not exist in the set**, and eleven line items are priced against it. RFI raised.
+
+**Priced neither way, deliberately:** MEP3 §260100 4.0 B demands NEC 517.13 patient-care grounding,
+but NEC 517.10(B) exempts Category 3 (Basic Care) spaces, which is how dental operatories are normally
+classified. Roughly $1,900 if it applies. Disclosed as an RFI rather than silently priced or silently
+dropped — the spec and the code disagree and that is the EOR's call, not mine.
+
+**Verified clean:** S1 structural (Div 05's seven lines map one-for-one to its details; special
+inspections correctly a documented zero, Owner-employed per S1 §3.C) and A8 §099123's dryfall
+requirement (0 SF is right — RCP note 1 puts ACT or GYP everywhere, nothing is open to structure).
+
+**No JobTread parameter changed**: nothing *measured* moved. These are specification scope findings and
+they live in `lineitems.csv` and the takeoff.
 
 ### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
 - **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
