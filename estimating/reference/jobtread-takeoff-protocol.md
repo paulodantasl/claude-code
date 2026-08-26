@@ -135,6 +135,8 @@ global types by name (`parameters`, `plan`).
 | 30 | Every DERIVED figure downstream of the bid was stale — waterfall, sensitivity, GMP delta, row counts — while `validate_estimate.py` passed 0 FAIL throughout, because it checks the ESTIMATE, not the DOCUMENTS | Check the two halves separately. Write a script that recomputes the waterfall from source and verifies every published table against it, and gate the commit on it |
 | 31 | A find-and-replace on the headline bid dragged the REVISION LOG's "was" figures forward until it misstated its own history | The revision log is the one place that must never be swept. Exclude it from global replaces, and treat a dated audit the same way — mark it superseded, never update it |
 | 32 | Nearly rebuilt a FULL-REPLACE payload on a saved local copy that was 7 name-revisions behind the live record — first entry matched verbatim, so it looked authoritative | A local copy of a remote record is NOT the record. Diff the whole thing against a fresh read before using it as a base; a matching first entry is what makes a stale mirror convincing |
+| 33 | Hand-assembling a 68 KB full-replace payload SILENTLY DROPPED a parameter (a 110-point light-fixture trace). The mutation returned success; 87 went in as 86 | On a full-replace API an omission IS a deletion. Never transcribe a generated payload by hand without a read-back that DIFFS the result against the intended file by name — a count alone would have caught this, a spot-check would not |
+| 34 | Face-pairing at the wall lineweight returned 617 LF of "partition" against a carried 431; the overlay showed CASEWORK drawn at the same 1.08 weight | Lineweight is not a layer. Before trusting a geometric filter, render it over the sheet and look — the counter runs are the same weight as the walls that carry them |
 
 ## 7. What good looks like (reference result)
 
@@ -970,6 +972,47 @@ leaving the budget intact); it was offered, and the decision was **takeoff only*
 **Recording the divergence is the deliverable when you decline to write.** Anyone reading a dollar
 figure off that job record is reading a stale pre-MEP number, and the takeoff now says so in bold
 next to the comparison. **A gap you chose to leave is only safe if the next person can see it.**
+
+### 2026-08-26 (m) — Job 2026-374 — CONVERTING BARE PARAMETERS TO TRACED GEOMETRY, AND A PAYLOAD THAT LOST ONE — Claude
+
+Asked to convert every bare Plans-tab parameter into a hand-traced measurement. **Delivered three; most
+of the rest cannot honestly be traced, and saying so is the finding.**
+
+**Converted (24 traced polygons on A1, from the room polygons already overlay-verified):** sealed
+concrete 221.38 SF (4 rooms), VCT-1 38.94 SF (Pano 110), LVT-1 2,310.48 SF (19 polygons / 21 rooms).
+They **tile the floor plate exactly — 2,570.80 SF, no gap, no overlap** — so the Plans tab now carries
+a real finish map instead of three numbers. Geometry-anchored parameters 23 → 26.
+
+**Partitions defeated three methods and I shipped none of them.**
+
+- Face-pairing filtered to the wall lineweight (1.08, established from a known partition) → **617.7 LF**
+  against a carried 431. The **overlay showed why**: casework counter runs are drawn at the *same*
+  1.08 weight, so every countertop got counted as a wall. **Guard #34 — lineweight is not a layer.**
+- Pairing the *room-boundary* edges instead (a partition is a room boundary; casework never is) →
+  **256.7 LF**. Too low, and the reason is real: `Corridor 122` and the four Exam rooms report the
+  **same** edge at x=934.1 with zero gap — the **open operatory fronts** the takeoff already documents.
+  There is no wall there to trace.
+
+Neither reproduces 431, so 431 stands as-is and unconverted. **Three methods disagreeing is a result,
+not a failure to report.**
+
+**Structurally untraceable, and left bare deliberately:** GWB / batts / paint / acoustical sealant are
+*derived* from partition LF × height; branch circuits and receptacles come from panel-schedule VA;
+sprinkler heads are explicitly derived (FP1 is a performance spec with no head layout); testing,
+escutcheons, spare filters and the coordination study have no plan geometry at all. **Drawing polygons
+for those would be inventing evidence.** Demolition, sprinkler coverage, final cleaning and floor
+levelling were skipped as *redundant* — they are the same rooms the finishes already draw, and stacking
+three identical polygon sets on one sheet makes it harder to read, not better.
+
+**Then I broke the job and the read-back caught it.** The first write came back **86 parameters, not
+87**: hand-assembling the 68 KB payload, I skipped the **110-point light-fixture trace** entirely. On a
+full-replace API **an omission is a deletion** — and `updateJob` returned success both times. Restored
+and re-verified: 87 / 26 geometry / 0 missing values / 0 name deltas against the intended file.
+
+**Guard #33: never hand-transcribe a generated payload without a read-back that DIFFS by name against
+the intended file.** A count alone catches this; a spot-check does not. This is guard 14's warning
+("never hand-edit a generated payload — regenerate it") arriving as data loss rather than a bad number,
+and the only reason it was recoverable is that the intended payload existed on disk to diff against.
 
 ### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
 - **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
