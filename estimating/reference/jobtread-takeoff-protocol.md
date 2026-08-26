@@ -130,6 +130,8 @@ global types by name (`parameters`, `plan`).
 | 25 | Raised an RFI for a "missing" sheet SED.3 — every detail it supposedly held was on SED.2, and 14 of OUR OWN citations pointed at the wrong sheet | Resolve the reference before raising the RFI. A citation to a sheet not in the set is evidence of a bad citation at least as often as evidence of a missing document |
 | 26 | A volunteered alternate carried a **$500 engineer review fee printed on the same sheet as the fixture schedule**, turning a published $572 deduct into $72 | A drawing sets COMMERCIAL terms as well as technical ones. Read substitution, alternate and bid-form notes as priced scope — a fee that attaches to something you volunteered is a cost you chose |
 | 27 | A withdrawn finding ("A0 is 8.1% high") was corrected in the narrative but left standing, as fact, in two line-item basis notes | A retraction is not complete until every DERIVED copy is gone. Grep the withdrawn claim across every deliverable, not just the document that argued it |
+| 28 | A published cost-by-division table still summed to a 262-row, $806,101 state three revisions later — 9 of 19 divisions wrong — while its OWN arithmetic stayed perfect | A stale table that is internally consistent is harder to spot than a broken one: every check inside it passes. REGENERATE derived tables from the source; never patch them |
+| 29 | "Exhaust fans integral" treated a factory INTEGRAL DISCONNECT as satisfying a required wall CONTROL switch — two devices, two locations | When a schedule note and a plan keynote both name a device, they are naming a device. Reconcile keynotes per sheet the way you reconcile schedules |
 
 ## 7. What good looks like (reference result)
 
@@ -810,6 +812,50 @@ it is **treating "I have corrected this" as an event rather than as something to
 **schedule**, **general notes**. Base bid $1,042,947. Two RFIs remain open and both are genuinely the
 EOR's call: NEC 517.13 patient-care grounding (~$1,900 if the operatories are Category 1 or 2) and
 MEP6 keynote DP03 (~$505 if it is a second waste stub to cap).
+
+### 2026-08-26 (j) — Job 2026-374 — THE KEYNOTE PASS, AND A TABLE THAT HAD QUIETLY STOPPED TYING — Claude
+
+Fifth axis: **plan keynotes**. Extract every keynote ID per sheet, reconcile against the estimate.
+Six of 66 came back uncited. Five resolved as covered or as coordination instructions carrying no
+cost — P13 *route piping clear of new electrical*, E17 *coordinate mounting in the casework niche*,
+E13 *hand dryer* (carried at row 117, cited by its A2 schedule tag not its keynote).
+
+**E28 was real.** *"TOGGLE SWITCH TO CONTROL EXHAUST FAN."* Row 231 had recorded *"exhaust fans
+integral"* and carried no device — treating the factory integral **disconnect** at the fan as
+satisfying a **control** switch on the wall. Corroborated three ways that agree exactly: MEP5 puts
+electrical note B on **EF-1 and EF-2 only** (EF-3 carries note A alone), E2 places **exactly two** E28
+tags, and there are **exactly two** toilet rooms. EF-3 needs no toggle because its control *is* the
+rate-of-rise thermostat — keynote E26, furnished under Div 23 *"to the electrical contractor for
+installation"* with no Div 26 line for that installation. One line, 3 EA, **$485 direct**.
+
+**Guard #29: when a schedule note and a plan keynote both name a device, they are naming a device.**
+
+**Then the small line exposed a large one.** The published cost-by-division table in the estimate
+summary, and its short form in the proposal, **summed to $806,101 over 262 line items** — the state
+*before the specification review*, three revisions back. Nine of nineteen divisions were wrong,
+Electrical worst at $144,341 published against $152,595 actual.
+
+**What makes this worth a guard is why nobody caught it.** The table's *internal* arithmetic was
+flawless: every loaded column was exactly its direct × 1.27634, and that factor reproduces the
+original $1,028,865 bid perfectly. **A stale table that is self-consistent passes every check you run
+inside it.** The only visible tell was a bold total row reading "262" beside a 271-row total, because
+successive find-and-replace passes on the headline had been dragging the total row forward while
+leaving every division row behind. The $/SF columns had also split bases — division rows on 2,797 SF
+gross, total row on 2,570.8 SF clear, in one table.
+
+**Guard #28: regenerate derived tables from the source; never patch them.** A find-and-replace on a
+headline figure updates the sentences that quote it and silently desynchronises every table that
+derives from it.
+
+Both tables regenerated from `lineitems.csv` on one area basis, with the dependent narrative
+recomputed — cost-type split, the four cost drivers, Div 26+27+28 concentration (**$197,718 direct,
+24.2%**), and the mandated-vendor exposure rebuilt from its three components to **$86,973 at sell,
+8.3% of bid**. A cross-document tie-out now runs: both tables sum to $817,844 over 271 rows,
+percentages foot to 100%, all four documents carry the same bid.
+
+**Where it lands.** Direct $806,102 → **$817,844**; bid $1,028,865 → **$1,043,566**. Five axes
+enumerated: **geometry, specification, schedule, general notes, keynotes**. Two RFIs stay open and
+both are the EOR's call: NEC 517.13 patient-care grounding (~$1,900) and MEP6 keynote DP03 (~$505).
 
 ### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
 - **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
