@@ -113,6 +113,14 @@ global types by name (`parameters`, `plan`).
 | 8 | Text annotation rejected (`fontWeight` non-null) | Send the full text field set (§1) |
 | 9 | CDN download blocked / Drive big-file failures | §3 fallbacks; ask user to allowlist cdn.jobtread.com |
 | 10 | Hand-summed values ≠ app-computed | Expected — geometry is truth; values are advisory (state this to the user) |
+| 11 | Composed params from a CSV by `LIKE '%…%'` → silently matched the wrong rows | Constrain by division AND unit; `assert len(matches)==1` and let it fail loudly |
+| 12 | Dimension lines masquerade as walls (a 42.7 ft "partition") | Require the parallel face PAIR (≈5.6 pt for a 4-7/8" stud wall); a lone long line is a dimension or leader |
+| 13 | A printed dimension spans MORE than the room it labels | Bound the dimension against the wall faces it actually terminates on before using it |
+| 14 | A clean continuous chain is not evidence it is the right line (traced the canopy, not the storefront) | Overlay-verify POLYLINES too, not just polygons; both ends must close on verified wall faces |
+| 15 | A correct TOTAL hid a wrong SPLIT (block divided at a wall that is outside the block) | Verify the DIVIDER against a face pair whose overlap spans the block; never extend a wall line in from outside |
+| 16 | "Matches the printed dimension exactly" *was* the error — the printed chain runs face-to-far-face | Decide the wall reference once (room-side face); classify every edge against its pair, not against the printed dim |
+| 17 | The font-size discriminator cuts BOTH ways — over-count (legend key at 12.57 pt) and under-count (device filter excluded 6.17 pt) | Histogram tags by font size, then RENDER A SAMPLE OF EVERY BAND before deciding which bands are devices |
+| 18 | A scaled plan with no measurements looked "done" because it still carried its upload filename | Diff the set of scaled plans against the set of plans carrying geometry; query `plans` with `size: 60` |
 
 ## 7. What good looks like (reference result)
 
@@ -446,6 +454,86 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   linearVolume take it); large updateJob echoes get persisted to a tool-result file —
   parse it programmatically for the read-back diff instead of re-reading inline.
 - **State after run: 74 parameters**, 8 plan pages calibrated. Cost-item wiring still open.
+
+### 2026-08-26 (c) — Job 2026-374 — THE LAST TWO TRADE SHEETS, AND WHAT THEY EXPOSED ON THE FIRST ONE — Claude
+
+Ran the plan list at `size: 60` (45 plans) and found **two scaled sheets still untraced**: `FP1 —
+Floor 1 Fire Protection` (uploaded but never renamed off the generic filename, so it read as
+"…ASMEP.pdf (25)") and `MEP6 — Floor 1 MEP Demolition`. Tracing them changed the takeoff more than
+the trades themselves did.
+
+- **A sheet can be finished and still be invisible.** FP1 was already scaled correctly and sitting
+  in the plan list under its upload filename. Nothing about the plan list said "untraced trade."
+  **Enumerate scaled plans and diff them against the set of plans that carry measurements** — a plan
+  with a scale and no geometry is an unfinished sheet, whatever it is called.
+
+- **Read the legend before you count anything.** FP1 has no head symbols at all. Its note directs the
+  contractor to *"reconfigure existing base building fire sprinkler layout… per NFPA 13"* — a
+  **performance specification**. The countable thing on the sheet is not heads, it is the **hazard
+  classification**, drawn as three hatches. Discriminator, measured off the legend swatches: **45° =
+  Light Hazard, 135° = Ordinary Hazard Gp 1, both = Ordinary Hazard Gp 2**, all at 9.0 pt spacing.
+  Sampling diagonal segments within r=26 of each room label classified all 25 rooms in one pass.
+  Then take the zone boundary from the **heavy (w=1.68) dashed outline**, which sits exactly on the
+  wall faces — the hatch is clipped to it.
+
+- **🔴 A second sheet is the best audit of the first.** Translating A1 → FP1 (pure translation,
+  DX=254.09 DY=158.94, both rotation-0 in the end) let every A1 room edge be tested against FP1's own
+  face pairs. Two classes of error fell out of a takeoff I had already called complete and
+  overlay-verified:
+  - **Guard #15 (new): a correct TOTAL can hide a wrong SPLIT.** Equip 108 / IT 107 had been divided
+    at **y = 727.9** — which is Corridor 109's south wall, *east of that block and not a wall inside
+    it at all*. The real partition is the face pair at **781.1 / 786.7**. Equip 108 89.50 → **120.38
+    SF**; IT 107 55.35 → **25.58 SF**. The two rooms' **sum moved by 1.10 SF**, so every total-based
+    check passed while one room was 34% low and the other 54% high. **When you split a block into
+    rooms, verify the DIVIDER against a face pair whose overlap actually spans the block — never
+    extend a wall line in from outside it.**
+  - **Guard #16 (new): decide the wall reference ONCE, and it is not the printed dimension.** Five
+    rooms had one or two edges on the *far* face of the bounding wall, because the printed chain runs
+    face-to-far-face — so "matches the printed 16'-4" exactly" *felt* like confirmation and was in
+    fact the error. Classify each edge by asking whether the traced coordinate is the wall pair's
+    **room-side** face or its far face. Storage 117 −8.51, Pano 110 −5.50, Storage 119 −3.90, Office
+    103 −2.52, front-of-house −3.28 SF. Total 2,593.4 → **2,570.8 SF**.
+  - **The reward:** FP1's OH-2 zone measures **75.46 SF** and the same two rooms traced independently
+    on A1 now measure **75.43 SF** — two sheets, two extraction methods, **0.04 SF apart**. That
+    agreement is the real verification; the earlier per-room "matches the printed dim" was not.
+
+- **MEP6: separate the drawing by TONE before counting.** General Note D: *half-tone = existing to
+  remain, full-tone/dashed = demolish.* `get_drawings()` splits cleanly — grey `(0.4/0.48)` 1,765
+  paths vs black `(0,0,0)` 576. Every demolished device also carries a **grey fill dot ~5 pt**, which
+  isolates devices from leaders and keynote bubbles in one filter. **7 devices — the carried total was
+  right, the split was not**: 2 high bay + **1** bug-eye + **3** exit signs + 1 lighting control, not
+  2/2/2/1. Separated by symbol-geometry signature at matched radius (exit sign 27–30 segments /
+  29–32 pt of stroke; bug-eye 36 / 58). Same $110/EA, so **zero cost effect and a real scope fix.**
+
+- **🔴 Guard #17 (new): the font-size discriminator cuts BOTH ways.** E1 earlier over-counted because
+  a **12.57 pt legend key** was read as a device. E2 now proves the inverse: I had filtered MS tags to
+  9.1 pt and counted **19**, while the sheet carries **23** `MS` strings. The four extras are **6.17 pt
+  plain text labelling low-voltage homerun runs** — no symbol, sitting on a wire with tick marks. 19
+  was right and 23 (which the estimate carried) was wrong, −$691. **Always histogram the tag population
+  by font size, then RENDER A SAMPLE OF EVERY BAND before deciding which bands are devices.** Neither
+  "the biggest band" nor "the modal size" is a rule.
+
+- **Sheets that must stay unscaled, and why that is a measurement decision.** E4/E5/E6, M2/M3, P2–P5
+  are NOT TO SCALE by their own title blocks. Leaving them without a plan scale is deliberate: a scale
+  on a riser diagram lets someone take a real-looking measurement off a drawing with no geometric
+  meaning. **Record the omission as intentional in the run log so the next person does not "fix" it.**
+
+- **Architectural sheets in this set have ALL text outlined to curves** — `get_text()` returns zero
+  spans on all ten. Every A-sheet fact must come from vector geometry or from rendering and reading.
+  The MEP/E/FP sheets are ordinary text. **Check `len(page.get_text('dict')['blocks'])` first; it
+  decides whether a sheet can be mined or must be looked at.**
+
+- **Payload discipline held.** Both writes were generated end-to-end from source files
+  (`e_final.json`, extracted face pairs) with `assert` on every count and rect before serialising —
+  no hand-editing of a generated payload, per the fabricated-coordinate incident. `updateJob` is
+  full-replace, so each edit re-sends all 72 parameters (~48 KB); budget for that, and keep a
+  per-parameter coordinate checksum to verify the send.
+
+- **State after run: 72 parameters, 24 geometry-anchored, across A1 / P1 / M1 / E1 / E2 / E3 / FP1 /
+  MEP6.** Every trade with a scaled sheet is measured. Estimate requantified on the measured area:
+  direct $806,102 → **$803,773**, bid $1,028,865 → **$1,025,931**; `validate_estimate.py` 0 FAIL with
+  the xlsx tie-out passing.
+
 
 ### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
 - **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
