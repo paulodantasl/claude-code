@@ -123,6 +123,8 @@ global types by name (`parameters`, `plan`).
 | 18 | A scaled plan with no measurements looked "done" because it still carried its upload filename | Diff the set of scaled plans against the set of plans carrying geometry; query `plans` with `size: 60` |
 | 19 | Called a stated area "8.1% HIGH" and published it — it was a different reference, not an error | Before declaring any stated quantity wrong, RE-DERIVE it on its own convention. A0's 2,797 SF reproduces to 0.08% by offsetting the traced rooms to wall centrelines |
 | 20 | A plan-wide assumption ("the floor is LVT") survived because no one opened the room finish SCHEDULE | Read the schedule, not just the plan graphic. 5 of 26 rooms were CONC or VCT; the LVT line said "net room area" and had never been netted |
+| 21 | A vendor sheet is drawn to scale AND stamped "NOT FOR CONSTRUCTION" | Leave it unscaled, like an NTS sheet. A scale invites measuring off a drawing its own author has disclaimed — mine its SCHEDULE instead |
+| 22 | A column-position parse of a spec schedule dropped 8 rows and manufactured 3 false "uncosted" items | Reconcile a parse against its own row count before reporting a gap, then READ the schedule. All three were correctly not separate scope |
 
 ## 7. What good looks like (reference result)
 
@@ -580,6 +582,54 @@ is already carried.
 **State after run: 78 parameters, 23 geometry-anchored**, across A1 / P1 / M1 / E1 / E2 / E3 / FP1 /
 MEP6. Direct **$806,102 → $801,789**; bid **$1,028,865 → $1,023,360**; `validate_estimate.py` 0 FAIL
 with the xlsx tie-out passing.
+
+### 2026-08-26 (e) — Job 2026-374 — THE LAST FOUR SCALED SHEETS WERE THE VENDOR'S — Claude
+
+Closing pass. Verified the write (78 parameters, 23 geometry-anchored, all intact), then went after
+the sheets I had not opened: A3/A4 interior elevations, A5 door schedule, and the seven Henry Schein
+equipment sheets.
+
+- **A5 settles the door count from the schedule, not the plan.** 13 rows, of which **three are marked
+  EX** (existing to remain, verify and re-key) → **10 new doors**, matching the carried 10 doors / 10
+  frames / 10 hardware sets exactly, and giving the hardware-group split 1/2/2/5 for free.
+- **A3+A4 reconcile the casework to the foot.** Nine GC elevations, each with a printed dimension,
+  sum to **85.08 LF** against a carried **85 LF**. The estimate turned out to carry one line per
+  elevation with the printed dimension transcribed — so the check was a true independent re-add, not
+  a re-read of the same arithmetic.
+- **The scope boundary on A4 is the kind that loses money if skimmed:** the blue elevations say
+  *"provided by Henry Schein and **installed by Contractor**."* Material excluded, labour ours. It was
+  carried; but "Henry Schein casework EXCLUDED" in a line name is one word away from dropping the
+  install.
+
+**Guard #21 (new): a vendor sheet drawn to scale AND stamped NOT FOR CONSTRUCTION stays unscaled.**
+Four of the seven HS sheets are ¼″=1′-0″ (SA.0 floor plan, SA.1 reinforcement, SP.1 plumbing, SE.1
+electrical) and — unlike the InVision architectural sheets — carry extractable text, so they are
+tempting. Each is stamped *"THIS SPECIFICATION SHEET IS A GUIDE ONLY… **NOT FOR CONSTRUCTION**"* and
+*"**NOT AN ARCHITECTURAL PLAN**."* Putting a scale on them would let someone take a real-looking
+measurement off a drawing its own author has disclaimed. **Mine the SCHEDULE, leave the plan
+unscaled** — the same treatment as the NTS risers, for the same reason. Guard #18 says a scaled plan
+with no measurements is unfinished; this is its exception, and the exception has to be *recorded* or
+the next pass "fixes" it.
+
+**Guard #22 (new): a parse that drops rows manufactures gaps.** A column-position extractor over the
+SE.1 schedule silently missed **eight** rows and reported specs **6B, 14A and 39B** as uncosted. All
+three are correctly not separate scope — 6B dental lights and 39B chair-mounted monitors are both
+*"tied in at power for chair"*, and 14A's two autoclaves sit inside the estimate's "sterilizers (3)".
+**Reconcile the parse against its own row count before reporting a gap, then read the schedule.** I
+came within one sentence of putting three fictitious scope gaps in front of a client.
+
+Every HS spec item reconciles: 35 blocking ×9 (plan tags confirm 9), 9C pano, 3A/4C/5 ×7 at the
+chairs, 23A exhaust fan → the Greenheck EF-3 with the rate-of-rise thermostat the spec demands, and
+23A's *supplemental cooling* clause → the Mitsubishi 3-ton split, which matters because the compressor
+and vacuum throw ~19,000 BTU/h into Equip 108.
+
+**One drawing defect worth an RFI:** A3 titles an elevation "Break **121**" (Break is 125) and A4
+titles two "Labratory **109**" (Lab is 112, and it is misspelled). The estimate had already
+reconciled them; a GC working straight off the elevations would not.
+
+**Takeoff COMPLETE.** All 38 sheets accounted for: 11 traced or measured, 8 verified with no change,
+19 correctly unscaled (NTS details, risers, schedules, specs, and the four not-for-construction
+vendor plans). No parameter changed in this pass — nothing measured moved.
 
 ### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
 - **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
