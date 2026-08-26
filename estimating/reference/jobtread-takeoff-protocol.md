@@ -231,7 +231,7 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   the glass at 13.5 pt/ft); solid piers in the same run carry the **~5.5 pt** partition twin. A single line with no
   twin at either spacing is not part of the enclosure. This storefront alternates glazing and pier, so no one
   spacing filter finds the whole boundary.
-- **Where the trace ends and the RFI begins — and how to tell the difference.** The three front-of-house spaces
+- **⚠ SUPERSEDED by the 2026-08-26 entry — the front of house WAS traceable and the RFI WAS closable by measurement. The bullet below over-applied a good instinct.** Where the trace ends and the RFI begins — and how to tell the difference.** The three front-of-house spaces
   (Waiting 100 / Admin 101 / Break 125) resolve to a residual of **626–879 SF** depending on whether A0's 2,797 SF
   or the lease's 2,544 SF governs. **The entire 253 SF discrepancy lands inside that one space — 34% of it** — while
   every traced room closes to ~0.05%. A polygon carrying a 34% band is not a measurement. **When the unresolved
@@ -243,6 +243,38 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   linear ones.** Areas got the check; the polyline did not, and that is exactly where the defect was.
 - **State after run: 64 parameters, 11 geometry-anchored** — 23 rooms wall-to-wall (1,918.4 SF), east exterior wall
   54.5 LF, trade markers on P1 and M1. South perimeter withdrawn pending a correct glazing trace.
+
+
+### 2026-08-26 — Job 2026-374 — TAKEOFF COMPLETED; THE MEASUREMENT CLOSED THE RFI — Claude
+- **⚠ CORRECTS the 2026-08-25 (b) entry.** That entry argued the three front-of-house spaces should NOT be traced,
+  because the A0-vs-lease spread was 34% of the residual. **That reasoning conflated two different things.** A traced
+  polygon measures **the drawing**; the RFI is about **which stated basis is correct**. Measuring the drawing does not
+  require the RFI to be settled — and here it *settled* it. **When sources disagree about an area, measuring is the way
+  to adjudicate, not a thing to postpone until they agree.**
+- **Result: the whole suite is now traced wall-to-wall.** 23 rooms 1,918.4 SF + front of house 675.1 SF (one 38-vertex
+  polygon; Waiting/Admin/Break are divided only by casework, so one polygon is the honest unit) = **2,593.5 SF total**.
+  Against the two stated figures: **lease 2,544 SF → +1.9%** (ordinary usable-vs-rentable), **A0 code summary 2,797 SF
+  → −7.3%**. The lease is corroborated; A0 is materially high. Three line items had been priced on 2,797 (final
+  cleaning, selective demolition, sprinkler) = **~$1,475 direct** overstated.
+- **How the correct storefront line was finally isolated, after Guard #14 killed the first attempt.** Not by chaining —
+  chaining is what picked the canopy. By **spacing signature, per panel**: glazing carries a ~1.1 pt twin (glass faces
+  at 13.5 pt/ft), solid piers carry the ~5.5 pt partition twin, and single lines with neither twin are canopy, curb or
+  furniture. The run alternates glass and pier, so **assemble panel by panel and let the twin spacing classify each
+  one**, rather than looking for one filter that spans the whole face.
+- **The closure test is the acceptance criterion, and it is cheap.** The accepted chain starts at (435, 1197) — where
+  the west exterior wall's verified face 423.7 terminates at y=1191.6 — and ends at (1089.5, 1007.2), on the east wall's
+  verified inner face 1090.4. **Both ends landing on independently verified wall faces is what promotes a candidate
+  from plausible to correct.** The withdrawn canopy chain failed exactly this test at its west end (x=400.4).
+- **Overlay-verify caught the difference in one image.** Drawing all three candidates in different colours over the
+  sheet — accepted enclosure, the 7-ft parallel pair, the canopy — showed instantly that the middle candidate ran
+  *inside a bench* and the canopy ran *outside the building*. **Render competing candidates together; the wrong one is
+  obvious in a way no coordinate listing makes obvious.**
+- **Non-convex is fine.** The front-of-house polygon includes a V-notch where the entry vestibule projects. Shoelace
+  handles it; JobTread renders and stores it without complaint. Do not simplify a notch away to keep a polygon convex —
+  the notch was ~30 SF here.
+- **State after run: 13 geometry-anchored parameters, every named space on the sheet measured.** No space on A1 is now
+  un-traced. The only remaining open item is unrelated: E1 is not uploaded to JobTread, so the electrical counts stay
+  value-only, and that is where the +1 junction-box discrepancy sits (takeoff 31 vs 32 tags).
 
 
 ### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
