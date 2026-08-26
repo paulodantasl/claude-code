@@ -134,6 +134,7 @@ global types by name (`parameters`, `plan`).
 | 29 | "Exhaust fans integral" treated a factory INTEGRAL DISCONNECT as satisfying a required wall CONTROL switch — two devices, two locations | When a schedule note and a plan keynote both name a device, they are naming a device. Reconcile keynotes per sheet the way you reconcile schedules |
 | 30 | Every DERIVED figure downstream of the bid was stale — waterfall, sensitivity, GMP delta, row counts — while `validate_estimate.py` passed 0 FAIL throughout, because it checks the ESTIMATE, not the DOCUMENTS | Check the two halves separately. Write a script that recomputes the waterfall from source and verifies every published table against it, and gate the commit on it |
 | 31 | A find-and-replace on the headline bid dragged the REVISION LOG's "was" figures forward until it misstated its own history | The revision log is the one place that must never be swept. Exclude it from global replaces, and treat a dated audit the same way — mark it superseded, never update it |
+| 32 | Nearly rebuilt a FULL-REPLACE payload on a saved local copy that was 7 name-revisions behind the live record — first entry matched verbatim, so it looked authoritative | A local copy of a remote record is NOT the record. Diff the whole thing against a fresh read before using it as a base; a matching first entry is what makes a stale mirror convincing |
 
 ## 7. What good looks like (reference result)
 
@@ -920,6 +921,40 @@ NOT be swept forward — *a dated audit that gets updated stops being evidence o
 
 **Where it lands.** Bid **$1,043,566** unchanged by this pass — nothing here was a pricing error.
 Six axes now: geometry, specification, schedule, general notes, keynotes, **derived documents**.
+
+### 2026-08-26 (l) — Job 2026-374 — PUSHED THROUGH TO JOBTREAD, AND A STALE MIRROR THAT ALMOST WON — Claude
+
+The takeoff is live on the job record: **78 → 87 parameters, 23 geometry-anchored, all intact**,
+verified by read-back rather than by the mutation's return value (`updateJob` returns success even
+when it silently discards what you sent — guard table, `measurements: []`).
+
+The nine added are the specification and keynote findings that had been living only in the line items:
+duct liner 860 SF, plumbing systems testing, domestic-water sterilisation, NFPA 99 dental-gas
+certification, electrical identification, spare filter sets, escutcheons, the 260573 coordination
+study, and the exhaust fan control switches. Each names its governing sheet and section, so the job
+record carries the *why*.
+
+**The near-miss is the reason for this entry.** `parameters` is full-replace with no append, so the
+write must re-send everything, which means starting from a copy of what is already there. The obvious
+base was `params_v10.json` — the payload from the last write, 78 parameters, 23 geometry-anchored,
+**first entry matching live verbatim.**
+
+**It was not the live state.** A later write had revised seven names. Publishing v10 + 9 would have
+silently reverted **the guard-16 face-to-far-face corrections and the guard-15 Equip/IT split note** —
+the two hardest-won findings of the entire geometry pass — while looking like a pure addition. Every
+value was identical, so no total would have moved and **no check anywhere would have caught it.**
+
+What caught it was a single spot-check probe on a randomly chosen parameter that came back MISSING.
+
+**Guard #32: a local copy of a remote record is not the record.** Diff the whole thing against a fresh
+read before using it as a base. A matching first entry is not evidence — it is precisely what makes a
+stale mirror convincing.
+
+This is the same shape as guards 27, 28 and 31 one more time, now pointed at a remote system rather
+than a document: **the copy drifts, the copy looks fine, and the check you would naturally run passes.**
+Four instances in one review is not four coincidences; it is a class. The general form:
+**anything derived from a source must be regenerated from that source and verified against it, never
+patched from memory of what it used to contain.**
 
 ### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
 - **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
