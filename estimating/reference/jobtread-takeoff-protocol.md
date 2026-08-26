@@ -121,6 +121,8 @@ global types by name (`parameters`, `plan`).
 | 16 | "Matches the printed dimension exactly" *was* the error — the printed chain runs face-to-far-face | Decide the wall reference once (room-side face); classify every edge against its pair, not against the printed dim |
 | 17 | The font-size discriminator cuts BOTH ways — over-count (legend key at 12.57 pt) and under-count (device filter excluded 6.17 pt) | Histogram tags by font size, then RENDER A SAMPLE OF EVERY BAND before deciding which bands are devices |
 | 18 | A scaled plan with no measurements looked "done" because it still carried its upload filename | Diff the set of scaled plans against the set of plans carrying geometry; query `plans` with `size: 60` |
+| 19 | Called a stated area "8.1% HIGH" and published it — it was a different reference, not an error | Before declaring any stated quantity wrong, RE-DERIVE it on its own convention. A0's 2,797 SF reproduces to 0.08% by offsetting the traced rooms to wall centrelines |
+| 20 | A plan-wide assumption ("the floor is LVT") survived because no one opened the room finish SCHEDULE | Read the schedule, not just the plan graphic. 5 of 26 rooms were CONC or VCT; the LVT line said "net room area" and had never been netted |
 
 ## 7. What good looks like (reference result)
 
@@ -534,6 +536,50 @@ the trades themselves did.
   direct $806,102 → **$803,773**, bid $1,028,865 → **$1,025,931**; `validate_estimate.py` 0 FAIL with
   the xlsx tie-out passing.
 
+
+### 2026-08-26 (d) — Job 2026-374 — I CALLED A CORRECT DRAWING WRONG (Guard #19) — Claude
+
+The previous entry recorded that A0's 2,797 SF "project area" measured **8.1% high** against a traced
+2,570.8 SF, and that finding went into a client bid proposal, the JobTread parameters and a PR body
+before it was checked. **It was wrong. A0 is correct.**
+
+- **What A0 actually is.** Its code summary breaks 2,797 SF into **Business 2,355 + Waiting 282 +
+  Break 160** — a Revit room-area schedule, and Revit computes room areas at **wall centrelines**.
+  Offsetting every traced room polygon outward by half a 4-7/8″ partition (2.82 pt at 13.5 pt/ft)
+  and re-summing gives **2,794.7 SF against A0's 2,797 — 0.08% apart.**
+- **So there was never a discrepancy at all**, only three references for the same 25 spaces: clear
+  2,570.8 SF, centreline 2,797 SF, lease demise 2,544 SF (1.0% under clear, where a usable-area
+  demise belongs). All three are right, each for its own purpose — A0 uses the centreline figure for
+  an FBC Ch. 10 occupant-load calc, which is exactly what it is for.
+- **Guard #19 (new): before declaring a stated quantity wrong, re-derive it on its own convention.**
+  A one-line offset calculation would have caught this before publication. The tell was there in the
+  arithmetic and I did not look: the gap was **226.2 SF**, and 431 LF of partition at 0.406 ft is
+  **175 SF** of footprint, with the rest half the perimeter wall — that is a basis difference, not
+  an error. **A number that is off by exactly a wall thickness is a reference problem, and reference
+  problems are reconciled, not adjudicated.**
+- **The requantifications survive, for a better reason.** Six line items were still on the wrong
+  basis, because final cleaning, selective demolition, NFPA 13 sprinkler coverage, LVT, floor
+  levelling and sealed concrete are all **floor** items and floor work is bought by the clear area.
+  The money does not change; the justification changes from "A0 is wrong" to "these are floor items
+  and A0 is a centreline figure."
+
+**A6 Finish Plan — read the schedule, not just the plan (Guard #20).** A6 carries a full Room Finish
+Schedule and it does not say LVT everywhere: **107 IT, 108 Equip, 117 and 119 Storage are CONC, and
+110 Pano is VCT-1.** The LVT line was labelled *"NET room area"* and had never been netted for any of
+them — **2,502 → 2,310 SF**, with floor levelling following its own note to 2,349 SF and sealed
+concrete measuring 221 SF against 244. Base is B-1 in every room including the CONC ones; measured
+gross room perimeter is **1,053.5 LF** against the 1,092 assumed, but the carried 944 LF was **left
+alone** — the defensible deduction band (837–996 LF, depending on storefront glazing and casework)
+is wider than the correction would be, and churning a quantity inside its own uncertainty is noise.
+
+**A2 and A0 checked and clean.** A2's Equipment Schedule (102800) is 16 tags with a furnish/install
+column; every CF/CI item is already priced and the OF/CI items correctly carry only blocking, mounts
+and power. A0's remaining content — 46 occupants, two exits, 71′ max travel against 300′ allowed —
+is already carried.
+
+**State after run: 78 parameters, 23 geometry-anchored**, across A1 / P1 / M1 / E1 / E2 / E3 / FP1 /
+MEP6. Direct **$806,102 → $801,789**; bid **$1,028,865 → $1,023,360**; `validate_estimate.py` 0 FAIL
+with the xlsx tie-out passing.
 
 ### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
 - **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
