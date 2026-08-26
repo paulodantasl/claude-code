@@ -277,6 +277,31 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   value-only, and that is where the +1 junction-box discrepancy sits (takeoff 31 vs 32 tags).
 
 
+### 2026-08-26 (b) — Job 2026-374 — DELAYED RECOMPUTE: an immediate read-back cannot verify geometry — Claude
+- **Corrects a conclusion drawn earlier in this run.** After a geometry write I read the job straight back, saw my own
+  rounded number echoed (`79.67` for Corridor 106), and concluded JobTread *stores* what you send rather than
+  recomputing. **Wrong.** A read six hours later returns `79.6703978052126`. The server DOES recompute from geometry ×
+  plan scale — **the recomputed value simply is not there yet on an immediate read.**
+- **Consequence for the protocol: an immediate read-back is NOT a verification of a geometry-anchored measurement.**
+  It only proves the write was accepted. It cannot distinguish a correct polygon from a wrong one, because at that
+  moment the value on the server is still the number you supplied. Verify geometry by **overlay against the sheet**
+  (§4 step 6), and treat a later read as the arithmetic cross-check.
+- **That later read is worth waiting for, because it is a genuinely independent check.** JobTread's own engine,
+  using the stored scale 44.29133858, reproduced every value computed locally by shoelace / chain length:
+  front of house 675.080301783266, enclosure run 73.6204858317247 LF, east wall 54.4592592592593 LF,
+  Corridor 106 79.6703978052126, Admin Storage 102 53.9390946502056. **Agreement to 12 significant figures on a
+  38-vertex non-convex polygon confirms the coordinate transform, the scale and the shoelace all at once** — a
+  free third-party audit of the whole geometry pipeline, available on any run, for the cost of one delayed read.
+- **Round only when you speak, never when you write.** Values sent rounded (675.1, 73.62) come back at full precision
+  once recomputed, so the rounding is discarded anyway — but summing *rounded* room values is what produced the
+  published total of 2,593.5 SF against a true 2,593.41 SF. Harmless here (0.09 SF), but sum the stored precise
+  values when a total is the deliverable.
+- **State: verified.** 23 rooms + front of house = 2,593.41 SF measured; lease 2,544 SF corroborated at +1.9%,
+  A0's 2,797 SF confirmed 7.3% high. A coverage sweep (every traced polygon overlaid on A1) found no un-traced space;
+  the duplicate "Lab 112" text in Corridor 122 is a leader label, not a missed room. E1 is still not uploaded, so the
+  electrical counts remain value-only and the +1 junction-box discrepancy stays open.
+
+
 ### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
 - **Scope:** full-system accuracy audit. JobTread leg: re-derived every measurement
   value from raw annotation geometry (shoelace areas, polyline lengths, marker counts)
