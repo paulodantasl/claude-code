@@ -956,6 +956,21 @@ Four instances in one review is not four coincidences; it is a class. The genera
 **anything derived from a source must be regenerated from that source and verified against it, never
 patched from memory of what it used to contain.**
 
+**The takeoff went; the budget deliberately did not, and that divergence is now documented.** The
+job's money side holds **277 cost items last touched 11 Aug** — before this takeoff started — as
+coarse lump sums, with customer orders at **$595,036 / $540,956** against our **$1,043,566**. It is
+stale for the same reason the prior GMP was: it predates the full 38-sheet MEP set.
+
+`updateJob.lineItems` is full-replace-shaped exactly like `parameters` — existing items are kept by
+**id**, so anything omitted is deleted — and those 277 items are referenced by **44 documents,
+including four approved bid requests and a vendor bill.** Overwriting the budget could sever those
+links irreversibly. A non-destructive alternative exists (`createDocument`, a NEW estimate document
+leaving the budget intact); it was offered, and the decision was **takeoff only**.
+
+**Recording the divergence is the deliverable when you decline to write.** Anyone reading a dollar
+figure off that job record is reading a stale pre-MEP number, and the takeoff now says so in bold
+next to the comparison. **A gap you chose to leave is only safe if the next person can see it.**
+
 ### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
 - **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
   **94.4%** of nominal ¼″ — apparent 40′ spans measured 680 pt, not 720. Solved
