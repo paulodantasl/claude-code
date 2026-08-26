@@ -132,6 +132,8 @@ global types by name (`parameters`, `plan`).
 | 27 | A withdrawn finding ("A0 is 8.1% high") was corrected in the narrative but left standing, as fact, in two line-item basis notes | A retraction is not complete until every DERIVED copy is gone. Grep the withdrawn claim across every deliverable, not just the document that argued it |
 | 28 | A published cost-by-division table still summed to a 262-row, $806,101 state three revisions later — 9 of 19 divisions wrong — while its OWN arithmetic stayed perfect | A stale table that is internally consistent is harder to spot than a broken one: every check inside it passes. REGENERATE derived tables from the source; never patch them |
 | 29 | "Exhaust fans integral" treated a factory INTEGRAL DISCONNECT as satisfying a required wall CONTROL switch — two devices, two locations | When a schedule note and a plan keynote both name a device, they are naming a device. Reconcile keynotes per sheet the way you reconcile schedules |
+| 30 | Every DERIVED figure downstream of the bid was stale — waterfall, sensitivity, GMP delta, row counts — while `validate_estimate.py` passed 0 FAIL throughout, because it checks the ESTIMATE, not the DOCUMENTS | Check the two halves separately. Write a script that recomputes the waterfall from source and verifies every published table against it, and gate the commit on it |
+| 31 | A find-and-replace on the headline bid dragged the REVISION LOG's "was" figures forward until it misstated its own history | The revision log is the one place that must never be swept. Exclude it from global replaces, and treat a dated audit the same way — mark it superseded, never update it |
 
 ## 7. What good looks like (reference result)
 
@@ -868,6 +870,56 @@ is a takeoff finding, and leaving it unsaid is how a soft number gets read as a 
 **Where it lands.** Direct $806,102 → **$817,844**; bid $1,028,865 → **$1,043,566**. Five axes
 enumerated: **geometry, specification, schedule, general notes, keynotes**. Two RFIs stay open and
 both are the EOR's call: NEC 517.13 patient-care grounding (~$1,900) and MEP6 keynote DP03 (~$505).
+
+### 2026-08-26 (k) — Job 2026-374 — THE ESTIMATE WAS RIGHT AND THE DOCUMENTS WERE WRONG — Claude
+
+Five passes had asked *"is the estimate right?"* This one asked the other question: **do the documents
+still say what the estimate says?** They did not, and `validate_estimate.py` had been returning
+**0 FAIL** the whole time — correctly. It checks that the ESTIMATE is sound. Nothing was checking
+that the DOCUMENTS still matched it. **Those are two different jobs and I had only been doing one.**
+
+Stale, all of it derived, none of it a quantity or a unit price: the markup waterfall in both
+documents (tax $19,929 vs $19,990, contingency $99,124 vs $100,540, insurance $10,177 vs $10,322,
+OH&P $93,533 vs $94,870), the markups total, all three contingency-sensitivity scenarios, the
+capital-at-risk figure, the prior-GMP reconciliation delta (+$218,491/+27.0% against a bid that no
+longer existed), and the line-item count in seven places.
+
+**Two failure shapes, and they behave completely differently.**
+
+- **Self-consistent stale.** The division table's loaded column stayed exactly its direct × its markup
+  factor three revisions after both were wrong. Nothing inside it disagreed with anything else inside
+  it. Reading it more carefully would never have caught it.
+- **Broken endpoints.** The waterfall's first and last rows got swept; the middle rows did not. It
+  published a running total that did not connect to its own inputs, and a sentence asserting
+  *"Waterfall foots: A + B + C + D + E = $1,043,566"* **when those five summed to $2,959 less.**
+
+**And the sweep rewrote history.** The revision log is the one place that must record what the old
+numbers were, and successive find-and-replaces had dragged its "was" figures forward until the entry
+read *"Base bid $1,041,321 → $1,043,566, direct $816,102 → $817,844"* — describing a revision that
+actually landed at $1,028,865 / $806,102. **Guard #31.**
+
+**Guard #30: check the two halves separately, and do it with a script.** Wrote
+`estimating/scripts/verify_documents.py`: recompute direct, waterfall and bid from
+`lineitems.csv` + `markups.csv`, then verify every bid-quoting document carries the current bid,
+every waterfall row matches amount AND running, every division table sums to direct with matching row
+counts, every "A + B + … = C" sentence adds up, every was/now/delta row is self-consistent, and every
+sensitivity scenario recomputes from its own stated rates. Non-zero exit so it can gate a commit.
+**0 FAIL / 23 PASS**, negative-tested by reintroducing the stale GMP delta, which it caught.
+
+**One check was removed rather than fixed, and that is the part worth remembering.** The first version
+flagged *"any seven-figure value near the bid not marked historical."* It produced mostly false
+positives — an all-alternates total, a sensitivity scenario, the old value in a was/now row are all
+legitimately different quantities. **That is guard 22, committed by my own tool.** Replaced with exact
+relationship checks. A verifier that cries wolf trains you to ignore it, which is worse than not
+having one.
+
+**The audit report is now marked superseded, not updated.** It is dated, audits the $1,028,865 /
+262-line revision, and carried a live FAIL verdict. All eight findings (C-1, M-1…M-7) were
+re-verified and **all eight are closed**. A banner says so and says explicitly that its figures must
+NOT be swept forward — *a dated audit that gets updated stops being evidence of anything.*
+
+**Where it lands.** Bid **$1,043,566** unchanged by this pass — nothing here was a pricing error.
+Six axes now: geometry, specification, schedule, general notes, keynotes, **derived documents**.
 
 ### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
 - **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
