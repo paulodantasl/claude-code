@@ -129,6 +129,7 @@ global types by name (`parameters`, `plan`).
 | 24 | "Implied and not scoped" was recorded for work that had a dedicated full spec section (MEP4 = 260573, an entire sheet) | "Implied" is a claim to verify, not a conclusion. Before inferring scope from a schedule note, go find the section that mandates it |
 | 25 | Raised an RFI for a "missing" sheet SED.3 — every detail it supposedly held was on SED.2, and 14 of OUR OWN citations pointed at the wrong sheet | Resolve the reference before raising the RFI. A citation to a sheet not in the set is evidence of a bad citation at least as often as evidence of a missing document |
 | 26 | A volunteered alternate carried a **$500 engineer review fee printed on the same sheet as the fixture schedule**, turning a published $572 deduct into $72 | A drawing sets COMMERCIAL terms as well as technical ones. Read substitution, alternate and bid-form notes as priced scope — a fee that attaches to something you volunteered is a cost you chose |
+| 27 | A withdrawn finding ("A0 is 8.1% high") was corrected in the narrative but left standing, as fact, in two line-item basis notes | A retraction is not complete until every DERIVED copy is gone. Grep the withdrawn claim across every deliverable, not just the document that argued it |
 
 ## 7. What good looks like (reference result)
 
@@ -769,6 +770,46 @@ sheet traced and overlay-verified), **specification** (every sheet cited three o
 **schedule** (every mark on every schedule reconciled). Two RFIs remain open and both are genuinely
 the EOR's call, not mine: NEC 517.13 patient-care grounding (~$1,900 if the operatories are Category
 1 or 2) and MEP6 keynote DP03 (~$505 if it is a second waste stub to cap).
+
+### 2026-08-26 (i) — Job 2026-374 — THE FOURTH AXIS, AND A RETRACTION THAT DID NOT TAKE — Claude
+
+Entry (h) closed the schedule axis and claimed three axes were enumerated. There was a fourth:
+**the general-notes block**. Each discipline publishes exactly one, stamped *"(TYPICAL ALL SHEETS)"* —
+M3 for mechanical, P5 for plumbing, E6 for electrical, FP1 for fire protection — so four blocks govern
+all 31 engineering sheets, and reading them is cheap once you know that.
+
+Three of the four were clean. E6's is the densest on the job (notes A through V) and is where the
+ALT-9 review fee in entry (h) came from; everything else on it reconciles, including the full fire
+alarm modification scope and the 15 dBA-above-ambient audibility verification with horns added as
+required.
+
+**Four apparent gaps came out of the grep and all four were correctly not separate scope** — guard 22
+applied to my own output rather than to someone else's schedule. Rated box enclosures were already
+inside the firestopping allowance under different wording. Fire cap housings at rated *ceilings* are
+zero because the rated assembly here is a **wall**. Existing-device replacement is inapplicable to a
+bare first-generation shell. Dry sidewall at vestibules was already a *documented zero* in the
+takeoff — my grep had searched the line items and the answer was in the other file. **Four for four
+is the expected outcome of a good process, and worth recording as such:** a reconciliation that finds
+nothing is evidence, not wasted effort.
+
+**What the pass did find was mine.** Two rows of `lineitems.csv` still asserted, as fact, that
+*"A0 is 8.1% high"* — the claim withdrawn in entry (e) when A0 turned out to be a correct centreline
+figure. The narrative had been corrected everywhere. The **derived basis notes had not**, and those
+are the text a client reads sitting next to a price. Both rewritten; no quantity or price moved.
+
+**Guard #27 (new): a retraction is not complete until every derived copy is gone.** I corrected the
+document that made the argument and never grepped the withdrawn phrase across the deliverables that
+had quoted it. The fix is mechanical and takes one command: **grep the withdrawn claim itself, not the
+document that carried it.**
+
+That is the third time in this review the same shape has appeared — publish, then verify. Guard 19
+(A0), guard 25 (SED.3), guard 27 (the retraction). The through-line is not carelessness about facts;
+it is **treating "I have corrected this" as an event rather than as something to check**.
+
+**Where the takeoff stands.** Four axes enumerated and reconciled: **geometry**, **specification**,
+**schedule**, **general notes**. Base bid $1,042,947. Two RFIs remain open and both are genuinely the
+EOR's call: NEC 517.13 patient-care grounding (~$1,900 if the operatories are Category 1 or 2) and
+MEP6 keynote DP03 (~$505 if it is a second waste stub to cap).
 
 ### 2026-07-04 (2) — Job 2025-227 — SF + Roof (A2.0, 04.10 A0.0 set) — Claude
 - **Off-scale plot detected & calibrated (§4.1 guard validated):** the A2.0 sheet plotted at
