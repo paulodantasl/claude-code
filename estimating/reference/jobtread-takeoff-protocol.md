@@ -137,6 +137,12 @@ global types by name (`parameters`, `plan`).
 | 32 | Nearly rebuilt a FULL-REPLACE payload on a saved local copy that was 7 name-revisions behind the live record — first entry matched verbatim, so it looked authoritative | A local copy of a remote record is NOT the record. Diff the whole thing against a fresh read before using it as a base; a matching first entry is what makes a stale mirror convincing |
 | 33 | Hand-assembling a 68 KB full-replace payload SILENTLY DROPPED a parameter (a 110-point light-fixture trace). The mutation returned success; 87 went in as 86 | On a full-replace API an omission IS a deletion. Never transcribe a generated payload by hand without a read-back that DIFFS the result against the intended file by name — a count alone would have caught this, a spot-check would not |
 | 34 | Face-pairing at the wall lineweight returned 617 LF of "partition" against a carried 431; the overlay showed CASEWORK drawn at the same 1.08 weight | Lineweight is not a layer. Before trusting a geometric filter, render it over the sheet and look — the counter runs are the same weight as the walls that carry them |
+| 35 | Three methods disagreed on partition LF because none of them could separate a wall from a countertop. The sheet drew every NEW partition as a **50%-grey filled rect** (`fill = 0.498`) and nothing else on the sheet carries that fill | **Ask what the drafter used to SAY "this is a wall."** Lineweight is shared with casework, layers are flattened away, and a room-boundary test cannot see an open front. Enumerate `fill`/`color`/`stroke` **as data** before inventing a geometric heuristic — the poché was one query and it was exact |
+| 36 | The first poché total was 837 LF against a carried 431 — almost exactly double. The sheet draws the **same floor plan twice**, offset 1,147.44 pt = **85.00 ft exactly**; 37 of 45 rects matched verbatim under the shift | A sheet can carry the same plan more than once. Every raw-geometry total off it is a multiple of the truth until you find the offset. **A round number in the offset (85.00 ft) is the duplicate announcing itself** — check for it before believing any sheet-wide total |
+| 37 | A 45° partition came back from the PDF library as a **121.92 × 126.24 pt axis-aligned square**, which I dismissed as a graphic block on the geometry alone | A rotated rectangle is reported as its **axis-aligned bounding box**. A near-square whose diagonal (bbox × √2, less one wall thickness) equals a **printed dimension** is a band, not a block — here 12.81 ft against a printed 12′-10″ |
+| 38 | I "confirmed" that exclusion by rendering the region and seeing ordinary plan content. **The render was of the wrong place** — shapes draw in the page's *unrotated* space, `get_pixmap` clips in the *rotated display* space, and I reused the derotated coordinates as the clip | Draw space and clip space are not the same space. **A render that DISPROVES something must be calibrated on a known object first**, or it disproves whatever happens to be in frame. One render of a known-good bbox is the whole cost |
+| 39 | 24 room polygons summed to the published area and their **union was 1.95 SF smaller** — two rooms overlapped. Chasing it found **six** room edges sitting on dimension lines instead of walls; the clear plate was **2.1% low** and one room was 38% low | **Sum is not union.** And a hand-traced room cannot be checked until the thing it is supposed to touch has been measured: once the walls were objects, every edge could be reconciled against a poché face, the shell, or a zero-gap neighbour — and what does not reconcile is an edge on an annotation |
+| 40 | The published proof that "A0 is a wall-centreline figure" (2,794.7 vs 2,797, 0.08%) **did not survive** the geometry correction — it had agreed only because the polygons were low | A reconciliation that closes is evidence, not proof — **compensating errors close too**. Re-run every published agreement after any input to it moves, and prefer the reconciliation that matches the source's own DEFINITION (FBC "floor area, gross" = clear + interior wall footprint, which closed at 0.25%) over one that merely lands close |
 
 ## 7. What good looks like (reference result)
 
@@ -1053,3 +1059,30 @@ and the only reason it was recoverable is that the intended payload existed on d
   values advisory; ± tolerances into names; one text note per plan.
 - **Open for next run:** cost-item wiring; SF/roof pass; cdn.jobtread.com allowlist
   request pending; door/window schedule still absent from design set (± on counts).
+
+### 2026-08-27 — Job 2026-374 (Advantage Dental+, Wesley Chapel) — partitions, and what they proved — Claude
+- **(n) The last bare parameter converted, and it changed the floor plate.** The three failed
+  partition methods (guard #34) all shared one blind spot: they asked what a wall *looks* like.
+  A1 draws every new partition as a **50%-grey filled rect** — 92 of them, two thicknesses, casework
+  never poché'd. **431.56 LF** by centreline network, **416.4 LF** by poché-area ÷ 4-7/8″, against a
+  carried **431 LF**. Guards **#35** (the fill is the answer), **#36** (the sheet draws the plan
+  twice, 85.00 ft apart), **#37** (a rotated rect reports as its bbox), **#38** (I "disproved" it by
+  rendering the wrong place — draw space ≠ clip space).
+- **Then the walls audited the rooms.** With partitions finally measured, two checks became
+  possible for the first time: **sum vs union** (1.95 SF of overlap), and **every room edge against
+  a poché face**. Six edges were sitting on **dimension lines**. Office 103 was **38% low**; the
+  clear plate was **2.1% low** (2,570.8 → 2,624.7 SF). Every correction is confirmed by a printed
+  dimension face-to-far-face, and **none of them closed on the old geometry**. Guard **#39**.
+- **A published proof died.** "A0 is centreline, 2,794.7 vs 2,797, 0.08% apart" agreed only because
+  the polygons were low. The correct reading is the code's own — **FBC "floor area, gross"** =
+  clear + interior wall footprint = **2,804.1 vs 2,797, 0.25%** — and the old geometry gives 1.68%
+  on that identity. Guard **#40: compensating errors close too.**
+- **Carried through:** 7 line-item quantities, direct $817,844 → $819,092, bid $1,043,566 →
+  **$1,045,164**. `validate_estimate.py` 0 FAIL; `verify_documents.py` **0 FAIL / 23 PASS** after
+  regenerating both division tables, both waterfalls and the sensitivity scenarios from source.
+- **JobTread:** two verified full-replace writes (87 parameters, 27 geometry-anchored, 706
+  annotations), each read back and diffed by name, value, measurement count and every coordinate —
+  **zero mismatches** both times.
+- **Open for next run:** partition-DERIVED quantities (GWB, batts, paint, sealant) are still LF ×
+  height and were not re-derived — the LF moved 0.13%, inside their own rounding. The two EOR RFIs
+  stand. The JobTread **budget** is still the 11 Aug pre-MEP number and was deliberately not touched.
