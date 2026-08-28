@@ -57,6 +57,18 @@ Skills, and a CSI-organized knowledge base. See [`estimating/`](./estimating/REA
 for what it does, and [`estimating/INSTALL.md`](./estimating/INSTALL.md) to install it
 locally or upload it to claude.ai.
 
+## Public API integrations (`ideal_apis/`)
+
+Tier 1 & 2 public APIs (NPPES, Smarty, weather, USAspending, Socrata, etc.) are
+wrapped in a unified Python client and CLI. See [`ideal_apis/README.md`](./ideal_apis/README.md).
+
+```bash
+cd ideal_apis && python3 -m venv .venv && .venv/bin/pip install -e .
+cp .env.example .env   # add API keys for paid services
+.venv/bin/ideal-api list
+.venv/bin/ideal-api call leads dentists --limit 5
+```
+
 ## Reporting Bugs
 
 We welcome your feedback. Use the `/bug` command to report issues directly within Claude Code, or file a [GitHub issue](https://github.com/anthropics/claude-code/issues).
