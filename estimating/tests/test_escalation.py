@@ -140,7 +140,10 @@ def test_never_emits_a_fail():
         assert "FAIL" not in levels(rows)
 
 
-# --------------------------- wiring into the validator ---------------------------
+# --------------------------- the live fallback ---------------------------
+#
+# These cover --escalation-live. The default path reads the committed snapshot and
+# is covered in test_snapshot.py.
 
 def _stub_ideal_apis(monkeypatch, client):
     """Install a minimal fake ideal_apis, matching what check_escalation imports."""
@@ -166,7 +169,7 @@ def test_check_escalation_survives_a_broken_client(monkeypatch):
             raise RuntimeError("network unreachable")
 
     _stub_ideal_apis(monkeypatch, Boom)
-    validate_estimate.check_escalation(rep, 0.5, 3.0, 90, "construction_materials", 12)
+    validate_estimate.check_escalation(rep, 0.5, 3.0, 90, "construction_materials", 12, live=True)
     assert [r[0] for r in rep.rows] == ["INFO"]
     assert "FRED unreachable" in rep.rows[0][2]
 
@@ -185,7 +188,7 @@ def test_check_escalation_names_the_missing_key(monkeypatch):
             raise holder["exc"]("FRED requires IDEAL_FRED_KEY")
 
     holder["exc"] = _stub_ideal_apis(monkeypatch, NoKey)
-    validate_estimate.check_escalation(rep, 0.5, 3.0, 90, "construction_materials", 12)
+    validate_estimate.check_escalation(rep, 0.5, 3.0, 90, "construction_materials", 12, live=True)
     assert rep.rows[0][0] == "INFO"
     assert "IDEAL_FRED_KEY not set" in rep.rows[0][2]
 
@@ -202,7 +205,7 @@ def test_check_escalation_reports_a_real_read(monkeypatch):
         market = type("M", (), {"escalation": staticmethod(lambda *a, **kw: read)})()
 
     _stub_ideal_apis(monkeypatch, Client)
-    validate_estimate.check_escalation(rep, 0.5, 3.0, 180, "construction_materials", 12)
+    validate_estimate.check_escalation(rep, 0.5, 3.0, 180, "construction_materials", 12, live=True)
     assert "WARN" in {r[0] for r in rep.rows}
     assert "WPUSI012011" in " ".join(r[2] for r in rep.rows)
 
@@ -211,7 +214,7 @@ def test_check_escalation_reports_when_ideal_apis_is_absent(monkeypatch):
     """No ideal_apis at all: say how to get the check, do not fail the run."""
     rep = validate_estimate.Report()
     monkeypatch.setitem(sys.modules, "ideal_apis", None)  # forces ImportError
-    validate_estimate.check_escalation(rep, 0.5, 3.0, 90, "construction_materials", 12)
+    validate_estimate.check_escalation(rep, 0.5, 3.0, 90, "construction_materials", 12, live=True)
     assert rep.rows[0][0] == "INFO"
     assert "ideal_apis not installed" in rep.rows[0][2]
 

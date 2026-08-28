@@ -56,9 +56,11 @@ ideal-api call market escalation --series construction_materials --months 12
 
 ## Escalation in the estimate validator
 
-`estimating/scripts/validate_estimate.py --escalation` uses `market.escalation()` to
-check a bid's carried contingency against the trailing move in a material price index.
-See [the estimating README](../estimating/README.md#escalation-check---escalation).
+`market.bid_exposure()` feeds `estimating/scripts/refresh_escalation.py`, which writes a
+committed snapshot that `validate_estimate.py` reads on every run — so every bid is
+checked against a current, cited index without a key or network at validation time. A
+scheduled workflow keeps the snapshot fresh and opens an issue when materials move.
+See [the estimating README](../estimating/README.md#escalation-check-automatic).
 
 ## Weather licensing
 

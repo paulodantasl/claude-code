@@ -195,9 +195,11 @@ Tier B:
 1. ~~Swap the commercial weather default to NWS, and route batch geocoding to the Census geocoder.~~
    **Done** — `weather job` and `geo batch-geocode`. No new keys; removes a licensing exposure and a
    metered bill.
-2. ~~Add `market` module — FRED.~~ **Done**, and wired into the estimate validator:
-   `validate_estimate.py --escalation` checks the carried contingency against the trailing index
-   move, scaled by material share and bid validity, and cites the series.
+2. ~~Add `market` module — FRED.~~ **Done**, and running autonomously: a monthly
+   `escalation-monitor` workflow refreshes a committed snapshot and opens an issue when materials
+   move; `validate_estimate.py` reads that snapshot on every run — no flag, no key, no network — to
+   check the carried contingency against the trailing index move, scaled by material share and bid
+   validity, citing the series.
 3. ~~Add `bidpackage` module — iLovePDF assembly + Smarty US Extract intake.~~ **Done** —
    `bidpackage assemble` and `address extract`.
 4. ~~Add `site` module — EPA Envirofacts, Open Topo Data, USGS Water Services, and FEMA NFHL as one

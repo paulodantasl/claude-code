@@ -70,29 +70,59 @@ python estimating/scripts/build_estimate_xlsx.py estimating/projects/<slug>/
 python estimating/scripts/validate_estimate.py estimating/projects/<slug>/ --sector <sector>   # deterministic QA
 ```
 
-### Escalation check (`--escalation`)
+### Escalation check (automatic)
 
-The validator can check the carried `contingency_pct` against the trailing move in a
-published material price index, so an escalation allowance is defended by a cited
-series instead of asserted:
+Every validator run checks the carried `contingency_pct` against the trailing move in
+a published material price index, so an escalation allowance is defended by a cited
+series instead of asserted. No flag, no API key, and no network are needed at
+validation time — it reads `estimating/data/escalation.json`, a snapshot refreshed on
+a schedule:
 
 ```
-python estimating/scripts/validate_estimate.py estimating/projects/<slug>/ \
-    --sector commercial --escalation --bid-validity-days 60
+                 monthly (or on demand)              every run, offline
+  FRED  ──────▶  refresh_escalation.py  ──────▶  escalation.json  ──────▶  validate_estimate.py
+                 (needs IDEAL_FRED_KEY)           (committed)              (needs nothing)
 ```
 
-It scales the index move by this bid's material share of direct cost and by the days
-the price is held, then compares that to the contingency line. It WARNs when
-escalation alone would consume the line, and cites the series and both endpoint
-observations so a reviewer can trace the number.
+The `escalation-monitor` workflow runs `refresh_escalation.py` monthly, commits the
+refreshed snapshot, and opens an issue when a cost-driving series moves faster than
+the alert threshold — so a price swing reaches you without anyone thinking to look.
 
-Opt-in and advisory by design: it never FAILs, and without `ideal_apis`, an
-`IDEAL_FRED_KEY`, or network it reports why it was skipped — so the default run stays
-a deterministic offline gate. Bid validity comes from `--bid-validity-days`, else a
-`bid_validity_days` row in `markups.csv`, else 30 days.
+**Setup:** add a free [FRED key](https://fred.stlouisfed.org/docs/api/api_key.html) as
+the `IDEAL_FRED_KEY` repository secret. Until the first refresh runs, the validator
+reports one INFO row saying the snapshot is missing and carries on. No placeholder
+data ships — see [`estimating/data/README.md`](./data/README.md).
 
-Requires the [`ideal_apis`](../ideal_apis/README.md) client (`pip install -e ideal_apis`)
-and a free key from fred.stlouisfed.org.
+**Reading the output.** It scales the index move by this bid's material share of
+direct cost and by the days the price is held, then compares that to the contingency
+line. It WARNs when escalation alone would consume the line, and cites the series and
+both endpoint observations so a reviewer can trace the number:
+
+```
+[INFO] escalation: material exposure 22% of direct × +26.0% drift over a 365-day bid
+       validity ⇒ 5.81% of bid. WPU081 2025-08-01 100.0 → 2026-08-01 126.0 (+26.0%/yr)
+[WARN] escalation: escalation alone needs ~5.81% but contingency_pct is 3.00% — the
+       line is fully consumed with nothing left for scope risk
+```
+
+Advisory by design: it WARNs, never FAILs, because it rests on a national index rather
+than this project's buyout. A snapshot older than 60 days WARNs before its number is
+used — PPI publishes monthly.
+
+**Manual runs and overrides:**
+
+```
+python3 estimating/scripts/refresh_escalation.py              # refresh the snapshot
+python3 estimating/scripts/validate_estimate.py <proj> --escalation-live    # skip the snapshot, query FRED
+python3 estimating/scripts/validate_estimate.py <proj> --no-escalation      # skip the check
+python3 estimating/scripts/validate_estimate.py <proj> --escalation-series lumber_wood \
+                                                       --bid-validity-days 60
+```
+
+Bid validity comes from `--bid-validity-days`, else a `bid_validity_days` row in
+`markups.csv`, else 30 days.
+
+Requires the [`ideal_apis`](../ideal_apis/README.md) client for the *refresh* step only.
 
 Tests: `python3 -m pytest estimating/tests/`
 
