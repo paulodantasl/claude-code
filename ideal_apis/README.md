@@ -145,3 +145,17 @@ Approval batches: `ideal_apis/data/approvals/YYYY-MM-DD.json`
 
 Cursor agents can push approved leads via JobTread MCP when `JOBTREAD_GRANT_KEY` is not set locally.
 
+## Autonomous health checks
+
+Probe every registered API integration (free APIs must pass; keyed APIs skip if no key):
+
+```bash
+ideal-api health                    # probe all 39 integrations (parallel, 30s/probe timeout)
+ideal-api health --tier 1           # tier 1 only
+ideal-api health --require-all-free # exit 1 if any free API fails
+ideal-api health --write-report     # saves data/output/health_report.json
+ideal-api health --timeout 30 -v    # verbose probe progress
+```
+
+Scheduled via `.github/workflows/api-health.yml` (weekdays). Keyed APIs show `skipped` until you set env vars from `ideal-api keys`.
+

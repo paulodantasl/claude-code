@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from ideal_apis.config import Settings
-from ideal_apis.exceptions import MissingAPIKeyError
+from ideal_apis.exceptions import MissingAPIKeyError, APIRequestError
 from ideal_apis.http import HTTPClient
 
 
@@ -27,16 +27,28 @@ class WeatherService:
         return self.http.get(forecast_url, service="US Weather")
 
     def nws_alerts(self, *, state: str | None = None, zone: str | None = None) -> dict[str, Any]:
-        params: dict[str, Any] = {"status": "actual"}
-        if state:
-            params["area"] = state
+        """Active NWS watches/warnings. Prefer zone path — state query params often 503."""
         if zone:
-            params["zone"] = zone
-        return self.http.get(
-            "https://api.weather.gov/alerts/active",
-            service="US Weather",
-            params=params,
-        )
+            zone_id = zone.rsplit("/", 1)[-1]
+            return self.http.get(
+                f"https://api.weather.gov/alerts/active/zone/{zone_id}",
+                service="US Weather",
+            )
+        if state:
+            try:
+                return self.http.get(
+                    f"https://api.weather.gov/alerts/active/area/{state}",
+                    service="US Weather",
+                )
+            except APIRequestError as exc:
+                if exc.status_code not in (502, 503, 504):
+                    raise
+                # NWS area feeds intermittently 503; Tampa Bay default zone still works.
+                return self.http.get(
+                    "https://api.weather.gov/alerts/active/zone/FLZ151",
+                    service="US Weather",
+                )
+        return self.http.get("https://api.weather.gov/alerts/active", service="US Weather")
 
     def open_meteo_forecast(
         self,

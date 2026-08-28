@@ -7,6 +7,7 @@ from typing import Any
 import click
 
 from ideal_apis.config import get_settings
+from ideal_apis.autonomy.runner import run_health_check, write_health_report
 from ideal_apis.pipeline.approvals import ApprovalBatch
 from ideal_apis.pipeline.apply import apply_jobtread, write_quo_queue
 from ideal_apis.pipeline.runner import DailyLeadPipeline
@@ -90,6 +91,8 @@ def show_keys() -> None:
         ("DistrictAPI", s.districtapi_key),
         ("Clockify", s.clockify_key),
     ]
+    import os
+    fields.append(("JobTread grant", os.getenv("JOBTREAD_GRANT_KEY")))
     for name, configured in fields:
         status = "set" if configured else "missing"
         click.echo(f"{name:<20} {status}")
@@ -265,6 +268,39 @@ def leads_approve_quo(
     _print_json(batch.summary())
     if changed:
         click.echo("\nNext: ideal-api leads apply quo")
+
+
+@main.command("health")
+@click.option("--tier", type=int, default=None, help="Probe tier 1 or 2 only")
+@click.option("--fail-fast", is_flag=True, default=False, help="Stop on first failure")
+@click.option("--write-report", is_flag=True, default=False, help="Save JSON report to data/output/")
+@click.option("--require-all-free", is_flag=True, default=False, help="Exit 1 if any free API fails")
+@click.option("--timeout", "timeout_s", default=45, show_default=True, help="Per-probe timeout (seconds)")
+@click.option("--verbose", "-v", is_flag=True, default=False, help="Print probe progress")
+def health_check(
+    tier: int | None,
+    fail_fast: bool,
+    write_report: bool,
+    require_all_free: bool,
+    verbose: bool,
+    timeout_s: float,
+) -> None:
+    """Autonomous health check — probe every registered API integration."""
+    report = run_health_check(tier=tier, fail_fast=fail_fast, verbose=verbose, timeout_s=timeout_s)
+    if write_report:
+        path = write_health_report(report)
+        click.echo(f"Report: {path}")
+    _print_json(report.to_dict())
+
+    failed_free = [
+        r for r in report.results
+        if r.status == "failed" and not r.requires_key
+    ]
+    if require_all_free and failed_free:
+        names = ", ".join(f"{r.group}/{r.name}" for r in failed_free)
+        raise click.ClickException(f"Free API probe(s) failed: {names}")
+    if report.failed and require_all_free:
+        raise SystemExit(1)
 
 
 @main.command("daily")
