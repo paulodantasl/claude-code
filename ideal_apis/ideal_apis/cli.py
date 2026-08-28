@@ -7,6 +7,7 @@ from typing import Any
 import click
 
 from ideal_apis.config import get_settings
+from ideal_apis.pipeline.runner import DailyLeadPipeline
 from ideal_apis.registry import get_command, list_groups
 
 
@@ -90,6 +91,26 @@ def show_keys() -> None:
     for name, configured in fields:
         status = "set" if configured else "missing"
         click.echo(f"{name:<20} {status}")
+
+
+@main.command("daily")
+@click.option("--push-jobtread", is_flag=True, default=False, help="Push high-priority leads to JobTread (needs JOBTREAD_GRANT_KEY)")
+@click.option("--dry-run/--live", default=True, show_default=True, help="JobTread push mode")
+@click.option("--skip-yelp", is_flag=True, default=False, help="Skip Yelp (no IDEAL_YELP_KEY)")
+@click.option("--config", "config_path", default=None, type=click.Path(exists=True), help="pipeline.yaml path")
+def daily_leads(push_jobtread: bool, dry_run: bool, skip_yelp: bool, config_path: str | None) -> None:
+    """Run the full daily lead pipeline (NPPES, OpenFEMA, weather, gov → ledger + CSV)."""
+    from pathlib import Path
+
+    pipeline = DailyLeadPipeline(
+        config_path=Path(config_path) if config_path else None,
+    )
+    result = pipeline.run(
+        push_jobtread=push_jobtread,
+        dry_run=dry_run,
+        skip_yelp=skip_yelp,
+    )
+    _print_json(result)
 
 
 @main.command("call", context_settings={"ignore_unknown_options": True, "allow_extra_args": True})

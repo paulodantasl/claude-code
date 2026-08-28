@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from ideal_apis.config import Settings
@@ -112,7 +112,7 @@ class WeatherService:
         days_back: int = 365,
         radius_deg: float = 0.25,
     ) -> Any:
-        end = datetime.utcnow()
+        end = datetime.now(timezone.utc)
         start = end - timedelta(days=days_back)
         bbox = (
             lon - radius_deg,

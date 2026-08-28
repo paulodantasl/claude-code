@@ -109,3 +109,33 @@ class GovernmentService:
             service="EPA",
             params=params,
         )
+
+    def openfema_disasters(
+        self,
+        *,
+        states: list[str] | None = None,
+        incident_types: list[str] | None = None,
+        days_back: int = 90,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        """Recent FEMA disaster declarations (OpenFEMA v2)."""
+        from datetime import datetime, timedelta, timezone
+
+        since = (datetime.now(timezone.utc) - timedelta(days=days_back)).strftime("%Y-%m-%d")
+        filters: list[str] = [f"declarationDate ge '{since}'"]
+        if states:
+            state_filter = " or ".join(f"state eq '{s}'" for s in states)
+            filters.append(f"({state_filter})")
+        if incident_types:
+            type_filter = " or ".join(f"incidentType eq '{t}'" for t in incident_types)
+            filters.append(f"({type_filter})")
+        odata_filter = " and ".join(filters)
+        return self.http.get(
+            "https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries",
+            service="OpenFEMA",
+            params={
+                "$filter": odata_filter,
+                "$orderby": "declarationDate desc",
+                "$top": limit,
+            },
+        )

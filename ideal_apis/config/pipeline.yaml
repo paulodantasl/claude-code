@@ -1,0 +1,69 @@
+# Daily lead pipeline — Tampa Bay metro (Hillsborough, Pinellas, Pasco)
+# Brands: ideal_cgc | ideal_dental | ideal_remodeling
+
+ledger_path: data/leads_ledger.json
+output_dir: data/output
+
+brands:
+  ideal_dental:
+    name: Ideal Dental Construction
+    site: idealdentalconstruction.com
+    email: tampa@idealcgc.com
+  ideal_cgc:
+    name: Ideal CGC
+    site: idealcgc.com
+    email: tampa@idealcgc.com
+  ideal_remodeling:
+    name: The Ideal Remodeling
+    site: theidealremodeling.com
+    email: office@theidealremodeling.com
+
+nppes_searches:
+  - brand: ideal_dental
+    taxonomy: Dentist
+    state: FL
+    cities: [Tampa, St Petersburg, Clearwater, Brandon, Lakeland, Sarasota]
+    limit: 30
+  - brand: ideal_dental
+    taxonomy: "Dental Clinic"
+    state: FL
+    cities: [Tampa, Orlando]
+    limit: 20
+  - brand: ideal_cgc
+    taxonomy: "General Contractor"
+    state: FL
+    cities: [Tampa, St Petersburg]
+    limit: 15
+
+yelp_searches:
+  - brand: ideal_cgc
+    term: tenant improvement contractor
+    location: "Tampa, FL"
+    limit: 10
+  - brand: ideal_remodeling
+    term: water damage restoration
+    location: "Tampa, FL"
+    limit: 10
+
+openfema:
+  states: [FL]
+  incident_types: [Hurricane, Flood, Severe Storm, Tornado, Fire]
+  days_back: 90
+
+weather:
+  alert_state: FL
+  hail_points:
+    - {name: Tampa, lat: 27.9506, lon: -82.4572}
+    - {name: St Petersburg, lat: 27.7676, lon: -82.6403}
+    - {name: Clearwater, lat: 27.9659, lon: -82.8001}
+  hail_days_back: 180
+
+government:
+  usaspending_limit: 10
+  federal_contracts_state: FL
+  federal_contracts_limit: 10
+
+jobtread:
+  org_id: "22P6bRn5p6Pn"
+  push_min_priority: high
+  dry_run: true

@@ -66,6 +66,7 @@ wrapped in a unified Python client and CLI. See [`ideal_apis/README.md`](./ideal
 cd ideal_apis && python3 -m venv .venv && .venv/bin/pip install -e .
 cp .env.example .env   # add API keys for paid services
 .venv/bin/ideal-api list
+.venv/bin/ideal-api daily --skip-yelp    # automated daily lead run
 .venv/bin/ideal-api call leads dentists --limit 5
 ```
 

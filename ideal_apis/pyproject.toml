@@ -22,6 +22,7 @@ dev = ["pytest>=7.4.0", "pytest-httpx>=0.30.0"]
 
 [project.scripts]
 ideal-api = "ideal_apis.cli:main"
+ideal-leads = "ideal_apis.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -78,3 +78,40 @@ Your existing `permit_scraper` Socrata adapter can share `IDEAL_SOCRATA_APP_TOKE
 - NWS (`api.weather.gov`) requires a descriptive `User-Agent` — set via `IDEAL_USER_AGENT`.
 - NOAA hail uses the free SWDI NEXRAD endpoint (no key).
 - Keyed APIs raise `MissingAPIKeyError` with the env var name if credentials are absent.
+
+## Automated daily pipeline
+
+Run the full lead workflow (NPPES → OpenFEMA → weather → gov intel → ledger → CSV):
+
+```bash
+ideal-api daily
+ideal-api daily --skip-yelp          # if no IDEAL_YELP_KEY yet
+ideal-api daily --push-jobtread      # needs JOBTREAD_GRANT_KEY in .env
+ideal-api daily --push-jobtread --live   # actually create JobTread accounts
+```
+
+Outputs land in `ideal_apis/data/output/`:
+
+- `daily_leads_YYYY-MM-DD.json` — all new rows
+- `jobtread_import_YYYY-MM-DD.csv` — contactable leads for CRM import
+- `summary_YYYY-MM-DD.md` — email-ready digest
+
+Dedupe state: `ideal_apis/data/leads_ledger.json`
+
+Edit sources in `ideal_apis/config/pipeline.yaml` (cities, taxonomies, brands).
+
+### JobTread auto-push
+
+Add to `.env`:
+
+```
+JOBTREAD_GRANT_KEY=your_grant_key
+```
+
+Then:
+
+```bash
+ideal-api daily --push-jobtread --live
+```
+
+Without the grant key, the pipeline still runs and writes the CSV — import manually or let a Cursor agent use JobTread MCP.
