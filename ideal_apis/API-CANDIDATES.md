@@ -4,7 +4,13 @@ Curated from [public-apis](https://github.com/paulodantasl/public-apis) (1,717 e
 filtered against what a Florida GC actually does: land/lot screening, permits, takeoff and estimating,
 bid packages, public work compliance, field logistics, and lead gen.
 
-Everything below is scored against the 12 modules already wired in `ideal_apis/` so we don't pay twice.
+Everything below is scored against the modules already wired in `ideal_apis/` so we don't pay twice.
+
+**Build status.** Both fixes in section 2, all of Tier A, and four of Tier B are now implemented and
+covered by tests — see the status column in section 3. Two Tier A picks turned out to already have
+client methods (`address.extract_addresses`, `government.epa_envirofacts`); they were never exposed
+on the CLI, so the work there was wiring, not building. Three Tier B picks were deliberately left
+out and section 3.1 says why.
 
 ---
 
@@ -57,7 +63,7 @@ Free fallbacks in the list if we outgrow Census: **Nominatim** (no key), **OpenC
 
 ### Tier A — build these next
 
-**1. FRED — Federal Reserve Bank of St. Louis** · `apiKey` (free) · *Finance*
+**1. FRED — Federal Reserve Bank of St. Louis** · `apiKey` (free) · *Finance* · **Built** — `market escalation`, `market exposure`
 The single highest-leverage add for the estimating toolkit. FRED carries the BLS Producer Price Index
 series for lumber, steel mill products, ready-mix concrete, gypsum, and copper wire, plus Census
 construction spending and the construction Employment Cost Index.
@@ -67,57 +73,76 @@ construction spending and the construction Employment Cost Index.
 > validity from 60 days to 30. This turns "we think material is moving" into a number the estimate
 > validator can check.
 
-**2. iLovePDF** · `apiKey` (free 250 docs/month) · *Documents & Productivity*
+**2. iLovePDF** · `apiKey` (free 250 docs/month) · *Documents & Productivity* · **Built** — `bidpackage assemble`
 Merge, split, extract text, add page numbers. Public bid packages are the use case: an ITB response is
 a transmittal + forms + bond + license + insurance + SOV, assembled in a mandated order and paginated.
 The FL public-bid work is exactly this, and responsiveness failures are often assembly failures.
 
 **3. Smarty US Extract** · `apiKey` (same Smarty account we already pay for) · *Data Validation*
-Pulls postal addresses out of free text — including emails. Point it at PlanHub/GC bid-invite emails
+**Built** — `address extract`. The client method `address.extract_addresses()` already existed; it
+had no CLI command, so it was invisible in practice. Pulls postal addresses out of free text —
+including emails. Point it at PlanHub/GC bid-invite emails
 and it yields a clean job-site address ready for JobTread intake, with no manual retyping and no
 copy/paste transposition into the takeoff.
 
 **4. EPA Envirofacts** · No auth · *Government*
-Brownfields, Superfund, underground storage tanks, air and water permits, by location. Screen a parcel
+**Built** — `site epa`, and folded into `site screen`. The client method
+`government.epa_envirofacts()` already existed but was generic and unexposed; the new
+`site.epa_facilities()` wraps the Facility Registry Service with the ZIP/city filters we actually
+query by. Brownfields, Superfund, underground storage tanks, air and water permits. Screen a parcel
 before we price site work or commit to a land deal — a UST or a Superfund boundary is a six-figure
 change to a site package and it is free to check.
 
-**5. Nager.Date** · No auth · *Calendar*
+**5. Nager.Date** · No auth · *Calendar* · **Built** — `schedule working-days`, `schedule add-days`
 US public holidays, no key. Working-day math for CPM schedules, draw schedules, and liquidated-damages
 counts. Small, but the loan-package and Gantt builders currently have no holiday calendar at all.
 
 ### Tier B — high value, narrower trigger
 
-**6. OpenSanctions + Vett** · both No auth · *Open Data / Government*
+**6. OpenSanctions** · No auth · *Open Data* · **Built** — `compliance vendor` (Vett deferred, see 3.1)
 OFAC, PEP, watchlist, and debarment-style screening. On federally funded work we must not contract with
 an excluded party. Run every sub and material vendor through this at buyout and keep the response as
 the compliance record. Pairs with the FastDOL OSHA/WHD lookup already wired.
 
-**7. Federal Register** · No auth · *Government*
+**7. Federal Register** · No auth · *Government* · **Built** — `compliance rules`, `compliance register`
 The daily journal of the US government. Watch it for Davis-Bacon wage determination changes, new OSHA
 rules, and Buy America provisions that change public-bid scope mid-solicitation.
 
-**8. Open Topo Data** · No auth · *Geocoding*
+**8. Open Topo Data** · No auth · *Geocoding* · **Built** — `site elevation`
 Elevation for a lat/lon. Cut-and-fill sanity checks, finished-floor elevation against base flood
 elevation, and drainage direction — a first-pass answer before anyone pays for a survey.
 
-**9. Road511** · `apiKey` · *Transportation*
+**9. Road511** · `apiKey` · *Transportation* · **Deferred, see 3.1**
 Traffic events, cameras, bridges, and **truck routes** across 65 US/CA jurisdictions. For oversize and
 overweight deliveries — trusses, tilt panels, crane mobilization — and for maintenance-of-traffic
 planning on roadway-adjacent work.
 
-**10. USGS Water Services** · No auth · *Science & Math*
+**10. USGS Water Services** · No auth · *Science & Math* · **Built** — `site groundwater`
 River stage and groundwater levels. Florida dewatering is a real cost line; groundwater trend plus a
 storm forecast tells us whether a foundation pour survives the week.
 
-**11. AQICN / OpenAQ** · `apiKey` · *Weather / Environment*
+**11. AQICN / OpenAQ** · `apiKey` · *Weather / Environment* · **Built** — `weather air`
 Air quality by location. Dust-control compliance on demolition and site work, and crew-safety calls on
 wildfire-smoke days.
 
-**12. Funding Signals** · `apiKey` · *Business*
+**12. Funding Signals** · `apiKey` · *Business* · **Deferred, see 3.1**
 Companies that just raised funding, scored as sales leads, from public SEC filings. A funded company
 needs space — this is a genuine top-of-funnel source for office and lab tenant-improvement work, which
 is the sector where our TI gates already apply.
+
+### 3.1 Deferred, and why
+
+Three picks were left out rather than shipped on a guess. Road511, Funding Signals, and Vett are all
+keyed or thinly documented, and this session's egress policy blocks outbound calls to them, so their
+request and response contracts could not be verified against the live service. Writing a client to a
+contract nobody has confirmed produces code that looks finished and fails on first real use, which
+costs more than the integration is worth. Each is a small, self-contained add once someone with a key
+can run one live call and confirm the shape.
+
+The same constraint applies to everything that *was* built: the tests are contract tests over mocked
+HTTP, not live integration tests. They pin the request we send and the reshaping we do, which is what
+catches upstream drift, but the first live call against FRED, iLovePDF, and AQICN should still be
+run by someone holding those keys.
 
 ### Tier C — only if the trigger exists
 
@@ -165,12 +190,19 @@ Tier B:
 
 ---
 
-## 6. Suggested build order
+## 6. Build order — status
 
-1. Swap the commercial weather default to NWS, and route batch geocoding to the Census geocoder. *(No
-   new keys. Removes a licensing exposure and a metered bill.)*
-2. Add `market` module — FRED. Wire the PPI series into the estimate validator's escalation check.
-3. Add `bidpackage` module — iLovePDF assembly + Smarty US Extract intake.
-4. Add `site` module — EPA Envirofacts, Open Topo Data, USGS Water Services, and FEMA NFHL together as
-   one "screen this parcel" call.
-5. Add `compliance` module — OpenSanctions, Vett, Federal Register, alongside the existing FastDOL call.
+1. ~~Swap the commercial weather default to NWS, and route batch geocoding to the Census geocoder.~~
+   **Done** — `weather job` and `geo batch-geocode`. No new keys; removes a licensing exposure and a
+   metered bill.
+2. ~~Add `market` module — FRED.~~ **Done.** Still open: wire `market escalation` into the estimate
+   validator so an escalation allowance is checked against a cited series rather than asserted.
+3. ~~Add `bidpackage` module — iLovePDF assembly + Smarty US Extract intake.~~ **Done** —
+   `bidpackage assemble` and `address extract`.
+4. ~~Add `site` module — EPA Envirofacts, Open Topo Data, USGS Water Services, and FEMA NFHL as one
+   "screen this parcel" call.~~ **Done** — `site screen`.
+5. ~~Add `compliance` module — OpenSanctions, Federal Register, alongside the existing FastDOL call.~~
+   **Done** — `compliance vendor` and `compliance rules`.
+
+Remaining: the estimate-validator hook in step 2, the three deferred integrations in section 3.1, and
+the Florida-specific sources in section 4 — of which only FEMA NFHL is currently wired.

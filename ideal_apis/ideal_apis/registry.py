@@ -144,6 +144,106 @@ def _commands(api_factory: Callable[[], IdealAPIs]) -> list[CommandSpec]:
         CommandSpec("productivity", "clockify-workspaces", "List Clockify workspaces", 2, True,
                     "ideal-api productivity clockify-workspaces",
                     lambda **kw: api().productivity.clockify_workspaces()),
+        # Tier 1 — market escalation (FRED)
+        CommandSpec("market", "escalation", "Trailing price move for a cost series", 1, True,
+                    "ideal-api call market escalation --series construction_materials --months 12",
+                    lambda **kw: api().market.escalation(
+                        kw.get("series", "construction_materials"),
+                        months=int(kw.get("months", 12)),
+                    )),
+        CommandSpec("market", "exposure", "Escalation across every curated cost series", 1, True,
+                    "ideal-api call market exposure --months 12",
+                    lambda **kw: api().market.bid_exposure(months=int(kw.get("months", 12)))),
+        CommandSpec("market", "series", "Raw observations for a FRED series", 1, True,
+                    "ideal-api call market series --series lumber_wood --limit 12",
+                    lambda **kw: api().market.observations(
+                        kw.get("series", "construction_materials"),
+                        start_date=kw.get("start"), end_date=kw.get("end"),
+                        limit=int(kw["limit"]) if kw.get("limit") else None,
+                    )),
+        CommandSpec("market", "search", "Find a FRED series id by keyword", 1, True,
+                    'ideal-api call market search --text "ready-mix concrete"',
+                    lambda **kw: api().market.search(kw["text"], limit=int(kw.get("limit", 20)))),
+        # Tier 1 — parcel screening
+        CommandSpec("site", "screen", "Full parcel screen for one point", 1, False,
+                    "ideal-api call site screen --lat 27.9506 --lon -82.4572 --zip 33602",
+                    lambda **kw: api().site.screen(
+                        float(kw["lat"]), float(kw["lon"]),
+                        zipcode=kw.get("zipcode"), state=kw.get("state", "FL"),
+                    )),
+        CommandSpec("site", "flood", "FEMA flood zone and BFE at a point", 1, False,
+                    "ideal-api call site flood --lat 27.9506 --lon -82.4572",
+                    lambda **kw: api().site.flood_summary(float(kw["lat"]), float(kw["lon"]))),
+        CommandSpec("site", "elevation", "Ground elevation in feet", 1, False,
+                    "ideal-api call site elevation --lat 27.9506 --lon -82.4572",
+                    lambda **kw: {"elevation_ft": api().site.elevation_ft(
+                        float(kw["lat"]), float(kw["lon"]))}),
+        CommandSpec("site", "groundwater", "USGS water levels near a point", 1, False,
+                    "ideal-api call site groundwater --lat 27.9506 --lon -82.4572",
+                    lambda **kw: api().site.water_levels(float(kw["lat"]), float(kw["lon"]))),
+        CommandSpec("site", "epa", "EPA-regulated facilities by ZIP or city", 1, False,
+                    "ideal-api call site epa --zip 33602",
+                    lambda **kw: api().site.epa_facilities(
+                        zipcode=kw.get("zipcode"), city=kw.get("city"),
+                        state=kw.get("state", "FL"), rows=int(kw.get("rows", 20)),
+                    )),
+        # Tier 1 — compliance screening
+        CommandSpec("compliance", "vendor", "Sanctions/watchlist screen for a sub", 1, False,
+                    'ideal-api call compliance vendor --name "Example Construction LLC"',
+                    lambda **kw: api().compliance.screen_vendor(kw["name"])),
+        CommandSpec("compliance", "rules", "Federal Register sweep of watched topics", 1, False,
+                    "ideal-api call compliance rules --days 30",
+                    lambda **kw: api().compliance.rule_watch(days_back=int(kw.get("days", 30)))),
+        CommandSpec("compliance", "register", "Search the Federal Register", 1, False,
+                    'ideal-api call compliance register --term "Davis-Bacon" --days 90',
+                    lambda **kw: api().compliance.federal_register_search(
+                        kw["term"], days_back=int(kw.get("days", 30)),
+                    )),
+        # Tier 1 — schedule math
+        CommandSpec("schedule", "working-days", "Count working days between two dates", 1, False,
+                    "ideal-api call schedule working-days --start 2026-09-01 --end 2026-12-31",
+                    lambda **kw: api().schedule.working_days(kw["start"], kw["end"])),
+        CommandSpec("schedule", "add-days", "Project a date N working days out", 1, False,
+                    "ideal-api call schedule add-days --start 2026-09-01 --days 120",
+                    lambda **kw: api().schedule.add_working_days(kw["start"], int(kw["days"]))),
+        CommandSpec("schedule", "holidays", "Public holidays for a year", 1, False,
+                    "ideal-api call schedule holidays --year 2026",
+                    lambda **kw: api().schedule.holidays(int(kw["year"]))),
+        # Tier 1 — commercially licensed weather + air quality
+        CommandSpec("weather", "job", "Job-site forecast (NWS, commercial-safe)", 1, False,
+                    "ideal-api call weather job --lat 27.9506 --lon -82.4572",
+                    lambda **kw: api().weather.job_forecast(float(kw["lat"]), float(kw["lon"]))),
+        CommandSpec("weather", "air", "Air quality near a job site", 1, True,
+                    "ideal-api call weather air --lat 27.9506 --lon -82.4572",
+                    lambda **kw: api().weather.air_quality(float(kw["lat"]), float(kw["lon"]))),
+        # Tier 1 — free bulk geocoding + address extraction
+        # Single-address Census geocoding stays at `gov census-geocode`; this group
+        # adds only the batch path, which is what replaces the metered providers.
+        CommandSpec("geo", "batch-geocode", "Geocode many addresses via Census (free)", 1, False,
+                    'ideal-api call geo batch-geocode --addresses "401 E Jackson St Tampa FL;100 2nd Ave St Petersburg FL"',
+                    lambda **kw: api().geo.batch_geocode(
+                        [a.strip() for a in kw["addresses"].split(";") if a.strip()])),
+        CommandSpec("address", "extract", "Pull addresses out of text or an email", 1, True,
+                    'ideal-api call address extract --text "Bid walk at 401 E Jackson St, Tampa FL 33602"',
+                    lambda **kw: api().address.extract_addresses(kw["text"])),
+        # Tier 2 — bid package assembly
+        CommandSpec("bidpackage", "assemble", "Merge + paginate a bid package", 2, True,
+                    "ideal-api call bidpackage assemble --files a.pdf;b.pdf --out package.pdf",
+                    lambda **kw: api().bidpackage.assemble(
+                        [f.strip() for f in kw["files"].split(";") if f.strip()],
+                        kw["out"], starting_number=int(kw.get("start", 1)),
+                    )),
+        CommandSpec("bidpackage", "merge", "Merge PDFs in the given order", 2, True,
+                    "ideal-api call bidpackage merge --files a.pdf;b.pdf --out merged.pdf",
+                    lambda **kw: api().bidpackage.merge(
+                        [f.strip() for f in kw["files"].split(";") if f.strip()], kw["out"])),
+        CommandSpec("bidpackage", "number", "Add page numbers to a PDF", 2, True,
+                    "ideal-api call bidpackage number --file package.pdf --out numbered.pdf",
+                    lambda **kw: api().bidpackage.add_page_numbers(
+                        kw["file"], kw["out"], starting_number=int(kw.get("start", 1)))),
+        CommandSpec("bidpackage", "split", "Extract page ranges from a PDF", 2, True,
+                    'ideal-api call bidpackage split --file plans.pdf --out sheets.zip --ranges "1-12,40-52"',
+                    lambda **kw: api().bidpackage.split(kw["file"], kw["out"], ranges=kw["ranges"])),
     ]
 
 

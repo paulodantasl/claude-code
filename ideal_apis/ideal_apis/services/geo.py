@@ -14,6 +14,54 @@ class GeoService:
         self.http = http
         self.settings = settings
 
+    def census_geocode(self, address: str) -> dict[str, Any]:
+        """Free, keyless, unlimited US geocoding — the default for bulk work.
+
+        Google, Mapbox, and Smarty all bill per lookup, so geocoding a scraped
+        PlanHub list or a county permit dump through them scales the bill with row
+        count. The Census geocoder is authoritative for US street addresses and free.
+        Reserve the paid providers for single-address paths where deliverability and
+        suite-level accuracy actually matter.
+        """
+        params: dict[str, Any] = {
+            "address": address,
+            "benchmark": "Public_AR_Current",
+            "format": "json",
+        }
+        if self.settings.census_key:
+            params["key"] = self.settings.census_key
+        return self.http.get(
+            "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress",
+            service="Census.gov",
+            params=params,
+        )
+
+    def batch_geocode(self, addresses: list[str]) -> list[dict[str, Any]]:
+        """Geocode a list of addresses through the free Census geocoder.
+
+        One address that fails to match does not stop the batch — it comes back with
+        ``matched: False`` so the rest of the list stays usable.
+        """
+        results: list[dict[str, Any]] = []
+        for address in addresses:
+            entry: dict[str, Any] = {"input": address, "matched": False}
+            try:
+                payload = self.census_geocode(address)
+                matches = (payload.get("result") or {}).get("addressMatches") or []
+                if matches:
+                    best = matches[0]
+                    coords = best.get("coordinates") or {}
+                    entry.update(
+                        matched=True,
+                        matched_address=best.get("matchedAddress"),
+                        lat=coords.get("y"),
+                        lon=coords.get("x"),
+                    )
+            except Exception as exc:
+                entry["error"] = str(exc)
+            results.append(entry)
+        return results
+
     def google_geocode(self, address: str) -> dict[str, Any]:
         if not self.settings.google_maps_key:
             raise MissingAPIKeyError("Google Maps", "IDEAL_GOOGLE_MAPS_KEY")
