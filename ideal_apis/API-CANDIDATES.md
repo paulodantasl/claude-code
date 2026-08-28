@@ -195,8 +195,9 @@ Tier B:
 1. ~~Swap the commercial weather default to NWS, and route batch geocoding to the Census geocoder.~~
    **Done** — `weather job` and `geo batch-geocode`. No new keys; removes a licensing exposure and a
    metered bill.
-2. ~~Add `market` module — FRED.~~ **Done.** Still open: wire `market escalation` into the estimate
-   validator so an escalation allowance is checked against a cited series rather than asserted.
+2. ~~Add `market` module — FRED.~~ **Done**, and wired into the estimate validator:
+   `validate_estimate.py --escalation` checks the carried contingency against the trailing index
+   move, scaled by material share and bid validity, and cites the series.
 3. ~~Add `bidpackage` module — iLovePDF assembly + Smarty US Extract intake.~~ **Done** —
    `bidpackage assemble` and `address extract`.
 4. ~~Add `site` module — EPA Envirofacts, Open Topo Data, USGS Water Services, and FEMA NFHL as one
@@ -204,5 +205,5 @@ Tier B:
 5. ~~Add `compliance` module — OpenSanctions, Federal Register, alongside the existing FastDOL call.~~
    **Done** — `compliance vendor` and `compliance rules`.
 
-Remaining: the estimate-validator hook in step 2, the three deferred integrations in section 3.1, and
-the Florida-specific sources in section 4 — of which only FEMA NFHL is currently wired.
+Remaining: the three deferred integrations in section 3.1, and the Florida-specific sources in
+section 4 — of which only FEMA NFHL is currently wired.

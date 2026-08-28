@@ -70,6 +70,32 @@ python estimating/scripts/build_estimate_xlsx.py estimating/projects/<slug>/
 python estimating/scripts/validate_estimate.py estimating/projects/<slug>/ --sector <sector>   # deterministic QA
 ```
 
+### Escalation check (`--escalation`)
+
+The validator can check the carried `contingency_pct` against the trailing move in a
+published material price index, so an escalation allowance is defended by a cited
+series instead of asserted:
+
+```
+python estimating/scripts/validate_estimate.py estimating/projects/<slug>/ \
+    --sector commercial --escalation --bid-validity-days 60
+```
+
+It scales the index move by this bid's material share of direct cost and by the days
+the price is held, then compares that to the contingency line. It WARNs when
+escalation alone would consume the line, and cites the series and both endpoint
+observations so a reviewer can trace the number.
+
+Opt-in and advisory by design: it never FAILs, and without `ideal_apis`, an
+`IDEAL_FRED_KEY`, or network it reports why it was skipped — so the default run stays
+a deterministic offline gate. Bid validity comes from `--bid-validity-days`, else a
+`bid_validity_days` row in `markups.csv`, else 30 days.
+
+Requires the [`ideal_apis`](../ideal_apis/README.md) client (`pip install -e ideal_apis`)
+and a free key from fred.stlouisfed.org.
+
+Tests: `python3 -m pytest estimating/tests/`
+
 ## Important limits (read this)
 - **Costs are budgetary assumptions**, not quotes, until backed by real vendor/sub
   pricing. The estimator labels plugs/allowances; confirm them before submitting.

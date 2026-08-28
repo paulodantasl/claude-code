@@ -4,10 +4,12 @@
 Usage:
     python3 estimating/scripts/validate_estimate.py <project_dir> [--sector SECTOR]
                                                      [--strict] [--xlsx PATH]
+                                                     [--escalation]
 
     SECTOR: residential | commercial | ti | public   (default: residential)
     --strict: exit 1 on WARNs too (CI gate)
     --xlsx:   path to estimate.xlsx (default <project_dir>/estimate.xlsx)
+    --escalation: check carried contingency against trailing FRED material escalation
 
 Checks lineitems.csv + markups.csv (+ scope-of-work.md if present):
   schema, numeric parse, unit whitelist, zero-qty dispositions, rollup pricing
@@ -17,6 +19,12 @@ Checks lineitems.csv + markups.csv (+ scope-of-work.md if present):
   allowance tie-out vs the scope, and — when estimate.xlsx and openpyxl are
   available — a structural tie-out of the workbook itself (constants, extension
   formulas, subtotal ranges, waterfall order/rates vs the CSVs).
+
+With --escalation, also checks contingency_pct against the trailing move in a
+published material price index (FRED, via ideal_apis), scaled by this bid's
+material share and the days the price is held. Advisory: it WARNs, never FAILs,
+and degrades to INFO without ideal_apis, a FRED key, or network — so the default
+run stays a deterministic offline gate.
 
 Exit code 0 = no FAILs (WARNs allowed; --strict fails WARNs too), 1 = FAIL.
 Prompt discipline catches most errors; this catches the rest for free.
@@ -99,6 +107,12 @@ ROLLUP_RE = re.compile(r"\b(total|rollup|roll-up|subtotal)\b", re.I)
 INFO_NOTE_RE = re.compile(r"\b(rollup|roll-up|info|sanity|do not double|dedup)\b", re.I)
 ZERO_OK_NOTE_RE = re.compile(r"\b(rfi|deferred|by others|allowance|see |qty tbd|verify)\b", re.I)
 
+# Escalation check: how much of the carried contingency the material exposure may
+# eat before it stops being a cushion. WARN above, FAIL never — the check is
+# advisory because it rests on a published index, not on this project's buyout.
+ESCALATION_WARN_RATIO = 1.0    # required >= carried
+ESCALATION_TIGHT_RATIO = 0.6   # required eats 60%+ of the carried line
+
 
 def num(s, default=0.0):
     try:
@@ -124,6 +138,93 @@ class Report:
         print(f"\n  Summary: {counts['FAIL']} FAIL / {counts['WARN']} WARN / "
               f"{counts['INFO']} INFO / {counts['PASS']} PASS")
         return counts
+
+
+def escalation_rows(esc, mat_share, contingency_pct, validity_days):
+    """Turn a FRED escalation read into report rows. Pure — no network, no I/O.
+
+    The model is deliberately simple and stated in the output so nobody reads more
+    precision into it than it carries: an index moving at `annualized_pct` drifts
+    `annualized_pct * validity_days/365` over the window the bid is exposed, and
+    only the material fraction of direct cost is exposed to it. That drift is
+    compared against the carried contingency/escalation line.
+    """
+    rows = []
+    if esc.get("error"):
+        rows.append(("INFO", "escalation",
+                     f"{esc.get('series', 'series')}: {esc['error']} — escalation not checked"))
+        return rows
+
+    annualized = esc.get("annualized_pct")
+    if annualized is None:
+        rows.append(("INFO", "escalation", "FRED returned no annualized rate — escalation not checked"))
+        return rows
+
+    cite = (f"{esc['series']} {esc['start']['date']} {esc['start']['value']} → "
+            f"{esc['end']['date']} {esc['end']['value']} "
+            f"({esc['pct_change']:+.1f}% over {esc['months']}mo, {annualized:+.1f}%/yr)")
+
+    if annualized <= 0:
+        rows.append(("INFO", "escalation",
+                     f"materials flat or falling — no escalation exposure to carry. {cite}"))
+        return rows
+
+    window_drift = annualized * validity_days / 365
+    required = window_drift * mat_share
+    rows.append(("INFO", "escalation",
+                 f"material exposure {mat_share * 100:.0f}% of direct × {window_drift:+.1f}% drift "
+                 f"over a {validity_days}-day bid validity ⇒ {required:.2f}% of bid. {cite}"))
+
+    if contingency_pct <= 0:
+        rows.append(("WARN", "escalation",
+                     f"contingency_pct=0 but materials are moving {annualized:+.1f}%/yr — carry "
+                     f"~{required:.2f}% escalation or shorten bid validity below {validity_days} days"))
+        return rows
+
+    ratio = required / contingency_pct
+    if ratio >= ESCALATION_WARN_RATIO:
+        rows.append(("WARN", "escalation",
+                     f"escalation alone needs ~{required:.2f}% but contingency_pct is "
+                     f"{contingency_pct:.2f}% — the line is fully consumed with nothing left for "
+                     f"scope risk; raise it, shorten bid validity, or justify in writing"))
+    elif ratio >= ESCALATION_TIGHT_RATIO:
+        rows.append(("WARN", "escalation",
+                     f"escalation ~{required:.2f}% consumes {ratio * 100:.0f}% of the "
+                     f"{contingency_pct:.2f}% contingency — thin cushion for scope risk"))
+    else:
+        rows.append(("PASS", "escalation",
+                     f"contingency {contingency_pct:.2f}% covers the ~{required:.2f}% escalation "
+                     f"exposure with room for scope risk"))
+    return rows
+
+
+def check_escalation(rep, mat_share, contingency_pct, validity_days, series, months):
+    """Fetch the escalation read and add its rows. Never fails the run.
+
+    ideal_apis, a key, and network are all optional: without any of them the check
+    reports why it was skipped and the validator stays a deterministic offline gate.
+    """
+    try:
+        from ideal_apis import IdealAPIs
+        from ideal_apis.exceptions import MissingAPIKeyError
+    except ImportError:
+        rep.add("INFO", "escalation",
+                "ideal_apis not installed — run 'pip install -e ideal_apis' to check "
+                "escalation against a cited FRED series")
+        return
+    try:
+        esc = IdealAPIs().market.escalation(series, months=months)
+    except MissingAPIKeyError:
+        rep.add("INFO", "escalation",
+                "IDEAL_FRED_KEY not set — get a free key at fred.stlouisfed.org and add it "
+                "to .env to check escalation against a cited series")
+        return
+    except Exception as exc:
+        rep.add("INFO", "escalation",
+                f"FRED unreachable ({type(exc).__name__}) — escalation not checked")
+        return
+    for level, check, msg in escalation_rows(esc, mat_share, contingency_pct, validity_days):
+        rep.add(level, check, msg)
 
 
 def tie_out_xlsx(xlsx_path, data, mk, rep):
@@ -231,6 +332,16 @@ def main():
                     help="exit 1 on WARNs too (CI gate)")
     ap.add_argument("--xlsx", default=None,
                     help="path to estimate.xlsx (default: <project_dir>/estimate.xlsx)")
+    ap.add_argument("--escalation", action="store_true",
+                    help="check contingency_pct against trailing material escalation "
+                         "(FRED; needs ideal_apis + IDEAL_FRED_KEY). Advisory only — never FAILs.")
+    ap.add_argument("--bid-validity-days", type=int, default=None,
+                    help="days the bid price is held (default: bid_validity_days in "
+                         "markups.csv, else 30)")
+    ap.add_argument("--escalation-series", default="construction_materials",
+                    help="FRED series name or id for the escalation read")
+    ap.add_argument("--escalation-months", type=int, default=12,
+                    help="trailing window for the escalation read (default 12)")
     args = ap.parse_args()
     proj = Path(args.project_dir)
     rep = Report()
@@ -376,6 +487,18 @@ def main():
             rep.add("WARN", "markups", "sector=public but bond_pct=0 — FL 255.05 requires P&P bond on most public work")
     else:
         rep.add("WARN", "markups", "markups.csv not found — waterfall not recomputed")
+
+    # --- escalation vs the carried contingency (opt-in, advisory) ---
+    if args.escalation:
+        if not direct:
+            rep.add("INFO", "escalation", "no direct cost — escalation not checked")
+        else:
+            validity = (args.bid_validity_days
+                        or int(mk.get("bid_validity_days") or 0)
+                        or 30)
+            check_escalation(rep, tot["mat"] / direct,
+                             mk.get("contingency_pct", 0.0), validity,
+                             args.escalation_series, args.escalation_months)
 
     # --- benchmark bands ---
     bands = BANDS[args.sector]

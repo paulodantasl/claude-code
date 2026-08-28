@@ -54,6 +54,12 @@ ideal-api call weather job --lat 27.9506 --lon -82.4572
 ideal-api call market escalation --series construction_materials --months 12
 ```
 
+## Escalation in the estimate validator
+
+`estimating/scripts/validate_estimate.py --escalation` uses `market.escalation()` to
+check a bid's carried contingency against the trailing move in a material price index.
+See [the estimating README](../estimating/README.md#escalation-check---escalation).
+
 ## Weather licensing
 
 Use `weather job` (NWS) for anything that touches a real job. Open-Meteo's free tier
