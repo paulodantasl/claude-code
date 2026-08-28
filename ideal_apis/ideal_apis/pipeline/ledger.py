@@ -56,3 +56,11 @@ class LeadLedger:
     def is_quo_texted(self, phone: str) -> bool:
         digits = "".join(c for c in phone if c.isdigit())[-10:]
         return digits in self.data.get("quo_texted", [])
+
+    def mark_quo_texted(self, phone: str) -> None:
+        digits = "".join(c for c in phone if c.isdigit())[-10:]
+        if not digits:
+            return
+        texted = self.data.setdefault("quo_texted", [])
+        if digits not in texted:
+            texted.append(digits)

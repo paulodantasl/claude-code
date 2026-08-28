@@ -7,6 +7,7 @@ from typing import Any
 import yaml
 
 from ideal_apis.client import IdealAPIs
+from ideal_apis.pipeline.approvals import ApprovalBatch
 from ideal_apis.pipeline.enrich import enrich_leads
 from ideal_apis.pipeline.jobtread_export import (
     JobTreadClient,
@@ -31,6 +32,7 @@ class DailyLeadPipeline:
         self.config = self._load_config()
         self.ledger = LeadLedger(self._resolve_path(self.config.get("ledger_path", "data/leads_ledger.json")))
         self.output_dir = self._resolve_path(self.config.get("output_dir", "data/output"))
+        self.approvals_dir = self._resolve_path(self.config.get("approvals_dir", "data/approvals"))
         self.sources = LeadSources(self.api)
 
     def _resolve_path(self, rel: str) -> Path:
@@ -57,14 +59,7 @@ class DailyLeadPipeline:
                 )
             ]
 
-    def run(
-        self,
-        *,
-        push_jobtread: bool | None = None,
-        dry_run: bool | None = None,
-        skip_yelp: bool = False,
-    ) -> dict[str, Any]:
-        stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    def _fetch_all(self, *, skip_yelp: bool = False) -> list[LeadRecord]:
         fetched: list[LeadRecord] = []
 
         for spec in self.config.get("nppes_searches", []):
@@ -101,9 +96,9 @@ class DailyLeadPipeline:
             ),
         ))
         fetched.extend(self._safe_fetch("weather", lambda: self.sources.fetch_weather(self.config.get("weather", {}))))
+        return fetched
 
-        enriched = enrich_leads(self.api, fetched, validate=True)
-
+    def _dedupe(self, enriched: list[LeadRecord]) -> tuple[list[LeadRecord], list[LeadRecord], int]:
         new_leads: list[LeadRecord] = []
         intel_leads: list[LeadRecord] = []
         skipped = 0
@@ -117,8 +112,76 @@ class DailyLeadPipeline:
                 new_leads.append(lead)
             else:
                 intel_leads.append(lead)
-
         self.ledger.save()
+        return new_leads, intel_leads, skipped
+
+    def collect(self, *, skip_yelp: bool = False) -> dict[str, Any]:
+        """Fetch → enrich → dedupe → export → create approval batch (no JobTread push)."""
+        stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        fetched = self._fetch_all(skip_yelp=skip_yelp)
+        enriched = enrich_leads(self.api, fetched, validate=True)
+        new_leads, intel_leads, skipped = self._dedupe(enriched)
+
+        out_json = self.output_dir / f"daily_leads_{stamp}.json"
+        out_csv = self.output_dir / f"jobtread_import_{stamp}.csv"
+        out_md = self.output_dir / f"summary_{stamp}.md"
+
+        write_leads_json(out_json, new_leads + intel_leads)
+        write_jobtread_csv(new_leads, out_csv)
+        write_summary_md(
+            out_md,
+            new_leads=new_leads,
+            intel_leads=intel_leads,
+            skipped=skipped,
+            jobtread_results=[],
+        )
+
+        batch = ApprovalBatch.create(
+            self.approvals_dir,
+            stamp,
+            new_leads,
+            intel_leads,
+            meta={
+                "fetched": len(fetched),
+                "skipped_dedupe": skipped,
+                "outputs": {
+                    "json": str(out_json),
+                    "csv": str(out_csv),
+                    "summary": str(out_md),
+                },
+            },
+        )
+
+        high = sum(1 for lead in new_leads if lead.priority == "high")
+        return {
+            "date": stamp,
+            "batch_id": batch.batch_id,
+            "fetched": len(fetched),
+            "new_contactable": len(new_leads),
+            "high_priority": high,
+            "intel": len(intel_leads),
+            "skipped_dedupe": skipped,
+            "approval_batch": str(batch.path),
+            "next_step": batch.summary()["next_step"],
+            "outputs": {
+                "json": str(out_json),
+                "csv": str(out_csv),
+                "summary": str(out_md),
+                "ledger": str(self.ledger.path),
+            },
+        }
+
+    def run(
+        self,
+        *,
+        push_jobtread: bool | None = None,
+        dry_run: bool | None = None,
+        skip_yelp: bool = False,
+    ) -> dict[str, Any]:
+        stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        fetched = self._fetch_all(skip_yelp=skip_yelp)
+        enriched = enrich_leads(self.api, fetched, validate=True)
+        new_leads, intel_leads, skipped = self._dedupe(enriched)
 
         jt_cfg = self.config.get("jobtread", {})
         org_id = jt_cfg.get("org_id", "22P6bRn5p6Pn")

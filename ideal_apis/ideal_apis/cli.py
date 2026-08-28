@@ -7,6 +7,8 @@ from typing import Any
 import click
 
 from ideal_apis.config import get_settings
+from ideal_apis.pipeline.approvals import ApprovalBatch
+from ideal_apis.pipeline.apply import apply_jobtread, write_quo_queue
 from ideal_apis.pipeline.runner import DailyLeadPipeline
 from ideal_apis.registry import get_command, list_groups
 
@@ -91,6 +93,177 @@ def show_keys() -> None:
     for name, configured in fields:
         status = "set" if configured else "missing"
         click.echo(f"{name:<20} {status}")
+
+
+def _parse_indices(value: str) -> list[int]:
+    try:
+        return [int(x.strip()) for x in value.split(",") if x.strip()]
+    except ValueError as exc:
+        raise click.ClickException(f"Invalid indices: {value!r}") from exc
+
+
+def _get_pipeline(config_path: str | None) -> DailyLeadPipeline:
+    from pathlib import Path
+
+    return DailyLeadPipeline(
+        config_path=Path(config_path) if config_path else None,
+    )
+
+
+def _open_batch(pipeline: DailyLeadPipeline, batch_id: str | None) -> ApprovalBatch:
+    if batch_id:
+        return ApprovalBatch.open(pipeline.approvals_dir, batch_id)
+    batch = ApprovalBatch.latest(pipeline.approvals_dir)
+    if not batch:
+        raise click.ClickException("No approval batch found. Run: ideal-api leads collect")
+    return batch
+
+
+def _print_leads_table(batch: ApprovalBatch, *, stage: str | None = None, limit: int = 30) -> None:
+    rows = batch.items()
+    if stage:
+        rows = [r for r in rows if r["stage"] == stage]
+    click.echo(f"\nBatch {batch.batch_id} — showing {min(len(rows), limit)} of {len(rows)} leads\n")
+    for item in rows[:limit]:
+        lead = item["lead"]
+        contact = lead.get("phone") or lead.get("email") or "—"
+        click.echo(
+            f"  [{item['index']:>3}] {item['stage']:<18} "
+            f"{lead.get('priority', '?'):<6} {lead.get('name', '')[:40]:<40} {contact}"
+        )
+
+
+@main.group("leads")
+def leads_group() -> None:
+    """Approval-gated daily lead pipeline (collect → approve → apply)."""
+
+
+@leads_group.command("collect")
+@click.option("--skip-yelp", is_flag=True, default=False, help="Skip Yelp (no IDEAL_YELP_KEY)")
+@click.option("--config", "config_path", default=None, type=click.Path(exists=True), help="pipeline.yaml path")
+def leads_collect(skip_yelp: bool, config_path: str | None) -> None:
+    """Fetch leads and create an approval batch (does not push JobTread or QUO)."""
+    pipeline = _get_pipeline(config_path)
+    result = pipeline.collect(skip_yelp=skip_yelp)
+    _print_json(result)
+    batch = ApprovalBatch.open(pipeline.approvals_dir, result["batch_id"])
+    _print_leads_table(batch, stage="pending", limit=25)
+    click.echo(f"\n{result['next_step']}")
+
+
+@leads_group.command("status")
+@click.option("--batch", "batch_id", default=None, help="Batch id (default: latest)")
+@click.option("--config", "config_path", default=None, type=click.Path(exists=True))
+@click.option("--show-leads", is_flag=True, default=False, help="List leads in batch")
+def leads_status(batch_id: str | None, config_path: str | None, show_leads: bool) -> None:
+    """Show approval batch summary and next step."""
+    pipeline = _get_pipeline(config_path)
+    batch = _open_batch(pipeline, batch_id)
+    summary = batch.summary()
+    _print_json(summary)
+    if show_leads:
+        _print_leads_table(batch, limit=50)
+    click.echo(f"\n{summary['next_step']}")
+
+
+@leads_group.command("approve")
+@click.option("--batch", "batch_id", default=None)
+@click.option("--high-only", is_flag=True, default=False, help="Approve high-priority pending leads only")
+@click.option("--all", "all_pending", is_flag=True, default=False, help="Approve all pending leads")
+@click.option("--indices", default=None, help="Comma-separated indices, e.g. 0,1,5")
+@click.option("--config", "config_path", default=None, type=click.Path(exists=True))
+def leads_approve(
+    batch_id: str | None,
+    high_only: bool,
+    all_pending: bool,
+    indices: str | None,
+    config_path: str | None,
+) -> None:
+    """Approve pending leads for JobTread push."""
+    if not (high_only or all_pending or indices):
+        raise click.ClickException("Specify --high-only, --all, or --indices 0,1,2")
+    pipeline = _get_pipeline(config_path)
+    batch = _open_batch(pipeline, batch_id)
+    idx_list = _parse_indices(indices) if indices else None
+    changed = batch.approve(indices=idx_list, high_only=high_only, all_pending=all_pending)
+    click.echo(f"Approved {changed} lead(s) for JobTread.")
+    _print_json(batch.summary())
+    if batch.approved_jobtread():
+        click.echo("\nNext: ideal-api leads apply jobtread --live")
+
+
+@leads_group.command("reject")
+@click.option("--batch", "batch_id", default=None)
+@click.option("--indices", required=True, help="Comma-separated indices to reject")
+@click.option("--config", "config_path", default=None, type=click.Path(exists=True))
+def leads_reject(batch_id: str | None, indices: str, config_path: str | None) -> None:
+    """Reject pending leads (will not be pushed)."""
+    pipeline = _get_pipeline(config_path)
+    batch = _open_batch(pipeline, batch_id)
+    changed = batch.reject(_parse_indices(indices))
+    click.echo(f"Rejected {changed} lead(s).")
+    _print_json(batch.summary())
+
+
+@leads_group.group("apply")
+def leads_apply_group() -> None:
+    """Apply approved actions (JobTread push or QUO queue)."""
+
+
+@leads_apply_group.command("jobtread")
+@click.option("--batch", "batch_id", default=None)
+@click.option("--dry-run/--live", default=True, show_default=True)
+@click.option("--config", "config_path", default=None, type=click.Path(exists=True))
+def leads_apply_jobtread(batch_id: str | None, dry_run: bool, config_path: str | None) -> None:
+    """Push approved leads to JobTread (needs JOBTREAD_GRANT_KEY for --live)."""
+    pipeline = _get_pipeline(config_path)
+    batch = _open_batch(pipeline, batch_id)
+    org_id = pipeline.config.get("jobtread", {}).get("org_id", "22P6bRn5p6Pn")
+    result = apply_jobtread(
+        batch,
+        org_id=org_id,
+        ledger=pipeline.ledger,
+        dry_run=dry_run,
+    )
+    _print_json(result)
+    if result.get("pushed"):
+        click.echo("\nNext: ideal-api leads approve-quo --all  then  ideal-api leads apply quo")
+
+
+@leads_apply_group.command("quo")
+@click.option("--batch", "batch_id", default=None)
+@click.option("--config", "config_path", default=None, type=click.Path(exists=True))
+def leads_apply_quo(batch_id: str | None, config_path: str | None) -> None:
+    """Write QUO text queue JSON (does not send texts)."""
+    pipeline = _get_pipeline(config_path)
+    batch = _open_batch(pipeline, batch_id)
+    path, queue = write_quo_queue(batch, pipeline.output_dir, ledger=pipeline.ledger)
+    click.echo(f"QUO queue written: {path}")
+    _print_json({"count": queue["count"], "skipped": queue.get("skipped", []), "path": str(path)})
+
+
+@leads_group.command("approve-quo")
+@click.option("--batch", "batch_id", default=None)
+@click.option("--all", "all_ready", is_flag=True, default=False, help="Approve all JobTread-pushed leads with phone")
+@click.option("--indices", default=None, help="Comma-separated indices")
+@click.option("--config", "config_path", default=None, type=click.Path(exists=True))
+def leads_approve_quo(
+    batch_id: str | None,
+    all_ready: bool,
+    indices: str | None,
+    config_path: str | None,
+) -> None:
+    """Approve leads for QUO texting (after JobTread push)."""
+    if not (all_ready or indices):
+        raise click.ClickException("Specify --all or --indices")
+    pipeline = _get_pipeline(config_path)
+    batch = _open_batch(pipeline, batch_id)
+    idx_list = _parse_indices(indices) if indices else None
+    changed = batch.approve_quo(indices=idx_list, all_ready=all_ready)
+    click.echo(f"Approved {changed} lead(s) for QUO.")
+    _print_json(batch.summary())
+    if changed:
+        click.echo("\nNext: ideal-api leads apply quo")
 
 
 @main.command("daily")

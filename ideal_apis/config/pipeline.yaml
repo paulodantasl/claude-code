@@ -3,6 +3,7 @@
 
 ledger_path: data/leads_ledger.json
 output_dir: data/output
+approvals_dir: data/approvals
 
 brands:
   ideal_dental:

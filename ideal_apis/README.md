@@ -115,3 +115,32 @@ ideal-api daily --push-jobtread --live
 ```
 
 Without the grant key, the pipeline still runs and writes the CSV — import manually or let a Cursor agent use JobTread MCP.
+
+## Approval-gated workflow (recommended)
+
+Use sequential approvals before JobTread push or QUO texts:
+
+```bash
+# 1. Collect (fetch + dedupe + approval batch — no auto-push)
+ideal-api leads collect --skip-yelp
+ideal-api leads status --show-leads
+
+# 2. Approve leads for JobTread
+ideal-api leads approve --high-only
+# or: ideal-api leads approve --indices 0,1,2
+# or: ideal-api leads approve --all
+
+# 3. Push to JobTread (dry-run default; --live needs JOBTREAD_GRANT_KEY)
+ideal-api leads apply jobtread
+ideal-api leads apply jobtread --live
+
+# 4. Approve QUO texts (after JobTread push)
+ideal-api leads approve-quo --all
+
+# 5. Write QUO queue JSON (does not send — you send via OpenPhone)
+ideal-api leads apply quo
+```
+
+Approval batches: `ideal_apis/data/approvals/YYYY-MM-DD.json`
+
+Cursor agents can push approved leads via JobTread MCP when `JOBTREAD_GRANT_KEY` is not set locally.
