@@ -95,6 +95,7 @@ def show_keys() -> None:
         click.echo(f"{name:<20} {status}")
 
 
+
 def _parse_indices(value: str) -> list[int]:
     try:
         return [int(x.strip()) for x in value.split(",") if x.strip()]

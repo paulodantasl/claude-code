@@ -144,3 +144,4 @@ ideal-api leads apply quo
 Approval batches: `ideal_apis/data/approvals/YYYY-MM-DD.json`
 
 Cursor agents can push approved leads via JobTread MCP when `JOBTREAD_GRANT_KEY` is not set locally.
+
