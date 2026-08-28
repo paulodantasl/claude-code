@@ -1,0 +1,36 @@
+name: Daily leads pipeline
+
+on:
+  schedule:
+    - cron: "0 12 * * 1-5"  # 7am ET weekdays
+  workflow_dispatch:
+
+jobs:
+  daily-leads:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ideal-apis
+        run: pip install -e ./ideal_apis
+
+      - name: Run daily pipeline
+        env:
+          IDEAL_YELP_KEY: ${{ secrets.IDEAL_YELP_KEY }}
+          IDEAL_SMARTY_AUTH_ID: ${{ secrets.IDEAL_SMARTY_AUTH_ID }}
+          IDEAL_SMARTY_AUTH_TOKEN: ${{ secrets.IDEAL_SMARTY_AUTH_TOKEN }}
+          IDEAL_NUMVERIFY_KEY: ${{ secrets.IDEAL_NUMVERIFY_KEY }}
+          JOBTREAD_GRANT_KEY: ${{ secrets.JOBTREAD_GRANT_KEY }}
+        run: ideal-api daily --skip-yelp
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-leads-${{ github.run_id }}
+          path: |
+            ideal_apis/data/output/
+            ideal_apis/data/leads_ledger.json

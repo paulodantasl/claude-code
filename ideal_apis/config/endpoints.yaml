@@ -1,0 +1,17 @@
+# Known working endpoints for autonomous probes (Tampa Bay / Central FL)
+
+socrata_permits:
+  - name: Orlando Building Permits
+    endpoint: https://data.cityoforlando.net/resource/ryhf-m453.json
+    date_column: processed_date
+  - name: Miami-Dade Permits
+    endpoint: https://gis-mdc.opendata.arcgis.com/datasets/MDC::building-permit-activity/explore  # fallback catalog only
+
+probe_defaults:
+  lat: 27.9506
+  lon: -82.4572
+  tampa_address: "401 E Jackson St, Tampa, FL 33602"
+  test_phone: "8136945439"
+  test_email: "office@theidealremodeling.com"
+  test_url: "https://idealcgc.com"
+  test_company: "Ideal Construction Group LLC"
