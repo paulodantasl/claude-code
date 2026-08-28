@@ -6,7 +6,8 @@ description: >
   and performance bonds, certified payroll, Davis-Bacon, DBE/MBE goals, owner direct
   purchase, bid tabulation, or responsiveness. Runs the precon pipeline (takeoff → scope →
   estimate → proposal → audit) with public-work gates: FL 255.05 bonding, ODP sales-tax
-  carve-outs, strict bid-form responsiveness, no post-bid negotiation.
+  carve-outs, strict bid-form responsiveness, no post-bid negotiation. The public owner
+  governs even when the scope is a buildout — public + TI runs under this skill.
 ---
 
 # Public / Government Bid (Florida)
@@ -34,6 +35,9 @@ blended, run the stages in order and say which role you are in.
 - **Labor:** no Florida state prevailing wage, but **Davis-Bacon + certified payroll when
   federal funds are present** — detect it, price the wage determinations and compliance admin.
 - **No post-bid negotiation:** escalation and contingency must be in the number on bid day.
+- Bond posture wired into the numbers: bid bond per the ITB (typ. 5%); P&P bond per
+  FL 255.05 — set `bond_pct` > 0 in `markups.csv` unless the solicitation waives it
+  (the validator flags `--sector public` with bond at 0).
 - Retainage and prompt-payment per the Florida public prompt-payment framework — confirm
   the current statutory caps per the bundled profile (laws amended 2023).
 

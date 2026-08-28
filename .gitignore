@@ -18,3 +18,5 @@ estimating/projects/*
 estimating-projects/
 dist/
 
+# permit_scraper live outputs (demo copies live in permit_scraper/demo/)
+permit_scraper/output_*.csv

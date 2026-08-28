@@ -1,5 +1,7 @@
 # Florida Construction Reference
 
+*(facts as-of: 2026-07 — re-verify dated items: code editions, tax rates, statutes, $/SF bands)*
+
 Shared knowledge base for the takeoff / scope / estimating / audit agents.
 **Default jurisdiction is Florida.** Always confirm the actual Authority Having
 Jurisdiction (AHJ) from the documents (title block, code-summary sheet, permit

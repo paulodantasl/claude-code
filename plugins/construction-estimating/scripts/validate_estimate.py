@@ -241,6 +241,10 @@ def main():
     with li_path.open(newline="", encoding="utf-8-sig") as f:
         rows = list(csv.reader(f))
 
+    if not rows:
+        print(f"FAIL: {li_path} is empty — expected header: {','.join(HEADER)}")
+        sys.exit(1)
+
     # --- schema ---
     if rows[0] != HEADER:
         rep.add("FAIL", "schema", f"header mismatch: {rows[0]}")

@@ -1,5 +1,7 @@
 # New Commercial Construction (Florida)
 
+*(facts as-of: 2026-07 — re-verify dated items: code editions, tax rates, statutes, $/SF bands)*
+
 Sector reference for ground-up commercial work (retail, office, industrial/flex,
 medical office) in Florida. Builds on `florida-code.md`, `estimating-methodology.md`,
 and `csi-divisions.md` — this file covers only what **changes** for this sector; do not

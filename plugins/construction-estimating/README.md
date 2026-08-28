@@ -18,7 +18,7 @@ plan sets/specs and/or digitized takeoff exports (Bluebeam, PlanSwift, STACK, On
 Then, in **any** project folder, run `/bid` or just describe the task (e.g. *"take off the
 structural concrete from these plans and price it"*). Updates: `/plugin marketplace update claude-code-plugins`.
 
-> **Dependency:** the Excel builders need `openpyxl` → `pip install openpyxl`.
+> **Dependency:** the Excel builders need `openpyxl` → `pip install openpyxl pillow pymupdf`.
 
 Three other ways to have this — an offline install into `~/.claude/` that works in every
 folder, automatic loading in Claude Code on the web, and uploadable skill zips for

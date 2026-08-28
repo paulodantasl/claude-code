@@ -1,5 +1,7 @@
 # Commercial Buildout / Tenant Improvement (Florida)
 
+*(facts as-of: 2026-07 — re-verify dated items: code editions, tax rates, statutes, $/SF bands)*
+
 Sector guide for interior buildouts of leased commercial space — office, retail,
 restaurant, medical — inside an existing, usually occupied, landlord-controlled building.
 **The building already exists, so existing conditions — not quantities — are the dominant

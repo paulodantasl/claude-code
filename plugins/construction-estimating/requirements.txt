@@ -1,0 +1,5 @@
+# Python dependencies for the construction-estimating plugin's scripts.
+# Install: pip install -r requirements.txt   (or: pip install openpyxl pillow pymupdf)
+openpyxl>=3.1        # estimate + loan-package workbook builders
+pillow>=10.0         # logo image embedding in the loan package (optional at runtime)
+pymupdf>=1.24        # JobTread takeoff overlay verification (optional at runtime)

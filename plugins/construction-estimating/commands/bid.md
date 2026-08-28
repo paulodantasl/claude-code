@@ -1,7 +1,7 @@
 ---
 description: Run the full Florida preconstruction pipeline (takeoff → scope → estimate → proposal → audit) for a project.
 argument-hint: <project name, or path to a folder of plans/specs>
-allowed-tools: Agent, Read, Write, Edit, Bash, Grep, Glob
+allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/*), Bash(mkdir:*)
 ---
 
 ## Plugin paths (read first)
@@ -20,9 +20,12 @@ work yourself. Steps:
    `/bid-public` posture (`${CLAUDE_PLUGIN_ROOT}/reference/sector-public-bidding.md`); new single/multi-family
    residential → `/bid-residential` (`${CLAUDE_PLUGIN_ROOT}/reference/sector-residential-new.md`); new commercial →
    `/bid-commercial` (`${CLAUDE_PLUGIN_ROOT}/reference/sector-commercial-new.md`); buildout/TI of existing space →
-   `/bid-ti` (`${CLAUDE_PLUGIN_ROOT}/reference/sector-tenant-improvement.md`). Read the matching profile and pass it
-   to every subagent. If ambiguous, ask the user once. Both the estimator and auditor run
-   the validator with the matching `--sector` flag.
+   `/bid-ti` (`${CLAUDE_PLUGIN_ROOT}/reference/sector-tenant-improvement.md`). Read the matching profile and pass its PATH
+   to every subagent with the instruction to read and apply it. If ambiguous, ask the user
+   once. Both the estimator and auditor run the validator with the matching sector flag:
+   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate_estimate.py <project_dir>/ --sector <residential|commercial|ti|public>`.
+   If no sector cleanly fits, pick the nearest and say so in the audit report — the
+   validator silently defaults to residential bands otherwise.
 
 1. **Set up the project folder.** Under `estimating-projects/<slug>/`, create or locate
    the folder for this project (slugify the name). If the user pointed at plans/specs or a
@@ -43,11 +46,13 @@ work yourself. Steps:
    reconciled against the takeoff and bid documents.
 
 4. **Estimate** — delegate to `cost-estimator` to build `lineitems.csv` + `markups.csv`
-   and run the workbook builder to produce `estimate.xlsx`. Use sourced prices from
+   and run the workbook builder to produce `estimate.xlsx` **and `estimate-summary.md`**
+   (the plain-text BID TOTAL + waterfall; the step is not done without it). Use sourced prices from
    `procurement.csv` if procurement was run (step 2a); otherwise budgetary unit costs.
 
-5. **Proposal** — delegate to `bid-proposal-writer` to produce `bid-proposal.md`,
-   numbers tying out to the estimate and scope.
+5. **Proposal** — delegate to `bid-proposal-writer` to produce `bid-proposal.md`.
+   Pass the BID TOTAL from `estimate-summary.md` and the alternates/unit prices explicitly
+   in the delegation; numbers must tie out to the estimate and scope.
 
 6. **Independent audit** — delegate to `estimate-auditor` to verify everything and write
    `audit-report.md`. **Always run this before declaring the bid ready**, even if earlier
@@ -56,6 +61,12 @@ work yourself. Steps:
 7. **Report back.** Summarize: BID TOTAL, $/SF if known, cost by division, the audit
    verdict, and the open items (RFIs, plugs/allowances, placeholders) the user must
    resolve. List the file paths of every deliverable.
+
+   **Done gate (mechanical):** the bid is NOT ready until `takeoff.md`,
+   `scope-of-work.md`, `lineitems.csv`, `markups.csv`, `estimate.xlsx`,
+   `estimate-summary.md`, `bid-proposal.md`, and `audit-report.md` all exist
+   (plus `procurement.md`/`procurement.csv` if step 2a ran) AND the validator
+   reports 0 FAIL. Anything less: report what is missing instead of declaring ready.
 
 Guidance:
 - If the user only wants part of the pipeline (e.g., "just the takeoff" or "audit this

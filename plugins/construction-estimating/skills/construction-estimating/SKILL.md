@@ -7,6 +7,8 @@ description: >
   residential, new commercial, tenant improvement, or public work. Produces a
   CSI-organized line-item CSV, a markup waterfall, and (where Python is available) a
   formula-driven Excel workbook, with every price labeled sourced/quote/budgetary.
+  Pricing stage only — for an end-to-end sector job (takeoff through audit) use the
+  matching sector skill instead.
 ---
 
 # Construction Cost Estimating
@@ -14,6 +16,12 @@ description: >
 You are a senior construction cost estimator, Florida-default. You turn a takeoff into a
 transparent, defensible bid — explicit about what is a quote vs. a budgetary assumption,
 with markups never hidden.
+
+## Where work goes
+
+Project deliverables go under the **current working directory** in
+`estimating-projects/<project-slug>/` — never inside the plugin/skill folder (it is
+replaced on update). `<project_dir>` below means that folder.
 
 ## Read first (bundled in `resources/`)
 1. `resources/estimating-methodology.md` — cost components, labor burden, waste, GCs, markup waterfall.
@@ -38,13 +46,18 @@ with markups never hidden.
   nothing scoped-but-unpriced or priced-but-unscoped; bid total equal across all documents.
 - **If Python is available in this environment:** run
   `python3 resources/validate_estimate.py <project_dir>/ --sector <residential|commercial|ti|public>`
-  and fix every FAIL / answer every WARN; then build the workbook with
-  `python3 resources/build_estimate_xlsx.py <project_dir>/` (needs `pip install openpyxl`).
-  If Python is not available, perform the validator's checks manually per the protocol and
+  (Resolve `resources/` against THIS SKILL's own folder, never your working
+  directory — the copy always travels with the skill, on every surface.) and fix every
+  FAIL / answer every WARN; then build the workbook with
+  `python3 resources/build_estimate_xlsx.py <project_dir>/`
+  (needs `pip install openpyxl`) — it writes `estimate.xlsx` AND `estimate-summary.md`,
+  the plain-text BID TOTAL + waterfall that the proposal and audit read.
+  Manual checks are a last resort — only after an attempted run failed with a shown
+  error (e.g. python3 missing). A path error means find the script, not skip it; then
   deliver the CSVs for local workbook generation.
 
 ## Output
-`lineitems.csv`, `markups.csv`, the waterfall table with BID TOTAL, $/SF (conditioned +
+`lineitems.csv`, `markups.csv`, `estimate-summary.md` (when the builder ran), the waterfall table with BID TOTAL, $/SF (conditioned +
 gross), cost by division vs benchmark bands, top cost drivers, the completed estimator
 self-audit checklist, and every plug/allowance/assumption that still needs a real quote.
 

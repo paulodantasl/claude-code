@@ -6,7 +6,8 @@ description: >
   tenant improvement, TI allowance, work letter, landlord, lease space, or remodeling an
   existing commercial space. Runs the precon pipeline with TI gates: existing-conditions
   verification, asbestos survey, landlord work letter + mandated vendors, after-hours
-  logistics premiums, code-trigger checks, and higher contingency.
+  logistics premiums, code-trigger checks, and higher contingency. Existing buildings
+  only — for ground-up commercial work use the commercial-construction skill.
 ---
 
 # Commercial Buildout / Tenant Improvement (Florida)
