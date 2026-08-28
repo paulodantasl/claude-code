@@ -1,0 +1,57 @@
+# Flight price monitor: Tampa/Orlando → Natal, Brazil
+# Departure window: Jan 15 – Feb 15 (flexible stay length)
+
+route:
+  origins:
+    - code: TPA
+      name: Tampa
+    - code: MCO
+      name: Orlando
+  destination:
+    code: NAT
+    name: Natal, RN, Brazil
+
+passengers:
+  adults: 2
+  children: 2
+
+season:
+  year: 2027
+  departure_start: "2027-01-15"
+  departure_end: "2027-02-15"
+  min_stay_days: 7
+  preferred_stays: [10, 14, 17, 20, 21, 24, 28]
+
+# Sampled every 3 days across the window (interactive search refines further)
+departure_anchors:
+  - "2027-01-15"
+  - "2027-01-18"
+  - "2027-01-21"
+  - "2027-01-24"
+  - "2027-01-27"
+  - "2027-01-30"
+  - "2027-02-02"
+  - "2027-02-05"
+  - "2027-02-08"
+  - "2027-02-11"
+  - "2027-02-14"
+  - "2027-02-15"
+
+search:
+  currency: USD
+  max_offers_per_query: 5
+  max_queries_per_run: 12
+  travel_class: ECONOMY
+  market: US
+  fetch_booking_links: false
+
+alerts:
+  target_price_usd: 3200
+  drop_threshold_usd: 100
+  notify_emails:
+    - robertavazsantos@gmail.com
+    - paulolimad@gmail.com
+
+schedule:
+  runs_per_day: 3
+  timezone: America/New_York

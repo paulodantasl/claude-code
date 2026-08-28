@@ -49,6 +49,26 @@ For more installation options, uninstall steps, and troubleshooting, see the [se
 
 This repository includes several Claude Code plugins that extend functionality with custom commands and agents. See the [plugins directory](./plugins/README.md) for detailed documentation on available plugins.
 
+## Construction precon toolkit
+
+This fork also carries a Florida construction takeoff / estimating toolkit — 6 specialist
+subagents, 12 slash commands (`/bid`, `/takeoff`, `/estimate`, `/audit`, …), 8 Agent
+Skills, and a CSI-organized knowledge base. See [`estimating/`](./estimating/README.md)
+for what it does, and [`estimating/INSTALL.md`](./estimating/INSTALL.md) to install it
+locally or upload it to claude.ai.
+
+## Public API integrations (`ideal_apis/`)
+
+Tier 1 & 2 public APIs (NPPES, Smarty, weather, USAspending, Socrata, etc.) are
+wrapped in a unified Python client and CLI. See [`ideal_apis/README.md`](./ideal_apis/README.md).
+
+```bash
+cd ideal_apis && python3 -m venv .venv && .venv/bin/pip install -e .
+cp .env.example .env   # add API keys for paid services
+.venv/bin/ideal-api daily --skip-yelp    # automated daily lead run
+.venv/bin/ideal-api call leads dentists --limit 5
+```
+
 ## Reporting Bugs
 
 We welcome your feedback. Use the `/bug` command to report issues directly within Claude Code, or file a [GitHub issue](https://github.com/anthropics/claude-code/issues).

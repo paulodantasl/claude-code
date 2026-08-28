@@ -10,3 +10,11 @@ __pycache__/
 credentials.json
 token.json
 
+# Estimating: keep the structure & READMEs, never commit real plans/specs/pricing
+estimating/projects/*
+!estimating/projects/README.md
+
+# Estimating: bid data written outside the repo layout, and build output
+estimating-projects/
+dist/
+

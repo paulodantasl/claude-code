@@ -1,0 +1,34 @@
+name: Natal Interactive Search (Jan 15–Feb 15)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r flight_monitor/requirements.txt
+
+      - name: Run interactive Natal search
+        run: python flight_monitor/scripts/natal_interactive_search.py | tee natal_interactive_report.txt
+        env:
+          IGNAV_API_KEY: ${{ secrets.IGNAV_API_KEY }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: natal-interactive-search
+          path: |
+            natal_interactive_report.txt
+            natal_interactive_results.json
+
+      - run: cat natal_interactive_report.txt >> $GITHUB_STEP_SUMMARY
