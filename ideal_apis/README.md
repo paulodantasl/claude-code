@@ -73,6 +73,13 @@ Use with `ideal-api call permits socrata --endpoint URL --days 7`:
 
 Your existing `permit_scraper` Socrata adapter can share `IDEAL_SOCRATA_APP_TOKEN`.
 
+## What to build next
+
+See [`API-CANDIDATES.md`](./API-CANDIDATES.md) for a ranked review of the
+[public-apis](https://github.com/paulodantasl/public-apis) directory against what a Florida GC
+actually needs — what we already cover, two licensing/cost problems in the current wiring, twelve
+recommended adds, and the Florida-specific sources the directory does not carry.
+
 ## Notes
 
 - NWS (`api.weather.gov`) requires a descriptive `User-Agent` — set via `IDEAL_USER_AGENT`.
