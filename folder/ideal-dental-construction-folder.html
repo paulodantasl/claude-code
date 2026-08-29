@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ideal Dental Construction — One-Page Folder</title>
+<style>
+  /* ============================================================
+     IDEAL DENTAL CONSTRUCTION — One-page folder (US Letter, portrait)
+     Brand-matched to the official logo (idealdentalconstruction.com):
+       • Gold  #F6BE1A  — sampled from the "IDEAL" wordmark
+       • Teal  #176C75  — sampled from "Dental Construction"
+       Teal = primary/structure, Gold = accent/energy.
+     The real logo art is embedded in the header (assets/logo.png).
+     Print-ready: 8.5in × 11in, self-contained.
+     ============================================================ */
+
+  :root{
+    --gold:#f6be1a;        /* brand primary accent */
+    --gold-deep:#d99e00;
+    --teal:#176c75;        /* brand primary structure */
+    --teal-mid:#2a8f97;
+    --teal-deep:#0e535a;
+    --ink:#27393c;
+    --slate:#6c7b7d;
+    --line:#d7e4e4;
+    --tint:#eef6f6;
+    --tint-2:#e2efef;
+    --paper:#ffffff;
+    --sans:"Liberation Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html,body{
+    background:#5a6a6c;
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:geometricPrecision;
+  }
+
+  /* ---- Page frame ---- */
+  .page{
+    position:relative;
+    width:8.5in;
+    height:11in;
+    margin:24px auto;
+    background:var(--paper);
+    overflow:hidden;
+    box-shadow:0 18px 60px rgba(0,0,0,.35);
+    display:flex;
+    flex-direction:column;
+  }
+  /* crisp branded top edge: teal with a gold tail */
+  .page::before{
+    content:""; position:absolute; top:0; left:0; right:0; height:5px;
+    background:linear-gradient(90deg, var(--teal) 0%, var(--teal) 62%, var(--gold) 62%, var(--gold) 100%);
+    z-index:5;
+  }
+  /* fixed-height sections must not shrink — only .process flexes */
+  header, .hero, .band, footer{ flex:0 0 auto; }
+
+  /* type helpers */
+  .eyebrow{
+    font-size:9.5px; letter-spacing:.26em; text-transform:uppercase;
+    font-weight:700; color:var(--teal);
+  }
+  .eyebrow.gold{ color:var(--gold-deep); }
+  .eyebrow.light{ color:#9fd0d4; }
+
+  /* ============================================================
+     HEADER
+     ============================================================ */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 46px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  .logo{ height:60px; width:auto; display:block; }
+  .header-meta{ text-align:right; }
+  .header-meta .loc{
+    font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--teal); font-weight:700;
+  }
+  .header-meta .lic{
+    font-size:9px; letter-spacing:.05em; color:var(--slate);
+    margin-top:4px;
+  }
+
+  /* ============================================================
+     HERO
+     ============================================================ */
+  .hero{
+    position:relative;
+    padding:22px 46px 14px;
+    background:linear-gradient(180deg, #ffffff 0%, var(--tint) 100%);
+    overflow:hidden;
+  }
+  /* faint blueprint grid */
+  .hero::before{
+    content:""; position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(23,108,117,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(23,108,117,.06) 1px, transparent 1px);
+    background-size:26px 26px;
+    -webkit-mask-image:linear-gradient(120deg, transparent 38%, #000 100%);
+            mask-image:linear-gradient(120deg, transparent 38%, #000 100%);
+  }
+  .hero-inner{ position:relative; max-width:6.1in; }
+  .hero h1{
+    font-size:35px; line-height:1.1; color:var(--teal);
+    font-weight:800; letter-spacing:-.02em;
+    margin:12px 0 0;
+  }
+  .hero h1 em{ font-style:italic; color:var(--gold-deep); }
+  .hero p.lede{
+    margin-top:13px; font-size:13px; line-height:1.6;
+    color:#3f5052; max-width:5.4in;
+  }
+  .hero-rule{
+    width:54px; height:3px; background:var(--gold); margin-top:10px;
+  }
+
+  /* ============================================================
+     PROCESS — the centerpiece
+     ============================================================ */
+  .process{
+    padding:22px 46px 12px;
+    flex:1;
+  }
+  .section-head{ display:flex; align-items:baseline; gap:16px; margin-bottom:20px; }
+  .section-head h2{
+    font-size:21px; color:var(--teal);
+    font-weight:800; letter-spacing:-.01em; white-space:nowrap;
+  }
+  .section-head .ln{ flex:1; height:1px; background:var(--line); position:relative; top:-4px; }
+
+  .steps{
+    position:relative;
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:0;
+  }
+  /* connecting spine: teal -> gold */
+  .steps::before{
+    content:""; position:absolute;
+    top:17px; left:8%; right:8%;
+    height:2px;
+    background:linear-gradient(90deg, var(--teal) 0%, var(--gold) 100%);
+    opacity:.55;
+  }
+  .step{ position:relative; padding:0 11px; text-align:center; }
+  .step .node{
+    width:36px; height:36px; border-radius:50%;
+    background:var(--teal); color:#fff;
+    border:2px solid var(--teal);
+    font-weight:800; font-size:15px;
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto; position:relative; z-index:2;
+  }
+  /* alternate nodes in brand gold for rhythm */
+  .step:nth-child(even) .node{
+    background:var(--gold); border-color:var(--gold); color:var(--teal-deep);
+  }
+  .step h3{
+    font-size:11.5px; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--teal); font-weight:700; margin:14px 0 7px;
+  }
+  .step p{
+    font-size:10.3px; line-height:1.5; color:#56686a;
+  }
+
+  /* ============================================================
+     SERVICES + WHY (two-column band)
+     ============================================================ */
+  .band{
+    display:grid; grid-template-columns:1.15fr 1fr;
+  }
+  .services{
+    background:var(--tint-2);
+    padding:20px 40px 20px 46px;
+  }
+  .services h2, .why h2{
+    font-size:18px; color:var(--teal);
+    font-weight:800; letter-spacing:-.01em; margin-bottom:4px;
+  }
+  .services .eyebrow, .why .eyebrow{ margin-bottom:12px; display:block; }
+  .svc-list{ list-style:none; margin-top:14px; }
+  .svc-list li{
+    display:flex; gap:11px; align-items:flex-start;
+    padding:9px 0; border-top:1px solid #cfe1e1;
+    font-size:11.5px; line-height:1.45; color:#36484a;
+  }
+  .svc-list li:first-child{ border-top:none; }
+  .svc-list li b{ color:var(--teal); font-weight:700; }
+  .tick{
+    flex:0 0 16px; width:16px; height:16px; margin-top:1px;
+    border:1.5px solid var(--gold-deep); border-radius:50%;
+    background:var(--gold); position:relative;
+  }
+  .tick::after{
+    content:""; position:absolute; left:4.5px; top:1.5px;
+    width:4px; height:8px; border:solid #fff;
+    border-width:0 1.7px 1.7px 0; transform:rotate(43deg);
+  }
+
+  .why{
+    background:var(--teal);
+    color:#d7ecee;
+    padding:20px 40px 20px 38px;
+    position:relative;
+  }
+  .why h2{ color:#fff; }
+  .stats{ display:grid; grid-template-columns:1fr 1fr; gap:18px 14px; margin-top:18px; }
+  .stat .num{
+    font-size:30px; font-weight:800; letter-spacing:-.02em;
+    color:#fff; line-height:1;
+  }
+  .stat .num small{ font-size:17px; color:var(--gold); font-weight:800; }
+  .stat .lab{
+    font-size:9px; letter-spacing:.11em; text-transform:uppercase;
+    color:#a7d2d6; margin-top:7px; line-height:1.4;
+  }
+  .pledge{
+    margin-top:22px; padding-top:18px; border-top:1px solid rgba(255,255,255,.18);
+    font-size:11px; line-height:1.6; color:#cfe6e8; font-style:italic;
+  }
+
+  /* ============================================================
+     FOOTER / CTA
+     ============================================================ */
+  footer{
+    background:var(--teal-deep);
+    color:#fff;
+    padding:16px 46px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .cta-left .eyebrow{ color:var(--gold); }
+  .cta-left .big{
+    font-size:17px; font-weight:800; letter-spacing:-.01em;
+    color:#fff; margin-top:5px;
+  }
+  .cta-right{ text-align:right; font-size:10.5px; line-height:1.7; color:#c4e0e2; }
+  .cta-right .web{ color:var(--gold); font-weight:700; letter-spacing:.02em; font-size:12px; }
+  .cta-right a{ color:inherit; text-decoration:none; }
+
+  /* ---- print ---- */
+  @page{ size:8.5in 11in; margin:0; }
+  @media print{
+    html,body{ background:#fff; }
+    .page{ margin:0; box-shadow:none; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- ============ HEADER ============ -->
+    <header>
+      <img class="logo" src="assets/logo.png" alt="Ideal Dental Construction" />
+      <div class="header-meta">
+        <div class="loc">Tampa Bay, Florida</div>
+        <div class="lic">Licensed &amp; Insured · CGC1537480 · MRSR5016</div>
+      </div>
+    </header>
+
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero-inner">
+        <span class="eyebrow">Dental Office Construction &amp; Buildouts</span>
+        <h1>We build the practice<br>you've been <em>planning for.</em></h1>
+        <p class="lede">
+          From bare shell to opening day, Ideal Dental Construction delivers
+          ground-up buildouts, renovations, and expansions for dental practices
+          across Tampa Bay — engineered around your operatories, your equipment,
+          and your timeline, with the precision your patients will feel.
+        </p>
+        <div class="hero-rule"></div>
+      </div>
+    </section>
+
+    <!-- ============ PROCESS (centerpiece) ============ -->
+    <section class="process">
+      <div class="section-head">
+        <h2>Our Building Process</h2>
+        <div class="ln"></div>
+        <span class="eyebrow gold">Five clear stages</span>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="node">1</div>
+          <h3>Discovery</h3>
+          <p>We learn your vision, chair count, budget, and lease — then map a realistic scope and schedule.</p>
+        </div>
+        <div class="step">
+          <div class="node">2</div>
+          <h3>Design &amp; 3D</h3>
+          <p>Full 3D coordination aligns plumbing, equipment, and finishes before a single wall goes up.</p>
+        </div>
+        <div class="step">
+          <div class="node">3</div>
+          <h3>Permitting</h3>
+          <p>We manage drawings, code review, and approvals so the project clears every inspection cleanly.</p>
+        </div>
+        <div class="step">
+          <div class="node">4</div>
+          <h3>Construction</h3>
+          <p>One accountable team builds it out — on a tracked schedule with transparent daily updates.</p>
+        </div>
+        <div class="step">
+          <div class="node">5</div>
+          <h3>Handover</h3>
+          <p>Final walkthrough, equipment coordination, and the keys to a practice ready to see patients.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SERVICES + WHY ============ -->
+    <section class="band">
+      <div class="services">
+        <span class="eyebrow">What We Build</span>
+        <h2>Built for dentistry</h2>
+        <ul class="svc-list">
+          <li><span class="tick"></span><span><b>Ground-up buildouts</b> — new dental offices delivered turnkey, shell to opening day.</span></li>
+          <li><span class="tick"></span><span><b>Renovations &amp; refreshes</b> — modernize an operating practice with minimal downtime.</span></li>
+          <li><span class="tick"></span><span><b>Expansions</b> — add operatories and square footage as your patient base grows.</span></li>
+          <li><span class="tick"></span><span><b>3D coordination</b> — clash-free planning of utilities, casework, and equipment.</span></li>
+          <li><span class="tick"></span><span><b>Permitting &amp; compliance</b> — full management of drawings, code, and inspections.</span></li>
+        </ul>
+      </div>
+
+      <div class="why">
+        <span class="eyebrow light">Why Ideal</span>
+        <h2>Proven, accountable, local.</h2>
+        <div class="stats">
+          <div class="stat">
+            <div class="num">200<small>+</small></div>
+            <div class="lab">Projects<br>Delivered</div>
+          </div>
+          <div class="stat">
+            <div class="num">100<small>%</small></div>
+            <div class="lab">Dental-Focused<br>Buildouts</div>
+          </div>
+          <div class="stat">
+            <div class="num">2</div>
+            <div class="lab">State Licenses<br>CGC · MRSR</div>
+          </div>
+          <div class="stat">
+            <div class="num">1</div>
+            <div class="lab">Accountable<br>Team, Start–Finish</div>
+          </div>
+        </div>
+        <p class="pledge">
+          “One team, one point of contact, and a schedule you can build a
+          launch date around.”
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER / CTA ============ -->
+    <footer>
+      <div class="cta-left">
+        <span class="eyebrow">Let's plan your buildout</span>
+        <div class="big">Schedule a free consultation</div>
+      </div>
+      <div class="cta-right">
+        <div class="web"><a href="https://idealdentalconstruction.com">idealdentalconstruction.com</a></div>
+        <div>tampa@idealcgc.com</div>
+        <div>8270 Woodland Center Blvd, Tampa, FL 33614</div>
+      </div>
+    </footer>
+
+  </div>
+</body>
+</html>
