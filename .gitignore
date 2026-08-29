@@ -9,6 +9,7 @@ __pycache__/
 *.db-wal
 credentials.json
 token.json
+procurement/plans_registry.json
 
 # Estimating: keep the structure & READMEs, never commit real plans/specs/pricing
 estimating/projects/*
