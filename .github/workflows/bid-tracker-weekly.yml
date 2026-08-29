@@ -1,0 +1,48 @@
+name: Bid Tracker (weekly)
+
+# Runs every Monday at 07:00 UTC, or on demand.
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Days to look back"
+        required: false
+        default: "7"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bid_tracker
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run bid tracker
+        env:
+          SAM_GOV_API_KEY: ${{ secrets.SAM_GOV_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          python -m bid_tracker run \
+            --days "${{ github.event.inputs.days || '7' }}" \
+            --output-dir bid_packages
+
+      - name: Upload bid packages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bid-packages
+          path: |
+            bid_tracker/bid_packages/**
+            bid_tracker/bids.db
+          if-no-files-found: ignore

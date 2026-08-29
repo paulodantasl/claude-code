@@ -1,0 +1,79 @@
+# Bid / no-bid qualification criteria.
+#
+# How it works:
+#   - Hard filters (disqualifiers) reject an opportunity outright:
+#       states, keywords_exclude, bonding_capacity, min_days_to_respond.
+#   - Everything else feeds a weighted 0–100 score. An opportunity qualifies
+#     when its score >= score_threshold.
+#
+# Edit these to match YOUR company. The defaults below are a general-purpose
+# commercial / public-works contractor in Florida.
+
+criteria:
+
+  # ── NAICS sectors you bid on (prefix match; 23 = Construction) ──────────
+  naics_codes:
+    - "236220"   # Commercial & Institutional Building Construction
+    - "237310"   # Highway, Street & Bridge Construction
+    - "237990"   # Other Heavy & Civil Engineering Construction
+    - "238"      # Specialty Trade Contractors (any subsector)
+
+  # ── Keywords ─────────────────────────────────────────────────────────────
+  # An opportunity that matches include keywords scores higher; any exclude
+  # keyword disqualifies it.
+  keywords_include:
+    - construction
+    - renovation
+    - building
+    - site work
+    - concrete
+    - roadway
+    - utilities
+    - general contractor
+    - design-build
+    - facility
+
+  keywords_exclude:
+    - janitorial
+    - landscaping maintenance
+    - software
+    - staffing
+    - consulting only
+
+  # ── Geography (state codes). Empty list = nationwide. ───────────────────
+  states:
+    - FL
+
+  # ── Contract value (USD). max_value is a HARD cap — bids above it are
+  #    disqualified. Set for small construction work: $0–$300K. ────────────
+  min_value: 0
+  max_value: 300000
+
+  # ── Bonding capacity: any single project above this is rejected ─────────
+  bonding_capacity: 1000000
+
+  # ── Set-asides you can claim (lowercased substring match). Empty = any. ──
+  set_asides: []
+  #  - small business
+  #  - 8(a)
+  #  - hubzone
+  #  - service-disabled veteran
+
+  # ── Reject if fewer than N days remain to respond ───────────────────────
+  min_days_to_respond: 7
+
+  # ── Qualification threshold (0–100) ─────────────────────────────────────
+  # Local government bids often omit NAICS codes, so we keep the bar moderate
+  # and lean on keyword + geography + value signals.
+  score_threshold: 50
+
+  # ── Download solicitation attachments into each package folder ──────────
+  download_documents: true
+
+  # ── Optional: override scoring weights (must sum however you like) ──────
+  weights:
+    naics: 30
+    keywords: 25
+    value: 20
+    geography: 15
+    set_aside: 10
