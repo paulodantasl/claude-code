@@ -1,0 +1,38 @@
+# OPTIONAL structured overrides. Copy to profile.yaml and edit.
+# Anything you set here overrides what the parser guesses from your resume/LinkedIn.
+# Leave a field out to let the auto-parser fill it.
+
+name: "Jane Doe"
+email: "jane@example.com"
+phone: "(555) 123-4567"
+headline: "Public-sector project manager"
+
+# Target/known job titles — these drive the cheap keyword search gate and the
+# title-similarity bonus in scoring. Be generous.
+titles:
+  - "Project Manager"
+  - "Program Coordinator"
+  - "Operations Analyst"
+
+# Skills you want weighted in matching.
+skills:
+  - "budget management"
+  - "GIS"
+  - "stakeholder engagement"
+  - "permitting"
+
+# Search keywords — postings must contain at least one to pass the cheap gate
+# before AI scoring. Defaults to your titles if omitted.
+keywords:
+  - "project"
+  - "coordinator"
+  - "analyst"
+  - "manager"
+
+preferred_locations:
+  - "Tampa"
+  - "St. Petersburg"
+  - "Clearwater"
+
+years_experience: 8
+desired_salary_min: 65000

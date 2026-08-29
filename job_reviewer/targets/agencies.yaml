@@ -1,0 +1,157 @@
+# Government employers in Pasco, Hillsborough, and Pinellas counties (FL)
+# that post on governmentjobs.com (NEOGOV).
+#
+# Each entry:
+#   id        — stable internal id
+#   name      — display name
+#   county    — pasco | hillsborough | pinellas
+#   type      — scraper type (governmentjobs)
+#   slug      — the {agency} segment in governmentjobs.com/careers/{slug}
+#   base_url  — optional explicit careers URL (overrides slug-derived URL)
+#   selectors — optional per-agency CSS selector overrides (see scrapers/governmentjobs.py)
+#
+# ⚠️ SLUG VERIFICATION: governmentjobs.com slugs are not 100% predictable.
+# Before the first real run, open https://www.governmentjobs.com/careers/{slug}
+# for each agency and confirm it loads that employer's jobs. Fix any slug that
+# 404s or set an explicit `base_url`. Agencies marked `verify: true` are the
+# ones most likely to need a slug check. (This sandbox can't reach the site, so
+# slugs below are best-known values to confirm locally.)
+
+agencies:
+
+  # ── Counties ────────────────────────────────────────────────────────────
+  - id: pasco_county
+    name: "Pasco County, FL"
+    county: pasco
+    type: governmentjobs
+    slug: pascocountyfl
+    verify: true
+
+  - id: hillsborough_county
+    name: "Hillsborough County, FL"
+    county: hillsborough
+    type: governmentjobs
+    slug: hillsborough
+    verify: true
+
+  - id: pinellas_county
+    name: "Pinellas County, FL"
+    county: pinellas
+    type: governmentjobs
+    slug: pinellascounty
+    verify: true
+
+  # ── Pasco County municipalities ─────────────────────────────────────────
+  - id: new_port_richey
+    name: "City of New Port Richey, FL"
+    county: pasco
+    type: governmentjobs
+    slug: newportrichey
+    verify: true
+
+  - id: dade_city
+    name: "City of Dade City, FL"
+    county: pasco
+    type: governmentjobs
+    slug: dadecity
+    verify: true
+
+  - id: port_richey
+    name: "City of Port Richey, FL"
+    county: pasco
+    type: governmentjobs
+    slug: portricheyfl
+    verify: true
+
+  - id: zephyrhills
+    name: "City of Zephyrhills, FL"
+    county: pasco
+    type: governmentjobs
+    slug: zephyrhills
+    verify: true
+
+  # ── Hillsborough County municipalities ──────────────────────────────────
+  - id: tampa
+    name: "City of Tampa, FL"
+    county: hillsborough
+    type: governmentjobs
+    slug: tampa
+    verify: true
+
+  - id: temple_terrace
+    name: "City of Temple Terrace, FL"
+    county: hillsborough
+    type: governmentjobs
+    slug: templeterrace
+    verify: true
+
+  - id: plant_city
+    name: "City of Plant City, FL"
+    county: hillsborough
+    type: governmentjobs
+    slug: plantcity
+    verify: true
+
+  # ── Pinellas County municipalities ──────────────────────────────────────
+  - id: st_petersburg
+    name: "City of St. Petersburg, FL"
+    county: pinellas
+    type: governmentjobs
+    slug: stpete
+    verify: true
+
+  - id: clearwater
+    name: "City of Clearwater, FL"
+    county: pinellas
+    type: governmentjobs
+    slug: clearwater
+    verify: true
+
+  - id: largo
+    name: "City of Largo, FL"
+    county: pinellas
+    type: governmentjobs
+    slug: largo
+    verify: true
+
+  - id: pinellas_park
+    name: "City of Pinellas Park, FL"
+    county: pinellas
+    type: governmentjobs
+    slug: pinellaspark
+    verify: true
+
+  - id: dunedin
+    name: "City of Dunedin, FL"
+    county: pinellas
+    type: governmentjobs
+    slug: dunedinfl
+    verify: true
+
+  - id: tarpon_springs
+    name: "City of Tarpon Springs, FL"
+    county: pinellas
+    type: governmentjobs
+    slug: tarponsprings
+    verify: true
+
+  - id: oldsmar
+    name: "City of Oldsmar, FL"
+    county: pinellas
+    type: governmentjobs
+    slug: oldsmar
+    verify: true
+
+  - id: seminole_fl
+    name: "City of Seminole, FL"
+    county: pinellas
+    type: governmentjobs
+    slug: myseminole
+    verify: true
+
+  - id: safety_harbor
+    name: "City of Safety Harbor, FL"
+    county: pinellas
+    type: governmentjobs
+    slug: safetyharbor
+    verify: true
