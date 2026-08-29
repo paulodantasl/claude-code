@@ -1,0 +1,55 @@
+# Pending permits / projects to monitor for status updates.
+#
+# Add one entry per permit you have in flight. The monitor re-checks each one on
+# every run, and notifies the assigned field manager(s) the moment its status
+# (or issued/expiry date, or any watch_fields) changes.
+#
+# Required : permit_number, county (must match an id in counties.yaml)
+# Optional : project_name, address, category (residential|commercial|industrial),
+#            managers (list of field_managers.yaml ids), watch_fields,
+#            source_url, active, notes
+#
+# The permits below are illustrative — replace with your own jobs.
+
+tracked_permits:
+
+  # ── Commercial ──────────────────────────────────────────────────────────
+  - permit_number: "BD-2025-028100"
+    county: pasco_county
+    project_name: "Publix — Angeline Town Center"
+    address: "3400 Angeline Blvd, Land O Lakes, FL 34638"
+    category: commercial
+    managers: [msmith, ops_desk]
+    watch_fields: [next_inspection, assigned_reviewer]
+    notes: "Anchor tenant build; GC = Welbro."
+
+  - permit_number: "BC-2026-004810"
+    county: hillsborough_county
+    project_name: "Amazon Last-Mile DTA5"
+    address: "5200 E Hillsborough Ave, Tampa, FL 33610"
+    category: commercial
+    managers: [jdoe]
+
+  - permit_number: "BLD-2026-007780"
+    county: city_tampa
+    project_name: "Chick-fil-A — Westshore"
+    address: "4320 W Boy Scout Blvd, Tampa, FL 33607"
+    category: commercial
+    managers: [jdoe, ops_desk]
+
+  # ── Residential ─────────────────────────────────────────────────────────
+  # (The discovery pipeline ignores residential; the monitor does NOT — field
+  #  managers care just as much about a custom-home permit clearing review.)
+  - permit_number: "RES-2026-001452"
+    county: city_orlando
+    project_name: "Baldwin Park Custom Home — Lot 14"
+    address: "1420 Meeting Pl, Orlando, FL 32814"
+    category: residential
+    managers: [rlee]
+
+  - permit_number: "BD-2026-003980"
+    county: pasco_county
+    project_name: "Bexley Model Home — Phase 3"
+    address: "4100 Tour Trace, Land O Lakes, FL 34638"
+    category: residential
+    managers: [msmith]
