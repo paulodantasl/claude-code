@@ -1,0 +1,18 @@
+You have received a new assignment in XactAnalysis.
+
+Claim Number: ABC-2026-0421337
+Policy Number: HO-99182734
+Insured: Jane Q. Sample
+Phone: (727) 555-0142
+Loss Address: 4821 Example Ave N
+St. Petersburg, FL 33710
+Type of Loss: Water
+Date of Loss: 07/28/2026
+Deductible: $2,500.00
+Carrier: Example Mutual Insurance
+Adjuster: Alex Casefile
+Adjuster Phone: (800) 555-0100
+Adjuster Email: acasefile@examplemutual.test
+
+Please log in to XactAnalysis to view the complete assignment.
+This is an automated notification. Do not reply to this email.
