@@ -34,6 +34,8 @@ class HTTPClient:
         json: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        files: dict[str, Any] | None = None,
+        raw: bool = False,
     ) -> Any:
         with self._client() as client:
             response = client.request(
@@ -43,10 +45,13 @@ class HTTPClient:
                 json=json,
                 data=data,
                 headers=headers,
+                files=files,
             )
         if response.status_code >= 400:
             detail = response.text[:500]
             raise APIRequestError(service, response.status_code, detail)
+        if raw:
+            return response.content
         if not response.content:
             return None
         content_type = response.headers.get("content-type", "")

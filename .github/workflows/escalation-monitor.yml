@@ -1,0 +1,141 @@
+name: Material Escalation Monitor
+
+on:
+  schedule:
+    # Monthly, the 20th at 13:00 UTC. BLS publishes PPI mid-month for the prior
+    # month, so this lands after the release the snapshot is meant to pick up.
+    - cron: "0 13 20 * *"
+  workflow_dispatch:
+    inputs:
+      months:
+        description: "Trailing window in months"
+        required: false
+        default: "12"
+      alert_pct:
+        description: "Annualized % move that opens an issue"
+        required: false
+        default: "6.0"
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: escalation-monitor
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ideal_apis
+        run: pip install -e ideal_apis
+
+      - name: Refresh escalation snapshot
+        id: refresh
+        env:
+          IDEAL_FRED_KEY: ${{ secrets.IDEAL_FRED_KEY }}
+        run: |
+          if [ -z "$IDEAL_FRED_KEY" ]; then
+            echo "::error::IDEAL_FRED_KEY is not set. Add it as a repository secret" \
+                 "(free key from https://fred.stlouisfed.org/docs/api/api_key.html)."
+            exit 1
+          fi
+          python estimating/scripts/refresh_escalation.py \
+            --months "${{ github.event.inputs.months || '12' }}" \
+            --alert-pct "${{ github.event.inputs.alert_pct || '6.0' }}" \
+            --json > escalation_result.json
+          python estimating/scripts/refresh_escalation.py \
+            --months "${{ github.event.inputs.months || '12' }}" \
+            --alert-pct "${{ github.event.inputs.alert_pct || '6.0' }}" \
+            > escalation_report.md
+          ALERT=$(python3 -c "import json; print(str(json.load(open('escalation_result.json'))['alert_triggered']).lower())")
+          echo "alert=$ALERT" >> "$GITHUB_OUTPUT"
+
+      - name: Post report to job summary
+        run: cat escalation_report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the refreshed snapshot
+        run: |
+          if git diff --quiet -- estimating/data/escalation.json; then
+            echo "Snapshot unchanged — nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add estimating/data/escalation.json
+          git commit -m "Refresh material escalation snapshot
+
+          Automated by the escalation-monitor workflow. The estimate validator
+          reads this file, so refreshing it keeps every bid checked against a
+          current index without a key or network at validation time."
+          git push
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: escalation-${{ github.run_number }}
+          path: |
+            escalation_result.json
+            escalation_report.md
+            estimating/data/escalation.json
+          retention-days: 180
+
+      - name: Open issue when materials are moving
+        if: steps.refresh.outputs.alert == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json, subprocess
+
+          with open("escalation_result.json") as f:
+              result = json.load(f)
+          fired = result.get("alerts") or []
+          if not fired:
+              raise SystemExit(0)
+
+          rows = "\n".join(
+              f"| {a['name']} | `{a['series']}` | {a['pct_change']:+.1f}% | "
+              f"{a['annualized_pct']:+.1f}%/yr | {a['end']['date']} {a['end']['value']} |"
+              for a in fired
+          )
+          worst = fired[0]
+          body = f"""## Material escalation above threshold
+
+          {len(fired)} cost series moved faster than the alert threshold over the
+          trailing window. Escalation carried on open bids may no longer cover the
+          exposure.
+
+          | Series | FRED ID | Window move | Annualized | Latest |
+          |---|---|---|---|---|
+          {rows}
+
+          ### What to do
+
+          - Re-run the validator on any bid still outstanding — it reads the refreshed
+            snapshot automatically:
+            `python3 estimating/scripts/validate_estimate.py <project> --sector <sector>`
+          - Where it WARNs, either raise `contingency_pct` in `markups.csv`, shorten
+            `bid_validity_days`, or write down why the exposure is acceptable.
+          - The snapshot behind this alert is committed at
+            `estimating/data/escalation.json`; every figure above traces to a published
+            FRED series.
+
+          _Automated by the escalation-monitor workflow._
+          """
+          subprocess.run(
+              ["gh", "issue", "create",
+               "--title", f"Material escalation: {worst['name']} {worst['annualized_pct']:+.1f}%/yr",
+               "--body", body],
+              check=False,
+          )
+          PY

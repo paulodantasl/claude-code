@@ -4,10 +4,13 @@
 Usage:
     python3 estimating/scripts/validate_estimate.py <project_dir> [--sector SECTOR]
                                                      [--strict] [--xlsx PATH]
+                                                     [--no-escalation | --escalation-live]
 
     SECTOR: residential | commercial | ti | public   (default: residential)
     --strict: exit 1 on WARNs too (CI gate)
     --xlsx:   path to estimate.xlsx (default <project_dir>/estimate.xlsx)
+    --no-escalation:    skip the escalation check
+    --escalation-live:  query FRED instead of the committed snapshot
 
 Checks lineitems.csv + markups.csv (+ scope-of-work.md if present):
   schema, numeric parse, unit whitelist, zero-qty dispositions, rollup pricing
@@ -18,14 +21,23 @@ Checks lineitems.csv + markups.csv (+ scope-of-work.md if present):
   available — a structural tie-out of the workbook itself (constants, extension
   formulas, subtotal ranges, waterfall order/rates vs the CSVs).
 
+Also checks, on every run, contingency_pct against the trailing move in a
+published material price index, scaled by this bid's material share and the days
+the price is held. It reads estimating/data/escalation.json — a snapshot a
+scheduled job refreshes from FRED — so the check needs no flag, no API key, and
+no network, and stays deterministic in CI. Advisory: it WARNs, never FAILs, and
+degrades to INFO when the snapshot is missing.
+
 Exit code 0 = no FAILs (WARNs allowed; --strict fails WARNs too), 1 = FAIL.
 Prompt discipline catches most errors; this catches the rest for free.
 """
 
 import argparse
 import csv
+import json
 import re
 import sys
+from datetime import datetime, timezone
 from statistics import median
 from collections import defaultdict
 from pathlib import Path
@@ -99,6 +111,18 @@ ROLLUP_RE = re.compile(r"\b(total|rollup|roll-up|subtotal)\b", re.I)
 INFO_NOTE_RE = re.compile(r"\b(rollup|roll-up|info|sanity|do not double|dedup)\b", re.I)
 ZERO_OK_NOTE_RE = re.compile(r"\b(rfi|deferred|by others|allowance|see |qty tbd|verify)\b", re.I)
 
+# Escalation check: how much of the carried contingency the material exposure may
+# eat before it stops being a cushion. WARN above, FAIL never — the check is
+# advisory because it rests on a published index, not on this project's buyout.
+ESCALATION_WARN_RATIO = 1.0    # required >= carried
+ESCALATION_TIGHT_RATIO = 0.6   # required eats 60%+ of the carried line
+
+# The committed snapshot the escalation check reads by default. A scheduled job
+# refreshes it; reading it here keeps the check on for every run without a flag,
+# a key, or network — and keeps the validator deterministic in CI.
+ESCALATION_SNAPSHOT = Path(__file__).resolve().parents[1] / "data" / "escalation.json"
+SNAPSHOT_STALE_DAYS = 60   # PPI publishes monthly; two missed refreshes is stale
+
 
 def num(s, default=0.0):
     try:
@@ -124,6 +148,158 @@ class Report:
         print(f"\n  Summary: {counts['FAIL']} FAIL / {counts['WARN']} WARN / "
               f"{counts['INFO']} INFO / {counts['PASS']} PASS")
         return counts
+
+
+def escalation_rows(esc, mat_share, contingency_pct, validity_days):
+    """Turn a FRED escalation read into report rows. Pure — no network, no I/O.
+
+    The model is deliberately simple and stated in the output so nobody reads more
+    precision into it than it carries: an index moving at `annualized_pct` drifts
+    `annualized_pct * validity_days/365` over the window the bid is exposed, and
+    only the material fraction of direct cost is exposed to it. That drift is
+    compared against the carried contingency/escalation line.
+    """
+    rows = []
+    if esc.get("error"):
+        rows.append(("INFO", "escalation",
+                     f"{esc.get('series', 'series')}: {esc['error']} — escalation not checked"))
+        return rows
+
+    annualized = esc.get("annualized_pct")
+    if annualized is None:
+        rows.append(("INFO", "escalation", "FRED returned no annualized rate — escalation not checked"))
+        return rows
+
+    cite = (f"{esc['series']} {esc['start']['date']} {esc['start']['value']} → "
+            f"{esc['end']['date']} {esc['end']['value']} "
+            f"({esc['pct_change']:+.1f}% over {esc['months']}mo, {annualized:+.1f}%/yr)")
+
+    if annualized <= 0:
+        rows.append(("INFO", "escalation",
+                     f"materials flat or falling — no escalation exposure to carry. {cite}"))
+        return rows
+
+    window_drift = annualized * validity_days / 365
+    required = window_drift * mat_share
+    rows.append(("INFO", "escalation",
+                 f"material exposure {mat_share * 100:.0f}% of direct × {window_drift:+.1f}% drift "
+                 f"over a {validity_days}-day bid validity ⇒ {required:.2f}% of bid. {cite}"))
+
+    if contingency_pct <= 0:
+        rows.append(("WARN", "escalation",
+                     f"contingency_pct=0 but materials are moving {annualized:+.1f}%/yr — carry "
+                     f"~{required:.2f}% escalation or shorten bid validity below {validity_days} days"))
+        return rows
+
+    ratio = required / contingency_pct
+    if ratio >= ESCALATION_WARN_RATIO:
+        rows.append(("WARN", "escalation",
+                     f"escalation alone needs ~{required:.2f}% but contingency_pct is "
+                     f"{contingency_pct:.2f}% — the line is fully consumed with nothing left for "
+                     f"scope risk; raise it, shorten bid validity, or justify in writing"))
+    elif ratio >= ESCALATION_TIGHT_RATIO:
+        rows.append(("WARN", "escalation",
+                     f"escalation ~{required:.2f}% consumes {ratio * 100:.0f}% of the "
+                     f"{contingency_pct:.2f}% contingency — thin cushion for scope risk"))
+    else:
+        rows.append(("PASS", "escalation",
+                     f"contingency {contingency_pct:.2f}% covers the ~{required:.2f}% escalation "
+                     f"exposure with room for scope risk"))
+    return rows
+
+
+def read_snapshot(path):
+    """Load the committed escalation snapshot. Returns (data, note); data may be None."""
+    p = Path(path)
+    if not p.exists():
+        return None, (f"no escalation snapshot at {p.name} — run "
+                      f"estimating/scripts/refresh_escalation.py (or let the scheduled "
+                      f"escalation-monitor workflow write one)")
+    try:
+        data = json.loads(p.read_text())
+    except (OSError, ValueError) as exc:
+        return None, f"escalation snapshot unreadable ({type(exc).__name__}) — regenerate it"
+    if not isinstance(data, dict) or not data.get("series"):
+        return None, "escalation snapshot has no series — regenerate it"
+    return data, None
+
+
+def snapshot_age_days(snapshot):
+    """Days since the snapshot was written, or None if the stamp is unusable."""
+    stamp = snapshot.get("generated_at")
+    if not stamp:
+        return None
+    try:
+        written = datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+    return (datetime.now(timezone.utc) - written).days
+
+
+def escalation_from_snapshot(snapshot, series):
+    """Pull one series out of a snapshot, by friendly name or raw FRED id."""
+    entries = snapshot.get("series", {})
+    if series in entries:
+        return entries[series]
+    for esc in entries.values():
+        if esc.get("series") == series:
+            return esc
+    return None
+
+
+def check_escalation(rep, mat_share, contingency_pct, validity_days, series, months,
+                     *, snapshot_path=None, live=False):
+    """Add the escalation rows. Never fails the run, never blocks on the network.
+
+    By default this reads the committed snapshot, so the check is on for every run
+    without a flag, a key, or connectivity — and stays deterministic in CI. ``live``
+    goes to FRED directly, which needs ideal_apis and a key.
+    """
+    if not live:
+        snapshot, note = read_snapshot(snapshot_path or ESCALATION_SNAPSHOT)
+        if snapshot is None:
+            rep.add("INFO", "escalation", note)
+            return
+        esc = escalation_from_snapshot(snapshot, series)
+        if esc is None:
+            rep.add("INFO", "escalation",
+                    f"series {series!r} not in the snapshot (has: "
+                    f"{sorted(snapshot['series'])}) — refresh it or pass --escalation-series")
+            return
+        age = snapshot_age_days(snapshot)
+        if age is not None and age > SNAPSHOT_STALE_DAYS:
+            rep.add("WARN", "escalation",
+                    f"escalation snapshot is {age} days old (written {snapshot['generated_at']}) "
+                    f"— PPI updates monthly; refresh it before relying on the number below")
+        elif age is not None:
+            rep.add("INFO", "escalation",
+                    f"snapshot written {snapshot['generated_at']} ({age}d ago), "
+                    f"{snapshot.get('series_read', '?')}/{snapshot.get('series_total', '?')} series")
+        for level, check, msg in escalation_rows(esc, mat_share, contingency_pct, validity_days):
+            rep.add(level, check, msg)
+        return
+
+    try:
+        from ideal_apis import IdealAPIs
+        from ideal_apis.exceptions import MissingAPIKeyError
+    except ImportError:
+        rep.add("INFO", "escalation",
+                "ideal_apis not installed — run 'pip install -e ideal_apis' to check "
+                "escalation live against FRED")
+        return
+    try:
+        esc = IdealAPIs().market.escalation(series, months=months)
+    except MissingAPIKeyError:
+        rep.add("INFO", "escalation",
+                "IDEAL_FRED_KEY not set — get a free key at fred.stlouisfed.org and add it "
+                "to .env, or drop --escalation-live to use the committed snapshot")
+        return
+    except Exception as exc:
+        rep.add("INFO", "escalation",
+                f"FRED unreachable ({type(exc).__name__}) — escalation not checked")
+        return
+    for level, check, msg in escalation_rows(esc, mat_share, contingency_pct, validity_days):
+        rep.add(level, check, msg)
 
 
 def tie_out_xlsx(xlsx_path, data, mk, rep):
@@ -231,6 +407,20 @@ def main():
                     help="exit 1 on WARNs too (CI gate)")
     ap.add_argument("--xlsx", default=None,
                     help="path to estimate.xlsx (default: <project_dir>/estimate.xlsx)")
+    ap.add_argument("--no-escalation", action="store_true",
+                    help="skip the escalation check entirely")
+    ap.add_argument("--escalation-live", action="store_true",
+                    help="query FRED directly instead of reading the committed snapshot "
+                         "(needs ideal_apis + IDEAL_FRED_KEY)")
+    ap.add_argument("--escalation-snapshot", default=None,
+                    help=f"snapshot path (default: {ESCALATION_SNAPSHOT})")
+    ap.add_argument("--bid-validity-days", type=int, default=None,
+                    help="days the bid price is held (default: bid_validity_days in "
+                         "markups.csv, else 30)")
+    ap.add_argument("--escalation-series", default="construction_materials",
+                    help="FRED series name or id for the escalation read")
+    ap.add_argument("--escalation-months", type=int, default=12,
+                    help="trailing window for the escalation read (default 12)")
     args = ap.parse_args()
     proj = Path(args.project_dir)
     rep = Report()
@@ -376,6 +566,20 @@ def main():
             rep.add("WARN", "markups", "sector=public but bond_pct=0 — FL 255.05 requires P&P bond on most public work")
     else:
         rep.add("WARN", "markups", "markups.csv not found — waterfall not recomputed")
+
+    # --- escalation vs the carried contingency (on by default, advisory) ---
+    if not args.no_escalation:
+        if not direct:
+            rep.add("INFO", "escalation", "no direct cost — escalation not checked")
+        else:
+            validity = (args.bid_validity_days
+                        or int(mk.get("bid_validity_days") or 0)
+                        or 30)
+            check_escalation(rep, tot["mat"] / direct,
+                             mk.get("contingency_pct", 0.0), validity,
+                             args.escalation_series, args.escalation_months,
+                             snapshot_path=args.escalation_snapshot,
+                             live=args.escalation_live)
 
     # --- benchmark bands ---
     bands = BANDS[args.sector]

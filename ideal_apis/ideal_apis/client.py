@@ -4,14 +4,19 @@ from ideal_apis.config import Settings, get_settings
 from ideal_apis.http import HTTPClient
 from ideal_apis.services import (
     AddressService,
+    BidPackageService,
+    ComplianceService,
     DocumentsService,
     GeoService,
     GovernmentService,
     LeadsService,
     LogisticsService,
+    MarketService,
     PermitsService,
     ProductivityService,
     PropertyService,
+    ScheduleService,
+    SiteService,
     ValidationService,
     WeatherService,
     WebService,
@@ -43,4 +48,9 @@ class IdealAPIs:
         self.logistics = LogisticsService(self.http, self.settings)
         self.property = PropertyService(self.http, self.settings)
         self.productivity = ProductivityService(self.http, self.settings)
+        self.market = MarketService(self.http, self.settings)
+        self.site = SiteService(self.http, self.settings)
+        self.compliance = ComplianceService(self.http, self.settings)
+        self.schedule = ScheduleService(self.http, self.settings)
+        self.bidpackage = BidPackageService(self.http, self.settings)
         self.web = WebService(self.http)

@@ -90,6 +90,11 @@ def show_keys() -> None:
         ("OpenCorporates", s.opencorporates_key),
         ("DistrictAPI", s.districtapi_key),
         ("Clockify", s.clockify_key),
+        ("FRED", s.fred_key),
+        ("iLovePDF", s.ilovepdf_public_key),
+        ("OpenSanctions", s.opensanctions_key),
+        ("AQICN", s.aqicn_key),
+        ("OpenAQ", s.openaq_key),
     ]
     import os
     fields.append(("JobTread grant", os.getenv("JOBTREAD_GRANT_KEY")))

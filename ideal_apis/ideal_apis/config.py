@@ -60,6 +60,20 @@ class Settings(BaseModel):
     ups_client_id: str | None = None
     ups_client_secret: str | None = None
 
+    # Market / escalation
+    fred_key: str | None = None
+
+    # Bid package assembly
+    ilovepdf_public_key: str | None = None
+    ilovepdf_secret_key: str | None = None
+
+    # Compliance
+    opensanctions_key: str | None = None
+
+    # Environment
+    aqicn_key: str | None = None
+    openaq_key: str | None = None
+
     # Property / productivity
     acrelens_key: str | None = None
     opencorporates_key: str | None = None
@@ -92,6 +106,12 @@ class Settings(BaseModel):
             whereparcel_key=os.getenv("IDEAL_WHEREPARCEL_KEY"),
             ups_client_id=os.getenv("IDEAL_UPS_CLIENT_ID"),
             ups_client_secret=os.getenv("IDEAL_UPS_CLIENT_SECRET"),
+            fred_key=os.getenv("IDEAL_FRED_KEY"),
+            ilovepdf_public_key=os.getenv("IDEAL_ILOVEPDF_PUBLIC_KEY"),
+            ilovepdf_secret_key=os.getenv("IDEAL_ILOVEPDF_SECRET_KEY"),
+            opensanctions_key=os.getenv("IDEAL_OPENSANCTIONS_KEY"),
+            aqicn_key=os.getenv("IDEAL_AQICN_KEY"),
+            openaq_key=os.getenv("IDEAL_OPENAQ_KEY"),
             acrelens_key=os.getenv("IDEAL_ACRELENS_KEY"),
             opencorporates_key=os.getenv("IDEAL_OPENCORPORATES_KEY"),
             districtapi_key=os.getenv("IDEAL_DISTRICTAPI_KEY"),

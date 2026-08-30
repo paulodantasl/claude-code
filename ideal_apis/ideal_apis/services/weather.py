@@ -26,6 +26,15 @@ class WeatherService:
         forecast_url = points["properties"]["forecast"]
         return self.http.get(forecast_url, service="US Weather")
 
+    def job_forecast(self, lat: float, lon: float) -> dict[str, Any]:
+        """Forecast for a live job — the commercially licensed default.
+
+        Use this, not :meth:`open_meteo_forecast`, for anything that touches a job.
+        NWS is US government work product in the public domain, so it carries no
+        licence restriction on commercial use; Open-Meteo's free tier does.
+        """
+        return self.nws_forecast(lat, lon)
+
     def nws_alerts(self, *, state: str | None = None, zone: str | None = None) -> dict[str, Any]:
         """Active NWS watches/warnings. Prefer zone path — state query params often 503."""
         if zone:
@@ -58,6 +67,12 @@ class WeatherService:
         hourly: list[str] | None = None,
         forecast_days: int = 7,
     ) -> dict[str, Any]:
+        """Open-Meteo forecast — internal and experimental use only.
+
+        Open-Meteo's free tier is licensed for non-commercial use. For scheduling
+        real work call :meth:`job_forecast`, which uses NWS, or move this call to an
+        Open-Meteo commercial plan.
+        """
         params: dict[str, Any] = {
             "latitude": lat,
             "longitude": lon,
@@ -136,6 +151,38 @@ class WeatherService:
             start=start.strftime("%Y%m%d"),
             end=end.strftime("%Y%m%d"),
             bbox=bbox,
+        )
+
+    def air_quality(self, lat: float, lon: float) -> dict[str, Any]:
+        """Nearest air quality reading (AQICN).
+
+        Drives dust-control compliance on demolition and site work, and the crew-safety
+        call on wildfire-smoke days.
+        """
+        if not self.settings.aqicn_key:
+            raise MissingAPIKeyError("AQICN", "IDEAL_AQICN_KEY")
+        return self.http.get(
+            f"https://api.waqi.info/feed/geo:{lat};{lon}/",
+            service="AQICN",
+            params={"token": self.settings.aqicn_key},
+        )
+
+    def openaq_nearby(
+        self,
+        lat: float,
+        lon: float,
+        *,
+        radius_m: int = 25000,
+        limit: int = 10,
+    ) -> dict[str, Any]:
+        """OpenAQ monitoring locations near a job site."""
+        if not self.settings.openaq_key:
+            raise MissingAPIKeyError("OpenAQ", "IDEAL_OPENAQ_KEY")
+        return self.http.get(
+            "https://api.openaq.org/v3/locations",
+            service="OpenAQ",
+            params={"coordinates": f"{lat},{lon}", "radius": radius_m, "limit": limit},
+            headers={"X-API-Key": self.settings.openaq_key},
         )
 
     def visual_crossing_timeline(
