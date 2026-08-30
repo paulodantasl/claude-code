@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from ideal_apis.config import Settings
@@ -8,9 +8,10 @@ from ideal_apis.http import HTTPClient
 
 
 class PermitsService:
-    """Socrata open-data permits and Data.gov catalog search."""
+    """Socrata open-data permits and dataset catalog search."""
 
-    DATAGOV_CATALOG = "https://api.gsa.gov/technology/datagov/v1/search"
+    DATAGOV_V4 = "https://api.gsa.gov/technology/datagov/v4/search"
+    SOCRATA_CATALOG = "https://api.us.socrata.com/api/catalog/v1"
 
     def __init__(self, http: HTTPClient, settings: Settings):
         self.http = http
@@ -48,7 +49,7 @@ class PermitsService:
         extra_where: str | None = None,
         limit: int = 500,
     ) -> list[dict[str, Any]]:
-        since = (datetime.utcnow() - timedelta(days=days_back)).strftime("%Y-%m-%dT00:00:00")
+        since = (datetime.now(timezone.utc) - timedelta(days=days_back)).strftime("%Y-%m-%dT00:00:00")
         where = f"{date_column} >= '{since}'"
         if extra_where:
             where = f"({where}) AND ({extra_where})"
@@ -60,15 +61,27 @@ class PermitsService:
         )
 
     def datagov_search(self, query: str, *, limit: int = 20) -> dict[str, Any]:
-        params = {"q": query, "size": limit}
-        headers = {}
+        """Search dataset catalog — v4 API when keyed, else Socrata catalog (free)."""
         if self.settings.datagov_key:
-            headers["X-Api-Key"] = self.settings.datagov_key
+            params = {"q": query, "per_page": limit}
+            headers = {"X-Api-Key": self.settings.datagov_key}
+            try:
+                return self.http.get(
+                    self.DATAGOV_V4,
+                    service="Data.gov",
+                    params=params,
+                    headers=headers,
+                )
+            except Exception:
+                pass
+        return self.socrata_catalog_search(query, limit=limit)
+
+    def socrata_catalog_search(self, query: str, *, limit: int = 20) -> dict[str, Any]:
+        """Free fallback: search Socrata open-data catalog for permit datasets."""
         return self.http.get(
-            self.DATAGOV_CATALOG,
-            service="Data.gov",
-            params=params,
-            headers=headers or None,
+            self.SOCRATA_CATALOG,
+            service="Socrata Catalog",
+            params={"q": query, "only": "datasets", "limit": limit},
         )
 
     def find_florida_permit_datasets(self, county: str | None = None) -> dict[str, Any]:

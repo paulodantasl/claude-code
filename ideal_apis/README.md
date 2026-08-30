@@ -119,3 +119,84 @@ Florida-specific sources the directory does not carry.
 - NWS (`api.weather.gov`) requires a descriptive `User-Agent` — set via `IDEAL_USER_AGENT`.
 - NOAA hail uses the free SWDI NEXRAD endpoint (no key).
 - Keyed APIs raise `MissingAPIKeyError` with the env var name if credentials are absent.
+
+## Automated daily pipeline
+
+Run the full lead workflow (NPPES → OpenFEMA → weather → gov intel → ledger → CSV):
+
+```bash
+ideal-api daily
+ideal-api daily --skip-yelp          # if no IDEAL_YELP_KEY yet
+ideal-api daily --push-jobtread      # needs JOBTREAD_GRANT_KEY in .env
+ideal-api daily --push-jobtread --live   # actually create JobTread accounts
+```
+
+Outputs land in `ideal_apis/data/output/`:
+
+- `daily_leads_YYYY-MM-DD.json` — all new rows
+- `jobtread_import_YYYY-MM-DD.csv` — contactable leads for CRM import
+- `summary_YYYY-MM-DD.md` — email-ready digest
+
+Dedupe state: `ideal_apis/data/leads_ledger.json`
+
+Edit sources in `ideal_apis/config/pipeline.yaml` (cities, taxonomies, brands).
+
+### JobTread auto-push
+
+Add to `.env`:
+
+```
+JOBTREAD_GRANT_KEY=your_grant_key
+```
+
+Then:
+
+```bash
+ideal-api daily --push-jobtread --live
+```
+
+Without the grant key, the pipeline still runs and writes the CSV — import manually or let a Cursor agent use JobTread MCP.
+
+## Approval-gated workflow (recommended)
+
+Use sequential approvals before JobTread push or QUO texts:
+
+```bash
+# 1. Collect (fetch + dedupe + approval batch — no auto-push)
+ideal-api leads collect --skip-yelp
+ideal-api leads status --show-leads
+
+# 2. Approve leads for JobTread
+ideal-api leads approve --high-only
+# or: ideal-api leads approve --indices 0,1,2
+# or: ideal-api leads approve --all
+
+# 3. Push to JobTread (dry-run default; --live needs JOBTREAD_GRANT_KEY)
+ideal-api leads apply jobtread
+ideal-api leads apply jobtread --live
+
+# 4. Approve QUO texts (after JobTread push)
+ideal-api leads approve-quo --all
+
+# 5. Write QUO queue JSON (does not send — you send via OpenPhone)
+ideal-api leads apply quo
+```
+
+Approval batches: `ideal_apis/data/approvals/YYYY-MM-DD.json`
+
+Cursor agents can push approved leads via JobTread MCP when `JOBTREAD_GRANT_KEY` is not set locally.
+
+## Autonomous health checks
+
+Probe every registered API integration (free APIs must pass; keyed APIs skip if no key):
+
+```bash
+ideal-api health                    # probe all 39 integrations (parallel, 30s/probe timeout)
+ideal-api health --tier 1           # tier 1 only
+ideal-api health --require-all-free # exit 1 if any free API fails
+ideal-api health --write-report     # saves data/output/health_report.json
+ideal-api health --timeout 30 -v    # verbose probe progress
+```
+
+Scheduled via `.github/workflows/api-health.yml` (weekdays). Keyed APIs show `skipped` until you set env vars from `ideal-api keys`.
+

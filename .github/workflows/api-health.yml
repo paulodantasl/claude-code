@@ -1,0 +1,23 @@
+name: API Health Check
+
+on:
+  schedule:
+    - cron: "0 12 * * 1-5"  # weekdays noon UTC (~7am ET)
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ideal_apis
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: Probe all free Tier 1 APIs
+        run: ideal-api health --tier 1 --require-all-free --timeout 30 --write-report
+      - name: Full health summary
+        run: ideal-api health --timeout 30 --write-report
