@@ -171,6 +171,43 @@ against the workbook before saving, and absorb rounding drift in the contingency
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
 
+### 2026-09-02 (10) - Job 2026-373 (SK Dental) - DRAINAGE REDESIGN, ACO StormBrixx vs StormTech SC-310 - Claude
+- **Scope:** owner-supplied C4 revision (plot 2026-09-01) replaced the 160-chamber SC-310 bed
+  with an ACO StormBrixx 600 HD half-layer tank. Registered the new sheet as its own plan
+  page, superseded the old C4 for drainage without touching its annotations, appended 15
+  anchored parameters (75 -> 90, one full-replace call of ~78K chars, read-back 90/90
+  identical), and ran takeoff -> procurement -> estimator -> auditor for a three-way
+  cost comparison (SC-310 as carried, StormBrixx per the 13 Aug review, StormBrixx per
+  the revised C4). All bid data stays in the gitignored project folder.
+- **NEW - file upload path that works from the sandbox:** `createUploadRequest` returns a
+  signed PUT URL on `storage.googleapis.com`; the PUT succeeds (HTTP 200) even though
+  `cdn.jobtread.com` downloads are proxy-blocked. Then `createFile` with
+  `targetType "job"`, `targetId`, `uploadRequestId`, `name` attaches the file to the
+  Files tab. It does NOT create plan pages.
+- **NEW - `createPlan` is one page per call:** `createPlan(jobId, fileId, page, name,
+  scale)`; it returns the root type, so select `job{$:{id}, plans{...}}` (there is no
+  `createdPlan`). A selection error stops the mutation before it executes (verified by
+  re-listing plans before retrying, so no duplicate pages).
+- **NEW - `updatePlan.annotations` is full replace** exactly like parameters: read, merge,
+  write, read back. Used it to add the calibration note plus a red SUPERSEDED FOR DRAINAGE
+  note on the old C4 while keeping its existing annotations.
+- **Supersession on a multi-page upload:** the ACO set is 13 pages; plan pages were
+  created for C4 REV (page 2), the ACO overlay (page 7) and the ACO plan view (page 8),
+  each with the 1"=10' scale 23.62204724409449 pt/m verified on the tank rectangle
+  (830.3 x 288.4 pt = 114.92 x 39.65 ft vs ACO 114'-11 1/4" x 39'-7 5/8").
+- **Naming rule carried over from Job 2026-374:** parameter names carry no sizes,
+  quantities or types (product size and printed callouts live in the measurement names);
+  no stored `value` and no `isManual` on tool-measured parameters; the freedraw form
+  renders but measures zero, so every geometry is a point-anchored path (`annotationId`
+  references) with `page:1` on plans cut from a multi-page file.
+- **Comparison discipline:** the superseded SC-310 parameters were kept and renamed with a
+  `PRIOR SC-310 (superseded 2026-09-01) ` prefix (14 of the 75) instead of being deleted,
+  so the old and new takeoffs coexist on the job and the delta is auditable line by line.
+- **Read-back handling:** a `parameters` read larger than the tool result cap is spooled to
+  a file under `tool-results/`; diff it in Python against the pre-write snapshot rather
+  than eyeballing 66K+ chars in context.
+- **`document.costItems` page size is capped at 100** (`size:300` is rejected).
+
 ### 2026-08-03 (9) — Job 2026-373 (SK Dental, St. Petersburg) — GROUND-UP CIVIL + ARCH — Claude
 - **Scope:** first GROUND-UP job through the pipeline: 6-sheet civil (C1–C8) + 5-sheet
   arch prelim + 1 superseded standalone sheet → **75 parameters** (33 with geometry,
