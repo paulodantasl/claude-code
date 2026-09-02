@@ -208,6 +208,36 @@ against the workbook before saving, and absorb rounding drift in the contingency
   than eyeballing 66K+ chars in context.
 - **`document.costItems` page size is capped at 100** (`size:300` is rejected).
 
+### 2026-09-02 (11) - Job 2026-373 - ESTIMATE VERSION + FORMULA PARAMETERS + TRACED VOLUMES - Claude
+- **Formula parameters work and reference other parameters by name in braces:**
+  `{"name":"...","formula":"{33 Storm - ACO StormBrixx tank footprint} / 7.854"}` was accepted by
+  `updateJob.parameters` and read back unchanged. Arithmetic with constants and a parameter
+  minus a parameter both validated. The API read-back returns no evaluated value for a
+  formula parameter; the value shows in the UI. Used for counts that are not drawn as
+  symbols (ACO half-modules = traced footprint / module area; side panels = traced
+  perimeter / panel pitch; top plates = half-modules; net stone = gross envelope volume
+  minus tank displacement volume).
+- **areaVolume and linearArea confirmed with `depth` + `unit` on the MEASUREMENT** (pit
+  excavation, stone envelope, ring backfill as four strips, final fill, geotextile sides).
+- **Per-message write ceiling is real:** a 165K-char `updateJob` call was cut by the
+  output limit before it was sent; 91K chars went through. Plan full-replace payloads
+  under about 100K chars, and prefer formula parameters over thousands of synthetic
+  count markers.
+- **New estimate version = `createDocument` + `updateDocument.lineItems` (full replace):**
+  `createDocument.$` needs `jobId`, `type` ("customerOrder" is the estimate type),
+  `name` (must be one of the organization's document template names, e.g. ESTIMATE,
+  ESTIMATE DENTAL, Change Order, Request for Information (RFI)), `fromName`, `toName`,
+  `taxRate`, `jobLocationName`, `jobLocationAddress`, and exactly one of `dueDays` or a
+  due date; the mutation returns the root, so select `job{documents{...}}`. The name
+  cannot be free text even on update. `updateDocument.$.lineItems` takes the same
+  costGroup / costItem shape as the budget (`unitId`, `costTypeId`, `costCodeId`,
+  `isTaxable`, `showQuantity`, `customFieldValues`); 98 items in 17 groups (~46K chars)
+  saved in one call and read back with `costItems{count,totalCost,totalPrice}`.
+  `duplicateDocument` does not exist; `notes` is not a document field.
+- **Reference-sheet calibration:** manufacturer sheets are often fit-to-sheet, not a
+  standard scale (ACO plan view 6.75 pt/ft = 22.14567 pt/m, from the tank outline quad);
+  calibrate each page on a drawn dimension before placing count markers on it.
+
 ### 2026-08-03 (9) — Job 2026-373 (SK Dental, St. Petersburg) — GROUND-UP CIVIL + ARCH — Claude
 - **Scope:** first GROUND-UP job through the pipeline: 6-sheet civil (C1–C8) + 5-sheet
   arch prelim + 1 superseded standalone sheet → **75 parameters** (33 with geometry,
