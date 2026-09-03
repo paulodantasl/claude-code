@@ -171,6 +171,39 @@ against the workbook before saving, and absorb rounding drift in the contingency
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
 
+### 2026-09-03 (11) - Job 2026-373 (SK Dental) - EVERY PARAMETER CONVERTED TO DRAWN GEOMETRY - Claude
+- **Scope:** the job still had 42 parameters carrying typed values with no geometry (the
+  original ground-up pass had used `isManual`). All 42 were traced on the actual sheets and
+  every stored `value` was removed job-wide: 105 parameters, 122 measurements, 956
+  annotations, 0 manual, 0 stored values, 5 formula parameters. Read-back verified.
+- **NEW - `page` on a measurement annotation is OPTIONAL on input.** Omitting it saves about
+  11 chars per annotation and the server writes `page: 1` back on read. Confirmed by diffing
+  the read-back against the payload: the ONLY systematic difference was the re-added `page`.
+- **NEW - the practical write ceiling is the CLIENT emission, not the server.** A 131K-char
+  `updateJob.parameters` array could not be emitted in one message; 93K went through cleanly
+  (90K had also worked before). Since parameters are FULL REPLACE and there is no
+  per-parameter mutation (`createParameter`, `updateParameter`, `updateJobParameters` all
+  reject at the query root), the whole array must fit in one call. Budget it: the geometry
+  floor is what dominates, not the notes, so cut measurement count and marker count first,
+  then note length. Merging several disjoint runs into ONE measurement with MULTIPLE paths
+  is the cheapest structural saving and keeps every quantity.
+- **NEW - a wrongly calibrated sheet is invisible until you draw on it.** C6 was registered at
+  1 in = 10 ft but is plotted at 1 in = 20 ft. Verify each page independently by measuring the
+  same real-world object on it (here the property rectangle) before tracing; only a count
+  marker had existed on that page, so nothing had been mis-measured.
+- **NEW - page-to-page anchoring.** Every civil sheet in a set repeats the same property
+  rectangle at a fixed offset, so tracing one sheet gives you a transform to every other
+  sheet: measure the parcel on each page once and translate. Verified across C3, C4, C5, C6
+  and C8.
+- **NEW - recovering a lost source PDF.** `cdn.jobtread.com` is blocked by the sandbox proxy,
+  but the same file in Google Drive can be pulled with the Drive connector; the base64 body is
+  spooled to a tool-results file and decoded locally with no context cost.
+- **Checker gotcha:** a closed path may or may not repeat its first point. Compute the area on
+  the ring with the duplicate removed only when the last point equals the first, otherwise a
+  four-point closed rectangle silently measures half.
+- **Registers as counts:** RFI and allowance registers were given one marker per real conflict
+  location on the governing sheet, so even those are counted on screen rather than typed.
+
 ### 2026-09-02 (10) - Job 2026-373 (SK Dental) - DRAINAGE REDESIGN, ACO StormBrixx vs StormTech SC-310 - Claude
 - **Scope:** owner-supplied C4 revision (plot 2026-09-01) replaced the 160-chamber SC-310 bed
   with an ACO StormBrixx 600 HD half-layer tank. Registered the new sheet as its own plan
