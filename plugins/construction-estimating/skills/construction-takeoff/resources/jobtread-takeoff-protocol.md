@@ -100,6 +100,11 @@ global types by name (`parameters`, `plan`).
    of git — and the sandbox container is ephemeral, so **also hand the files to the user**
    (SendUserFile) or the backup dies with the session. A takeoff is not finished until that
    file exists.
+   **The export MUST also capture, per plan: `scale`, `page`, and `file.{id,name,size}`.**
+   Parameter geometry is meaningless without the scale it was measured at and the file it was
+   traced on, and both can change under you (§6 #15 and the file-swap row in §1). Carrying
+   them in the backup is what lets a later session prove a stored value is still valid — or
+   recompute it — instead of guessing.
 
 ## 5. Naming & style conventions (keep the Parameters panel readable)
 
