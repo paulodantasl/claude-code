@@ -216,11 +216,37 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   were typed from memory instead of taken from the text layer. `plans/rooms.py` is kept in the
   project folder marked FAILED with both causes. **The conditioned area is the flooring control
   total; the split by finish type is an RFI because the 29-sheet set has no finish schedule.**
-- **Coverage is bounded by what is uploaded.** Only 10 of the set's 29 sheets are in JobTread
-  and only 5 are scaled. Div 22/23/26 (P1/P2, E1/E2, no mechanical sheet exists at all),
-  Div 12 cabinets (D5/D5.1), footing rebar / filled cells / lintels (S1/S1.1/S2/S2.1) and all
-  sitework (A2 is blank) **cannot be geometry-anchored** — say so plainly rather than
-  substituting a derived number for a trace.
+- **PAGINATION BURNED ME — `job.plans` defaults to 10 nodes.** I queried `{job:{plans:{nodes:…}}}`,
+  got 10 rows, and reported "only 10 of the set's 29 sheets are in JobTread." **All 29 were there.**
+  The claim propagated into a parameter note, this run log and a PR body before the user corrected
+  it. **Always pass `$: {size: N}` and select `count` on any connection, and reconcile the row
+  count against `count` before drawing a conclusion from it.** With the real list in hand, 15 of
+  the 29 sheets carry a scale and the "cannot be geometry-anchored" trades were all measurable:
+  S1 foundation, S2 lintels, E1/E2 electrical, P1/P2 plumbing, D5/D5.1 kitchen.
+- **PIPES AND FIXTURE SYMBOLS ARE DRAWN AS DOUBLE LINES / DOUBLE PATHS — check before you total.**
+  Two independent double-count traps in one run: (a) P1 water and P2 sanitary are each drawn as
+  two parallel edges (gap = the pipe size: 0.8 pt = 1/2", 1.6 pt = 3/4", 2.6 pt = 2", 5.3 pt = 3"),
+  so the raw edge length ran ~1.5x the truth — 663.8 -> **445.1 LF** water and 453.7 -> **298.0 LF**
+  DWV after pairing edges into centrelines with the same union-of-extents rule used on the A4
+  partitions; (b) the E1 recessed-can glyph is **two paths 7.5 pt apart**, so a naive symbol match
+  returned 68 cans instead of **34**. The tell for (b) is a count that collapses cleanly 2:1 and
+  then stays flat across a wide dedupe tolerance (9-14 pt). **Histogram the gaps between parallel
+  runs, and sweep the dedupe tolerance, before believing any auto-extracted quantity.**
+- **Chaining segments into polylines changes the measured length.** To shrink the payload I linked
+  pipe segments end-to-end; at every tee the chain doubled back down a run it had already
+  traversed, so the path length JobTread would recompute exceeded the sum of the segments. Caught
+  by recomputing path length from the annotation ids and comparing to the stated value. **One
+  2-point path per measured segment; verify stated value == recomputed path length before saving.**
+- **Payload ceiling is real.** The 34-parameter full-replace came to 129.6 KB and could not be
+  emitted in one call. Compacting (drop the server-default `page:1`, drop per-marker
+  `fillColor`/`strokeColor`/`strokeWidth` on count params since measurement `color` drives display,
+  shorten ids, delete a parameter whose geometry duplicated another) took it to 88 KB, and dropping
+  the two pipe-trace parameters took the saved set to **31 parameters / 49.8 KB**, which went
+  through clean and read back 31/31 with 0 mismatches. **Budget the payload BEFORE tracing a dense
+  network: ~200 traced segments is roughly 35 KB and may not fit alongside everything else.**
+- **Schedules govern over plan-tag counts.** P1/P2 print a PLUMBING SCHEDULE totalling 18 fixtures;
+  scraping P-marks off the plan found 17. The schedule is the authority — plan tags miss fixtures
+  drawn only on the riser diagram.
 
 ### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
 - **Scope:** full-system accuracy audit. JobTread leg: re-derived every measurement
