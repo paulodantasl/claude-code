@@ -21,6 +21,7 @@ the bottom each time this runs. Companion helpers: `estimating/scripts/jobtread_
 | Parameter types | `area, linear, count, linearArea(depth), areaVolume(depth), linearVolume(width+depth), areaPitch, linearPitch(pitchX/Y), linearDrop(startDrop/endDrop), formula(name+formula), number, option` | Schema introspection `parameters` type |
 | Path structure | `path.points` = array of `{annotationId}` refs to sibling `point` annotations; `isClosed` for areas; for a **perimeter as linear**, use an open path with N+1 points (repeat the first coordinate as a new point id) | Org example + our saves |
 | Text annotations | Require non-null `fontWeight`, `fontStyle`, `fillColor`, `fillOpacity`, `rotation` (API errors one missing field at a time) | updatePlan error `A non-null value is required … fontWeight` |
+| **`path` annotations require `strokeWidth` AND `strokeColor`** (both non-null). `point` annotations do NOT — there `strokeColor`/`fillColor`/`strokeWidth` are all optional, so stripping them from count markers is a valid payload compaction; stripping them from paths is not. The validator names **one missing field per round-trip**, and only *after* the whole payload is on the wire | Schema `parameters._on_linear.measurements.annotations`: path lists `strokeWidth:"number"`, `strokeColor:"color"` unwrapped (required) where point wraps them in `{optional:…}`; two consecutive 90 KB rejections cost two full sends |
 | Mutation returns | `updatePlan`/`updateJob` return **root** — select a root field (e.g. re-query the job) or the call fails validation | `The field "id" does not exist at "updatePlan"` |
 | Permissions quirk | Grant may block root `plan{}` (`readPlan`) while **`job → plans` works** (`readJobPlans`) | Live 403 on root query; job-path succeeded |
 
@@ -86,6 +87,16 @@ global types by name (`parameters`, `plan`).
 8. **Report with the overlay image** so the human can compare against the JobTread UI in
    seconds, and state every ± tolerance in the parameter/measurement **names** (they are the
    only field the UI always shows).
+9. **EXPORT A PARAMETER BACKUP — every time, no exceptions** (standing instruction, user,
+   2026-09-05). Once the read-back verifies, dump the job's parameters tab to
+   `estimating/projects/<job>/takeoff-backups/<YYYY-MM-DD>-jobtread-parameters.{json,csv}`:
+   the JSON is the **full-fidelity restore artifact** (feed its `parameters` array straight
+   back into `updateJob.$.parameters` — full replace), the CSV is the human-readable tab
+   (parameter, type, value, unit, depth/width, sheet, measurement + annotation counts,
+   basis note). `estimating/projects/*` is gitignored by design, so real plan data stays out
+   of git — and the sandbox container is ephemeral, so **also hand the files to the user**
+   (SendUserFile) or the backup dies with the session. A takeoff is not finished until that
+   file exists.
 
 ## 5. Naming & style conventions (keep the Parameters panel readable)
 
@@ -113,6 +124,8 @@ global types by name (`parameters`, `plan`).
 | 8 | Text annotation rejected (`fontWeight` non-null) | Send the full text field set (§1) |
 | 9 | CDN download blocked / Drive big-file failures | §3 fallbacks; ask user to allowlist cdn.jobtread.com |
 | 10 | Hand-summed values ≠ app-computed | Expected — geometry is truth; values are advisory (state this to the user) |
+| 11 | Payload compaction stripped `strokeWidth`/`strokeColor` from **path** annotations → two rejected 90 KB sends, one field named per attempt | Strip style keys from `point` markers only. **Introspect the schema rather than guess twice** — one `parameters._on_<type>.measurements.annotations` expand costs ~1 KB and settles every required field at once |
+| 12 | `job.plans` returned 10 nodes; I concluded 19 of 29 sheets were "not uploaded" and wrote off 5 trades | Connections paginate. **Always pass `$: {size: N}` and select `count`**, then assert `len(nodes) == count` before concluding anything is missing |
 
 ## 7. What good looks like (reference result)
 
@@ -135,6 +148,47 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   per plan page).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
+
+### 2026-09-05 (9) — Job 2026-404 — FERRARI RESIDENCE — full-trade completion (P1/P2, E1/E2, S1/S2, D5) — Claude
+- **Result: 33 parameters, 1,200 annotations, saved and read back with 0 mismatches** on
+  every field including all 1,200 coordinates. Up from 23. New this run: Div 22 water (445.15
+  LF) + sanitary (298.01 LF), Div 26 cans 34 / devices 92 / switches 33, Div 04 filled cells
+  52 / CMU columns 3 / precast U-lintels 21, Div 12 granite 58.7 SF / cabinet runs 21.0 LF.
+- **THE BIG MISS, and it was mine:** I read the first page of `job.plans` (**10 nodes, the
+  default**) as the whole set and told the user 19 sheets "were not uploaded" — writing off
+  Div 22, Div 26, Div 12 and the structural rebar as unmeasurable. All 29 were there and
+  scaled. The user corrected me. Re-query with `$: {size: 100}` + `count`, assert
+  `len(nodes) == count`. The false claim had already propagated into a JobTread parameter
+  note, this run log and a PR body; all three were corrected. **A pagination default became a
+  scope decision — never let a connection's first page stand in for the set.**
+- **Double-line pipe = 1.5× overcount.** P1 and P2 draw every pipe as TWO parallel edges
+  (gap = the pipe size: 0.8 pt = ½", 1.6 pt = ¾"; 2.6/5.3 pt = 2"/3" DWV). Raw edge length
+  663.8 / 453.7 LF. Fix: histogram the gaps between overlapping parallel runs, then pair
+  edges into a **centreline by union-of-extents** (139→91 and 174→110 segments) → **445.15 /
+  298.01 LF**. Same trap class as the tile-hatch partition failure: measure what the pipe IS,
+  not how it is drawn.
+- **Legend glyphs drawn as N paths = N× the count.** E1's recessed can is TWO paths 7.5 pt
+  apart → raw 68 for 34 real fixtures. Detected because hits arrived in pairs; confirmed by
+  **sweeping the dedupe tolerance** (68 at ≤6 pt, stable 34 from 9→14 pt). Sweep the tolerance
+  on every symbol count — a plateau is the real number, a knife-edge is a bug. E2's 92 and 33
+  survived the same sweep unchanged.
+- **Chaining segments into polylines silently inflates length** — at every tee the chain
+  doubles back. Caught by recomputing path length from the annotation ids and comparing to
+  the stated value. Reverted to **one 2-point path per segment**; stated == recomputed exactly.
+- **Payload ceiling is real.** 129.6 KB could not be emitted at all; 91–96 KB goes through.
+  Budget the send, and see §6 #11 before compacting anything.
+- **Schedules govern over plan tags.** D4's schedules independently confirmed 14 windows and
+  **343 SF of exterior openings** (257 window + 86 door) — exactly the stucco deduction already
+  derived — and surfaced two live conflicts now carried in the parameter notes: the schedule
+  lists **15** interior openings against my **16** marked on A3, and a **12080 SD slider at
+  LIVING appears in D4's elevation graphics but in no schedule** (money + impact-glazing).
+  P1/P2's schedule reads 18 fixtures where the plan tags read 17 — schedule wins.
+- **A2 Site Plan and A2.1 Landscape are genuinely empty** (18 paths = border + title block).
+  No sitework is drawn anywhere in the 29 sheets. That is an **RFI, not a measurement gap** —
+  say which, explicitly, so nobody re-hunts for it.
+- **Backup exported** per the new §4 step 9: `takeoff-backups/2026-09-05-jobtread-parameters.
+  {json,csv}` (207 KB restore artifact + 8 KB readable tab), and handed to the user, since the
+  project folder is gitignored and the container is ephemeral.
 
 ### 2026-09-05 (8) — Job 2026-404 — FERRARI RESIDENCE, 1217 19TH ST S (A3 GF takeoff) — Claude
 - **Scope:** first takeoff on this job. A3 calibrated + **10 GF parameters, 95 annotations**,
