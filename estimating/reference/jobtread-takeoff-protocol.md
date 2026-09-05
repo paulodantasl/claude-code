@@ -182,6 +182,46 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   for asphalt shingles** (FBC-R R905.2.2). Almost certainly "3:12 / 6:12" mis-tagged as
   percent, but it is a fourth conflicting pitch statement in one set and belongs in RFI-04.
 
+- **Run finished at 23 parameters, 415 annotations** across A3/A4/A5 after the user scaled A4,
+  A5, A6 and A6.1: GF areas 4, CMU 2, slab 1, openings 3, roof 5, partitions 2, plus 6
+  quantity parameters derived on already-traced geometry (mono footing volume, slab volume,
+  vapor barrier/termite area, partition drywall both faces, CMU inside face, ceiling).
+  Saved full-replace and read back with every value identical.
+- **SCHEMA FACT CONFIRMED, not presumed:** `linearVolume` takes **`width` AND `depth` AND its
+  own `unit`** on the measurement; `areaVolume` takes `depth` + `unit`. Both round-trip exactly
+  (`350.74` and `756.59` ft³ read back unchanged). The 2026-09-05 (8) note above said this was
+  "presumably" true of the volume types — it is.
+- **MUTATION SELECTION FACT (cost a failed 41 KB call):** the `job` selection on a mutation
+  needs **its own `$`** — `{"updateJob": {"$": {...}, "job": {"$": {"id": JOB}, "id": {}}}}`.
+  Sending `"job": {"id": {}, "name": {}}` fails with
+  `A non-null value is required at "updateJob"."job"."$"`. §2 already showed the right shape;
+  **verify the selection shape with a one-line no-op mutation BEFORE spending a giant payload.**
+- **PARTITIONS SOLVED — by changing sheets, not by tuning the filter.** A3's floor-tile hatch
+  defeated both attempts in run (8). A4 (DIMENSIONS PLAN) carries identical wall geometry with
+  no floor finish, so the 1.42 pt strokes are unambiguous: **197.6 LF net (150.4 LF 4in +
+  47.2 LF 6in)**, validated against the CMU perimeter to **0.24%**. Two corrections mattered:
+  (a) the sheet is drawn at **nominal** 4"/6"/8", not the spec'd 3-1/2"/5-1/2"/7-5/8" — a
+  thickness histogram of overlapping parallel faces shows peaks at 4.50/6.75/9.00 pt; assuming
+  the spec'd actuals put every pair outside tolerance and lost ~45% of the wall; and (b) the two
+  faces of one wall are NOT drawn to the same extent, so take the **union** of their extents
+  gated on overlap, not the shared overlap (which under-measured the exterior by 44%).
+  **Guard: when a takeoff fights the hatch, look for a sibling sheet with the same geometry
+  and less graphics before writing another filter.**
+- **CMU self-check read as a 66% failure until the comparison was fixed.** Net-between-openings
+  (130.98 LF) was being compared to the gross perimeter (197.29 LF). 197.29 − 66 LF of openings
+  = 131.29 expected → **0.24%**. Compare like to like before concluding the method is broken.
+- **ROOM-BY-ROOM FLOOR AREAS: ATTEMPTED AND DISCARDED.** Ray-casting from A3 room labels onto
+  A4 walls returned 3,794 SF against a conditioned 1,996.68 SF. Median-of-rays cannot fix a
+  room with no fourth wall — living/dining/kitchen is genuinely open-plan — and several seeds
+  were typed from memory instead of taken from the text layer. `plans/rooms.py` is kept in the
+  project folder marked FAILED with both causes. **The conditioned area is the flooring control
+  total; the split by finish type is an RFI because the 29-sheet set has no finish schedule.**
+- **Coverage is bounded by what is uploaded.** Only 10 of the set's 29 sheets are in JobTread
+  and only 5 are scaled. Div 22/23/26 (P1/P2, E1/E2, no mechanical sheet exists at all),
+  Div 12 cabinets (D5/D5.1), footing rebar / filled cells / lintels (S1/S1.1/S2/S2.1) and all
+  sitework (A2 is blank) **cannot be geometry-anchored** — say so plainly rather than
+  substituting a derived number for a trace.
+
 ### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
 - **Scope:** full-system accuracy audit. JobTread leg: re-derived every measurement
   value from raw annotation geometry (shoelace areas, polyline lengths, marker counts)
