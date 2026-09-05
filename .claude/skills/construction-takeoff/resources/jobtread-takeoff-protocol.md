@@ -136,6 +136,52 @@ interior; cores and patio/balcony walls stack at identical coordinates).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
 
+### 2026-09-05 (8) — Job 2026-404 — FERRARI RESIDENCE, 1217 19TH ST S (A3 GF takeoff) — Claude
+- **Scope:** first takeoff on this job. A3 calibrated + **10 GF parameters, 95 annotations**,
+  all geometry-anchored, saved and read back clean. Job had `parameters: null` (clean slate).
+- **NEW SCHEMA FACT (cost a failed call):** a `linearArea` **measurement** requires its own
+  non-null **`unit`** field alongside `depth` — the parameter-level `unit` is NOT enough.
+  Error: `A non-null value is required at "updateJob"."$"."parameters"."5"."measurements"."0"."unit"`.
+  `jobtread_takeoff.measurement()` takes it via `**extra` (`unit="foot", depth=10`). The same
+  is presumably true of `areaVolume`/`linearVolume` — send `unit` on every dimensioned type.
+- **Calibration by measured dimension, not nominal:** A3's printed 37'-6" spans **506.75 pt**
+  between extension lines → **13.51333 pt/ft**, i.e. 3/16"=1'-0" plotted at **100.1%**.
+  `plan.scale = 13.51333 × 3.280839895 = 44.335083`. Nominal 3/16" (44.2913) would have been
+  0.11% light. Confirmed by the sheet's own area table (below).
+- **Validation that the trace is right:** shoelace on the traced 8-point footprint =
+  **2,269.76 SF vs the architect's printed 2,270 SF (0.01%)**; lanai 140.67 vs 142; entry
+  132.40 vs 134; conditioned 1,996.68 vs 1,994 (0.13%); CMU perimeter **197.29 LF** vs the
+  independent line-item takeoff's 197 LF. Five independent ties — that is the licence to save.
+- **The footprint is NOT the bounding rectangle.** 37'-6" × 61'-0" = 2,287.5 SF, but the real
+  under-roof figure is 2,269.6. The bedroom wing's south wall (y=1242.1) and the entry porch
+  (projecting to y=1265.6, only across x 892→1084.5) make it an **8-point polygon**. Tracing
+  the bounding box would have over-measured slab and roof by ~18 SF and, worse, put the CMU
+  perimeter 3.5 LF long. **Two different loops are needed:** the under-roof polygon (8 pts,
+  wraps the porch) and the CMU wall loop (6 pts, cuts straight across the open porch).
+- **Opening counts came free from the text layer.** Tag strings on A3 (`3060`, `2880`,
+  `4096 ED`…) extract cleanly and total **exactly 32**, matching the independent takeoff's
+  14 windows + 2 exterior + 16 interior. Snap markers from the tag box to the wall line
+  (tags sit outside the wall on leader lines) before saving.
+- **PARTITIONS: NOT TAKEN OFF — deliberately.** Two auto-extraction attempts both failed and
+  were discarded rather than published: (1) paired-parallel-face detection returned **1,479 LF**
+  because the **floor-tile hatch** is a regular comb of parallel lines at wall-like spacing;
+  (2) filtering by **stroke width** (1.42/0.71 pt vs the 0.51 pt hatch) landed on closet walls
+  and *door leaves* but missed the bath/bedroom walls entirely. Overlay-verify caught both.
+  **Guard: on a sheet with hatched floor finishes, never derive partition LF from parallel-line
+  geometry — trace it by hand or leave it out.**
+- **A5 ROOF NOT CALIBRATED — no trustworthy anchor.** Candidate dimension lines disagree:
+  61'-0" → 13.5701 pt/ft, 40'-6" → 13.8470/13.8539, 41'-2" → 16.79 (wrong line entirely).
+  A 1.2% spread silently corrupts every roof quantity, so the sheet was left at `scale: null`
+  for a **manual scale pick** (Plans tab → Manual Scale (Select Points)). Roof geometry IS
+  known in feet from the printed dims — hip, **40'-6" × 64'-0"** main body over a 37'-6" ×
+  61'-0" building = **1'-6" overhangs**, plus a lower entry-porch roof — so only the pt/ft
+  anchor is missing. **Lesson: agreement between two independent dimension lines on the same
+  sheet is the calibration gate; without it, stop and hand the sheet back.**
+- **Design finding surfaced by the roof plan:** A5 tags the main hips **3%** and the entry
+  porch **6%**. Read literally that is ~0.36:12 and ~0.72:12 — far below the **2:12 minimum
+  for asphalt shingles** (FBC-R R905.2.2). Almost certainly "3:12 / 6:12" mis-tagged as
+  percent, but it is a fourth conflicting pitch statement in one set and belongs in RFI-04.
+
 ### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
 - **Scope:** full-system accuracy audit. JobTread leg: re-derived every measurement
   value from raw annotation geometry (shoelace areas, polyline lengths, marker counts)

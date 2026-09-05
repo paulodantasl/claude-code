@@ -128,11 +128,25 @@ def line_annotations(prefix: str, x0: float, y0: float, x1: float, y1: float,
 # ---------------------------------------------------------------------------
 # Parameter builders
 
+DIMENSIONED_TYPES = {"linearArea", "areaVolume", "linearVolume"}
+
+
 def measurement(name: str, value: float, plan_id: str, color: str,
                 annotations: list[dict], **extra) -> dict:
+    """One measurement inside a parameter.
+
+    Dimensioned types (linearArea/areaVolume/linearVolume) need their dimension(s)
+    AND their own non-null `unit` ON THE MEASUREMENT -- the parameter-level `unit`
+    is not enough. Verified 2026-09-05 on Job 2026-404, which failed with:
+        A non-null value is required at ..."parameters"."5"."measurements"."0"."unit"
+    So pass e.g. measurement(..., unit="foot", depth=10).
+    """
     m = {"name": name, "value": round(value, 2), "planId": plan_id,
          "color": color, "annotations": annotations}
-    m.update(extra)  # e.g. depth=13, unit="foot" for linearArea
+    m.update(extra)
+    if ("depth" in m or "width" in m) and "unit" not in m:
+        raise ValueError("dimensioned measurement needs its own unit= (e.g. 'foot') "
+                         "alongside depth/width -- the server rejects it otherwise")
     return m
 
 
@@ -253,9 +267,16 @@ if __name__ == "__main__":
         n = area_param("Net", "PLAN", "#1b5e20", rect=(213.6, 234.6, 909.6, 1374.6),
                        negatives=[(213.6, 234.6, 909.6, 402.6), (702.6, 765.7, 897.6, 1005.6)])
         assert abs(n["value"] - 1943.62) < 0.05, n["value"]
+        try:
+            measurement("bad", 1, "P", "#000", [], depth=10)      # missing unit
+            raise AssertionError("dimensioned measurement without unit must raise")
+        except ValueError:
+            pass
+        ok = measurement("good", 1, "P", "#000", [], unit="foot", depth=10)
+        assert ok["unit"] == "foot" and ok["depth"] == 10
         merged = merge_parameters([{"name": "A", "measurements": []}], [p, n])
         assert [q["name"] for q in merged] == ["A", "GF Footprint Area", "Net"]
         check_unique_ids([p, n])
-        print("selftest OK — scale table, closure, area math (incl. isNegative), merge, ids")
+        print("selftest OK — scale table, closure, area math (incl. isNegative), dimensioned-unit guard, merge, ids")
     else:
         print(__doc__)
