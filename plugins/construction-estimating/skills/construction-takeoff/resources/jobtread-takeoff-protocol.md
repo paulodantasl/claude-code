@@ -42,6 +42,18 @@ the bottom each time this runs. Companion helpers: `estimating/scripts/jobtread_
 {"updateJob": {"$": {"id": JOB, "parameters": [...]}, "job": {"$": {"id": JOB}, "parameters": {}}}}
 ```
 
+**Bulk mutations via field aliases.** JSON forbids duplicate keys, so batch writes by aliasing:
+`{"a1": {"_": "updatePlan", "$": {…}, "job": {"$": {"id": JOB}, "id": {}}}, "a2": {…}}`. Each alias
+still needs its own root selection. **About 9 per call** — beyond that the server returns
+`Request Entity Too Large`. This turns 29 restores into 4 calls instead of 29.
+
+**Re-pointing / adding plans** (the recovery path when a plan set is replaced):
+`updatePlan.$` takes `fileId`, `page`, `name` and `scale`, all optional and independent of
+`annotations` — so you can move a record back to its original file and page WITHOUT touching its
+geometry. `createPlan.$` takes `{jobId, fileId, name, page, scale}` and adds a sheet as a new record.
+Together they let one job carry two buildings: restore the first set in place, add the second under a
+name prefix.
+
 Schema discovery when anything is unclear: `{"schema": {"$": {"path": "root", "search": "<kw>"}}}`,
 expand with `{"schema": {"$": {"path": "root.updatePlan.$.annotations._on_path", "expand": true}}}`,
 global types by name (`parameters`, `plan`).
@@ -137,6 +149,8 @@ global types by name (`parameters`, `plan`).
 | 13 | Symbol count missed a **rotated** instance — the 6th SD/CO detector is drawn at 90 deg, so its letter glyphs carry swapped w/h and the signature scan returned 5 | Sweep for the transposed signature `(n, h, w)` as well as `(n, w, h)`, and never close a count without the overlay render — that is what caught it |
 | 14 | Legend-signature matching returned ZERO exhaust fans although 3 are drawn: the placed symbol uses a different path decomposition (and scale) than the legend glyph | Build the signature from a **placed instance** you have visually confirmed, not from the legend. Then require several independent sub-elements to agree on the same points |
 | 15 | Someone re-calibrated the sheets mid-job; A5 went to 22.1457 pt/m (3/32") where the geometry proves 3/16". Every A5 quantity in the UI silently x4 on area, x2 on length | **Re-read `plan.scale` and `plan.file` at the start of every session** and sanity-check each against a known building dimension before trusting any stored value. A scale edit rescales everything measured on that sheet |
+| 16 | Auto-pairing printed dimension TEXT to the nearest dimension LINE gave a 6% calibration spread on one sheet (13.61-14.43 pt/ft) | Dimension lines often **overshoot their witness lines** by a fixed drafting margin - here exactly 1'-0" on three of five dims. Calibrate only where **two or more independent dimensions agree to <0.1%** (6'-0"->81.08 pt and 20'-0"->270.26 pt both gave 13.5133), then confirm against the sheet's own printed area table |
+| 17 | A 78.7 MB plan set could not be fetched: `cdn.jobtread.com` and `drive.google.com` both blocked by egress policy, and the file connector caps downloads at 10 MB | Ask for a **per-page split**, not a byte split. Each part is an independently valid PDF that maps 1:1 to a sheet, is verifiable by byte size + title block, and skips reassembly entirely. Oversized single sheets (a 20.9 MB raster roof plan) stay blocked and must be re-exported |
 
 ## 7. What good looks like (reference result)
 
@@ -159,6 +173,41 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   per plan page).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
+
+### 2026-09-06 (10) — Job 2026-404 — PLAN SET REPLACED BY A DIFFERENT BUILDING; garage/ALS takeoff — Claude
+- **The incident.** Overnight, 37 of the job's 39 plan records were silently re-pointed from the
+  29-page house file to a 37-page file that turned out to be **a completely different structure** —
+  a detached garage (640 SF) with a two-story ALS above (581 SF), 1,245 SF total. Same address,
+  same architect, same sheet numbering, so nothing about the record names gave it away. Every one
+  of the 39 house parameters was left sitting on garage drawings.
+- **How it was caught:** diffing the new A3 against the local copy of the old one — 28,901 line
+  segments became 355,821, the traced footprint corners were absent, and the long wall runs sat at
+  different coordinates. Rendering it settled it in one look: two car bays and a stair.
+  **Never trust a plan record's NAME as evidence of what it draws.**
+- **Recovery (kept the geometry):** `updatePlan` with `fileId` + `page` + `name` restored all 29
+  house records to the original file and their original pages; `createPlan` added the 37 garage
+  sheets as new records under a `GAR ` prefix; both batched ~9 at a time via field aliases. Verified
+  afterwards: **1,241/1,241 annotations geometrically identical** to the pre-incident backup.
+- **CONFIRMED, correcting an earlier reading in this log:** the server really does recompute
+  `value = geometry x current scale`. The restore moved the footprint 2,269.76 -> 2,274.24 SF, exactly
+  2,269.76 x (44.335083/44.29133858)^2. An earlier session inferred stored values were echoes of what
+  was sent; that was wrong — the sent value had merely coincided.
+- **Garage takeoff (calibration 13.5133 pt/ft, same template as the house).** Footprint
+  **30'-0" x 21'-4" = 640.0 SF**, verified three ways: the top dimension chain closes
+  (19'-10" + 6'-0" + 4'-2" = 30'-0"), it matches the architect's printed 640 ft2 exactly, and the
+  overlay lands on the CMU outside face. Perimeter 102.67 LF; 10'-0" per floor and 20'-0" to top
+  bearing from the A6 red chain, whose 0'-4" base dimension independently confirms D2.3's
+  "garage FFE >= 4 inches above finished grade". **9 windows** (D4.1 schedule = plan tags, both 9)
+  and **12 doors** (D4 schedule), 291 SF of exterior openings.
+- **CODE FLAG — the garage roof is drawn at 1.5:12 while D2.3 keynote 20 calls for asphalt shingles.**
+  FBC-R R905.2.2 sets a 2:12 minimum for shingles. Unlike the house's mis-typed "3%" tag, here the
+  drawn geometry (1.500:12 across both hip slopes) and the printed triangle (`1 1/2 / 12`) AGREE, so
+  it is not a labelling error. The separate `12 / 3` triangles label the small 3:12 canopy, which
+  measures exactly 3.000:12. Either the roofing system changes or the pitch does.
+- **R302.6 is drawn scope, not an assumption.** D2.3 spells out 5/8" Type X at the garage ceiling
+  below habitable space (~581 SF), 1/2" gypsum to the garage side of separating walls, protected
+  supporting members, sealed penetrations, ducts per R302.5.2 — and the door schedule carries
+  **3 fire-rated 20-minute doors** to match.
 
 ### 2026-09-05 (9) — Job 2026-404 — FERRARI RESIDENCE — full-trade completion (P1/P2, E1/E2, S1/S2, D5) — Claude
 - **Result: 33 parameters, 1,200 annotations, saved and read back with 0 mismatches** on
