@@ -88,6 +88,36 @@ def path(pid: str, point_ids: list[str], color: str, *, closed: bool = False,
     return d
 
 
+def freedraw_path(pid: str, pts, color: str, *, closed: bool = False,
+                  negative: bool = False, width: int = 3, fill: bool = False,
+                  fill_opacity: float = 0.15, page: int = 1) -> dict:
+    """Path whose points are a FLAT [x1,y1,x2,y2,...] array — the 'freedraw' form.
+
+    Needs no sibling `point` annotations, so a polyline costs ~12 bytes per vertex
+    instead of ~70. Use for machine-traced runs (pipe, wall segments); keep the
+    {annotationId} form (path()) for shapes an estimator will want to drag, since
+    freedraw vertices are not draggable in the UI. 2..2000 numbers.
+    """
+    flat = []
+    for p in pts:
+        if isinstance(p, (list, tuple)):
+            flat += [round(float(p[0]), 1), round(float(p[1]), 1)]
+        else:
+            flat.append(round(float(p), 1))
+    if not 2 <= len(flat) <= 2000 or len(flat) % 2:
+        raise ValueError(f"freedraw needs an even 2..2000 numbers, got {len(flat)}")
+    d = {"type": "path", "page": page, "id": pid, "points": flat,
+         "strokeWidth": width, "strokeColor": color}
+    if closed:
+        d["isClosed"] = True
+    if negative:
+        d["isNegative"] = True
+    if fill and not negative:
+        d["fillColor"] = color
+        d["fillOpacity"] = fill_opacity
+    return d
+
+
 def text_note(pid: str, txt: str, x: float, y: float, color: str = "#cf1620",
               font_size: int = 24, page: int = 1) -> dict:
     """Text annotation — the API requires ALL of these fields non-null."""
@@ -206,6 +236,93 @@ def check_unique_ids(params: list[dict]) -> int:
     return len(ids)
 
 
+def check_payload(params: list[dict]) -> dict:
+    """The three pre-send asserts. Run this on the assembled array, every time.
+
+    Independent builder scripts each restarting their id counter is how 49
+    duplicated ids once reached a payload; path->point refs would then have
+    resolved to the wrong vertices with no server error, just wrong quantities.
+    """
+    n_ids = check_unique_ids(params)
+    names = [p["name"] for p in params]
+    dupe_names = sorted({n for n in names if names.count(n) > 1})
+    if dupe_names:
+        raise ValueError(f"duplicate parameter names: {dupe_names}")
+    unresolved = []
+    for p in params:
+        for m in p.get("measurements", []):
+            anns = m.get("annotations", [])
+            pids = {a["id"] for a in anns if a.get("type") == "point"}
+            for a in anns:
+                pts = a.get("points")
+                if pts and isinstance(pts[0], dict):
+                    unresolved += [r["annotationId"] for r in pts
+                                   if r["annotationId"] not in pids]
+    if unresolved:
+        raise ValueError(f"unresolved path refs: {sorted(set(unresolved))}")
+    return {"parameters": len(params), "annotations": n_ids}
+
+
+_BASE = {"area": "area", "linear": "linear", "count": "count",
+         "linearArea": "linear", "areaVolume": "area", "linearVolume": "linear",
+         "areaPitch": "area", "linearPitch": "linear"}
+
+
+def recompute_value(param: dict, scales: dict) -> float | None:
+    """Recompute a parameter's value from its geometry x each plan's stored scale.
+
+    `scales` maps planId -> plan.scale (PDF points per METRE). Use this to verify a
+    write immediately: the server recomputes `value` asynchronously, so a read-back
+    seconds after a write carries values only for plain-`number` parameters.
+    Returns None if a needed scale is missing.
+    """
+    mtype = param.get("measurementType")
+    if not mtype:
+        return param.get("value")
+    base = _BASE[mtype]
+    total = 0.0
+    for m in param.get("measurements", []):
+        anns = m.get("annotations", [])
+        by_id = {a["id"]: a for a in anns if a.get("type") == "point"}
+        if base == "count":
+            total += sum(1 for a in anns if a.get("type") == "point")
+            continue
+        sc = scales.get(m.get("planId"))
+        if sc is None:
+            return None
+        ppf = sc / FT_PER_M
+        mult = 1.0
+        if mtype in ("linearArea", "areaVolume"):
+            mult = m["depth"]
+        elif mtype == "linearVolume":
+            mult = m["depth"] * m["width"]
+        for a in anns:
+            if a.get("type") != "path":
+                continue
+            pts = a.get("points") or []
+            if pts and isinstance(pts[0], dict):
+                if any(r["annotationId"] not in by_id for r in pts):
+                    return None
+                v = [(by_id[r["annotationId"]]["x"], by_id[r["annotationId"]]["y"])
+                     for r in pts]
+            else:
+                v = [(pts[i], pts[i + 1]) for i in range(0, len(pts), 2)]
+            if base == "area":
+                if not a.get("isClosed"):
+                    continue
+                sh = abs(sum(v[i][0] * v[(i + 1) % len(v)][1]
+                             - v[(i + 1) % len(v)][0] * v[i][1]
+                             for i in range(len(v)))) / 2.0
+                q = sh / (ppf * ppf) * mult
+                total += -q if a.get("isNegative") else q
+            else:
+                L = sum(math.dist(v[i], v[i + 1]) for i in range(len(v) - 1))
+                if a.get("isClosed"):
+                    L += math.dist(v[-1], v[0])
+                total += L / ppf * mult
+    return total
+
+
 def merge_parameters(existing: list[dict], new: list[dict]) -> list[dict]:
     """FULL-REPLACE safety: keep existing (replacing same-name), append new.
     ALWAYS read job.parameters first and pass it here — never send only the new ones."""
@@ -276,7 +393,57 @@ if __name__ == "__main__":
         assert ok["unit"] == "foot" and ok["depth"] == 10
         merged = merge_parameters([{"name": "A", "measurements": []}], [p, n])
         assert [q["name"] for q in merged] == ["A", "GF Footprint Area", "Net"]
+
+        # freedraw: flat point array, same length as the vertex-ref form
+        fd = freedraw_path("fd1", [(0, 0), (720, 0), (720, 360)], "#cf1620", width=4)
+        assert fd["points"] == [0.0, 0.0, 720.0, 0.0, 720.0, 360.0]
+        try:
+            freedraw_path("bad", [(0, 0)], "#000")                # only 2 numbers is legal
+        except ValueError:
+            raise AssertionError("2 numbers must be accepted")
+        lin_fd = {"name": "FD", "measurementType": "linear", "unit": "foot",
+                  "measurements": [{"name": "", "color": "#cf1620", "planId": "P",
+                                    "annotations": [fd]}]}
+        lin_ref = {"name": "REF", "measurementType": "linear", "unit": "foot",
+                   "measurements": [{"name": "", "color": "#cf1620", "planId": "P",
+                                     "annotations": [
+                                         point("r1", 0, 0), point("r2", 720, 0),
+                                         point("r3", 720, 360),
+                                         path("rp", ["r1", "r2", "r3"], "#cf1620",
+                                              width=4)]}]}
+        sc = {"P": SCALE_QUARTER_INCH, "PLAN": SCALE_QUARTER_INCH}
+        a, b = recompute_value(lin_fd, sc), recompute_value(lin_ref, sc)
+        assert abs(a - b) < 1e-9, (a, b)          # freedraw conversion is lossless
+        assert abs(a - 60.0) < 0.01, a            # 720 pt + 360 pt at 1/4" = 40 + 20 ft
+
+        # recompute area, incl. isNegative, and the depth/width multipliers
+        assert abs(recompute_value(p, sc) - 2586.67) < 0.05
+        assert abs(recompute_value(n, sc) - 1943.62) < 0.05
+        lv = dict(lin_fd, name="LV", measurementType="linearVolume")
+        lv["measurements"] = [dict(lv["measurements"][0], unit="foot",
+                                   width=1.0, depth=1.0)]
+        assert abs(recompute_value(lv, sc) - 60.0) < 0.01
+
+        # pre-send asserts
+        assert check_payload([p, n])["parameters"] == 2
+        for bad, why in (([p, dict(p)], "duplicate parameter names"),
+                         ([p, dict(n, name="N2", measurements=p["measurements"])],
+                          "duplicate annotation ids")):
+            try:
+                check_payload(bad)
+                raise AssertionError(f"{why} must raise")
+            except ValueError:
+                pass
+        orphan = {"name": "O", "measurementType": "linear", "unit": "foot",
+                  "measurements": [{"name": "", "color": "#000", "planId": "P",
+                                    "annotations": [path("op", ["nope"], "#000")]}]}
+        try:
+            check_payload([orphan])
+            raise AssertionError("unresolved path refs must raise")
+        except ValueError:
+            pass
         check_unique_ids([p, n])
-        print("selftest OK — scale table, closure, area math (incl. isNegative), dimensioned-unit guard, merge, ids")
+        print("selftest OK — scale table, closure, area math (incl. isNegative), dimensioned-unit\n"
+              "         guard, merge, ids, freedraw round-trip, value recompute, pre-send asserts")
     else:
         print(__doc__)
