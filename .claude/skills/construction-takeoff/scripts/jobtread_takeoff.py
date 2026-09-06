@@ -296,6 +296,9 @@ def recompute_value(param: dict, scales: dict) -> float | None:
             mult = m["depth"]
         elif mtype == "linearVolume":
             mult = m["depth"] * m["width"]
+        elif mtype in ("areaPitch", "linearPitch"):
+            # pitchX = RUN, pitchY = RISE; the server returns plan x the slope factor
+            mult = math.sqrt(1.0 + (m["pitchY"] / m["pitchX"]) ** 2)
         for a in anns:
             if a.get("type") != "path":
                 continue
@@ -424,6 +427,14 @@ if __name__ == "__main__":
                                    width=1.0, depth=1.0)]
         assert abs(recompute_value(lv, sc) - 60.0) < 0.01
 
+        # areaPitch: server returns plan area x the slope factor (pitchX=RUN, pitchY=RISE)
+        ap = dict(p, name="AP", measurementType="areaPitch")
+        ap["measurements"] = [dict(p["measurements"][0], pitchX=12, pitchY=3)]
+        assert abs(recompute_value(ap, sc) - 2586.67 * 1.0307764) < 0.05, recompute_value(ap, sc)
+        ap15 = dict(ap, name="AP15")
+        ap15["measurements"] = [dict(p["measurements"][0], pitchX=12, pitchY=1.5)]
+        assert abs(recompute_value(ap15, sc) - 2586.67 * 1.0077822) < 0.05
+
         # pre-send asserts
         assert check_payload([p, n])["parameters"] == 2
         for bad, why in (([p, dict(p)], "duplicate parameter names"),
@@ -444,6 +455,7 @@ if __name__ == "__main__":
             pass
         check_unique_ids([p, n])
         print("selftest OK — scale table, closure, area math (incl. isNegative), dimensioned-unit\n"
-              "         guard, merge, ids, freedraw round-trip, value recompute, pre-send asserts")
+              "         guard, merge, ids, freedraw round-trip, value recompute (incl. pitch),\n"
+              "         pre-send asserts")
     else:
         print(__doc__)

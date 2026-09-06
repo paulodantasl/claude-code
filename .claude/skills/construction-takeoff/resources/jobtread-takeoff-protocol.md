@@ -166,6 +166,10 @@ global types by name (`parameters`, `plan`).
 | 23 | A 144 KB payload exceeded what I could emit in one call, and there was no patch path to send only the changed parameter | Convert machine-traced polylines to the **freedraw** form (§1) — flat number arrays, no point annotations. 144 KB → 106 KB here with zero geometric change. Validate the form with one small live write before converting a whole payload |
 | 24 | Read-back straight after a write showed **no `value`** on any measured parameter, and I briefly concluded JobTread does not persist computed values at all | It does — asynchronously (§1). **Verify the write by recomputing every value yourself from the geometry that came back**: shoelace ÷ (pt/ft)² for area, segment sums ÷ pt/ft for linear, marker count for count, then × `depth`, × `depth`, × `width·depth` for linearArea / areaVolume / linearVolume. That check is immediate, independent of the server, and catches a transcription error in a hand-emitted payload |
 | 25 | A count derived from **text tags** was short by one: GAR A3.1 has five interior-door tags (`2868 FR`, `2868` ×2, `2868 P`, `3668 BP`) and only four markers were placed. The overlay looked right — the four markers all sat on real doors, so nothing looked wrong. The note even claimed the FR door was "counted separately", which it was not | An overlay proves **no marker is wrong**; it does not prove **no tag is missing**. For any tag-derived count, run the complement check: extract every tag matching the pattern inside the traced envelope and assert **each one is claimed by exactly one marker**. Tag rows also carry suffix words (`FR`, `P`, `BP`, `GL`, `DH`, `FX`, `GD`, `DB`) that must be joined to the 4-digit token before classifying — and beware schedule/legend blocks elsewhere on the sheet, whose tags must be excluded by the envelope, not by eye |
+| 26 | A 120.7 KB `updateJob.parameters` call **could not be emitted** — the turn hit the output-token cap mid-payload and nothing was sent. Two earlier sends of 106.9 KB and 102.2 KB went through | The binding limit is the ASSISTANT'S output budget, not the API's. It sits between 107 and 120 KB, so **budget ~100 KB and compact BEFORE building, not after**. Compaction that costs nothing: freedraw for open paths, ids shortened to base-36 (`1`, `a`, `zz`), notes capped (long provenance belongs in the backup file, not the parameter note), and derived parameters that only duplicate geometry they cite demoted to plain `number`. That took 120.7 -> 102.2 KB with **every one of 115 values unchanged**. The failure is safe but EXPENSIVE — you re-read and re-emit the whole array — so measure the payload before you start reading it out |
+| 27 | Wall-pair detection returned **189 LF of 2F partitions where the truth was 61 LF**. The floor-tile hatch is a comb of single lines at 1.05 ft, too far apart to pair as a wall — but a 1.7 ft wall STUB paired with a 12.5 ft TILE line and the code took the UNION of their extents, inheriting the tile line's full length | A wall's two faces are nearly CO-EXTENSIVE. Require the overlap to be >= 0.7x the LONGER run (not the shorter), and take the length as the **overlap**, not the union — which also makes door and cased openings drop out, so the result is NET. Then dedupe: group runs whose constant coordinate is within a wall thickness and merge their extents, or one wall gets counted three times |
+| 28 | The roof plan (GAR A5, a 20.9 MB raster) could not be read at all, and the roof is a large share of the cost | **A roof can be fully determined without its roof plan.** Sections and elevations carry the same geometry at a measurable scale: A7's two sections both spanned 24.36 ft = the 21'-4" building + two 1'-6" overhangs; A6's FRONT elevation spanned 33.03 ft with an **8.68 ft flat between its two slopes**, LEFT spanned 24.36 ft and peaked. Ridge = L - W = 8.68 ft **exactly** — the signature of a regular hip, which settles hip-vs-gable, ridge length and all four planes at once. `read_file_content` on the unreadable sheet then returned its TEXT ('33\' - 0"', four '1 1/2 %' tags) and corroborated every number |
+| 29 | `recompute_value()` under-reported `areaPitch`/`linearPitch` by the slope factor — the helper applied the `depth`/`width` multipliers but not pitch | Fixed: `mult = sqrt(1 + (pitchY/pitchX)^2)` for both pitch types, locked in by `--selftest` at 3:12 and 1.5:12. It surfaced only because the recompute disagreed with a hand figure — **always cross-check the verifier against an independently derived number on at least one parameter**, or it silently blesses the wrong value |
 
 ## 7. What good looks like (reference result)
 
@@ -188,6 +192,34 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   per plan page).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
+
+### 2026-09-06 (13) — Job 2026-404 — GARAGE CONTINUED: roof, partitions, finishes, bar — Claude
+
+**Ask:** "Continue the takeoff of the garage." What remained after run (12) was the roof, the interior partitions, the bar millwork on D6, and interior finishes.
+
+**Result:** 116 parameters live (was 100), 1,017 annotations, 95 of them carrying traced geometry. Read-back vs. sent payload was a **full deep-equality match**, and every new value recomputes exactly from the geometry the server returned.
+
+**The roof, without its roof plan.** GAR A5 is a 20.9 MB raster page — no extractable geometry and over the connector's binary cap. The roof was still fully determined from three independent sources, and their agreement is what makes it trustworthy:
+- **A7 SECTION 1 and 2** both draw the roof spanning **24.36 ft** = 21'-4" + two 1'-6" overhangs, and all 29 of their roof segments sit at **exactly 1.50 rise per 12 run**.
+- **A6 FRONT** spans 33.03 ft with an **8.68 ft flat** between its two slopes; **A6 LEFT** spans 24.36 ft and peaks. Both print a 12-over-1½ triangle.
+- Ridge = L − W = 33.04 − 24.36 = **8.68 ft**, matching the measured flat exactly → a **regular hip**.
+- `read_file_content` on the unreadable A5 returned its TEXT: `33' - 0"` and four `1 1/2 %` tags — the same mis-typed-pitch convention as the house's `3%` = 3:12.
+
+Traced on GAR A3 as the plan projection: **803.3 SF plan, 809.6 SF surface, 114.69 LF eave, 77.51 LF plan hips+ridge (77.78 true), 163.26 SF soffit.**
+
+**RFI-G9 — a second hard stop.** The pitch is 1.5:12. FBC-R R905.2.2 permits asphalt shingles only at 2:12 or greater, and D2.3 keynote 20 specifies shingles. As drawn the roof cannot be built. Roofing is not priced until the designer raises the pitch or changes to a low-slope system. This sits alongside RFI-G7 (S3's EPA-cancelled termiticide).
+
+**Partitions.** GF **23.55 LF net**, 2F **60.70 LF net** — traced on the A4/A4.1 dimension sheets, mapped onto A3/A3.1 by pure translation (the envelopes are identical in size, so the transform is exact) and overlay-verified: every run lands on a drawn wall. Both dimension sheets calibrate to 13.5133 pt/ft on two agreeing axes; GAR A4.1's stored scale is 0.1% low and GAR A4 has none, so neither was used.
+
+**What nearly went wrong.** The first pass returned 189 LF of partitions for a 552 SF apartment. The 2F floor-tile hatch is a comb at 1.05 ft — too far apart to pair as a wall — but a 1.7 ft wall stub paired with a 12.5 ft tile line and the code took the **union** of their extents. Requiring the two faces to be co-extensive and taking their **overlap** fixed it (failure mode 27); the overlap is also the NET length, openings excluded.
+
+**Also new:** GF interior net floor area 573.44 SF (28'-8" × 20'-0" inside the CMU, against 640.04 SF gross); bar millwork from D6's printed dimensions (7.00 LF base, 7.00 LF uppers, 16.0 SF granite); partition drywall 1,684.9 SF; attic vent 2.13 SF net free area required — A5's own vent note (3,012 SF attic, 7 vents) is the MAIN HOUSE's, an RFI.
+
+**The payload finally bit.** A 120.7 KB write could not be emitted — the turn hit the output cap mid-payload and nothing was sent. The binding constraint is my own output budget, not the API, and it sits between 107 and 120 KB. Compacted to 102.2 KB with **zero change to any of 115 values** (failure mode 26). Areas were deliberately left in `{annotationId}` form because `isClosed` on a flat-array path is still unverified; a throwaway control parameter (`ZZ TEST freedraw isClosed control`) now sits in the job to settle it once the server's async recompute lands. If it reads 640.0, every polygon can be compacted and the payload drops another ~13 KB.
+
+**Backup:** `takeoff-backups/2026-09-06-jobtread-parameters-rev6-VERIFIED.json` + `-payload.json`, `-rev6.csv`, `-plan-index-rev6.csv`.
+
+**Still not taken off:** GAR A2/A2.1 (site and landscape — the house's equivalents were empty) and the D2/D2.1/D2.2 detail sheets. GAR S1/S2 remain geometry-less rasters, so filled cells and second-floor lintels stay estimates.
 
 ### 2026-09-06 (12) — Job 2026-404 — GARAGE TAKEOFF HAND-TRACED (replaced typed numbers with real geometry) — Claude
 
