@@ -27,7 +27,7 @@ the bottom each time this runs. Companion helpers: `estimating/scripts/jobtread_
 | **`path` annotations require `strokeWidth` AND `strokeColor`** (both non-null). `point` annotations do NOT — there `strokeColor`/`fillColor`/`strokeWidth` are all optional, so stripping them from count markers is a valid payload compaction; stripping them from paths is not. The validator names **one missing field per round-trip**, and only *after* the whole payload is on the wire | Schema `parameters._on_linear.measurements.annotations`: path lists `strokeWidth:"number"`, `strokeColor:"color"` unwrapped (required) where point wraps them in `{optional:…}`; two consecutive 90 KB rejections cost two full sends |
 | **`updateJob.$` has NO parameter patch path** — schema-confirmed, not just empirical: the only parameter field on the input is `parameters`, and it is a whole-array replace. Every save re-sends every parameter and every annotation, so payload size grows with the job and is the binding constraint on a large takeoff | Expanded `root.updateJob.$`: fields are `areas, closedOn, …, lineItems, name, number, parameters, priceType, …`. No add/patch/merge variant exists |
 | **`number` is a first-class parameter type**: `{name, value}` with **no** `measurements` and no `unit`. Because nothing is attached, the server has no geometry to recompute from and the sent value stands | Global type `parameters` `oneOf` → `number: {object: {name: string, value: {optional: number}}}`. Use it for quantities derived off-platform (or off a local PDF), and put the unit in the name — `… (CY)`, `… (LF)`. Typed params with an EMPTY `measurements` array risk recomputing to 0 |
-| **`path.points` also accepts a FLAT ARRAY OF NUMBERS** — `[x1,y1,x2,y2,…]` (min 2, max 2000 numbers), the "freedraw" form. No sibling `point` annotations are needed, so a polyline costs ~12 bytes per vertex instead of ~70 (a `point` annotation + a `{annotationId}` ref). Converting 284 segment-paths cut 34,052 bytes with `delta = 0.000000` on every affected parameter. Trade-off: freedraw vertices are **not draggable** in the UI, so keep the ref form for shapes an estimator will want to adjust (footprints, envelopes) and use freedraw for machine-traced runs (pipe, wall segments) | Schema `…annotations._on_path.points` is a `oneOf` of `[{annotationId}]` and `number[]`; validated with a live test write to an empty plan, then across 5 converted parameters |
+| **`path.points` also accepts a FLAT ARRAY OF NUMBERS** — `[x1,y1,x2,y2,…]`, the schema's **`freedraw`** variant — but **a freedraw path IS NOT MEASURED. The server computes the parameter's value as 0.** It is markup, not takeoff geometry. Only the `[{annotationId}]` ref form (a `point` annotation per vertex) is measured. The saving is real (~12 bytes per vertex vs ~70) and the round-trip is byte-perfect, which is exactly why this is dangerous: nothing errors, the shapes render, and the quantity silently becomes 0 | Job 2026-404: I converted 284 segment-paths to freedraw across two saves. Read-back was byte-identical and my own recompute agreed on all 86 parameters — and **30 parameters read 0 on the server**. Classified by path form: freedraw agree 0 / server-ZERO 30; ref-form agree 26; markers-only agree 38. Acontrol parameter (same 4-pt square, `isClosed`, one freedraw / one ref) settled it: freedraw 0, ref 640.044. The variant is *named* `freedraw` — the schema said so |
 | **Annotation ids must be unique across the ENTIRE `parameters` array**, not per parameter or per measurement | Four independent builder scripts each restarted their id counter and produced 49 duplicated ids (worst ×5). Caught by a pre-send uniqueness assert; re-ided globally while preserving every path→point reference |
 | **The server recomputes `value` ASYNCHRONOUSLY after a whole-array write.** Read back immediately and the 86 measurement-backed parameters carry **no** `value` at all — only plain-`number` params do. The values reappear later (rev4's export, taken ~2 h after its write, had them) | Job 2026-404: read-back seconds after the write returned 14/100 params with a value — exactly the 14 plain numbers. Do **not** read this as "the server does not store values" (I did, briefly) and do not wait on it either: **verify by recomputing from the round-tripped geometry × the plan's stored scale** — that is deterministic and available at once |
 | Annotation `page` | `defaultValue: 1` — omittable losslessly on send, but the server **echoes it back on every annotation**. A naive deep-equality diff of read-back vs. sent payload therefore reports *every* parameter as differing | Strip `page == 1` before diffing. With that one normalisation the round-trip was byte-perfect across 100 parameters / 1,052 annotations |
@@ -163,13 +163,15 @@ global types by name (`parameters`, `plan`).
 | 20 | Six parallel `download_file_content` calls returned in the same millisecond; two wrote to the **same** tool-result filename and one page was silently lost (p30 overwritten by p33) | Tool-result files are named by timestamp. Fire large downloads **one or two per message**, and after decoding assert every expected page number is on disk before moving on |
 | 21 | Pipe lengths measured off the coloured layer came out ~2x reality (COLD 120.3 LF where the run is 60.1) | Pipes are drawn as **2 parallel walls + a centreline**, all in the pipe colour. Merge collinear runs whose constant coordinate is within ~5 pt and bridge gaps <=3 pt, then sum. Verify on an overlay before believing either number |
 | 22 | Four builder scripts each began their annotation ids at 1, so the assembled payload carried **49 duplicated ids** (one repeated 5×). Sent as-is, path→point references would have resolved to the wrong vertices and shapes would have collapsed silently — no error, just wrong quantities | Ids are global to the whole `parameters` array. **Assert uniqueness across the assembled payload before every send**, together with: no duplicate parameter names, and zero unresolved `{annotationId}` refs. Three cheap asserts; the first one caught this |
-| 23 | A 144 KB payload exceeded what I could emit in one call, and there was no patch path to send only the changed parameter | Convert machine-traced polylines to the **freedraw** form (§1) — flat number arrays, no point annotations. 144 KB → 106 KB here with zero geometric change. Validate the form with one small live write before converting a whole payload |
+| 23 | A 144 KB payload exceeded what I could emit in one call, and there was no patch path to send only the changed parameter. I compacted it by converting machine-traced polylines to the **freedraw** form — and **silently zeroed every parameter I converted** (see 30) | Compact by stripping what the SERVER adds, never by changing the geometry's encoding: drop `value` from parameters and measurements, `page` from every annotation, and `fillColor`/`strokeColor`/`strokeWidth` from `point` annotations (paths require the stroke pair). That is ~25 KB on a 120 KB payload and provably lossless because those fields are server-generated. Beyond that, demote derived parameters to plain `number` — a stated value with no geometry is honest; geometry the server refuses to measure is not |
 | 24 | Read-back straight after a write showed **no `value`** on any measured parameter, and I briefly concluded JobTread does not persist computed values at all | It does — asynchronously (§1). **Verify the write by recomputing every value yourself from the geometry that came back**: shoelace ÷ (pt/ft)² for area, segment sums ÷ pt/ft for linear, marker count for count, then × `depth`, × `depth`, × `width·depth` for linearArea / areaVolume / linearVolume. That check is immediate, independent of the server, and catches a transcription error in a hand-emitted payload |
 | 25 | A count derived from **text tags** was short by one: GAR A3.1 has five interior-door tags (`2868 FR`, `2868` ×2, `2868 P`, `3668 BP`) and only four markers were placed. The overlay looked right — the four markers all sat on real doors, so nothing looked wrong. The note even claimed the FR door was "counted separately", which it was not | An overlay proves **no marker is wrong**; it does not prove **no tag is missing**. For any tag-derived count, run the complement check: extract every tag matching the pattern inside the traced envelope and assert **each one is claimed by exactly one marker**. Tag rows also carry suffix words (`FR`, `P`, `BP`, `GL`, `DH`, `FX`, `GD`, `DB`) that must be joined to the 4-digit token before classifying — and beware schedule/legend blocks elsewhere on the sheet, whose tags must be excluded by the envelope, not by eye |
-| 26 | A 120.7 KB `updateJob.parameters` call **could not be emitted** — the turn hit the output-token cap mid-payload and nothing was sent. Two earlier sends of 106.9 KB and 102.2 KB went through | The binding limit is the ASSISTANT'S output budget, not the API's. It sits between 107 and 120 KB, so **budget ~100 KB and compact BEFORE building, not after**. Compaction that costs nothing: freedraw for open paths, ids shortened to base-36 (`1`, `a`, `zz`), notes capped (long provenance belongs in the backup file, not the parameter note), and derived parameters that only duplicate geometry they cite demoted to plain `number`. That took 120.7 -> 102.2 KB with **every one of 115 values unchanged**. The failure is safe but EXPENSIVE — you re-read and re-emit the whole array — so measure the payload before you start reading it out |
+| 26 | A 120.7 KB `updateJob.parameters` call **could not be emitted** — the turn hit the output-token cap mid-payload and nothing was sent. Two earlier sends of 106.9 KB and 102.2 KB went through | The binding limit is the ASSISTANT'S output budget, not the API's. It sits between 107 and 120 KB, so **budget ~100 KB and compact BEFORE building, not after**. Compaction that costs nothing: strip server-generated fields (failure mode 23), ids shortened to base-36 (`1`, `a`, `zz`), notes capped (long provenance belongs in the backup file, not the parameter note), and derived parameters that only duplicate geometry they cite demoted to plain `number`. That took 120.7 -> 102.2 KB with **every one of 115 values unchanged**. The failure is safe but EXPENSIVE — you re-read and re-emit the whole array — so measure the payload before you start reading it out |
 | 27 | Wall-pair detection returned **189 LF of 2F partitions where the truth was 61 LF**. The floor-tile hatch is a comb of single lines at 1.05 ft, too far apart to pair as a wall — but a 1.7 ft wall STUB paired with a 12.5 ft TILE line and the code took the UNION of their extents, inheriting the tile line's full length | A wall's two faces are nearly CO-EXTENSIVE. Require the overlap to be >= 0.7x the LONGER run (not the shorter), and take the length as the **overlap**, not the union — which also makes door and cased openings drop out, so the result is NET. Then dedupe: group runs whose constant coordinate is within a wall thickness and merge their extents, or one wall gets counted three times |
 | 28 | The roof plan (GAR A5, a 20.9 MB raster) could not be read at all, and the roof is a large share of the cost | **A roof can be fully determined without its roof plan.** Sections and elevations carry the same geometry at a measurable scale: A7's two sections both spanned 24.36 ft = the 21'-4" building + two 1'-6" overhangs; A6's FRONT elevation spanned 33.03 ft with an **8.68 ft flat between its two slopes**, LEFT spanned 24.36 ft and peaked. Ridge = L - W = 8.68 ft **exactly** — the signature of a regular hip, which settles hip-vs-gable, ridge length and all four planes at once. `read_file_content` on the unreadable sheet then returned its TEXT ('33\' - 0"', four '1 1/2 %' tags) and corroborated every number |
 | 29 | `recompute_value()` under-reported `areaPitch`/`linearPitch` by the slope factor — the helper applied the `depth`/`width` multipliers but not pitch | Fixed: `mult = sqrt(1 + (pitchY/pitchX)^2)` for both pitch types, locked in by `--selftest` at 3:12 and 1.5:12. It surfaced only because the recompute disagreed with a hand figure — **always cross-check the verifier against an independently derived number on at least one parameter**, or it silently blesses the wrong value |
+
+| 30 | **I broke 30 live parameters by adopting an encoding I had verified only halfway.** To fit a payload I re-encoded traced polylines as `freedraw` flat arrays. I checked round-trip fidelity (byte-perfect) and my own recompute (47/47, 39/39) and called it lossless. Both checks were blind to the only thing that mattered: **the server measures freedraw paths as 0.** Two saves went out, and 30 parameters — 12 house, 19 garage — sat at 0 in the client's job | The two verifications I ran both take MY encoding as the source of truth, so neither can detect the server rejecting it. **A new geometry encoding is only proven when the SERVER'S OWN recomputed value comes back non-zero and correct** — which here means waiting out the async recompute (~2–4 h) on ONE control parameter before converting anything. Write the control as a matched pair (identical shape, one in each encoding) so the comparison is unambiguous. And read the schema's own vocabulary: the variant is called `freedraw`, which is what it is — freehand markup |
 
 ## 7. What good looks like (reference result)
 
@@ -193,6 +195,59 @@ interior; cores and patio/balcony walls stack at identical coordinates).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
 
+### 2026-09-06 (14) — Job 2026-404 — REPAIR: 30 parameters were reading 0 — Claude
+
+**What I broke.** In runs (12) and (13) I re-encoded traced polylines as `freedraw` flat
+arrays to fit the payload under the emit ceiling, and recorded it as a lossless compaction.
+It is not. **JobTread does not measure a freedraw path — the server recomputes the owning
+parameter's value to 0.** Two saves went out that way. Thirty parameters — 12 house, 19
+garage — sat at 0 in the client's live job.
+
+**Why both my checks missed it.** I verified (a) the read-back was byte-identical to what I
+sent, and (b) my own `recompute_value()` agreed with my pre-computed expectations, 47/47 and
+39/39. Both take my encoding as the source of truth, so neither can see the server refusing
+it. Nothing errored, the shapes render in the UI, and the schema names the variant
+`freedraw` — which I read past.
+
+**How it was caught and proven.** Classifying every parameter by the form of its path points
+against the server's own recomputed values:
+
+| path form | agree | server 0 | other mismatch |
+|---|---|---|---|
+| freedraw | 0 | **30** | 0 |
+| `{annotationId}` refs | 26 | 0 | 0 |
+| markers only (count) | 38 | 0 | 0 |
+
+Then a matched control pair — the same 4-point closed square, one freedraw, one ref: freedraw
+**0**, ref **640.044**. Not ambiguous.
+
+**The repair.** All 502 path points re-sent in `{annotationId}` ref form, 115 parameters,
+98,678 bytes in one send. Verified by read-back: 115/115 present, deep-diff **0 parameters
+differ** once server enrichment is normalised, **0 freedraw points remain**, every value-only
+parameter intact. All 19 garage parameters got real geometry back. Two house pipe runs
+(`Div 22 Water piping - CPVC` 444.53 LF, `Div 22 Sanitary / waste piping - PVC DWV` 298.01 LF)
+carry a stated value with no geometry, renamed `… (LF) - value only`, because the payload does
+not fit otherwise — an honest number beats geometry the server won't measure.
+
+**A near-miss inside the repair.** The generated payload carried 21 parameters as `{"name": …}`
+with no value — the builder's way of saying "unchanged". But `parameters` is a **whole-array
+replace**, so that would have wiped 21 live garage quantities (footing rebar 226 LF, partition
+drywall 1,684.9 SF, the bar millwork, the attic vent). Caught by asserting every parameter in
+the payload carries either a value or measurements. Compare against the previous *sent* payload,
+not against intent: rev5 and rev6 had zero name-only entries, which is what flagged it.
+
+**The compaction that actually is lossless** (now `strip_server_fields()`): drop `value` from
+parameters and measurements, `page == 1` from every annotation, and `fillColor`/`strokeColor`/
+`strokeWidth` from `point` annotations — paths require the stroke pair, points do not. Those
+fields are all server-generated. ~25 KB on a 120 KB payload.
+
+**Code:** `check_no_freedraw()` and `strip_server_fields()` added to `jobtread_takeoff.py`,
+both covered by `--selftest`; `freedraw_path()` now carries a do-not-use warning.
+
+**Still pending:** the server's recompute is asynchronous, so the 92 measured parameters read 0
+immediately after the write. Re-check in a few hours and confirm each returns its expected value
+— that server-side confirmation, not my own recompute, is what closes this out.
+
 ### 2026-09-06 (13) — Job 2026-404 — GARAGE CONTINUED: roof, partitions, finishes, bar — Claude
 
 **Ask:** "Continue the takeoff of the garage." What remained after run (12) was the roof, the interior partitions, the bar millwork on D6, and interior finishes.
@@ -215,7 +270,7 @@ Traced on GAR A3 as the plan projection: **803.3 SF plan, 809.6 SF surface, 114.
 
 **Also new:** GF interior net floor area 573.44 SF (28'-8" × 20'-0" inside the CMU, against 640.04 SF gross); bar millwork from D6's printed dimensions (7.00 LF base, 7.00 LF uppers, 16.0 SF granite); partition drywall 1,684.9 SF; attic vent 2.13 SF net free area required — A5's own vent note (3,012 SF attic, 7 vents) is the MAIN HOUSE's, an RFI.
 
-**The payload finally bit.** A 120.7 KB write could not be emitted — the turn hit the output cap mid-payload and nothing was sent. The binding constraint is my own output budget, not the API, and it sits between 107 and 120 KB. Compacted to 102.2 KB with **zero change to any of 115 values** (failure mode 26). Areas were deliberately left in `{annotationId}` form because `isClosed` on a flat-array path is still unverified; a throwaway control parameter (`ZZ TEST freedraw isClosed control`) now sits in the job to settle it once the server's async recompute lands. If it reads 640.0, every polygon can be compacted and the payload drops another ~13 KB.
+**The payload finally bit.** A 120.7 KB write could not be emitted — the turn hit the output cap mid-payload and nothing was sent. The binding constraint is my own output budget, not the API, and it sits between 107 and 120 KB. Compacted to 102.2 KB with **zero change to any of 115 values** (failure mode 26). Areas were deliberately left in `{annotationId}` form because `isClosed` on a flat-array path is still unverified; a throwaway control parameter (`ZZ TEST freedraw isClosed control`) now sits in the job to settle it once the server's async recompute lands. **It came back 0 against 640.044 for its ref-form twin — the finding that exposed failure mode 30.**
 
 **Backup:** `takeoff-backups/2026-09-06-jobtread-parameters-rev6-VERIFIED.json` + `-payload.json`, `-rev6.csv`, `-plan-index-rev6.csv`.
 
@@ -232,13 +287,13 @@ Traced on GAR A3 as the plan projection: **803.3 SF plan, 809.6 SF surface, 114.
 **Verification, in this order — the last two are the ones that earned their keep:**
 1. Pre-send asserts: 1,052 globally unique annotation ids, no duplicate parameter names, 0 unresolved path refs.
 2. Read-back deep-diff vs. the sent payload → **full equality** once `page: 1` (the server's echoed default) is normalised away.
-3. Recompute every value from the round-tripped geometry × each plan's stored scale → **47/47 traced garage parameters matched** their pre-computed expectations, and **39/39 house parameters at worst delta 0.000000000**, proving the segment-path → freedraw conversion was lossless.
+3. Recompute every value from the round-tripped geometry × each plan's stored scale → **47/47 traced garage parameters matched** their pre-computed expectations, and **39/39 house parameters at worst delta 0.000000000**. This did NOT prove the freedraw conversion lossless — see run (14); it proved only that my own encoder and decoder agreed.
 4. Overlay renders of the server's own geometry back onto all 10 sheets → every shape lands on the drawing it measures.
 5. **Tag audit** — every 4-digit door/window tag inside the traced envelope on GAR A3 (10) and A3.1 (11) matched against exactly one marker.
 
 **What step 5 caught that step 4 could not:** `GAR 2F Interior doors` read 4 where GAR A3.1 tags five — the `2868 P` pocket door had no marker, and the note wrongly claimed the FR door was "counted separately". The overlay looked clean because all four existing markers were on real doors. An overlay shows no marker is *wrong*; only the complement check shows no tag is *missing*. Corrected to 5 and re-sent; the resend was re-verified by the same read-back diff (byte-perfect) and recompute.
 
-**New capability — `freedraw`:** `path.points` accepts a flat `[x1,y1,…]` array instead of `{annotationId}` refs. Validated with a small live test write, then used for all machine-traced runs: 144 KB → 106 KB with `delta = 0.000000`. Vertex-ref paths kept for the shapes an estimator would want to drag.
+**~~New capability — `freedraw`~~ — THIS WAS WRONG, see run (14).** I converted all machine-traced runs to flat `[x1,y1,…]` arrays (144 KB → 106 KB, `delta = 0.000000` on my own recompute) and recorded it as a lossless compaction. **It is not: the server measures freedraw paths as 0.** Every parameter converted in this run and the next read 0 in the client's job until the run-(14) repair. The `delta = 0.000000` proved only that my encoder and my decoder agreed with each other.
 
 **Also learned:** the server recomputes `value` asynchronously — a read-back seconds after a write returns values only for plain-`number` params, which is not evidence that measured values aren't stored. Recompute from geometry instead of waiting.
 

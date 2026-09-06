@@ -93,10 +93,19 @@ def freedraw_path(pid: str, pts, color: str, *, closed: bool = False,
                   fill_opacity: float = 0.15, page: int = 1) -> dict:
     """Path whose points are a FLAT [x1,y1,x2,y2,...] array — the 'freedraw' form.
 
-    Needs no sibling `point` annotations, so a polyline costs ~12 bytes per vertex
-    instead of ~70. Use for machine-traced runs (pipe, wall segments); keep the
-    {annotationId} form (path()) for shapes an estimator will want to drag, since
-    freedraw vertices are not draggable in the UI. 2..2000 numbers.
+    *** DO NOT USE THIS FOR TAKEOFF GEOMETRY. ***
+
+    JobTread does NOT measure a freedraw path: the server recomputes the owning
+    parameter's value as 0. It is freehand markup, which is what the schema calls
+    it. Verified on job 2026-404 with a matched control pair (identical 4-point
+    closed square, one freedraw / one ref): freedraw 0, ref 640.044. Thirty live
+    parameters were silently zeroed before this was caught — the round-trip is
+    byte-perfect and an offline recompute agrees, so nothing warns you.
+
+    Use path() with {annotationId} refs for anything that must carry a quantity.
+    To shrink a payload, strip server-generated fields instead (see strip_server_
+    fields()). Kept here only so the encoding can be produced for genuine markup
+    and so --selftest can assert the round-trip.
     """
     flat = []
     for p in pts:
@@ -263,6 +272,51 @@ def check_payload(params: list[dict]) -> dict:
     return {"parameters": len(params), "annotations": n_ids}
 
 
+def check_no_freedraw(params: list[dict]) -> int:
+    """Assert no path carries a flat-array (freedraw) point list.
+
+    JobTread does not measure freedraw paths -- the server recomputes the owning
+    parameter to 0 -- so a freedraw path in a takeoff payload is a silent zero.
+    Run this alongside check_payload() before every send.
+    """
+    bad = []
+    for p in params:
+        for m in p.get("measurements", []):
+            for a in m.get("annotations", []):
+                pts = a.get("points")
+                if pts and not isinstance(pts[0], dict):
+                    bad.append(p["name"])
+    if bad:
+        raise ValueError(f"freedraw paths (these would measure 0): {sorted(set(bad))}")
+    return sum(len(m.get("annotations", []))
+               for p in params for m in p.get("measurements", []))
+
+
+def strip_server_fields(params: list[dict]) -> list[dict]:
+    """Remove everything the SERVER generates -- the only lossless compaction.
+
+    Read-back adds `value` to parameters and measurements, `page: 1` to every
+    annotation, and `fillColor` to every `point`. None of it needs to be sent
+    back. Worth ~25 KB on a 120 KB payload, and safe in a way that re-encoding
+    geometry is not. `strokeColor`/`strokeWidth` are REQUIRED on paths, so they
+    are kept there; on points they are optional and dropped.
+    """
+    import copy
+    out = copy.deepcopy(params)
+    for p in out:
+        if p.get("measurements"):
+            p.pop("value", None)          # measured params: the server computes it
+        for m in p.get("measurements", []):
+            m.pop("value", None)
+            for a in m.get("annotations", []):
+                if a.get("page") == 1:
+                    a.pop("page", None)
+                if a.get("type") == "point":
+                    for k in ("fillColor", "strokeColor", "strokeWidth"):
+                        a.pop(k, None)
+    return out
+
+
 _BASE = {"area": "area", "linear": "linear", "count": "count",
          "linearArea": "linear", "areaVolume": "area", "linearVolume": "linear",
          "areaPitch": "area", "linearPitch": "linear"}
@@ -416,8 +470,35 @@ if __name__ == "__main__":
                                               width=4)]}]}
         sc = {"P": SCALE_QUARTER_INCH, "PLAN": SCALE_QUARTER_INCH}
         a, b = recompute_value(lin_fd, sc), recompute_value(lin_ref, sc)
-        assert abs(a - b) < 1e-9, (a, b)          # freedraw conversion is lossless
+        # The two forms are geometrically identical OFFLINE -- and that is exactly
+        # the trap: JobTread measures the freedraw one as 0. This assert records
+        # the equivalence; check_no_freedraw() is what keeps it out of a payload.
+        assert abs(a - b) < 1e-9, (a, b)
         assert abs(a - 60.0) < 0.01, a            # 720 pt + 360 pt at 1/4" = 40 + 20 ft
+        try:
+            check_no_freedraw([lin_fd])
+            raise AssertionError("freedraw in a payload must raise")
+        except ValueError as e:
+            assert "measure 0" in str(e)
+        assert check_no_freedraw([lin_ref]) == 4
+
+        # strip_server_fields drops only what the server generates
+        dirty = {"name": "D", "measurementType": "area", "unit": "foot",
+                 "value": 1.0,
+                 "measurements": [{"name": "", "color": "#000", "planId": "P",
+                                   "value": 1.0,
+                                   "annotations": [
+                                       {"id": "a", "type": "point", "x": 0, "y": 0,
+                                        "page": 1, "fillColor": "#000"},
+                                       {"id": "b", "type": "path", "page": 1,
+                                        "points": [{"annotationId": "a"}],
+                                        "strokeColor": "#000", "strokeWidth": 3}]}]}
+        cl = strip_server_fields([dirty])[0]
+        assert "value" not in cl and "value" not in cl["measurements"][0]
+        anns = cl["measurements"][0]["annotations"]
+        assert anns[0] == {"id": "a", "type": "point", "x": 0, "y": 0}
+        assert anns[1]["strokeColor"] == "#000" and "page" not in anns[1]
+        assert "value" in dirty, "strip_server_fields must not mutate its input"
 
         # recompute area, incl. isNegative, and the depth/width multipliers
         assert abs(recompute_value(p, sc) - 2586.67) < 0.05
@@ -455,7 +536,8 @@ if __name__ == "__main__":
             pass
         check_unique_ids([p, n])
         print("selftest OK — scale table, closure, area math (incl. isNegative), dimensioned-unit\n"
-              "         guard, merge, ids, freedraw round-trip, value recompute (incl. pitch),\n"
+              "         guard, merge, ids, freedraw round-trip + no-freedraw assert,\n"
+              "         strip_server_fields, value recompute (incl. pitch),\n"
               "         pre-send asserts")
     else:
         print(__doc__)
