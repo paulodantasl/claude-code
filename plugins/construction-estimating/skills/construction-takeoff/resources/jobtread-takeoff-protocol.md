@@ -25,6 +25,8 @@ the bottom each time this runs. Companion helpers: `estimating/scripts/jobtread_
 | **A plan record's underlying FILE can be swapped under you.** `plan.id` and every saved annotation survive, but `plan.file`, `plan.page`, `plan.name` and `plan.scale` all change, and the drawing may be a different revision. `plan.file` exposes `{id, name, size, type, url}` — `url` takes `{download, original, size}` and is the only way to get the source PDF back | Job 2026-404: 37 of 39 plans silently re-pointed from `L_HOUSE-…R01.pdf` (29 pp) to `L_GARAGE-…R01.pdf` (37 pp) mid-session; sheet titles changed and D4 split into D4 + D4.1 |
 | **A pitch RATIO is scale-independent** — rise/run measured off section line work is immune to calibration error, so a section settles a disputed pitch even on an uncalibrated or mis-scaled sheet | RFI-04 closed at 3:12 from A7 geometry alone, then confirmed by printed 12-over-3 triangles on A6 and A6.1 |
 | **`path` annotations require `strokeWidth` AND `strokeColor`** (both non-null). `point` annotations do NOT — there `strokeColor`/`fillColor`/`strokeWidth` are all optional, so stripping them from count markers is a valid payload compaction; stripping them from paths is not. The validator names **one missing field per round-trip**, and only *after* the whole payload is on the wire | Schema `parameters._on_linear.measurements.annotations`: path lists `strokeWidth:"number"`, `strokeColor:"color"` unwrapped (required) where point wraps them in `{optional:…}`; two consecutive 90 KB rejections cost two full sends |
+| **`updateJob.$` has NO parameter patch path** — schema-confirmed, not just empirical: the only parameter field on the input is `parameters`, and it is a whole-array replace. Every save re-sends every parameter and every annotation, so payload size grows with the job and is the binding constraint on a large takeoff | Expanded `root.updateJob.$`: fields are `areas, closedOn, …, lineItems, name, number, parameters, priceType, …`. No add/patch/merge variant exists |
+| **`number` is a first-class parameter type**: `{name, value}` with **no** `measurements` and no `unit`. Because nothing is attached, the server has no geometry to recompute from and the sent value stands | Global type `parameters` `oneOf` → `number: {object: {name: string, value: {optional: number}}}`. Use it for quantities derived off-platform (or off a local PDF), and put the unit in the name — `… (CY)`, `… (LF)`. Typed params with an EMPTY `measurements` array risk recomputing to 0 |
 | Mutation returns | `updatePlan`/`updateJob` return **root** — select a root field (e.g. re-query the job) or the call fails validation | `The field "id" does not exist at "updatePlan"` |
 | Permissions quirk | Grant may block root `plan{}` (`readPlan`) while **`job → plans` works** (`readJobPlans`) | Live 403 on root query; job-path succeeded |
 
@@ -151,6 +153,10 @@ global types by name (`parameters`, `plan`).
 | 15 | Someone re-calibrated the sheets mid-job; A5 went to 22.1457 pt/m (3/32") where the geometry proves 3/16". Every A5 quantity in the UI silently x4 on area, x2 on length | **Re-read `plan.scale` and `plan.file` at the start of every session** and sanity-check each against a known building dimension before trusting any stored value. A scale edit rescales everything measured on that sheet |
 | 16 | Auto-pairing printed dimension TEXT to the nearest dimension LINE gave a 6% calibration spread on one sheet (13.61-14.43 pt/ft) | Dimension lines often **overshoot their witness lines** by a fixed drafting margin - here exactly 1'-0" on three of five dims. Calibrate only where **two or more independent dimensions agree to <0.1%** (6'-0"->81.08 pt and 20'-0"->270.26 pt both gave 13.5133), then confirm against the sheet's own printed area table |
 | 17 | A 78.7 MB plan set could not be fetched: `cdn.jobtread.com` and `drive.google.com` both blocked by egress policy, and the file connector caps downloads at 10 MB | Ask for a **per-page split**, not a byte split. Each part is an independently valid PDF that maps 1:1 to a sheet, is verifiable by byte size + title block, and skips reassembly entirely. Oversized single sheets (a 20.9 MB raster roof plan) stay blocked and must be re-exported |
+| 18 | Drive's `download_file_content` failed with "session expired" on every attempt at a **8.1-8.8 MB** page (5 retries, 4 sheets), and `cdn.jobtread.com` stayed 403 CONNECT under the egress policy — the structural set looked unreachable | **`read_file_content` succeeds on the same file where the binary download fails.** It returns the sheet's TEXT only (no geometry), which is still enough to recover a lintel schedule, a foundation note block, level datums and dimension strings. Take the text, state plainly which numbers needed geometry and are therefore NOT counted |
+| 19 | Calibrating an MEP sheet off "the longest run in the plan area" gave two irreconcilable answers (20.04 vs 18.02 pt/ft) — the longest runs were the **floor-tile grid**, which extends past the building | Calibrate on the run PAIR whose two axes give the **same** pt/ft against a known footprint. Here x 1482.5→2023.1 = 540.53 pt and y 194.5→578.8 = 384.38 pt both returned 18.0177 against 30'-0" x 21'-4" — agreement to 0.001% is the proof, a single axis is not |
+| 20 | Six parallel `download_file_content` calls returned in the same millisecond; two wrote to the **same** tool-result filename and one page was silently lost (p30 overwritten by p33) | Tool-result files are named by timestamp. Fire large downloads **one or two per message**, and after decoding assert every expected page number is on disk before moving on |
+| 21 | Pipe lengths measured off the coloured layer came out ~2x reality (COLD 120.3 LF where the run is 60.1) | Pipes are drawn as **2 parallel walls + a centreline**, all in the pipe colour. Merge collinear runs whose constant coordinate is within ~5 pt and bridge gaps <=3 pt, then sum. Verify on an overlay before believing either number |
 
 ## 7. What good looks like (reference result)
 
@@ -173,6 +179,49 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   per plan page).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
+
+### 2026-09-06 (11) — Job 2026-404 — GARAGE/ALS MEP + STRUCTURAL (E1/E1.1, E2/E2.1, P1/P1.1, P2/P2.1, S1-S3, D7/D7.1, A3.1) — Claude
+- **Scope closed:** the garage building's MEP and structural sheets, the stair, and the
+  second-floor envelope. 51 garage parameters derived; 10 garage plan records calibrated.
+- **New technique — isolate the discipline layer by COLOUR, then cluster.** These sheets carry
+  a light-grey architectural background (128,798 drawings at 0.8 grey) under a thin black
+  electrical layer (520 drawings). Filtering to pure black cut 215,551 primitives to 35
+  clusters. Union-find at **eps=1.5 pt** keeps adjacent glyphs apart (eps=5 merged pairs of
+  wall lights into one cluster and under-counted). Signature = (item count, bbox w, bbox h);
+  rotated instances appear as the transposed signature and must be summed with it.
+- **Legend matching, refined.** Signatures were matched against the E1 ELECTRICAL SCHEDULE by
+  clustering the legend region and pairing each cluster with the description text to its right.
+  Confirms §6/14: item COUNTS differ between legend and placed glyph (PAR flood light: legend
+  67 items, placed 136) but the **bbox size matches to 0.2 pt**, so size is the reliable key.
+  Every count was then verified on a labelled overlay render before being written down.
+- **MEP sheet calibration.** All eight garage MEP sheets measure **18.0177 pt/ft** — nominal
+  1/4"=1'-0" carrying a 0.10% plot stretch. Both axes agree to 0.001% against the known
+  30'-0" x 21'-4" footprint (540.53/30 and 384.38/21.333). Written back as scale 59.11331884.
+  The garage architectural sheets measure 13.5133 pt/ft (3/16" + 0.1%) -> 44.33474136.
+- **Second floor resolved geometrically.** Plate is the same 30'-0" x 21'-4" = 640.00 SF;
+  balcony 20'-4" x 4'-4" = 88.11 SF; **ALS conditioned = 551.89 SF**. This CORRECTS the
+  581 SF figure carried in run 10 — that number was never traced, and the balcony notch is
+  larger than assumed. Perimeter is unchanged at 102.67 LF because the notch is re-entrant.
+- **Structural recovered through a text-only channel.** Garage pages 32/34/35/36 are 8.1-8.8 MB
+  and the binary download fails every time (§6/18); `read_file_content` returned their text,
+  which carried the whole lintel schedule (L-8-J x5, L-9-J x1, L-14-Q x2 = 48.3 LF), the
+  foundation type note, the detail keys and the filled-cell dimension strings. **Filled-cell
+  count is an ESTIMATE (58), not a count** — the two 21'-4" end walls were not in the text.
+- **Eight RFIs raised**, of which one is a hard stop: **S3 specifies CHLORDANE with DIELDRIN
+  or HEPTACHLOR for termite soil poisoning.** All three were cancelled by the US EPA for
+  termiticide use in 1988. No licensed Florida applicator can bid it; a current-label
+  substitution has to be priced and qualified. Also: foundation type conflict (note says
+  MONOLITHIC, the keyed details are STEM WALL), no second-floor lintel plan although six
+  exterior CMU openings exist up there, FFE 86' vs 15.67' datum conflict, 2000 vs 3000 PSI
+  grout conflict, and a 300 A service against an 87.5 A calculated demand.
+- **Payload reality.** 39 house parameters + 1,241 annotations read back at 123,957 bytes;
+  compacted (drop server-back-filled `fillColor` from point markers only) to 114,276. The 51
+  garage parameters were written as **`number` type** (§1) — 3,133 bytes instead of 5,552 and,
+  more importantly, immune to the geometry recompute that an empty `measurements` array would
+  have triggered. Total send 117,740 bytes.
+- **State after run: 90 parameters** (39 house with geometry + 51 garage derived), 66 plans,
+  10 newly calibrated. Backup exported to `takeoff-backups/2026-09-06-…-rev4.{csv,json}` plus
+  a 66-row plan index carrying scale/page/file identity, and the full garage takeoff notes.
 
 ### 2026-09-06 (10) — Job 2026-404 — PLAN SET REPLACED BY A DIFFERENT BUILDING; garage/ALS takeoff — Claude
 - **The incident.** Overnight, 37 of the job's 39 plan records were silently re-pointed from the
