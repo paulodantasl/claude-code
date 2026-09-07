@@ -244,9 +244,13 @@ fields are all server-generated. ~25 KB on a 120 KB payload.
 **Code:** `check_no_freedraw()` and `strip_server_fields()` added to `jobtread_takeoff.py`,
 both covered by `--selftest`; `freedraw_path()` now carries a do-not-use warning.
 
-**Still pending:** the server's recompute is asynchronous, so the 92 measured parameters read 0
-immediately after the write. Re-check in a few hours and confirm each returns its expected value
-— that server-side confirmation, not my own recompute, is what closes this out.
+**Closed out — server-confirmed.** Re-read 2.5 h after the write, once the asynchronous recompute
+had run: **92/92 measured parameters carry a non-zero value and every one agrees** with the
+independent recompute; 0 read zero, 0 mismatch; all 23 value-only parameters intact. Headline
+garage figures straight off the server: roof plan 803.30 SF, surface 809.56 SF, eave 114.69 LF,
+hips + ridge 77.51 LF, soffit 163.26 SF, partitions 23.55 / 60.69 LF, GF interior net 573.44 SF,
+2F ALS 551.86 SF. That server-side confirmation — not my own recompute — is what closes this out,
+and it is now the last step of the protocol for any change to how geometry is encoded.
 
 ### 2026-09-06 (13) — Job 2026-404 — GARAGE CONTINUED: roof, partitions, finishes, bar — Claude
 
