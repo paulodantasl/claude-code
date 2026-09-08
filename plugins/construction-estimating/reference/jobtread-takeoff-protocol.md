@@ -252,7 +252,8 @@ through unchanged.
 
 **Verification:** 131/131 parameters present, deep-diff **0 differ** with path refs resolved to
 coordinates (so annotation reordering cannot mask a change), 0 freedraw across 1,121 annotations,
-39/39 stated values intact. Server recompute pending at export.
+39/39 stated values intact. **Server-confirmed** after the asynchronous recompute: 92/92 measured
+parameters non-zero and agreeing, 0 reading zero, 0 mismatches.
 
 **Backup:** `takeoff-backups/2026-09-08-jobtread-parameters-rev8-VERIFIED.json` + `-payload.json`,
 `-rev8.csv`, `-plan-index-rev8.csv`.
