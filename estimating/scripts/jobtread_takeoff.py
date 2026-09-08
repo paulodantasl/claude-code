@@ -88,6 +88,45 @@ def path(pid: str, point_ids: list[str], color: str, *, closed: bool = False,
     return d
 
 
+def freedraw_path(pid: str, pts, color: str, *, closed: bool = False,
+                  negative: bool = False, width: int = 3, fill: bool = False,
+                  fill_opacity: float = 0.15, page: int = 1) -> dict:
+    """Path whose points are a FLAT [x1,y1,x2,y2,...] array — the 'freedraw' form.
+
+    *** DO NOT USE THIS FOR TAKEOFF GEOMETRY. ***
+
+    JobTread does NOT measure a freedraw path: the server recomputes the owning
+    parameter's value as 0. It is freehand markup, which is what the schema calls
+    it. Verified on job 2026-404 with a matched control pair (identical 4-point
+    closed square, one freedraw / one ref): freedraw 0, ref 640.044. Thirty live
+    parameters were silently zeroed before this was caught — the round-trip is
+    byte-perfect and an offline recompute agrees, so nothing warns you.
+
+    Use path() with {annotationId} refs for anything that must carry a quantity.
+    To shrink a payload, strip server-generated fields instead (see strip_server_
+    fields()). Kept here only so the encoding can be produced for genuine markup
+    and so --selftest can assert the round-trip.
+    """
+    flat = []
+    for p in pts:
+        if isinstance(p, (list, tuple)):
+            flat += [round(float(p[0]), 1), round(float(p[1]), 1)]
+        else:
+            flat.append(round(float(p), 1))
+    if not 2 <= len(flat) <= 2000 or len(flat) % 2:
+        raise ValueError(f"freedraw needs an even 2..2000 numbers, got {len(flat)}")
+    d = {"type": "path", "page": page, "id": pid, "points": flat,
+         "strokeWidth": width, "strokeColor": color}
+    if closed:
+        d["isClosed"] = True
+    if negative:
+        d["isNegative"] = True
+    if fill and not negative:
+        d["fillColor"] = color
+        d["fillOpacity"] = fill_opacity
+    return d
+
+
 def text_note(pid: str, txt: str, x: float, y: float, color: str = "#cf1620",
               font_size: int = 24, page: int = 1) -> dict:
     """Text annotation — the API requires ALL of these fields non-null."""
@@ -128,11 +167,25 @@ def line_annotations(prefix: str, x0: float, y0: float, x1: float, y1: float,
 # ---------------------------------------------------------------------------
 # Parameter builders
 
+DIMENSIONED_TYPES = {"linearArea", "areaVolume", "linearVolume"}
+
+
 def measurement(name: str, value: float, plan_id: str, color: str,
                 annotations: list[dict], **extra) -> dict:
+    """One measurement inside a parameter.
+
+    Dimensioned types (linearArea/areaVolume/linearVolume) need their dimension(s)
+    AND their own non-null `unit` ON THE MEASUREMENT -- the parameter-level `unit`
+    is not enough. Verified 2026-09-05 on Job 2026-404, which failed with:
+        A non-null value is required at ..."parameters"."5"."measurements"."0"."unit"
+    So pass e.g. measurement(..., unit="foot", depth=10).
+    """
     m = {"name": name, "value": round(value, 2), "planId": plan_id,
          "color": color, "annotations": annotations}
-    m.update(extra)  # e.g. depth=13, unit="foot" for linearArea
+    m.update(extra)
+    if ("depth" in m or "width" in m) and "unit" not in m:
+        raise ValueError("dimensioned measurement needs its own unit= (e.g. 'foot') "
+                         "alongside depth/width -- the server rejects it otherwise")
     return m
 
 
@@ -190,6 +243,141 @@ def check_unique_ids(params: list[dict]) -> int:
     if dupes:
         raise ValueError(f"duplicate annotation ids: {sorted(dupes)}")
     return len(ids)
+
+
+def check_payload(params: list[dict]) -> dict:
+    """The three pre-send asserts. Run this on the assembled array, every time.
+
+    Independent builder scripts each restarting their id counter is how 49
+    duplicated ids once reached a payload; path->point refs would then have
+    resolved to the wrong vertices with no server error, just wrong quantities.
+    """
+    n_ids = check_unique_ids(params)
+    names = [p["name"] for p in params]
+    dupe_names = sorted({n for n in names if names.count(n) > 1})
+    if dupe_names:
+        raise ValueError(f"duplicate parameter names: {dupe_names}")
+    unresolved = []
+    for p in params:
+        for m in p.get("measurements", []):
+            anns = m.get("annotations", [])
+            pids = {a["id"] for a in anns if a.get("type") == "point"}
+            for a in anns:
+                pts = a.get("points")
+                if pts and isinstance(pts[0], dict):
+                    unresolved += [r["annotationId"] for r in pts
+                                   if r["annotationId"] not in pids]
+    if unresolved:
+        raise ValueError(f"unresolved path refs: {sorted(set(unresolved))}")
+    return {"parameters": len(params), "annotations": n_ids}
+
+
+def check_no_freedraw(params: list[dict]) -> int:
+    """Assert no path carries a flat-array (freedraw) point list.
+
+    JobTread does not measure freedraw paths -- the server recomputes the owning
+    parameter to 0 -- so a freedraw path in a takeoff payload is a silent zero.
+    Run this alongside check_payload() before every send.
+    """
+    bad = []
+    for p in params:
+        for m in p.get("measurements", []):
+            for a in m.get("annotations", []):
+                pts = a.get("points")
+                if pts and not isinstance(pts[0], dict):
+                    bad.append(p["name"])
+    if bad:
+        raise ValueError(f"freedraw paths (these would measure 0): {sorted(set(bad))}")
+    return sum(len(m.get("annotations", []))
+               for p in params for m in p.get("measurements", []))
+
+
+def strip_server_fields(params: list[dict]) -> list[dict]:
+    """Remove everything the SERVER generates -- the only lossless compaction.
+
+    Read-back adds `value` to parameters and measurements, `page: 1` to every
+    annotation, and `fillColor` to every `point`. None of it needs to be sent
+    back. Worth ~25 KB on a 120 KB payload, and safe in a way that re-encoding
+    geometry is not. `strokeColor`/`strokeWidth` are REQUIRED on paths, so they
+    are kept there; on points they are optional and dropped.
+    """
+    import copy
+    out = copy.deepcopy(params)
+    for p in out:
+        if p.get("measurements"):
+            p.pop("value", None)          # measured params: the server computes it
+        for m in p.get("measurements", []):
+            m.pop("value", None)
+            for a in m.get("annotations", []):
+                if a.get("page") == 1:
+                    a.pop("page", None)
+                if a.get("type") == "point":
+                    for k in ("fillColor", "strokeColor", "strokeWidth"):
+                        a.pop(k, None)
+    return out
+
+
+_BASE = {"area": "area", "linear": "linear", "count": "count",
+         "linearArea": "linear", "areaVolume": "area", "linearVolume": "linear",
+         "areaPitch": "area", "linearPitch": "linear"}
+
+
+def recompute_value(param: dict, scales: dict) -> float | None:
+    """Recompute a parameter's value from its geometry x each plan's stored scale.
+
+    `scales` maps planId -> plan.scale (PDF points per METRE). Use this to verify a
+    write immediately: the server recomputes `value` asynchronously, so a read-back
+    seconds after a write carries values only for plain-`number` parameters.
+    Returns None if a needed scale is missing.
+    """
+    mtype = param.get("measurementType")
+    if not mtype:
+        return param.get("value")
+    base = _BASE[mtype]
+    total = 0.0
+    for m in param.get("measurements", []):
+        anns = m.get("annotations", [])
+        by_id = {a["id"]: a for a in anns if a.get("type") == "point"}
+        if base == "count":
+            total += sum(1 for a in anns if a.get("type") == "point")
+            continue
+        sc = scales.get(m.get("planId"))
+        if sc is None:
+            return None
+        ppf = sc / FT_PER_M
+        mult = 1.0
+        if mtype in ("linearArea", "areaVolume"):
+            mult = m["depth"]
+        elif mtype == "linearVolume":
+            mult = m["depth"] * m["width"]
+        elif mtype in ("areaPitch", "linearPitch"):
+            # pitchX = RUN, pitchY = RISE; the server returns plan x the slope factor
+            mult = math.sqrt(1.0 + (m["pitchY"] / m["pitchX"]) ** 2)
+        for a in anns:
+            if a.get("type") != "path":
+                continue
+            pts = a.get("points") or []
+            if pts and isinstance(pts[0], dict):
+                if any(r["annotationId"] not in by_id for r in pts):
+                    return None
+                v = [(by_id[r["annotationId"]]["x"], by_id[r["annotationId"]]["y"])
+                     for r in pts]
+            else:
+                v = [(pts[i], pts[i + 1]) for i in range(0, len(pts), 2)]
+            if base == "area":
+                if not a.get("isClosed"):
+                    continue
+                sh = abs(sum(v[i][0] * v[(i + 1) % len(v)][1]
+                             - v[(i + 1) % len(v)][0] * v[i][1]
+                             for i in range(len(v)))) / 2.0
+                q = sh / (ppf * ppf) * mult
+                total += -q if a.get("isNegative") else q
+            else:
+                L = sum(math.dist(v[i], v[i + 1]) for i in range(len(v) - 1))
+                if a.get("isClosed"):
+                    L += math.dist(v[-1], v[0])
+                total += L / ppf * mult
+    return total
 
 
 def merge_parameters(existing: list[dict], new: list[dict]) -> list[dict]:
@@ -253,9 +441,103 @@ if __name__ == "__main__":
         n = area_param("Net", "PLAN", "#1b5e20", rect=(213.6, 234.6, 909.6, 1374.6),
                        negatives=[(213.6, 234.6, 909.6, 402.6), (702.6, 765.7, 897.6, 1005.6)])
         assert abs(n["value"] - 1943.62) < 0.05, n["value"]
+        try:
+            measurement("bad", 1, "P", "#000", [], depth=10)      # missing unit
+            raise AssertionError("dimensioned measurement without unit must raise")
+        except ValueError:
+            pass
+        ok = measurement("good", 1, "P", "#000", [], unit="foot", depth=10)
+        assert ok["unit"] == "foot" and ok["depth"] == 10
         merged = merge_parameters([{"name": "A", "measurements": []}], [p, n])
         assert [q["name"] for q in merged] == ["A", "GF Footprint Area", "Net"]
+
+        # freedraw: flat point array, same length as the vertex-ref form
+        fd = freedraw_path("fd1", [(0, 0), (720, 0), (720, 360)], "#cf1620", width=4)
+        assert fd["points"] == [0.0, 0.0, 720.0, 0.0, 720.0, 360.0]
+        try:
+            freedraw_path("bad", [(0, 0)], "#000")                # only 2 numbers is legal
+        except ValueError:
+            raise AssertionError("2 numbers must be accepted")
+        lin_fd = {"name": "FD", "measurementType": "linear", "unit": "foot",
+                  "measurements": [{"name": "", "color": "#cf1620", "planId": "P",
+                                    "annotations": [fd]}]}
+        lin_ref = {"name": "REF", "measurementType": "linear", "unit": "foot",
+                   "measurements": [{"name": "", "color": "#cf1620", "planId": "P",
+                                     "annotations": [
+                                         point("r1", 0, 0), point("r2", 720, 0),
+                                         point("r3", 720, 360),
+                                         path("rp", ["r1", "r2", "r3"], "#cf1620",
+                                              width=4)]}]}
+        sc = {"P": SCALE_QUARTER_INCH, "PLAN": SCALE_QUARTER_INCH}
+        a, b = recompute_value(lin_fd, sc), recompute_value(lin_ref, sc)
+        # The two forms are geometrically identical OFFLINE -- and that is exactly
+        # the trap: JobTread measures the freedraw one as 0. This assert records
+        # the equivalence; check_no_freedraw() is what keeps it out of a payload.
+        assert abs(a - b) < 1e-9, (a, b)
+        assert abs(a - 60.0) < 0.01, a            # 720 pt + 360 pt at 1/4" = 40 + 20 ft
+        try:
+            check_no_freedraw([lin_fd])
+            raise AssertionError("freedraw in a payload must raise")
+        except ValueError as e:
+            assert "measure 0" in str(e)
+        assert check_no_freedraw([lin_ref]) == 4
+
+        # strip_server_fields drops only what the server generates
+        dirty = {"name": "D", "measurementType": "area", "unit": "foot",
+                 "value": 1.0,
+                 "measurements": [{"name": "", "color": "#000", "planId": "P",
+                                   "value": 1.0,
+                                   "annotations": [
+                                       {"id": "a", "type": "point", "x": 0, "y": 0,
+                                        "page": 1, "fillColor": "#000"},
+                                       {"id": "b", "type": "path", "page": 1,
+                                        "points": [{"annotationId": "a"}],
+                                        "strokeColor": "#000", "strokeWidth": 3}]}]}
+        cl = strip_server_fields([dirty])[0]
+        assert "value" not in cl and "value" not in cl["measurements"][0]
+        anns = cl["measurements"][0]["annotations"]
+        assert anns[0] == {"id": "a", "type": "point", "x": 0, "y": 0}
+        assert anns[1]["strokeColor"] == "#000" and "page" not in anns[1]
+        assert "value" in dirty, "strip_server_fields must not mutate its input"
+
+        # recompute area, incl. isNegative, and the depth/width multipliers
+        assert abs(recompute_value(p, sc) - 2586.67) < 0.05
+        assert abs(recompute_value(n, sc) - 1943.62) < 0.05
+        lv = dict(lin_fd, name="LV", measurementType="linearVolume")
+        lv["measurements"] = [dict(lv["measurements"][0], unit="foot",
+                                   width=1.0, depth=1.0)]
+        assert abs(recompute_value(lv, sc) - 60.0) < 0.01
+
+        # areaPitch: server returns plan area x the slope factor (pitchX=RUN, pitchY=RISE)
+        ap = dict(p, name="AP", measurementType="areaPitch")
+        ap["measurements"] = [dict(p["measurements"][0], pitchX=12, pitchY=3)]
+        assert abs(recompute_value(ap, sc) - 2586.67 * 1.0307764) < 0.05, recompute_value(ap, sc)
+        ap15 = dict(ap, name="AP15")
+        ap15["measurements"] = [dict(p["measurements"][0], pitchX=12, pitchY=1.5)]
+        assert abs(recompute_value(ap15, sc) - 2586.67 * 1.0077822) < 0.05
+
+        # pre-send asserts
+        assert check_payload([p, n])["parameters"] == 2
+        for bad, why in (([p, dict(p)], "duplicate parameter names"),
+                         ([p, dict(n, name="N2", measurements=p["measurements"])],
+                          "duplicate annotation ids")):
+            try:
+                check_payload(bad)
+                raise AssertionError(f"{why} must raise")
+            except ValueError:
+                pass
+        orphan = {"name": "O", "measurementType": "linear", "unit": "foot",
+                  "measurements": [{"name": "", "color": "#000", "planId": "P",
+                                    "annotations": [path("op", ["nope"], "#000")]}]}
+        try:
+            check_payload([orphan])
+            raise AssertionError("unresolved path refs must raise")
+        except ValueError:
+            pass
         check_unique_ids([p, n])
-        print("selftest OK — scale table, closure, area math (incl. isNegative), merge, ids")
+        print("selftest OK — scale table, closure, area math (incl. isNegative), dimensioned-unit\n"
+              "         guard, merge, ids, freedraw round-trip + no-freedraw assert,\n"
+              "         strip_server_fields, value recompute (incl. pitch),\n"
+              "         pre-send asserts")
     else:
         print(__doc__)

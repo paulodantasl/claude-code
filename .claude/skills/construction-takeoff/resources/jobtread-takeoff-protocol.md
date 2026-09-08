@@ -21,6 +21,16 @@ the bottom each time this runs. Companion helpers: `estimating/scripts/jobtread_
 | Parameter types | `area, linear, count, linearArea(depth), areaVolume(depth), linearVolume(width+depth), areaPitch, linearPitch(pitchX/Y), linearDrop(startDrop/endDrop), formula(name+formula), number, option` | Schema introspection `parameters` type |
 | Path structure | `path.points` = array of `{annotationId}` refs to sibling `point` annotations; `isClosed` for areas; for a **perimeter as linear**, use an open path with N+1 points (repeat the first coordinate as a new point id) | Org example + our saves |
 | Text annotations | Require non-null `fontWeight`, `fontStyle`, `fillColor`, `fillOpacity`, `rotation` (API errors one missing field at a time) | updatePlan error `A non-null value is required … fontWeight` |
+| **`areaPitch` / `linearPitch`: `pitchX` = RUN, `pitchY` = RISE** — send `pitchX: 12, pitchY: 3` for a 3:12 and the server returns plan_area x 1.030776. Verified: sent 2419.69 for a 2347.44 SF plan polygon and it read back identical, so the server's own recompute agrees | Job 2026-404 roof; a swapped pair would have returned ~9,678 SF (factor 4.123) and an ignored pitch 2,347 SF |
+| **A plan record's underlying FILE can be swapped under you.** `plan.id` and every saved annotation survive, but `plan.file`, `plan.page`, `plan.name` and `plan.scale` all change, and the drawing may be a different revision. `plan.file` exposes `{id, name, size, type, url}` — `url` takes `{download, original, size}` and is the only way to get the source PDF back | Job 2026-404: 37 of 39 plans silently re-pointed from `L_HOUSE-…R01.pdf` (29 pp) to `L_GARAGE-…R01.pdf` (37 pp) mid-session; sheet titles changed and D4 split into D4 + D4.1 |
+| **A pitch RATIO is scale-independent** — rise/run measured off section line work is immune to calibration error, so a section settles a disputed pitch even on an uncalibrated or mis-scaled sheet | RFI-04 closed at 3:12 from A7 geometry alone, then confirmed by printed 12-over-3 triangles on A6 and A6.1 |
+| **`path` annotations require `strokeWidth` AND `strokeColor`** (both non-null). `point` annotations do NOT — there `strokeColor`/`fillColor`/`strokeWidth` are all optional, so stripping them from count markers is a valid payload compaction; stripping them from paths is not. The validator names **one missing field per round-trip**, and only *after* the whole payload is on the wire | Schema `parameters._on_linear.measurements.annotations`: path lists `strokeWidth:"number"`, `strokeColor:"color"` unwrapped (required) where point wraps them in `{optional:…}`; two consecutive 90 KB rejections cost two full sends |
+| **`updateJob.$` has NO parameter patch path** — schema-confirmed, not just empirical: the only parameter field on the input is `parameters`, and it is a whole-array replace. Every save re-sends every parameter and every annotation, so payload size grows with the job and is the binding constraint on a large takeoff | Expanded `root.updateJob.$`: fields are `areas, closedOn, …, lineItems, name, number, parameters, priceType, …`. No add/patch/merge variant exists |
+| **`number` is a first-class parameter type**: `{name, value}` with **no** `measurements` and no `unit`. Because nothing is attached, the server has no geometry to recompute from and the sent value stands | Global type `parameters` `oneOf` → `number: {object: {name: string, value: {optional: number}}}`. Use it for quantities derived off-platform (or off a local PDF), and put the unit in the name — `… (CY)`, `… (LF)`. Typed params with an EMPTY `measurements` array risk recomputing to 0 |
+| **`path.points` also accepts a FLAT ARRAY OF NUMBERS** — `[x1,y1,x2,y2,…]`, the schema's **`freedraw`** variant — but **a freedraw path IS NOT MEASURED. The server computes the parameter's value as 0.** It is markup, not takeoff geometry. Only the `[{annotationId}]` ref form (a `point` annotation per vertex) is measured. The saving is real (~12 bytes per vertex vs ~70) and the round-trip is byte-perfect, which is exactly why this is dangerous: nothing errors, the shapes render, and the quantity silently becomes 0 | Job 2026-404: I converted 284 segment-paths to freedraw across two saves. Read-back was byte-identical and my own recompute agreed on all 86 parameters — and **30 parameters read 0 on the server**. Classified by path form: freedraw agree 0 / server-ZERO 30; ref-form agree 26; markers-only agree 38. Acontrol parameter (same 4-pt square, `isClosed`, one freedraw / one ref) settled it: freedraw 0, ref 640.044. The variant is *named* `freedraw` — the schema said so |
+| **Annotation ids must be unique across the ENTIRE `parameters` array**, not per parameter or per measurement | Four independent builder scripts each restarted their id counter and produced 49 duplicated ids (worst ×5). Caught by a pre-send uniqueness assert; re-ided globally while preserving every path→point reference |
+| **The server recomputes `value` ASYNCHRONOUSLY after a whole-array write.** Read back immediately and the 86 measurement-backed parameters carry **no** `value` at all — only plain-`number` params do. The values reappear later (rev4's export, taken ~2 h after its write, had them) | Job 2026-404: read-back seconds after the write returned 14/100 params with a value — exactly the 14 plain numbers. Do **not** read this as "the server does not store values" (I did, briefly) and do not wait on it either: **verify by recomputing from the round-tripped geometry × the plan's stored scale** — that is deterministic and available at once |
+| Annotation `page` | `defaultValue: 1` — omittable losslessly on send, but the server **echoes it back on every annotation**. A naive deep-equality diff of read-back vs. sent payload therefore reports *every* parameter as differing | Strip `page == 1` before diffing. With that one normalisation the round-trip was byte-perfect across 100 parameters / 1,052 annotations |
 | Mutation returns | `updatePlan`/`updateJob` return **root** — select a root field (e.g. re-query the job) or the call fails validation | `The field "id" does not exist at "updatePlan"` |
 | Permissions quirk | Grant may block root `plan{}` (`readPlan`) while **`job → plans` works** (`readJobPlans`) | Live 403 on root query; job-path succeeded |
 
@@ -37,6 +47,18 @@ the bottom each time this runs. Companion helpers: `estimating/scripts/jobtread_
 // write parameters (FULL REPLACE of the whole array — read-merge-write!)
 {"updateJob": {"$": {"id": JOB, "parameters": [...]}, "job": {"$": {"id": JOB}, "parameters": {}}}}
 ```
+
+**Bulk mutations via field aliases.** JSON forbids duplicate keys, so batch writes by aliasing:
+`{"a1": {"_": "updatePlan", "$": {…}, "job": {"$": {"id": JOB}, "id": {}}}, "a2": {…}}`. Each alias
+still needs its own root selection. **About 9 per call** — beyond that the server returns
+`Request Entity Too Large`. This turns 29 restores into 4 calls instead of 29.
+
+**Re-pointing / adding plans** (the recovery path when a plan set is replaced):
+`updatePlan.$` takes `fileId`, `page`, `name` and `scale`, all optional and independent of
+`annotations` — so you can move a record back to its original file and page WITHOUT touching its
+geometry. `createPlan.$` takes `{jobId, fileId, name, page, scale}` and adds a sheet as a new record.
+Together they let one job carry two buildings: restore the first set in place, add the second under a
+name prefix.
 
 Schema discovery when anything is unclear: `{"schema": {"$": {"path": "root", "search": "<kw>"}}}`,
 expand with `{"schema": {"$": {"path": "root.updatePlan.$.annotations._on_path", "expand": true}}}`,
@@ -86,6 +108,21 @@ global types by name (`parameters`, `plan`).
 8. **Report with the overlay image** so the human can compare against the JobTread UI in
    seconds, and state every ± tolerance in the parameter/measurement **names** (they are the
    only field the UI always shows).
+9. **EXPORT A PARAMETER BACKUP — every time, no exceptions** (standing instruction, user,
+   2026-09-05). Once the read-back verifies, dump the job's parameters tab to
+   `estimating/projects/<job>/takeoff-backups/<YYYY-MM-DD>-jobtread-parameters.{json,csv}`:
+   the JSON is the **full-fidelity restore artifact** (feed its `parameters` array straight
+   back into `updateJob.$.parameters` — full replace), the CSV is the human-readable tab
+   (parameter, type, value, unit, depth/width, sheet, measurement + annotation counts,
+   basis note). `estimating/projects/*` is gitignored by design, so real plan data stays out
+   of git — and the sandbox container is ephemeral, so **also hand the files to the user**
+   (SendUserFile) or the backup dies with the session. A takeoff is not finished until that
+   file exists.
+   **The export MUST also capture, per plan: `scale`, `page`, and `file.{id,name,size}`.**
+   Parameter geometry is meaningless without the scale it was measured at and the file it was
+   traced on, and both can change under you (§6 #15 and the file-swap row in §1). Carrying
+   them in the backup is what lets a later session prove a stored value is still valid — or
+   recompute it — instead of guessing.
 
 ## 5. Naming & style conventions (keep the Parameters panel readable)
 
@@ -113,6 +150,30 @@ global types by name (`parameters`, `plan`).
 | 8 | Text annotation rejected (`fontWeight` non-null) | Send the full text field set (§1) |
 | 9 | CDN download blocked / Drive big-file failures | §3 fallbacks; ask user to allowlist cdn.jobtread.com |
 | 10 | Hand-summed values ≠ app-computed | Expected — geometry is truth; values are advisory (state this to the user) |
+| 11 | Payload compaction stripped `strokeWidth`/`strokeColor` from **path** annotations → two rejected 90 KB sends, one field named per attempt | Strip style keys from `point` markers only. **Introspect the schema rather than guess twice** — one `parameters._on_<type>.measurements.annotations` expand costs ~1 KB and settles every required field at once |
+| 12 | `job.plans` returned 10 nodes; I concluded 19 of 29 sheets were "not uploaded" and wrote off 5 trades | Connections paginate. **Always pass `$: {size: N}` and select `count`**, then assert `len(nodes) == count` before concluding anything is missing |
+| 13 | Symbol count missed a **rotated** instance — the 6th SD/CO detector is drawn at 90 deg, so its letter glyphs carry swapped w/h and the signature scan returned 5 | Sweep for the transposed signature `(n, h, w)` as well as `(n, w, h)`, and never close a count without the overlay render — that is what caught it |
+| 14 | Legend-signature matching returned ZERO exhaust fans although 3 are drawn: the placed symbol uses a different path decomposition (and scale) than the legend glyph | Build the signature from a **placed instance** you have visually confirmed, not from the legend. Then require several independent sub-elements to agree on the same points |
+| 15 | Someone re-calibrated the sheets mid-job; A5 went to 22.1457 pt/m (3/32") where the geometry proves 3/16". Every A5 quantity in the UI silently x4 on area, x2 on length | **Re-read `plan.scale` and `plan.file` at the start of every session** and sanity-check each against a known building dimension before trusting any stored value. A scale edit rescales everything measured on that sheet |
+| 16 | Auto-pairing printed dimension TEXT to the nearest dimension LINE gave a 6% calibration spread on one sheet (13.61-14.43 pt/ft) | Dimension lines often **overshoot their witness lines** by a fixed drafting margin - here exactly 1'-0" on three of five dims. Calibrate only where **two or more independent dimensions agree to <0.1%** (6'-0"->81.08 pt and 20'-0"->270.26 pt both gave 13.5133), then confirm against the sheet's own printed area table |
+| 17 | A 78.7 MB plan set could not be fetched: `cdn.jobtread.com` and `drive.google.com` both blocked by egress policy, and the file connector caps downloads at 10 MB | Ask for a **per-page split**, not a byte split. Each part is an independently valid PDF that maps 1:1 to a sheet, is verifiable by byte size + title block, and skips reassembly entirely. Oversized single sheets (a 20.9 MB raster roof plan) stay blocked and must be re-exported |
+| 18a | I judged a ~106 KB `updateJob.parameters` send "too large to emit reliably" and nearly stopped short of the write. **It went through on the first attempt, byte-perfect.** The prior "129.6 KB cannot be emitted" note had been over-generalised into a much lower working ceiling | **Establish the real ceiling from what the job has already accepted, not from a remembered failure.** The 39 house parameters then live in JobTread had themselves been written in one send carrying all 1,241 annotations PLUS the `page` field on every one - larger than the 106 KB now in question. Before declaring a payload too big: (1) strip losslessly - `page` has `defaultValue: 1`, and point markers do not require `strokeColor`/`fillColor`/`strokeWidth` (123,957 -> 106,177 bytes here, 14%); (2) compare against the largest send this job has already taken; (3) send it. The failure mode is safe - a truncated payload is invalid JSON, so the tool errors and NOTHING is written |
+| 18 | Drive's `download_file_content` failed with "session expired" on every attempt at a **8.1-8.8 MB** page (5 retries, 4 sheets), and `cdn.jobtread.com` stayed 403 CONNECT under the egress policy — the structural set looked unreachable | **`read_file_content` succeeds on the same file where the binary download fails.** It returns the sheet's TEXT only (no geometry), which is still enough to recover a lintel schedule, a foundation note block, level datums and dimension strings. Take the text, state plainly which numbers needed geometry and are therefore NOT counted |
+| 19 | Calibrating an MEP sheet off "the longest run in the plan area" gave two irreconcilable answers (20.04 vs 18.02 pt/ft) — the longest runs were the **floor-tile grid**, which extends past the building | Calibrate on the run PAIR whose two axes give the **same** pt/ft against a known footprint. Here x 1482.5→2023.1 = 540.53 pt and y 194.5→578.8 = 384.38 pt both returned 18.0177 against 30'-0" x 21'-4" — agreement to 0.001% is the proof, a single axis is not |
+| 20 | Six parallel `download_file_content` calls returned in the same millisecond; two wrote to the **same** tool-result filename and one page was silently lost (p30 overwritten by p33) | Tool-result files are named by timestamp. Fire large downloads **one or two per message**, and after decoding assert every expected page number is on disk before moving on |
+| 21 | Pipe lengths measured off the coloured layer came out ~2x reality (COLD 120.3 LF where the run is 60.1) | Pipes are drawn as **2 parallel walls + a centreline**, all in the pipe colour. Merge collinear runs whose constant coordinate is within ~5 pt and bridge gaps <=3 pt, then sum. Verify on an overlay before believing either number |
+| 22 | Four builder scripts each began their annotation ids at 1, so the assembled payload carried **49 duplicated ids** (one repeated 5×). Sent as-is, path→point references would have resolved to the wrong vertices and shapes would have collapsed silently — no error, just wrong quantities | Ids are global to the whole `parameters` array. **Assert uniqueness across the assembled payload before every send**, together with: no duplicate parameter names, and zero unresolved `{annotationId}` refs. Three cheap asserts; the first one caught this |
+| 23 | A 144 KB payload exceeded what I could emit in one call, and there was no patch path to send only the changed parameter. I compacted it by converting machine-traced polylines to the **freedraw** form — and **silently zeroed every parameter I converted** (see 30) | Compact by stripping what the SERVER adds, never by changing the geometry's encoding: drop `value` from parameters and measurements, `page` from every annotation, and `fillColor`/`strokeColor`/`strokeWidth` from `point` annotations (paths require the stroke pair). That is ~25 KB on a 120 KB payload and provably lossless because those fields are server-generated. Beyond that, demote derived parameters to plain `number` — a stated value with no geometry is honest; geometry the server refuses to measure is not |
+| 24 | Read-back straight after a write showed **no `value`** on any measured parameter, and I briefly concluded JobTread does not persist computed values at all | It does — asynchronously (§1). **Verify the write by recomputing every value yourself from the geometry that came back**: shoelace ÷ (pt/ft)² for area, segment sums ÷ pt/ft for linear, marker count for count, then × `depth`, × `depth`, × `width·depth` for linearArea / areaVolume / linearVolume. That check is immediate, independent of the server, and catches a transcription error in a hand-emitted payload |
+| 25 | A count derived from **text tags** was short by one: GAR A3.1 has five interior-door tags (`2868 FR`, `2868` ×2, `2868 P`, `3668 BP`) and only four markers were placed. The overlay looked right — the four markers all sat on real doors, so nothing looked wrong. The note even claimed the FR door was "counted separately", which it was not | An overlay proves **no marker is wrong**; it does not prove **no tag is missing**. For any tag-derived count, run the complement check: extract every tag matching the pattern inside the traced envelope and assert **each one is claimed by exactly one marker**. Tag rows also carry suffix words (`FR`, `P`, `BP`, `GL`, `DH`, `FX`, `GD`, `DB`) that must be joined to the 4-digit token before classifying — and beware schedule/legend blocks elsewhere on the sheet, whose tags must be excluded by the envelope, not by eye |
+| 26 | A 120.7 KB `updateJob.parameters` call **could not be emitted** — the turn hit the output-token cap mid-payload and nothing was sent. Two earlier sends of 106.9 KB and 102.2 KB went through | The binding limit is the ASSISTANT'S output budget, not the API's. It sits between 107 and 120 KB, so **budget ~100 KB and compact BEFORE building, not after**. Compaction that costs nothing: strip server-generated fields (failure mode 23), ids shortened to base-36 (`1`, `a`, `zz`), notes capped (long provenance belongs in the backup file, not the parameter note), and derived parameters that only duplicate geometry they cite demoted to plain `number`. That took 120.7 -> 102.2 KB with **every one of 115 values unchanged**. The failure is safe but EXPENSIVE — you re-read and re-emit the whole array — so measure the payload before you start reading it out |
+| 27 | Wall-pair detection returned **189 LF of 2F partitions where the truth was 61 LF**. The floor-tile hatch is a comb of single lines at 1.05 ft, too far apart to pair as a wall — but a 1.7 ft wall STUB paired with a 12.5 ft TILE line and the code took the UNION of their extents, inheriting the tile line's full length | A wall's two faces are nearly CO-EXTENSIVE. Require the overlap to be >= 0.7x the LONGER run (not the shorter), and take the length as the **overlap**, not the union — which also makes door and cased openings drop out, so the result is NET. Then dedupe: group runs whose constant coordinate is within a wall thickness and merge their extents, or one wall gets counted three times |
+| 28 | The roof plan (GAR A5, a 20.9 MB raster) could not be read at all, and the roof is a large share of the cost | **A roof can be fully determined without its roof plan.** Sections and elevations carry the same geometry at a measurable scale: A7's two sections both spanned 24.36 ft = the 21'-4" building + two 1'-6" overhangs; A6's FRONT elevation spanned 33.03 ft with an **8.68 ft flat between its two slopes**, LEFT spanned 24.36 ft and peaked. Ridge = L - W = 8.68 ft **exactly** — the signature of a regular hip, which settles hip-vs-gable, ridge length and all four planes at once. `read_file_content` on the unreadable sheet then returned its TEXT ('33\' - 0"', four '1 1/2 %' tags) and corroborated every number |
+| 29 | `recompute_value()` under-reported `areaPitch`/`linearPitch` by the slope factor — the helper applied the `depth`/`width` multipliers but not pitch | Fixed: `mult = sqrt(1 + (pitchY/pitchX)^2)` for both pitch types, locked in by `--selftest` at 3:12 and 1.5:12. It surfaced only because the recompute disagreed with a hand figure — **always cross-check the verifier against an independently derived number on at least one parameter**, or it silently blesses the wrong value |
+
+| 30 | **I broke 30 live parameters by adopting an encoding I had verified only halfway.** To fit a payload I re-encoded traced polylines as `freedraw` flat arrays. I checked round-trip fidelity (byte-perfect) and my own recompute (47/47, 39/39) and called it lossless. Both checks were blind to the only thing that mattered: **the server measures freedraw paths as 0.** Two saves went out, and 30 parameters — 12 house, 19 garage — sat at 0 in the client's job | The two verifications I ran both take MY encoding as the source of truth, so neither can detect the server rejecting it. **A new geometry encoding is only proven when the SERVER'S OWN recomputed value comes back non-zero and correct** — which here means waiting out the async recompute (~2–4 h) on ONE control parameter before converting anything. Write the control as a matched pair (identical shape, one in each encoding) so the comparison is unambiguous. And read the schema's own vocabulary: the variant is called `freedraw`, which is what it is — freehand markup |
+
+| 31 | A 99,935-byte payload was compacted, verified and read out — then the send **truncated at 111,665 bytes** and nothing was written. The file was 99.9 KB; I typed it with `": "` and `", "` spacing, which inflated it ~12% on the wire | **The emit ceiling applies to the CHARACTERS YOU TYPE, not to the compact byte count you measured.** `json.dumps(separators=(",",":"))` is the size you must budget AND the form you must emit — pretty-printing a payload that fits will overrun a payload that doesn't. Re-emitting the identical content in compact form went through on the next attempt |
 
 ## 7. What good looks like (reference result)
 
@@ -135,6 +196,413 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   per plan page).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
+
+### 2026-09-08 (15) — Job 2026-404 — TAKEOFF COMPLETE: 131 parameters — Claude
+
+**Ask:** "finish the takeoff, do the rest of the hand measurements and save in JobTread."
+
+**Approach — inventory before tracing.** Mapped all 66 plan records against the parameters
+measured on each, then asked what carries NO number rather than what is merely untraced.
+That reordered the work completely: the two house pipe runs everyone would reach for first
+already carry correct values, while **insulation — attic and wall, both buildings — was absent
+from every prior revision.**
+
+**115 → 131 parameters.** New:
+
+| | |
+|---|---|
+| House interior partition drywall, 2 faces @ 10' | 3,952.39 SF |
+| House exterior wall finish, NET of openings | 1,631.81 SF |
+| House window area / total opening deduction | 257 / 343 SF |
+| House footing rebar, 4-#5 + 10% laps | 868.92 LF |
+| **House precast lintel LENGTH per S2 call-outs** | **120.92 LF** |
+| House attic vent net free area, R806.2 | 6.67 SF |
+| House termite soil treatment @ S3's rate | 341.14 gal |
+| House lanai + entry porch soffit finish | 273.61 SF |
+| Kitchen upper cabinets / backsplash | 11.0 LF / 16.5 SF |
+| **House attic R-30 / wall insulation** | **2,000.63 / 1,631.81 SF** |
+| **Garage attic R-30 / wall insulation** | **551.86 / 914.37 SF** |
+| Garage GF floor finish, sealed slab | 573.44 SF |
+
+**A correction, not just additions.** The garage carried 158 gal of termite treatment. S3 states
+its own rate — "WITHIN BUILDING AREA … 1,5 GAL. PER 10 SQFT." — which gives **96.01 gal**. 158
+follows no rate on that sheet. Corrected, and the house computed on the same stated basis. S3's
+separate excavation and apron rates are excluded and named in the backup.
+
+**Lintel length from the drawing, not the schedule.** S2 prints a type table (L-1 = 2'-8" to 3'-6",
+…) AND per-opening call-outs. Pairing each L-tag to the nearest dimension **that falls inside that
+type's own range** paired 20 of 21 at 117.42 LF and reproduced the independently known type
+distribution exactly — 11× L-1, 1× L-3, 2× L-5, 2× L-6, 1× L-8, 2× L-9, 1× L-11, 1× L-12. The
+range filter is what makes this safe: a naive nearest-dimension pairing grabbed a 1'-2" jog
+dimension for an L-1 whose range starts at 2'-8". The 21st L-1 has no in-range dimension nearby
+and is carried at the 3'-6" schedule maximum, which is what all ten other L-1s measure.
+
+**Two scope questions closed for good.** A2 SITE and A2.1 LANDSCAPE are empty on **both** files —
+81 drawings, 79 lines, 11 rects, ~80 words each, i.e. title block and border. Sitework is an RFI,
+not a measurement gap, and that is now recorded rather than re-investigated every run.
+
+**What will not fit, and why that is now settled by measurement.** The two house pipe runs stay as
+stated values: their ref-form geometry measures **21,034 and 25,380 bytes**, and `parameters` is a
+whole-array replace under a ~105 KB ceiling. Not a judgement call — arithmetic.
+
+**Failure mode 31 cost a full send.** The payload measured 99,935 bytes compact, was verified, and
+then truncated at 111,665 bytes on the wire because I typed it with `": "` spacing. The ceiling
+applies to the characters typed, not the compact size measured. Re-emitted compact, it went
+through unchanged.
+
+**Verification:** 131/131 parameters present, deep-diff **0 differ** with path refs resolved to
+coordinates (so annotation reordering cannot mask a change), 0 freedraw across 1,121 annotations,
+39/39 stated values intact. **Server-confirmed** after the asynchronous recompute: 92/92 measured
+parameters non-zero and agreeing, 0 reading zero, 0 mismatches.
+
+**Backup:** `takeoff-backups/2026-09-08-jobtread-parameters-rev8-VERIFIED.json` + `-payload.json`,
+`-rev8.csv`, `-plan-index-rev8.csv`.
+
+### 2026-09-06 (14) — Job 2026-404 — REPAIR: 30 parameters were reading 0 — Claude
+
+**What I broke.** In runs (12) and (13) I re-encoded traced polylines as `freedraw` flat
+arrays to fit the payload under the emit ceiling, and recorded it as a lossless compaction.
+It is not. **JobTread does not measure a freedraw path — the server recomputes the owning
+parameter's value to 0.** Two saves went out that way. Thirty parameters — 12 house, 19
+garage — sat at 0 in the client's live job.
+
+**Why both my checks missed it.** I verified (a) the read-back was byte-identical to what I
+sent, and (b) my own `recompute_value()` agreed with my pre-computed expectations, 47/47 and
+39/39. Both take my encoding as the source of truth, so neither can see the server refusing
+it. Nothing errored, the shapes render in the UI, and the schema names the variant
+`freedraw` — which I read past.
+
+**How it was caught and proven.** Classifying every parameter by the form of its path points
+against the server's own recomputed values:
+
+| path form | agree | server 0 | other mismatch |
+|---|---|---|---|
+| freedraw | 0 | **30** | 0 |
+| `{annotationId}` refs | 26 | 0 | 0 |
+| markers only (count) | 38 | 0 | 0 |
+
+Then a matched control pair — the same 4-point closed square, one freedraw, one ref: freedraw
+**0**, ref **640.044**. Not ambiguous.
+
+**The repair.** All 502 path points re-sent in `{annotationId}` ref form, 115 parameters,
+98,678 bytes in one send. Verified by read-back: 115/115 present, deep-diff **0 parameters
+differ** once server enrichment is normalised, **0 freedraw points remain**, every value-only
+parameter intact. All 19 garage parameters got real geometry back. Two house pipe runs
+(`Div 22 Water piping - CPVC` 444.53 LF, `Div 22 Sanitary / waste piping - PVC DWV` 298.01 LF)
+carry a stated value with no geometry, renamed `… (LF) - value only`, because the payload does
+not fit otherwise — an honest number beats geometry the server won't measure.
+
+**A near-miss inside the repair.** The generated payload carried 21 parameters as `{"name": …}`
+with no value — the builder's way of saying "unchanged". But `parameters` is a **whole-array
+replace**, so that would have wiped 21 live garage quantities (footing rebar 226 LF, partition
+drywall 1,684.9 SF, the bar millwork, the attic vent). Caught by asserting every parameter in
+the payload carries either a value or measurements. Compare against the previous *sent* payload,
+not against intent: rev5 and rev6 had zero name-only entries, which is what flagged it.
+
+**The compaction that actually is lossless** (now `strip_server_fields()`): drop `value` from
+parameters and measurements, `page == 1` from every annotation, and `fillColor`/`strokeColor`/
+`strokeWidth` from `point` annotations — paths require the stroke pair, points do not. Those
+fields are all server-generated. ~25 KB on a 120 KB payload.
+
+**Code:** `check_no_freedraw()` and `strip_server_fields()` added to `jobtread_takeoff.py`,
+both covered by `--selftest`; `freedraw_path()` now carries a do-not-use warning.
+
+**Closed out — server-confirmed.** Re-read 2.5 h after the write, once the asynchronous recompute
+had run: **92/92 measured parameters carry a non-zero value and every one agrees** with the
+independent recompute; 0 read zero, 0 mismatch; all 23 value-only parameters intact. Headline
+garage figures straight off the server: roof plan 803.30 SF, surface 809.56 SF, eave 114.69 LF,
+hips + ridge 77.51 LF, soffit 163.26 SF, partitions 23.55 / 60.69 LF, GF interior net 573.44 SF,
+2F ALS 551.86 SF. That server-side confirmation — not my own recompute — is what closes this out,
+and it is now the last step of the protocol for any change to how geometry is encoded.
+
+### 2026-09-06 (13) — Job 2026-404 — GARAGE CONTINUED: roof, partitions, finishes, bar — Claude
+
+**Ask:** "Continue the takeoff of the garage." What remained after run (12) was the roof, the interior partitions, the bar millwork on D6, and interior finishes.
+
+**Result:** 116 parameters live (was 100), 1,017 annotations, 95 of them carrying traced geometry. Read-back vs. sent payload was a **full deep-equality match**, and every new value recomputes exactly from the geometry the server returned.
+
+**The roof, without its roof plan.** GAR A5 is a 20.9 MB raster page — no extractable geometry and over the connector's binary cap. The roof was still fully determined from three independent sources, and their agreement is what makes it trustworthy:
+- **A7 SECTION 1 and 2** both draw the roof spanning **24.36 ft** = 21'-4" + two 1'-6" overhangs, and all 29 of their roof segments sit at **exactly 1.50 rise per 12 run**.
+- **A6 FRONT** spans 33.03 ft with an **8.68 ft flat** between its two slopes; **A6 LEFT** spans 24.36 ft and peaks. Both print a 12-over-1½ triangle.
+- Ridge = L − W = 33.04 − 24.36 = **8.68 ft**, matching the measured flat exactly → a **regular hip**.
+- `read_file_content` on the unreadable A5 returned its TEXT: `33' - 0"` and four `1 1/2 %` tags — the same mis-typed-pitch convention as the house's `3%` = 3:12.
+
+Traced on GAR A3 as the plan projection: **803.3 SF plan, 809.6 SF surface, 114.69 LF eave, 77.51 LF plan hips+ridge (77.78 true), 163.26 SF soffit.**
+
+**RFI-G9 — a second hard stop.** The pitch is 1.5:12. FBC-R R905.2.2 permits asphalt shingles only at 2:12 or greater, and D2.3 keynote 20 specifies shingles. As drawn the roof cannot be built. Roofing is not priced until the designer raises the pitch or changes to a low-slope system. This sits alongside RFI-G7 (S3's EPA-cancelled termiticide).
+
+**Partitions.** GF **23.55 LF net**, 2F **60.70 LF net** — traced on the A4/A4.1 dimension sheets, mapped onto A3/A3.1 by pure translation (the envelopes are identical in size, so the transform is exact) and overlay-verified: every run lands on a drawn wall. Both dimension sheets calibrate to 13.5133 pt/ft on two agreeing axes; GAR A4.1's stored scale is 0.1% low and GAR A4 has none, so neither was used.
+
+**What nearly went wrong.** The first pass returned 189 LF of partitions for a 552 SF apartment. The 2F floor-tile hatch is a comb at 1.05 ft — too far apart to pair as a wall — but a 1.7 ft wall stub paired with a 12.5 ft tile line and the code took the **union** of their extents. Requiring the two faces to be co-extensive and taking their **overlap** fixed it (failure mode 27); the overlap is also the NET length, openings excluded.
+
+**Also new:** GF interior net floor area 573.44 SF (28'-8" × 20'-0" inside the CMU, against 640.04 SF gross); bar millwork from D6's printed dimensions (7.00 LF base, 7.00 LF uppers, 16.0 SF granite); partition drywall 1,684.9 SF; attic vent 2.13 SF net free area required — A5's own vent note (3,012 SF attic, 7 vents) is the MAIN HOUSE's, an RFI.
+
+**The payload finally bit.** A 120.7 KB write could not be emitted — the turn hit the output cap mid-payload and nothing was sent. The binding constraint is my own output budget, not the API, and it sits between 107 and 120 KB. Compacted to 102.2 KB with **zero change to any of 115 values** (failure mode 26). Areas were deliberately left in `{annotationId}` form because `isClosed` on a flat-array path is still unverified; a throwaway control parameter (`ZZ TEST freedraw isClosed control`) now sits in the job to settle it once the server's async recompute lands. **It came back 0 against 640.044 for its ref-form twin — the finding that exposed failure mode 30.**
+
+**Backup:** `takeoff-backups/2026-09-06-jobtread-parameters-rev6-VERIFIED.json` + `-payload.json`, `-rev6.csv`, `-plan-index-rev6.csv`.
+
+**Still not taken off:** GAR A2/A2.1 (site and landscape — the house's equivalents were empty) and the D2/D2.1/D2.2 detail sheets. GAR S1/S2 remain geometry-less rasters, so filled cells and second-floor lintels stay estimates.
+
+### 2026-09-06 (12) — Job 2026-404 — GARAGE TAKEOFF HAND-TRACED (replaced typed numbers with real geometry) — Claude
+
+**Ask:** "For the Garage i need you to actually hand-trace using jobtread on-screen takeoff tool." Run (11) had entered 51 of the garage quantities as plain `number` parameters. They were correct numbers, but nothing was anchored to a drawing — no shape to inspect, no self-correction if a sheet is recalibrated, and nothing an estimator can click.
+
+**Result:** 100 parameters live — 39 house (geometry unchanged) + 61 garage, of which **47 now carry traced geometry** on 10 calibrated garage plan records. 1,052 annotations, 1,427 vertices, 106,937 bytes in one send. 14 stay plain numbers with a written reason each (GAR S1/S2 carry no vector geometry; GAR D7 is N.T.S.; the rest are schedule sums or derived rates).
+
+**What was traced:** GF footprint / slab / CMU perimeter / stem wall / footing / vapor barrier and the Type X garage ceiling on GAR A3; the 2F plate, ALS, balcony, guardrail and ALS perimeter on GAR A3.1 (balcony as `isNegative`, so ALS = 640.04 − 88.19 = 551.86 SF and the Type X ceiling below it matches exactly); every light, device, detector and fixture as count markers on E1/E1.1/E2/E2.1; every water, hot, soil and site run as chained polylines on P1/P1.1/P2/P2.1.
+
+**Verification, in this order — the last two are the ones that earned their keep:**
+1. Pre-send asserts: 1,052 globally unique annotation ids, no duplicate parameter names, 0 unresolved path refs.
+2. Read-back deep-diff vs. the sent payload → **full equality** once `page: 1` (the server's echoed default) is normalised away.
+3. Recompute every value from the round-tripped geometry × each plan's stored scale → **47/47 traced garage parameters matched** their pre-computed expectations, and **39/39 house parameters at worst delta 0.000000000**. This did NOT prove the freedraw conversion lossless — see run (14); it proved only that my own encoder and decoder agreed.
+4. Overlay renders of the server's own geometry back onto all 10 sheets → every shape lands on the drawing it measures.
+5. **Tag audit** — every 4-digit door/window tag inside the traced envelope on GAR A3 (10) and A3.1 (11) matched against exactly one marker.
+
+**What step 5 caught that step 4 could not:** `GAR 2F Interior doors` read 4 where GAR A3.1 tags five — the `2868 P` pocket door had no marker, and the note wrongly claimed the FR door was "counted separately". The overlay looked clean because all four existing markers were on real doors. An overlay shows no marker is *wrong*; only the complement check shows no tag is *missing*. Corrected to 5 and re-sent; the resend was re-verified by the same read-back diff (byte-perfect) and recompute.
+
+**~~New capability — `freedraw`~~ — THIS WAS WRONG, see run (14).** I converted all machine-traced runs to flat `[x1,y1,…]` arrays (144 KB → 106 KB, `delta = 0.000000` on my own recompute) and recorded it as a lossless compaction. **It is not: the server measures freedraw paths as 0.** Every parameter converted in this run and the next read 0 in the client's job until the run-(14) repair. The `delta = 0.000000` proved only that my encoder and my decoder agreed with each other.
+
+**Also learned:** the server recomputes `value` asynchronously — a read-back seconds after a write returns values only for plain-`number` params, which is not evidence that measured values aren't stored. Recompute from geometry instead of waiting.
+
+**Backup:** `takeoff-backups/2026-09-06-jobtread-parameters-rev5-VERIFIED.json` (+ `-payload.json` for a straight restore, `-rev5.csv`, `-plan-index-rev5.csv`), carrying the plan index with `scale`, `page` and `file.{id,name,size}`, my independent `computedValues`, and a written reason for each of the 14 plain numbers.
+
+**Still open:** the eight garage RFIs from run (11) stand, RFI-G7 (S3 specifies chlordane/dieldrin/heptachlor — all EPA-cancelled for termiticide use in 1988) being the hard stop for bid.
+
+### 2026-09-06 (11) — Job 2026-404 — GARAGE/ALS MEP + STRUCTURAL (E1/E1.1, E2/E2.1, P1/P1.1, P2/P2.1, S1-S3, D7/D7.1, A3.1) — Claude
+- **Scope closed:** the garage building's MEP and structural sheets, the stair, and the
+  second-floor envelope. 51 garage parameters derived; 10 garage plan records calibrated.
+- **New technique — isolate the discipline layer by COLOUR, then cluster.** These sheets carry
+  a light-grey architectural background (128,798 drawings at 0.8 grey) under a thin black
+  electrical layer (520 drawings). Filtering to pure black cut 215,551 primitives to 35
+  clusters. Union-find at **eps=1.5 pt** keeps adjacent glyphs apart (eps=5 merged pairs of
+  wall lights into one cluster and under-counted). Signature = (item count, bbox w, bbox h);
+  rotated instances appear as the transposed signature and must be summed with it.
+- **Legend matching, refined.** Signatures were matched against the E1 ELECTRICAL SCHEDULE by
+  clustering the legend region and pairing each cluster with the description text to its right.
+  Confirms §6/14: item COUNTS differ between legend and placed glyph (PAR flood light: legend
+  67 items, placed 136) but the **bbox size matches to 0.2 pt**, so size is the reliable key.
+  Every count was then verified on a labelled overlay render before being written down.
+- **MEP sheet calibration.** All eight garage MEP sheets measure **18.0177 pt/ft** — nominal
+  1/4"=1'-0" carrying a 0.10% plot stretch. Both axes agree to 0.001% against the known
+  30'-0" x 21'-4" footprint (540.53/30 and 384.38/21.333). Written back as scale 59.11331884.
+  The garage architectural sheets measure 13.5133 pt/ft (3/16" + 0.1%) -> 44.33474136.
+- **Second floor resolved geometrically.** Plate is the same 30'-0" x 21'-4" = 640.00 SF;
+  balcony 20'-4" x 4'-4" = 88.11 SF; **ALS conditioned = 551.89 SF**. This CORRECTS the
+  581 SF figure carried in run 10 — that number was never traced, and the balcony notch is
+  larger than assumed. Perimeter is unchanged at 102.67 LF because the notch is re-entrant.
+- **Structural recovered through a text-only channel.** Garage pages 32/34/35/36 are 8.1-8.8 MB
+  and the binary download fails every time (§6/18); `read_file_content` returned their text,
+  which carried the whole lintel schedule (L-8-J x5, L-9-J x1, L-14-Q x2 = 48.3 LF), the
+  foundation type note, the detail keys and the filled-cell dimension strings. **Filled-cell
+  count is an ESTIMATE (58), not a count** — the two 21'-4" end walls were not in the text.
+- **Eight RFIs raised**, of which one is a hard stop: **S3 specifies CHLORDANE with DIELDRIN
+  or HEPTACHLOR for termite soil poisoning.** All three were cancelled by the US EPA for
+  termiticide use in 1988. No licensed Florida applicator can bid it; a current-label
+  substitution has to be priced and qualified. Also: foundation type conflict (note says
+  MONOLITHIC, the keyed details are STEM WALL), no second-floor lintel plan although six
+  exterior CMU openings exist up there, FFE 86' vs 15.67' datum conflict, 2000 vs 3000 PSI
+  grout conflict, and a 300 A service against an 87.5 A calculated demand.
+- **Payload reality.** 39 house parameters + 1,241 annotations read back at 123,957 bytes;
+  compacted (drop server-back-filled `fillColor` from point markers only) to 114,276. The 51
+  garage parameters were written as **`number` type** (§1) — 3,133 bytes instead of 5,552 and,
+  more importantly, immune to the geometry recompute that an empty `measurements` array would
+  have triggered. Total send 117,740 bytes.
+- **The write landed and was verified.** 106,177 bytes, 90 parameters, accepted first try. Read-back
+  diffed against the sent payload: 970 point annotations identical, 271 path annotations identical,
+  zero non-geometry differences. Lossless compaction got it there - dropping the redundant `page`
+  field (schema `defaultValue: 1`, and every annotation was page 1) and the server-back-filled
+  `fillColor` from point markers took 123,957 bytes to 106,177 with all 1,241 annotations intact.
+- **State after run: 90 parameters** (39 house with geometry + 51 garage derived), 66 plans,
+  10 newly calibrated. Backup exported to `takeoff-backups/2026-09-06-…-rev4-VERIFIED.json` + `.csv`
+  plus a 66-row plan index carrying scale/page/file identity, and the full garage takeoff notes.
+
+### 2026-09-06 (10) — Job 2026-404 — PLAN SET REPLACED BY A DIFFERENT BUILDING; garage/ALS takeoff — Claude
+- **The incident.** Overnight, 37 of the job's 39 plan records were silently re-pointed from the
+  29-page house file to a 37-page file that turned out to be **a completely different structure** —
+  a detached garage (640 SF) with a two-story ALS above (581 SF), 1,245 SF total. Same address,
+  same architect, same sheet numbering, so nothing about the record names gave it away. Every one
+  of the 39 house parameters was left sitting on garage drawings.
+- **How it was caught:** diffing the new A3 against the local copy of the old one — 28,901 line
+  segments became 355,821, the traced footprint corners were absent, and the long wall runs sat at
+  different coordinates. Rendering it settled it in one look: two car bays and a stair.
+  **Never trust a plan record's NAME as evidence of what it draws.**
+- **Recovery (kept the geometry):** `updatePlan` with `fileId` + `page` + `name` restored all 29
+  house records to the original file and their original pages; `createPlan` added the 37 garage
+  sheets as new records under a `GAR ` prefix; both batched ~9 at a time via field aliases. Verified
+  afterwards: **1,241/1,241 annotations geometrically identical** to the pre-incident backup.
+- **CONFIRMED, correcting an earlier reading in this log:** the server really does recompute
+  `value = geometry x current scale`. The restore moved the footprint 2,269.76 -> 2,274.24 SF, exactly
+  2,269.76 x (44.335083/44.29133858)^2. An earlier session inferred stored values were echoes of what
+  was sent; that was wrong — the sent value had merely coincided.
+- **Garage takeoff (calibration 13.5133 pt/ft, same template as the house).** Footprint
+  **30'-0" x 21'-4" = 640.0 SF**, verified three ways: the top dimension chain closes
+  (19'-10" + 6'-0" + 4'-2" = 30'-0"), it matches the architect's printed 640 ft2 exactly, and the
+  overlay lands on the CMU outside face. Perimeter 102.67 LF; 10'-0" per floor and 20'-0" to top
+  bearing from the A6 red chain, whose 0'-4" base dimension independently confirms D2.3's
+  "garage FFE >= 4 inches above finished grade". **9 windows** (D4.1 schedule = plan tags, both 9)
+  and **12 doors** (D4 schedule), 291 SF of exterior openings.
+- **CODE FLAG — the garage roof is drawn at 1.5:12 while D2.3 keynote 20 calls for asphalt shingles.**
+  FBC-R R905.2.2 sets a 2:12 minimum for shingles. Unlike the house's mis-typed "3%" tag, here the
+  drawn geometry (1.500:12 across both hip slopes) and the printed triangle (`1 1/2 / 12`) AGREE, so
+  it is not a labelling error. The separate `12 / 3` triangles label the small 3:12 canopy, which
+  measures exactly 3.000:12. Either the roofing system changes or the pitch does.
+- **R302.6 is drawn scope, not an assumption.** D2.3 spells out 5/8" Type X at the garage ceiling
+  below habitable space (~581 SF), 1/2" gypsum to the garage side of separating walls, protected
+  supporting members, sealed penetrations, ducts per R302.5.2 — and the door schedule carries
+  **3 fire-rated 20-minute doors** to match.
+
+### 2026-09-05 (9) — Job 2026-404 — FERRARI RESIDENCE — full-trade completion (P1/P2, E1/E2, S1/S2, D5) — Claude
+- **Result: 33 parameters, 1,200 annotations, saved and read back with 0 mismatches** on
+  every field including all 1,200 coordinates. Up from 23. New this run: Div 22 water (445.15
+  LF) + sanitary (298.01 LF), Div 26 cans 34 / devices 92 / switches 33, Div 04 filled cells
+  52 / CMU columns 3 / precast U-lintels 21, Div 12 granite 58.7 SF / cabinet runs 21.0 LF.
+- **THE BIG MISS, and it was mine:** I read the first page of `job.plans` (**10 nodes, the
+  default**) as the whole set and told the user 19 sheets "were not uploaded" — writing off
+  Div 22, Div 26, Div 12 and the structural rebar as unmeasurable. All 29 were there and
+  scaled. The user corrected me. Re-query with `$: {size: 100}` + `count`, assert
+  `len(nodes) == count`. The false claim had already propagated into a JobTread parameter
+  note, this run log and a PR body; all three were corrected. **A pagination default became a
+  scope decision — never let a connection's first page stand in for the set.**
+- **Double-line pipe = 1.5× overcount.** P1 and P2 draw every pipe as TWO parallel edges
+  (gap = the pipe size: 0.8 pt = ½", 1.6 pt = ¾"; 2.6/5.3 pt = 2"/3" DWV). Raw edge length
+  663.8 / 453.7 LF. Fix: histogram the gaps between overlapping parallel runs, then pair
+  edges into a **centreline by union-of-extents** (139→91 and 174→110 segments) → **445.15 /
+  298.01 LF**. Same trap class as the tile-hatch partition failure: measure what the pipe IS,
+  not how it is drawn.
+- **Legend glyphs drawn as N paths = N× the count.** E1's recessed can is TWO paths 7.5 pt
+  apart → raw 68 for 34 real fixtures. Detected because hits arrived in pairs; confirmed by
+  **sweeping the dedupe tolerance** (68 at ≤6 pt, stable 34 from 9→14 pt). Sweep the tolerance
+  on every symbol count — a plateau is the real number, a knife-edge is a bug. E2's 92 and 33
+  survived the same sweep unchanged.
+- **Chaining segments into polylines silently inflates length** — at every tee the chain
+  doubles back. Caught by recomputing path length from the annotation ids and comparing to
+  the stated value. Reverted to **one 2-point path per segment**; stated == recomputed exactly.
+- **Payload ceiling is real.** 129.6 KB could not be emitted at all; 91–96 KB goes through.
+  Budget the send, and see §6 #11 before compacting anything.
+- **Schedules govern over plan tags.** D4's schedules independently confirmed 14 windows and
+  **343 SF of exterior openings** (257 window + 86 door) — exactly the stucco deduction already
+  derived — and surfaced two live conflicts now carried in the parameter notes: the schedule
+  lists **15** interior openings against my **16** marked on A3, and a **12080 SD slider at
+  LIVING appears in D4's elevation graphics but in no schedule** (money + impact-glazing).
+  P1/P2's schedule reads 18 fixtures where the plan tags read 17 — schedule wins.
+- **A2 Site Plan and A2.1 Landscape are genuinely empty** (18 paths = border + title block).
+  No sitework is drawn anywhere in the 29 sheets. That is an **RFI, not a measurement gap** —
+  say which, explicitly, so nobody re-hunts for it.
+- **Backup exported** per the new §4 step 9: `takeoff-backups/2026-09-05-jobtread-parameters.
+  {json,csv}` (207 KB restore artifact + 8 KB readable tab), and handed to the user, since the
+  project folder is gitignored and the container is ephemeral.
+
+### 2026-09-05 (8) — Job 2026-404 — FERRARI RESIDENCE, 1217 19TH ST S (A3 GF takeoff) — Claude
+- **Scope:** first takeoff on this job. A3 calibrated + **10 GF parameters, 95 annotations**,
+  all geometry-anchored, saved and read back clean. Job had `parameters: null` (clean slate).
+- **NEW SCHEMA FACT (cost a failed call):** a `linearArea` **measurement** requires its own
+  non-null **`unit`** field alongside `depth` — the parameter-level `unit` is NOT enough.
+  Error: `A non-null value is required at "updateJob"."$"."parameters"."5"."measurements"."0"."unit"`.
+  `jobtread_takeoff.measurement()` takes it via `**extra` (`unit="foot", depth=10`). The same
+  is presumably true of `areaVolume`/`linearVolume` — send `unit` on every dimensioned type.
+- **Calibration by measured dimension, not nominal:** A3's printed 37'-6" spans **506.75 pt**
+  between extension lines → **13.51333 pt/ft**, i.e. 3/16"=1'-0" plotted at **100.1%**.
+  `plan.scale = 13.51333 × 3.280839895 = 44.335083`. Nominal 3/16" (44.2913) would have been
+  0.11% light. Confirmed by the sheet's own area table (below).
+- **Validation that the trace is right:** shoelace on the traced 8-point footprint =
+  **2,269.76 SF vs the architect's printed 2,270 SF (0.01%)**; lanai 140.67 vs 142; entry
+  132.40 vs 134; conditioned 1,996.68 vs 1,994 (0.13%); CMU perimeter **197.29 LF** vs the
+  independent line-item takeoff's 197 LF. Five independent ties — that is the licence to save.
+- **The footprint is NOT the bounding rectangle.** 37'-6" × 61'-0" = 2,287.5 SF, but the real
+  under-roof figure is 2,269.6. The bedroom wing's south wall (y=1242.1) and the entry porch
+  (projecting to y=1265.6, only across x 892→1084.5) make it an **8-point polygon**. Tracing
+  the bounding box would have over-measured slab and roof by ~18 SF and, worse, put the CMU
+  perimeter 3.5 LF long. **Two different loops are needed:** the under-roof polygon (8 pts,
+  wraps the porch) and the CMU wall loop (6 pts, cuts straight across the open porch).
+- **Opening counts came free from the text layer.** Tag strings on A3 (`3060`, `2880`,
+  `4096 ED`…) extract cleanly and total **exactly 32**, matching the independent takeoff's
+  14 windows + 2 exterior + 16 interior. Snap markers from the tag box to the wall line
+  (tags sit outside the wall on leader lines) before saving.
+- **PARTITIONS: NOT TAKEN OFF — deliberately.** Two auto-extraction attempts both failed and
+  were discarded rather than published: (1) paired-parallel-face detection returned **1,479 LF**
+  because the **floor-tile hatch** is a regular comb of parallel lines at wall-like spacing;
+  (2) filtering by **stroke width** (1.42/0.71 pt vs the 0.51 pt hatch) landed on closet walls
+  and *door leaves* but missed the bath/bedroom walls entirely. Overlay-verify caught both.
+  **Guard: on a sheet with hatched floor finishes, never derive partition LF from parallel-line
+  geometry — trace it by hand or leave it out.**
+- **A5 ROOF NOT CALIBRATED — no trustworthy anchor.** Candidate dimension lines disagree:
+  61'-0" → 13.5701 pt/ft, 40'-6" → 13.8470/13.8539, 41'-2" → 16.79 (wrong line entirely).
+  A 1.2% spread silently corrupts every roof quantity, so the sheet was left at `scale: null`
+  for a **manual scale pick** (Plans tab → Manual Scale (Select Points)). Roof geometry IS
+  known in feet from the printed dims — hip, **40'-6" × 64'-0"** main body over a 37'-6" ×
+  61'-0" building = **1'-6" overhangs**, plus a lower entry-porch roof — so only the pt/ft
+  anchor is missing. **Lesson: agreement between two independent dimension lines on the same
+  sheet is the calibration gate; without it, stop and hand the sheet back.**
+- **Design finding surfaced by the roof plan:** A5 tags the main hips **3%** and the entry
+  porch **6%**. Read literally that is ~0.36:12 and ~0.72:12 — far below the **2:12 minimum
+  for asphalt shingles** (FBC-R R905.2.2). Almost certainly "3:12 / 6:12" mis-tagged as
+  percent, but it is a fourth conflicting pitch statement in one set and belongs in RFI-04.
+
+- **Run finished at 23 parameters, 415 annotations** across A3/A4/A5 after the user scaled A4,
+  A5, A6 and A6.1: GF areas 4, CMU 2, slab 1, openings 3, roof 5, partitions 2, plus 6
+  quantity parameters derived on already-traced geometry (mono footing volume, slab volume,
+  vapor barrier/termite area, partition drywall both faces, CMU inside face, ceiling).
+  Saved full-replace and read back with every value identical.
+- **SCHEMA FACT CONFIRMED, not presumed:** `linearVolume` takes **`width` AND `depth` AND its
+  own `unit`** on the measurement; `areaVolume` takes `depth` + `unit`. Both round-trip exactly
+  (`350.74` and `756.59` ft³ read back unchanged). The 2026-09-05 (8) note above said this was
+  "presumably" true of the volume types — it is.
+- **MUTATION SELECTION FACT (cost a failed 41 KB call):** the `job` selection on a mutation
+  needs **its own `$`** — `{"updateJob": {"$": {...}, "job": {"$": {"id": JOB}, "id": {}}}}`.
+  Sending `"job": {"id": {}, "name": {}}` fails with
+  `A non-null value is required at "updateJob"."job"."$"`. §2 already showed the right shape;
+  **verify the selection shape with a one-line no-op mutation BEFORE spending a giant payload.**
+- **PARTITIONS SOLVED — by changing sheets, not by tuning the filter.** A3's floor-tile hatch
+  defeated both attempts in run (8). A4 (DIMENSIONS PLAN) carries identical wall geometry with
+  no floor finish, so the 1.42 pt strokes are unambiguous: **197.6 LF net (150.4 LF 4in +
+  47.2 LF 6in)**, validated against the CMU perimeter to **0.24%**. Two corrections mattered:
+  (a) the sheet is drawn at **nominal** 4"/6"/8", not the spec'd 3-1/2"/5-1/2"/7-5/8" — a
+  thickness histogram of overlapping parallel faces shows peaks at 4.50/6.75/9.00 pt; assuming
+  the spec'd actuals put every pair outside tolerance and lost ~45% of the wall; and (b) the two
+  faces of one wall are NOT drawn to the same extent, so take the **union** of their extents
+  gated on overlap, not the shared overlap (which under-measured the exterior by 44%).
+  **Guard: when a takeoff fights the hatch, look for a sibling sheet with the same geometry
+  and less graphics before writing another filter.**
+- **CMU self-check read as a 66% failure until the comparison was fixed.** Net-between-openings
+  (130.98 LF) was being compared to the gross perimeter (197.29 LF). 197.29 − 66 LF of openings
+  = 131.29 expected → **0.24%**. Compare like to like before concluding the method is broken.
+- **ROOM-BY-ROOM FLOOR AREAS: ATTEMPTED AND DISCARDED.** Ray-casting from A3 room labels onto
+  A4 walls returned 3,794 SF against a conditioned 1,996.68 SF. Median-of-rays cannot fix a
+  room with no fourth wall — living/dining/kitchen is genuinely open-plan — and several seeds
+  were typed from memory instead of taken from the text layer. `plans/rooms.py` is kept in the
+  project folder marked FAILED with both causes. **The conditioned area is the flooring control
+  total; the split by finish type is an RFI because the 29-sheet set has no finish schedule.**
+- **PAGINATION BURNED ME — `job.plans` defaults to 10 nodes.** I queried `{job:{plans:{nodes:…}}}`,
+  got 10 rows, and reported "only 10 of the set's 29 sheets are in JobTread." **All 29 were there.**
+  The claim propagated into a parameter note, this run log and a PR body before the user corrected
+  it. **Always pass `$: {size: N}` and select `count` on any connection, and reconcile the row
+  count against `count` before drawing a conclusion from it.** With the real list in hand, 15 of
+  the 29 sheets carry a scale and the "cannot be geometry-anchored" trades were all measurable:
+  S1 foundation, S2 lintels, E1/E2 electrical, P1/P2 plumbing, D5/D5.1 kitchen.
+- **PIPES AND FIXTURE SYMBOLS ARE DRAWN AS DOUBLE LINES / DOUBLE PATHS — check before you total.**
+  Two independent double-count traps in one run: (a) P1 water and P2 sanitary are each drawn as
+  two parallel edges (gap = the pipe size: 0.8 pt = 1/2", 1.6 pt = 3/4", 2.6 pt = 2", 5.3 pt = 3"),
+  so the raw edge length ran ~1.5x the truth — 663.8 -> **445.1 LF** water and 453.7 -> **298.0 LF**
+  DWV after pairing edges into centrelines with the same union-of-extents rule used on the A4
+  partitions; (b) the E1 recessed-can glyph is **two paths 7.5 pt apart**, so a naive symbol match
+  returned 68 cans instead of **34**. The tell for (b) is a count that collapses cleanly 2:1 and
+  then stays flat across a wide dedupe tolerance (9-14 pt). **Histogram the gaps between parallel
+  runs, and sweep the dedupe tolerance, before believing any auto-extracted quantity.**
+- **Chaining segments into polylines changes the measured length.** To shrink the payload I linked
+  pipe segments end-to-end; at every tee the chain doubled back down a run it had already
+  traversed, so the path length JobTread would recompute exceeded the sum of the segments. Caught
+  by recomputing path length from the annotation ids and comparing to the stated value. **One
+  2-point path per measured segment; verify stated value == recomputed path length before saving.**
+- **Payload ceiling is real.** The 34-parameter full-replace came to 129.6 KB and could not be
+  emitted in one call. Compacting (drop the server-default `page:1`, drop per-marker
+  `fillColor`/`strokeColor`/`strokeWidth` on count params since measurement `color` drives display,
+  shorten ids, delete a parameter whose geometry duplicated another) took it to 88 KB, and dropping
+  the two pipe-trace parameters took the saved set to **31 parameters / 49.8 KB**, which went
+  through clean and read back 31/31 with 0 mismatches. **Budget the payload BEFORE tracing a dense
+  network: ~200 traced segments is roughly 35 KB and may not fit alongside everything else.**
+- **Schedules govern over plan-tag counts.** P1/P2 print a PLUMBING SCHEDULE totalling 18 fixtures;
+  scraping P-marks off the plan found 17. The schedule is the authority — plan tags miss fixtures
+  drawn only on the riser diagram.
 
 ### 2026-07-10 (7) — Job 2025-227 — NUMERIC AUDIT (no takeoff; verification pass) — Claude
 - **Scope:** full-system accuracy audit. JobTread leg: re-derived every measurement
