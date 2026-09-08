@@ -173,6 +173,8 @@ global types by name (`parameters`, `plan`).
 
 | 30 | **I broke 30 live parameters by adopting an encoding I had verified only halfway.** To fit a payload I re-encoded traced polylines as `freedraw` flat arrays. I checked round-trip fidelity (byte-perfect) and my own recompute (47/47, 39/39) and called it lossless. Both checks were blind to the only thing that mattered: **the server measures freedraw paths as 0.** Two saves went out, and 30 parameters — 12 house, 19 garage — sat at 0 in the client's job | The two verifications I ran both take MY encoding as the source of truth, so neither can detect the server rejecting it. **A new geometry encoding is only proven when the SERVER'S OWN recomputed value comes back non-zero and correct** — which here means waiting out the async recompute (~2–4 h) on ONE control parameter before converting anything. Write the control as a matched pair (identical shape, one in each encoding) so the comparison is unambiguous. And read the schema's own vocabulary: the variant is called `freedraw`, which is what it is — freehand markup |
 
+| 31 | A 99,935-byte payload was compacted, verified and read out — then the send **truncated at 111,665 bytes** and nothing was written. The file was 99.9 KB; I typed it with `": "` and `", "` spacing, which inflated it ~12% on the wire | **The emit ceiling applies to the CHARACTERS YOU TYPE, not to the compact byte count you measured.** `json.dumps(separators=(",",":"))` is the size you must budget AND the form you must emit — pretty-printing a payload that fits will overrun a payload that doesn't. Re-emitting the identical content in compact form went through on the next attempt |
+
 ## 7. What good looks like (reference result)
 
 Job 2025-227, one A1.0 sheet (GF+FF at ¼″): **27 parameters** — footprint/plate 2,586.67 SF
@@ -194,6 +196,66 @@ interior; cores and patio/balcony walls stack at identical coordinates).
   per plan page).
 
 ## 9. RUN LOG (append one entry per run — this is the improvement loop)
+
+### 2026-09-08 (15) — Job 2026-404 — TAKEOFF COMPLETE: 131 parameters — Claude
+
+**Ask:** "finish the takeoff, do the rest of the hand measurements and save in JobTread."
+
+**Approach — inventory before tracing.** Mapped all 66 plan records against the parameters
+measured on each, then asked what carries NO number rather than what is merely untraced.
+That reordered the work completely: the two house pipe runs everyone would reach for first
+already carry correct values, while **insulation — attic and wall, both buildings — was absent
+from every prior revision.**
+
+**115 → 131 parameters.** New:
+
+| | |
+|---|---|
+| House interior partition drywall, 2 faces @ 10' | 3,952.39 SF |
+| House exterior wall finish, NET of openings | 1,631.81 SF |
+| House window area / total opening deduction | 257 / 343 SF |
+| House footing rebar, 4-#5 + 10% laps | 868.92 LF |
+| **House precast lintel LENGTH per S2 call-outs** | **120.92 LF** |
+| House attic vent net free area, R806.2 | 6.67 SF |
+| House termite soil treatment @ S3's rate | 341.14 gal |
+| House lanai + entry porch soffit finish | 273.61 SF |
+| Kitchen upper cabinets / backsplash | 11.0 LF / 16.5 SF |
+| **House attic R-30 / wall insulation** | **2,000.63 / 1,631.81 SF** |
+| **Garage attic R-30 / wall insulation** | **551.86 / 914.37 SF** |
+| Garage GF floor finish, sealed slab | 573.44 SF |
+
+**A correction, not just additions.** The garage carried 158 gal of termite treatment. S3 states
+its own rate — "WITHIN BUILDING AREA … 1,5 GAL. PER 10 SQFT." — which gives **96.01 gal**. 158
+follows no rate on that sheet. Corrected, and the house computed on the same stated basis. S3's
+separate excavation and apron rates are excluded and named in the backup.
+
+**Lintel length from the drawing, not the schedule.** S2 prints a type table (L-1 = 2'-8" to 3'-6",
+…) AND per-opening call-outs. Pairing each L-tag to the nearest dimension **that falls inside that
+type's own range** paired 20 of 21 at 117.42 LF and reproduced the independently known type
+distribution exactly — 11× L-1, 1× L-3, 2× L-5, 2× L-6, 1× L-8, 2× L-9, 1× L-11, 1× L-12. The
+range filter is what makes this safe: a naive nearest-dimension pairing grabbed a 1'-2" jog
+dimension for an L-1 whose range starts at 2'-8". The 21st L-1 has no in-range dimension nearby
+and is carried at the 3'-6" schedule maximum, which is what all ten other L-1s measure.
+
+**Two scope questions closed for good.** A2 SITE and A2.1 LANDSCAPE are empty on **both** files —
+81 drawings, 79 lines, 11 rects, ~80 words each, i.e. title block and border. Sitework is an RFI,
+not a measurement gap, and that is now recorded rather than re-investigated every run.
+
+**What will not fit, and why that is now settled by measurement.** The two house pipe runs stay as
+stated values: their ref-form geometry measures **21,034 and 25,380 bytes**, and `parameters` is a
+whole-array replace under a ~105 KB ceiling. Not a judgement call — arithmetic.
+
+**Failure mode 31 cost a full send.** The payload measured 99,935 bytes compact, was verified, and
+then truncated at 111,665 bytes on the wire because I typed it with `": "` spacing. The ceiling
+applies to the characters typed, not the compact size measured. Re-emitted compact, it went
+through unchanged.
+
+**Verification:** 131/131 parameters present, deep-diff **0 differ** with path refs resolved to
+coordinates (so annotation reordering cannot mask a change), 0 freedraw across 1,121 annotations,
+39/39 stated values intact. Server recompute pending at export.
+
+**Backup:** `takeoff-backups/2026-09-08-jobtread-parameters-rev8-VERIFIED.json` + `-payload.json`,
+`-rev8.csv`, `-plan-index-rev8.csv`.
 
 ### 2026-09-06 (14) — Job 2026-404 — REPAIR: 30 parameters were reading 0 — Claude
 
