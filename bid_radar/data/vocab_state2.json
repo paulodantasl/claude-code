@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-09-14T11:20:44+00:00",
+  "retrieved_at": "2026-09-14T12:20:36+00:00",
   "dbpr": {
     "newfood.csv": {
       "url": "https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv",
@@ -546,7 +546,7 @@
     "newlodg.csv": {
       "url": "https://www2.myfloridalicense.com/sto/file_download/extracts/newlodg.csv",
       "status": 200,
-      "bytes": 677450,
+      "bytes": 679299,
       "delimiter": ",",
       "columns": [
         "Application Number",
@@ -586,7 +586,7 @@
         "Number of Rental Units"
       ],
       "n_columns": 35,
-      "n_rows": 2356,
+      "n_rows": 2362,
       "n_matching": 51,
       "sample": [
         [
@@ -746,15 +746,15 @@
           ],
           [
             "62",
-            195
+            196
           ],
           [
             "59",
-            182
+            183
           ],
           [
             "46",
-            142
+            143
           ]
         ],
         "District": [
@@ -1161,7 +1161,7 @@
       "method": "GET",
       "status": 200,
       "content_type": "text/html; charset=utf-8",
-      "bytes": 88566,
+      "bytes": 88571,
       "download_links": [
         "/files/AllFacilityData_MiamiDade_08242026.xlsx",
         "/files/Clinical Lab Facility Data_08242026.xlsx"

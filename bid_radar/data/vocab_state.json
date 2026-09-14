@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-09-14T11:20:38+00:00",
+  "retrieved_at": "2026-09-14T12:20:30+00:00",
   "dbpr": {
     "pages": [
       {
@@ -7,7 +7,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 263077,
+        "bytes": 263078,
         "final_url": "https://www2.myfloridalicense.com/hotels-restaurants/public-records/",
         "download_links": [
           "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-09-06.xlsx",
@@ -107,7 +107,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 156326,
+        "bytes": 156329,
         "final_url": "https://www2.myfloridalicense.com/instant-public-records/",
         "download_links": []
       },
@@ -116,7 +116,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 157702,
+        "bytes": 157698,
         "final_url": "https://www2.myfloridalicense.com/open-government/",
         "download_links": []
       }
@@ -467,7 +467,7 @@
         "method": "GET",
         "status": 403,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 5736,
+        "bytes": 5714,
         "final_url": "https://dos.sunbiz.org/data-definitions/cor.html"
       }
     ],
@@ -577,7 +577,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=utf-8",
-        "bytes": 262704,
+        "bytes": 262709,
         "final_url": "https://quality.healthfinder.fl.gov/",
         "download_links": [
           "https://quality.healthfinder.fl.gov/files/AllFacilityData_MiamiDade_08242026.xlsx",
