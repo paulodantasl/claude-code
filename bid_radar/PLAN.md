@@ -25,6 +25,11 @@ source before building on it.
    JobTread Pave API — VERIFIED, org id `22P6bRn5p6Pn` in
    `ideal_apis/config/pipeline.yaml`); the tracker's database is written through
    the **Artifact tool** (`write_db`). Both bypass the sandbox egress.
+   **Re-verified 2026-09-14** at the start of execution: `curl` to
+   `arcgis.tampagov.net` fails (exit 56, no response), and `WebFetch` returns
+   `EGRESS_BLOCKED` for the same host — the server-side fetcher goes through
+   the same proxy, so it is not a way around this. `pypi.org` and `github.com`
+   *are* reachable. **Actions is confirmed as the only path to the data.**
    *Fastest unblock:* the user widens the environment's network allowlist with
    the domains above. Until then, the Actions path is the path.
 2. **No fabrication.** Every row the engine emits carries `source_url` and
@@ -47,11 +52,11 @@ source before building on it.
 | Asset | Path | State |
 |---|---|---|
 | Tracker UI (pipeline board, calibration, signals table, shared db) | `bid_radar/tampa-bid-radar.html` | Live artifact `https://claude.ai/code/artifact/a8a2e418-22fa-497d-af80-7bbfc8c34b2a`, capabilities `db` + `downloads` |
-| Tampa permits scraper — public ArcGIS FeatureServer, no auth | `permit_scraper/scrapers/arcgis_api.py`, target `city_tampa` in `targets/counties.yaml` | Written; never observed running — DISCOVER |
+| Tampa permits scraper — public ArcGIS FeatureServer, no auth | `permit_scraper/scrapers/arcgis_api.py`, target `city_tampa` in `targets/counties.yaml` | **DISCOVERED: not reusable.** Every field it looks for (`PERMITTYPE`, `APPLICATIONDATE`, `APPLICANTNAME`, `ESTIMATEDVALUE`) is absent from the live layer, so `_normalise` would return rows with an empty permit type, no date and no applicant. The service URL and layer id in `counties.yaml` are correct and are the only parts kept. `bid_radar/collect.py` maps the layer directly. |
 | Hillsborough (Accela/HillsGovHub), Pinellas, Pasco scrapers | `permit_scraper/scrapers/accela.py` | Written; `use_ai_agent: true` on Hillsborough |
 | `RawPermit` dataclass (has lat/lon, value, sqft, filed/issued, parties) | `permit_scraper/scrapers/base.py` | Reuse as-is |
 | SQLite `permits` table, unique on `(source_id, county_id)` | `permit_scraper/storage/models.py` | Reuse |
-| Fuzzy **company** matcher (Publix/Amazon watch list) | `permit_scraper/agents/classifier.py` | Wrong tool for fitouts — do not extend; write `FitoutClassifier` |
+| Fuzzy **company** matcher (Publix/Amazon watch list) | `permit_scraper/agents/classifier.py` | Wrong tool for fitouts — not extended. `bid_radar/classify.py` written instead, keyed on the filed FBC occupancy category |
 | Lead model, dedupe ledger, approval batches, JobTread push, QUO queue | `ideal_apis/ideal_apis/pipeline/{models,ledger,approvals,apply,jobtread_export}.py` | Reuse; extend `Source` literal |
 | Daily cron pattern (7am ET weekdays, py3.12, upload-artifact) | `.github/workflows/daily-leads.yml` | Clone for `bid-radar-collect.yml` |
 | Property appraiser adapters | `permit_scraper/scrapers/property_appraiser.py` | DISCOVER whether Hillsborough (HCPA) is covered |
@@ -61,10 +66,52 @@ source before building on it.
 ## 2. Definitions the whole system hangs on
 
 ### 2.1 Submarkets (8) — `bid_radar/submarkets.geojson`
-Polygons plus a 0.5-mile trade-area buffer. Draw from street boundaries;
-**acceptance test: geocode all 15 projects in the tracker's `P` array and assert
-each falls inside its assigned polygon.** Store the 15 geocoded points as the
-fixture `bid_radar/tests/fixtures/projects.geojson`.
+Built by `bid_radar/build_submarkets.py` from core rings drawn on street and
+water boundaries, then grown by a trade-area buffer. Looked up at runtime by
+`bid_radar/geo.py` (ray casting, no third-party dependency).
+
+**Buffer is not uniform — DISCOVERED, PLAN originally said 0.5 mi for all.**
+A half-mile buffer on contiguous downtown districts makes each swallow its
+neighbours, and on Davis Islands it crosses Seddon Channel and takes Water
+Street's permits. So:
+
+| Buffer | Applies to | Why |
+|---|---|---|
+| 0.50 mi | wsmarina, dalemabry, airport | Isolated districts; a tenant two blocks out is still that district's lead |
+| 0.25 mi | davis | Isolated, but 0.5 mi crosses the channel into Water Street |
+| 0.10 mi | riverwalk, downtown, waterst, ybor | Already share boundaries; 0.10 mi is a half-block tolerance for addresses geocoded to a street centreline |
+
+**`ybor` is not a rectangle.** The historic district stops at Adamo Dr; the
+Gasworx corridor runs south from there to Channelside Dr between 14th St and
+the Ybor Channel; Ybor Harbor is the waterfront east of that. A rectangle
+reaches across Adamo and captures the Channel District.
+
+**Polygons overlap; `PRECEDENCE` in `build_submarkets.py` resolves it**, most
+specific first: `waterst, davis, ybor, riverwalk, downtown, wsmarina,
+dalemabry, airport`. `waterst` is tested before `davis` so that Amalie Arena
+and 1050 Water St do not fall into the Davis Islands trade area. `riverwalk`
+and `downtown` deliberately overlap along Ashley Dr — the tracker itself files
+The Pendry (100 N Ashley) under "Downtown Riverwalk" and 601 N Ashley under
+"Downtown Tampa", two labels for one place. Permits on that frontage resolve
+to `riverwalk`; both are tracked, so no lead is lost either way.
+
+**Acceptance test — CHANGED from the plan.** PLAN called for geocoding the 15
+tracker projects and asserting containment. That test is run
+(`tests/test_submarkets.py::test_tracker_projects_fall_inside_their_assigned_submarket`,
+fixture `tests/fixtures/projects.geojson`, each row carrying its locator, its
+source and whether the locator is a published street address or a district
+anchor) — but it is the *weaker* of the two, because six of the fifteen are
+district-scale projects with no single street address, so testing them against
+a polygon drawn for that district is close to circular.
+
+The substantive test is
+`test_real_permit_points_resolve_to_the_right_submarket`: 15 **real permit
+coordinates served by the ArcGIS layer itself** (`tests/fixtures/permit_points.geojson`),
+asserting both that in-submarket permits resolve correctly *and* that
+out-of-submarket ones return `None`. Those coordinates are not geocoded or
+estimated, and they caught three polygon errors that the project fixture did
+not (Ybor eating the Channel District; Davis Islands eating Water Street;
+Water Street losing Amalie Arena).
 
 | id | Hood (as in tracker) | Anchor |
 |---|---|---|
@@ -84,17 +131,38 @@ source        permit | abt | dbpr_hr | sunbiz | ahca | noc | hcaa_ppo | manual
 hood          one of the 8 ids, or null if outside all polygons (dropped)
 address, lat, lon, parcel
 entity        applicant / licensee / LLC name as filed
+              — for permits this is PARSED out of PROJECTNAME2 /
+                PROJECTDESCRIPTION (classify.entity_of); the layer has no
+                applicant, owner or contractor field. Null where it could not
+                be read with confidence — never a guess.
 brand         normalized brand if recognizable, else null
 trade         medical | restaurant | retail | office | hospitality | other
-stage_hint    pre_permit | applied | issued | commenced
+stage_hint    early_start | issued | revision      (permit source)
+              — DISCOVERED: there is no `applied` stage. See §2.3(d).
 value_est     $ from permit valuation, or null
+              — NEVER available from the Tampa permit layer: no valuation field
 sqft          from permit, or null
 seats         from DBPR H&R licence, or null
 filed_at      the source's own date
 bid_window    {open, close} inferred per §2.4
 contacts[]    {kind: phone|email|agent, value, from}   — only from public records
+              — empty for every permit row; the layer has no contact field.
+                Tampa's AlcoholBeverage layer DOES carry them (§3 #3a).
 source_url, retrieved_at
-confidence    0–1 from classifier
+confidence    0–1 from classifier (0.9 when trade came from the filed FBC
+              occupancy category, 0.5 from keywords, 0.2 unclassified)
+
+Added by the permit collector beyond the original schema:
+occupancy_category   the FBC category the applicant filed under — the single
+                     most useful field in the layer, and the basis of `trade`
+is_fitout            fitout-capable record type AND not a dwelling occupancy
+is_dwelling          R-2/R-3* — a condo remodel under a threshold-building
+                     permit, not a job any GC bids
+scope                readable scope with Tampa's admin prefixes stripped,
+                     shown where `entity` is null
+record_type          RECORDTYPE verbatim
+city_neighborhood, cra, council_district   Tampa's own geography, kept as a
+                     cross-check on our polygons
 ```
 
 ### 2.3 Qualified lead — ALL of:
@@ -102,10 +170,29 @@ confidence    0–1 from classifier
 - (b) `trade` ≠ other;
 - (c) `value_est ≥ 75,000` or `sqft ≥ 1,200` or `seats ≥ 30`, **or** the signal
   is a licence-type source (abt/ahca/dbpr_hr) where value is unknowable;
-- (d) bid window opens within 9 months; for `permit`, `stage_hint = applied`
-  and `filed_at ≤ 30 days` (an *issued* fitout permit is already awarded —
-  keep it, tag `late`, route to §4 win-rate analysis, not outreach);
-- (e) an identifiable entity with ≥ 1 public contact channel;
+  **DISCOVERED: permit rows fall in the second branch too** — the Tampa layer
+  publishes no valuation, and `NEWCONSTRUCTIONSF` is 0 on every alteration.
+  Seats and sales-area SF *are* available, from the ABT layer (§3 #3a);
+- (d) bid window opens within 9 months. **REWRITTEN — the plan assumed an
+  `applied` stage that does not exist.** `PROJECTSTATUS` on the Tampa layer
+  only ever reads `Issued` or `Revision`: the layer publishes at issuance and
+  has no application or in-review state, so it cannot be queried for permits
+  still in review. What it does carry:
+    - `early_start` — the city has released interior non-structural work while
+      the main permit is still pending ("No inspections may be scheduled until
+      the permit is issued"). **This is the only permit row with a live bid
+      window**, and it is the row to act on. 6 of 29 commercial records in the
+      last 90 days were EARLY START.
+    - `revision` — a change to an in-flight permit; the job is active.
+    - `issued` — already awarded. Keep, tag `late`, route to §4 win-rate
+      analysis, not outreach.
+  Intake→issue lag (CREATEDDATE→LASTUPDATE) ran 15–66 days, median 35, across
+  the 25 most recent commercial records. So a permit that appears today was
+  applied for about five weeks ago — and the *real* leading indicators have to
+  come from the licence and entitlement layers, not from permits;
+- (e) an identifiable entity with ≥ 1 public contact channel — **no permit row
+  can satisfy this on its own**; the contact has to come from the ABT layer
+  (§3 #3a), Sunbiz, or HCPA ownership. Match on address;
 - (f) not matched to a JobTread account with a lost/declined outcome;
 - (g) not on the national-in-house-GC blocklist (`bid_radar/blocklist.yaml`,
   start with the obvious: Publix, Walmart, Amazon, Starbucks corporate,
@@ -124,25 +211,142 @@ confidence    0–1 from classifier
 
 ---
 
-## 3. Data sources — verified state and discovery steps
+## 3. Data sources — OBSERVED state (rewritten 2026-09-14 after discovery)
 
-| # | Source | Warning | Access | Status | Executor must DISCOVER |
-|---|---|---|---|---|---|
-| 1 | **City of Tampa permits** — `arcgis.tampagov.net/arcgis/rest/services/Planning/PermitsAll/FeatureServer/0`, date field `APPLICATIONDATE` | 0–4 mo | public, no auth, JSON | in repo, unobserved | (i) `returnDistinctValues=true` on `PERMITTYPE`, `WORKCLASS`/`SUBTYPE`, `STATUS` → write `bid_radar/data/vocab_tampa.json`; build the fitout filter **from that vocabulary**, not from guesses. (ii) Confirm features carry point geometry. (iii) Confirm which fields hold applicant / contractor / valuation. |
-| 2 | **Hillsborough permits** — HillsGovHub Accela `aca-prod.accela.com/HCFL` | 0–4 mo | browser scrape | in repo, `use_ai_agent: true` | Whether the rule-based Accela scraper works without the AI agent; unincorporated county matters least for these 8 submarkets (all inside city limits except parts of Dale Mabry/airport) — **deprioritize** |
-| 3 | **DBPR ABT** alcoholic-beverage licences — daily licence status data (free CSV) `www2.myfloridalicense.com/alcoholic-beverages-and-tobacco/daily-license-status-reporting-data/` | 4–9 mo | public file | VERIFIED page exists | Column layout; whether pending/new applications appear or only issued; county field for Hillsborough filter |
-| 4 | **DBPR Hotels & Restaurants** food-service and lodging extracts (free CSV) `www2.myfloridalicense.com/instant-public-records/` | 3–9 mo | public file | VERIFIED extracts exist | File names, refresh cadence, seat-count column |
-| 5 | **Sunbiz** daily corporate filings (fixed-width, weekdays, SFTP or browser) `dos.fl.gov/sunbiz/other-services/data-downloads/daily-data/` | 6–12 mo | public file | VERIFIED daily files exist | Fixed-width column definitions (`…/corporate-data-file/`); principal-address fields; filter to ZIPs 33602 33605 33606 33607 33609 33611 33616 then geocode + polygon |
-| 6 | **AHCA** health-care facility licensure | 6–12 mo | public | not yet researched | Which AHCA data product lists *applications* (not only licensed facilities); if none, use FloridaHealthFinder licensed-facility deltas as a later-stage proxy |
-| 7 | **Hillsborough Clerk** official records — Notices of Commencement `pubrec6.hillsclerk.com/ORIPublicAccess/` | 0 (already awarded) | search UI, no API | VERIFIED no API | Playwright search by document type + date range + legal description/address; this is the **win-rate** dataset, not an outreach dataset |
-| 8 | **HCAA Planned Procurement Opportunities** — monthly PDF at `tampaairport.com/sites/default/files/<yyyy-mm>/Planned Procurement Opportunities Report - <Month> <yyyy>.pdf`; OpenGov portal `procurement.opengov.com/portal/tampaairport`; DemandStar | varies | public | VERIFIED | Stable URL pattern; parse the table (PDF) monthly |
-| 9 | **Geocoding** for sources 3–7 | — | — | needed in Actions | Census Geocoder (free, batch, no key) first; Smarty (keyed, already in `ideal_apis.address`) as fallback |
+Everything below marked OBSERVED was established by querying the source from
+GitHub Actions on 2026-09-14. Raw output is committed to the `bid-radar-data`
+branch under `bid_radar/data/vocab_*.json`.
 
-**Not to build:** Hillsborough BTR (late, low value), CoStar (paid; broker
-relationships replace it), Related Group (no public prequal found — tenant-side
-only, as the tracker already says).
+### The headline finding
 
----
+PLAN assumed one Tampa permit source and reached for DBPR/Sunbiz files for the
+leading indicators. In fact **Tampa's own ArcGIS `Planning` folder carries
+four layers we can use**, all public, no auth, point geometry, one host that
+Actions can already reach — and two of them are *earlier* and *richer* than
+what PLAN planned to scrape from the state:
+
+| Layer | n | What it gives that permits cannot |
+|---|---|---|
+| `PermitsAll` | 2,577 | The job itself — but only at issuance |
+| `ActiveEntitlementLocations` | 289 | **Live rezoning / special-use cases, 100% still pending**, with hearing dates. The 9–18 month signal. |
+| `AlcoholBeverage` | 4,096 | **Business name, owner name, phone and email.** The only source of a contact channel. |
+| `CRACommercialInitiative` | 38 | Funded interior fitouts with a named applicant and an award amount |
+
+### 1. City of Tampa permits — OBSERVED
+
+`arcgis.tampagov.net/arcgis/rest/services/Planning/PermitsAll/FeatureServer/0`
+
+Everything `permit_scraper/scrapers/arcgis_api.py` assumes about this layer is
+wrong: there is no `PERMITTYPE`, no `APPLICATIONDATE`, no `APPLICANTNAME`, no
+valuation field. Do not use that scraper for this source — `bid_radar/collect.py`
+maps the layer directly.
+
+- **Point geometry**, native SR 102100; request `outSR=4326`. `maxRecordCount`
+  2000, pagination supported.
+- **2,577 features total**, a curated set: `RECORDTYPE` has exactly 7 values
+  (residential/commercial × new construction / alterations / demolition). No
+  electrical, plumbing, mechanical, roofing or sign sub-permits.
+- **`PROJECTSTATUS` has exactly two values: `Issued` (1,770) and `Revision`
+  (807).** No application stage — see §2.3(d).
+- Dates: `CREATEDDATE` (intake) min 2006-11-21, and `LASTUPDATE` (issue /
+  last touch). 158 records created in the last 90 days, of which **29 are
+  commercial**: 19 Commercial Alterations issued, 4 Commercial Alterations
+  revision, 4 Commercial Demolition, 2 Commercial New Construction.
+- **`OCCUPANCYCATEGORY` is the find** — the FBC occupancy the applicant filed
+  under (42 distinct values: `A-2 Assembly-Food & Drink. Restaurant. Night
+  Club. Bar`, `B-5 Business-Clinic. Outpatient`, `M-4 Mercantile-Retail`, …).
+  It gives `trade` directly, far better than keywords. Mapped in
+  `bid_radar/classify.py::OCCUPANCY_TRADE`; a test asserts every code seen in
+  the live vocabulary is mapped.
+- **`URL` is a per-permit Accela deep link** (25 distinct across 25 sampled
+  records) — a genuine `source_url`.
+- No applicant/owner/contractor field; the tenant is parsed from
+  `PROJECTNAME2` / `PROJECTDESCRIPTION` (`classify.entity_of`, 17 of 29 rows
+  resolved on the first real run).
+- Trap: commercial record types include condo kitchen and bathroom remodels in
+  threshold high-rises. Filter on `OCCUPANCYCATEGORY` R-2/R-3* — see
+  `classify.is_dwelling`.
+
+### 2. Hillsborough permits — unchanged, still deprioritized
+
+HillsGovHub Accela `aca-prod.accela.com/HCFL`, browser scrape. All eight
+tracked submarkets are inside city limits, so this adds little. Not attempted.
+
+### 3. City of Tampa alcoholic-beverage permits — OBSERVED, REPLACES the DBPR CSV
+
+`arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0`
+
+4,096 points. **This is the only source in the whole system that carries a
+contact channel**, which §2.3(e) requires:
+
+| Field | Filled | of 4,096 |
+|---|---|---|
+| `BUS_NAME` | 3,094 | 76% |
+| `BUS_OWNER_NAME` | 2,486 | 61% |
+| `BUS_PHONE` | 1,939 | 47% |
+| `BUS_OWN_EMAIL` | 890 | 22% |
+| `BUS_OWN_PHONE` | 453 | 11% |
+| `AB_SLS_AREA_TTL_SF` | 4,087 | 99.7% |
+| `SEAT_COUNT` | 23 | **0.6% — unusable**; drop `seats` from scoring |
+
+- `HISTORY_ACTION`: `Active` 1,634 · `Dry` 1,515 (closed) · the rest are change
+  records. Filter to `Active` for live venues; a transition *to* `Active` is
+  the opening signal.
+- Class: `AB_CLASS_PREFIX` 2/4 = 2COP/4COP; `ABSALECONDITION` distinguishes
+  `Consumption On Premises-Restaurant` (1,134) from `Package Sales` (994) —
+  the former is a buildout, the latter usually is not.
+- Volume: `CREATEDATE` carries 30 new records in the last 365 days;
+  `LASTUPDATE` touched 274. So ~30 genuinely new wet-zoning records a year
+  citywide, plus status changes on existing ones.
+- **Trap: bad dates.** `ORD_LTR_DT` has a max of `2997-01-29` and `FIRE_PMT_DT`
+  a min of `0201-04-11`. Any collector must clamp to a sane range.
+- **Consequence: PLAN §3 old-#3 (DBPR ABT daily CSV) and old-#4 (DBPR H&R) are
+  now second priority.** Tampa's own layer is geocoded, contact-bearing and on
+  a host we have already proven reachable. Use DBPR only to cover seats and
+  food-service licences the city layer misses.
+
+### 4. City of Tampa active entitlements — OBSERVED, NEW, the earliest signal
+
+`arcgis.tampagov.net/arcgis/rest/services/Planning/ActiveEntitlementLocations/FeatureServer/0`
+
+289 points, **every one of them a live case**: `APPSTATUS` is `In Process`
+(218), `Awaiting Client Reply` (53) or `Open` (18). 272 created in the last
+365 days. 100% fill on `RECORDID`, `ADDRESS`, `TENTATIVEHEARING` and `URL`
+(Accela deep link).
+
+`RECORDALIAS`: Rezoning 79 · Variance Review Board 58 · Design Exception 40 ·
+Formal Decision 30 · ROW Vacating 26 · General Land Use 24 · Special Use 16 ·
+**AB Special Use 13** (alcoholic-beverage special use — an F&B tell).
+
+This is the 9–18-month signal PLAN had no source for, and it comes with a
+dated hearing to work backwards from. **Build this collector first in Phase 2.**
+
+### 5. CRA Commercial Initiative grants — OBSERVED, NEW
+
+`arcgis.tampagov.net/arcgis/rest/services/Planning/CRACommercialInitiative/MapServer/0`
+
+38 records, 100% fill on `APPLICANT`, `BUSINESSPROPERTYOWNER`, `ADDRESS` and
+`DESCRIPTION`; `AWARDEDAMOUNT` on 37, `TOTALPROJECTCOST` on 30 — so this is
+the one permit-adjacent source that yields a real `value_est`. Grant types
+include `Commercial Interior Grant` (6), `Commercial Design Grant` (2) and
+`Vanilla Shell Grant` (1). `OCCUPANCY` splits Occupied 19 / Vacant 19.
+
+Only 8 of the 38 fall in a CRA that overlaps our submarkets (Ybor City 1/2,
+Downtown Core/Non Core) — small, but every one is a funded fitout with a named
+applicant. Cheap to collect.
+
+### 6. Sunbiz, AHCA, Hillsborough Clerk NOCs, HCAA PPO — unchanged from PLAN
+
+| # | Source | Warning | Status | DISCOVER |
+|---|---|---|---|---|
+| 6a | **Sunbiz** daily corporate filings, `dos.fl.gov/sunbiz/other-services/data-downloads/daily-data/` | 6–12 mo | VERIFIED files exist, not yet parsed | Fixed-width column definitions; principal-address fields; filter to ZIPs 33602 33605 33606 33607 33609 33611 33616 then geocode + polygon |
+| 6b | **AHCA** health-care licensure | 6–12 mo | not researched | Which product lists *applications*, not just licensed facilities |
+| 6c | **Hillsborough Clerk** ORI, Notices of Commencement | 0 (awarded) | VERIFIED no API | Playwright by document type + date range. This is the **win-rate** dataset (Phase 4), not outreach |
+| 6d | **HCAA** Planned Procurement Opportunities monthly PDF + OpenGov portal | varies | VERIFIED | Stable URL pattern; parse the table monthly |
+| 6e | **Geocoding** for 6a–6c | — | needed | Census Geocoder (free, batch, no key) first; Smarty as fallback. Not needed for sources 1, 3, 4, 5 — they all serve point geometry |
+
+**Not to build:** Hillsborough BTR (late, low value), CoStar (paid), Related
+Group prequal (none public — tenant-side only).
 
 ## 4. Direct paths to master developers and their GCs — VERIFIED 2026-09-14
 
@@ -152,7 +356,7 @@ These are relationship rows, not data rows. Seed them into `opportunities/` as
 | Target | Fact | Action |
 |---|---|---|
 | **Moss** — GC for Water Street (Cora; entertainment venue JV with Barton Malow) *and* Gasworx (office + Olivette) | Prequalifies subs through **COMPASS** (`compass.bespokemetrics.com`), used by 60+ Florida GCs | Register on COMPASS once → opens Moss and every other FL GC on it. Highest-leverage single action on this list. |
-| **AECOM Hunt / Turner** — CM for the Rays stadium district, named 2026-07-17 | Deal approved by Hillsborough 2026-08-28; site prep Sept 2026, demolition Dec, foundations Mar 2027, Opening Day 2029; 113-acre mixed-use "Innovation Edge" at the Hillsborough College Dale Mabry site | Get on both firms' sub/prequal lists now; the district's retail/F&B fitouts follow the bowl. **Update the tracker row** (currently names Hines/Populous only). |
+| **AECOM Hunt / Turner** — CM for the Rays stadium district, named 2026-07-17 | Deal approved by Hillsborough **2026-08-28**; site prep Sept 2026, demolition Dec, foundations Mar 2027, Opening Day 2029; 113-acre mixed-use "Innovation Edge" at the Hillsborough College Dale Mabry site | Get on both firms' sub/prequal lists now; the district's retail/F&B fitouts follow the bowl. **Tracker row still to update in Phase 3** (currently names Hines/Populous only). Note the `dalemabry` polygon is drawn on this site and the collector is already returning permits there. |
 | **KETTLER / Gasworx** | Retail leasing for four key blocks run by **JPRE Development** and **Archer Group Real Estate**; Ferguson signed ~50,000 SF office (Aug 2026) | Introduce to JPRE and Archer — they know the tenants a year before any record. Ferguson TI is a live corporate fitout: find the tenant-rep. |
 | **SPP / Water Street** | No public prequal; `info@spprealestate.com`, 1001 Water St Ste 1250; new 452-unit residential tower announced July 2026 | Relationship letter + COMPASS (Moss) is the realistic route; tenant-side for the entertainment district |
 | **Tampa General Hospital** | Formal vendor/supplier application and certification requirements at `tgh.org/vendor--supplier-information/` | Submit the application; ask for the construction-services category |
@@ -195,7 +399,7 @@ collect.py                               1. get_file_contents(bid-radar-data:   
 
 ## 6. Phases, in execution order, with acceptance criteria
 
-### Phase 0 — Prove the feed (first PR)
+### Phase 0 — Prove the feed (first PR) — ✅ DONE 2026-09-14
 1. `bid_radar/submarkets.geojson` + fixture + test (§2.1).
 2. `bid_radar/collect.py` — runs `ArcGISPermitScraper` for `city_tampa` with
    `days_back=90`; writes `data/vocab_tampa.json` (distinct values);
@@ -209,11 +413,26 @@ collect.py                               1. get_file_contents(bid-radar-data:   
    `bid-radar-data` (create if absent) with `GITHUB_TOKEN`.
 4. Trigger it from the session, read the logs, iterate until green.
 
-**Done when:** the workflow is green on `workflow_dispatch`; `summary.md` on
-`bid-radar-data` lists real Tampa fitout permit applications from the last 90
-days by submarket, each with permit number, address, applicant and source URL;
-all 15 fixture projects pass the polygon test. *This alone is actionable for
-the user — flag it to them the moment it lands.*
+**Done when:** the workflow is green; `summary.md` on `bid-radar-data` lists
+real Tampa fitout permits from the last 90 days by submarket, each with permit
+number, address, tenant and source URL; the fixture projects pass the polygon
+test.
+
+**What actually happened.** Green on run 4 (`workflow_dispatch` is not
+available until the workflow file reaches the default branch, so `push` on
+`claude/bid-radar-lead-engine-**` is the iteration trigger — that is a GitHub
+constraint, not a choice). First real output: 29 commercial records in 90
+days, 16 in a tracked submarket, 3 at EARLY START (Wagamama Pan Asian at 1050
+Water St; Edikted at WestShore Plaza; a renovation at 4915 Independence Pkwy).
+113 tests pass. Two deviations, both recorded above: the acceptance test is
+anchored on 15 real ArcGIS permit coordinates rather than on geocoded project
+addresses (§2.1), and the window is 365 days with the last 90 called out
+separately, because 90 days of commercial permits is only 29 records citywide.
+
+Deferred out of Phase 0, deliberately: `data/vocab_tampa.json` is written by
+`discover_tampa.py` as PLAN asked, but the fitout filter is built on
+`RECORDTYPE` + `OCCUPANCYCATEGORY` rather than on the `PERMITTYPE`/`WORKCLASS`
+fields PLAN named, because those fields do not exist.
 
 ### Phase 1 — Classify, score, and shake hands with JobTread
 1. `bid_radar/classify.py` — `FitoutClassifier` (trade from work class +
@@ -235,19 +454,37 @@ the user — flag it to them the moment it lands.*
 written into `signals.jsonl`; `ideal-api leads status --show-leads` lists
 permit-sourced leads with `source_url`; one dry-run JobTread push validated.
 
-### Phase 2 — Leading indicators (the licence feeds)
-1. `abt.py`, `dbpr_hr.py`, `sunbiz.py`, `ahca.py` — each: fetch → `RawSignal`
-   → geocode → polygon → classifier. Discovery steps in §3 come first, and
-   each collector's README section records the column layout it depends on
-   and the date it was checked.
-2. Geocoder module with Census first, Smarty fallback, on-disk cache
-   committed to the data branch (addresses repeat).
-3. `hcaa_ppo.py` monthly PDF parse (source #8) → `hcaa_ppo` signals typed
-   `relationship`.
+### Phase 2 — Leading indicators (REORDERED after discovery)
+
+The state-file collectors PLAN originally listed are no longer the first
+things to build. Tampa publishes earlier, geocoded, contact-bearing versions
+of two of them on a host we have already proven reachable (§3).
+
+1. `entitlements.py` — `ActiveEntitlementLocations` (§3 #4). Highest value per
+   line of code in the whole project: 289 live cases, 100% with address,
+   status, hearing date and Accela link, all point geometry. `stage_hint =
+   pre_permit`; bid window opens at the tentative hearing. Filter
+   `RECORDALIAS` to the types that precede a buildout (Rezoning, Special Use,
+   AB Special Use, Design Exception, General Land Use).
+2. `abt.py` — `AlcoholBeverage` (§3 #3). The contacts source. Emit
+   `contacts[]` from `BUS_PHONE` / `BUS_OWN_PHONE` / `BUS_OWN_EMAIL`, entity
+   from `BUS_NAME` / `BUS_OWNER_NAME`, `sqft` from `AB_SLS_AREA_TTL_SF`.
+   Do **not** populate `seats` — the field is filled on 23 of 4,096 rows.
+   Clamp dates: the layer contains a `2997` and a `0201`.
+3. `cra_grants.py` — `CRACommercialInitiative` (§3 #5). 38 rows, but the only
+   source with a real `value_est` (`AWARDEDAMOUNT`, `TOTALPROJECTCOST`).
+4. **Then** the state files, to cover what the city layers miss:
+   `dbpr_hr.py` (food-service licences and seat counts), `sunbiz.py` (new LLCs
+   at commercial addresses), `ahca.py`. Each collector's README section
+   records the column layout it depends on and the date it was checked.
+5. Geocoder module with Census first, Smarty fallback, on-disk cache committed
+   to the data branch. **Not needed for 1–3** — those serve point geometry.
+6. `hcaa_ppo.py` monthly PDF parse (§3 #6d) → `relationship` signals.
 
 **Done when:** each collector is green in Actions on a dated run; at least one
-ABT-sourced and one Sunbiz-sourced signal in a tracked submarket appear in
-`signals.jsonl` with contacts populated from the public record.
+entitlement-sourced and one ABT-sourced signal in a tracked submarket appear
+in `signals.jsonl`, the ABT one with a phone or email taken from the public
+record.
 
 ### Phase 3 — Into the tracker, live
 1. Routine per §5 (`create_trigger`, fresh session, 9am ET weekdays) whose
