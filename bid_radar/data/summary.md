@@ -1,32 +1,30 @@
 # Tampa Bid Radar
 
-Collected 2026-09-14T01:41:33+00:00 · 365-day window · eight tracked submarkets
+Collected 2026-09-14T01:43:38+00:00 · 365-day window · eight tracked submarkets
 
 | Source | Records | In a submarket | Qualified |
 |---|---|---|---|
-| Building permits | 304 | 138 | **41**|
+| Building permits | 296 | 136 | **40**|
 | Active entitlements | 272 | 58 | **26**|
-| Alcoholic-beverage permits | 39 | 21 | **17**|
+| Alcoholic-beverage permits | 36 | 19 | **15**|
 | CRA commercial grants | 38 | 10 | **3**|
-| _total_ | 653 | 227 | **87** |
+| _total_ | 642 | 223 | **84** |
 
-## Qualified — call these (87)
+## Qualified — call these (84)
 
 Score ≥ 55/100 with no hard blocker (PLAN §2.3/§2.4), inside one of the eight submarkets, bid window still open.
 
 | Source | Ref | Filed | Stage | Submarket | Trade | Score | Entity / scope | Address | Contact | Value | Link |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| abt | `2014-0000042-AB1` | 2014-04-04 | abt | Downtown Riverwalk | restaurant | **83** | Mitas Cocina Moderna | 301 W Plattt St (Suite C) | 813-369-9287 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D851&outFields=%2A&f=json) |
-| abt | `1991-0000057` | 2023-05-12 | abt | Ybor City | restaurant | **83** | Grand Central Cafe | 1910 E 7th Ave | 703-851-7595 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D50009&outFields=%2A&f=json) |
-| abt | `ORD. 2024-135` | 2025-04-04 | abt | Ybor City | restaurant | **83** | The Rockefeller Room | 2000 E. 11th Ave. | (813) 247-4731 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D61736&outFields=%2A&f=json) |
 | abt | `AB1-25-0000049` | 2025-09-29 | abt | Downtown Riverwalk | restaurant | **83** | Kinjo | 801 W. Platt St. (Unit 224) | 813-304-0000 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D77739&outFields=%2A&f=json) |
 | abt | `AB1-22-0000001` | 2025-09-29 | abt | Water Street | restaurant | **83** | Sip & Dry Tampa | 534 Channelside Dr. (1051 E Cumberland Ave) | 813-873-0414 (+2) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D77339&outFields=%2A&f=json) |
+| abt | `ORD. 2024-135` | 2025-10-06 | abt | Ybor City | restaurant | **83** | The Rockefeller Room | 2000 E. 11th Ave. | (813) 247-4731 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D61736&outFields=%2A&f=json) |
 | abt | `AB1-23-0000003` | 2025-11-25 | abt | Ybor City | restaurant | **83** | Mise en Place | 1205 E 8th Ave (1229 E 8th ave) | 813-254-5373 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D79739&outFields=%2A&f=json) |
 | abt | `AB1-26-0000007` | 2026-02-12 | abt | Downtown Riverwalk | restaurant | **83** | On A Roll Sushi | 101 N Franklin St (Suite C) | 813-400-1100 (+2) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81739&outFields=%2A&f=json) |
+| abt | `2014-0000042-AB1` | 2026-05-28 | abt | Downtown Riverwalk | restaurant | **83** | Mitas Cocina Moderna | 301 W Plattt St (Suite C) | 813-369-9287 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D851&outFields=%2A&f=json) |
 | abt | `AB1-26-0000021` | 2026-07-20 | abt | Ybor City | restaurant | **83** | Tommy's Chophouse | 1616 E 7th Ave (Unit 1626) | (727) 444-1414 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81748&outFields=%2A&f=json) |
 | permit | `BLD-26-0520463` | 2025-11-19 | revision | Downtown Riverwalk | medical | **78** | University of Tampa Science | 505 UT McNeel Ct | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02U90&agencyCode=TAMPA) |
 | permit | `BLD-26-0522346` | 2026-02-04 | revision | Airport / Westshore | medical | **78** | Inlumia Imaging | 5041 W Cypress St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=0074E&agencyCode=TAMPA) |
-| permit | `BLD-26-0522346` | 2026-02-04 | revision | Airport / Westshore | medical | **78** | Inlumia Imaging | 5041 W Cypress St #FS | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=0074E&agencyCode=TAMPA) |
 | permit | `BLD-26-0522431` | 2026-02-05 | revision | Davis Islands | medical | **78** | HMT 820 Clinic Expansion | 5 Tampa General Cir | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=007QJ&agencyCode=TAMPA) |
 | permit | `BLD-26-0523685` | 2026-03-23 | revision | Dale Mabry | medical | **78** | BayCare | 3001 W Dr Martin Luther King Jr Blvd #1-2 | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00H35&agencyCode=TAMPA) |
 | abt | `AB1-24-0000030` | 2025-09-25 | abt | Downtown Riverwalk | restaurant | **73** | Tampa Sun Football Club | 1701 N Boulevard | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D76939&outFields=%2A&f=json) |
@@ -92,7 +90,6 @@ Score ≥ 55/100 with no hard blocker (PLAN §2.3/§2.4), inside one of the eigh
 | permit | `BLD-26-0526369` | 2026-07-06 | revision | Downtown Riverwalk | office | **58** | Altieri Ins. Consultants | 400 N Tampa St #FS | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=01WDJ&agencyCode=TAMPA) |
 | abt | `2026-74` | 2026-07-27 | abt | Ybor City | hospitality | **58** | — | 1302 E 2nd Ave | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81751&outFields=%2A&f=json) |
 | abt | `2026-74` | 2026-07-27 | abt | Ybor City | hospitality | **58** | — | 1302 E 4th Ave | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81750&outFields=%2A&f=json) |
-| abt | `2026-74` | 2026-07-27 | abt | Ybor City | hospitality | **58** | — | 1302 E 4th Ave (1306 E 4th Ave) | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81749&outFields=%2A&f=json) |
 | abt | `ORD 2026-73` | 2026-07-27 | abt | Ybor City | hospitality | **58** | — | 1281 Ray Charles Blvd | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81752&outFields=%2A&f=json) |
 | entitlement | `LND-26-0000126` | 2026-07-28 | pre_permit | Dale Mabry | other | **58** | General Land Use case | 3432 W Beach St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=0229N&agencyCode=TAMPA) |
 | entitlement | `SU1-26-0000077` | 2026-08-06 | pre_permit | Airport / Westshore | other | **58** | Special Use 1 - General case | 5119 W Grace St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=024MJ&agencyCode=TAMPA) |
@@ -129,19 +126,18 @@ CRA grant money is committed and the work is not finished. The only source here 
 | cra_grant | `CRA-28` | 2026-08-25 | cra_awarded | Downtown Riverwalk | other | **68** | 1205 Franklin Ventures LLC | 1205 N Franklin Street | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/CRACommercialInitiative/MapServer/0/query?where=OBJECTID%3D28&outFields=%2A&f=json) |
 | cra_grant | `CRA-37` | 2025-11-13 | cra_awarded | Downtown Tampa | other | **35** | The Tampa Firefighters Museum | 720 E Zack St | — | $151,827 | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/CRACommercialInitiative/MapServer/0/query?where=OBJECTID%3D37&outFields=%2A&f=json) |
 
-## abt (21)
+## abt (19)
 
 A wet-zoning record moved — new, newly placarded, or newly Active. The one source that comes with a phone number.
 
 | Source | Ref | Filed | Stage | Submarket | Trade | Score | Entity / scope | Address | Contact | Value | Link |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| abt | `2014-0000042-AB1` | 2014-04-04 | abt | Downtown Riverwalk | restaurant | **83** | Mitas Cocina Moderna | 301 W Plattt St (Suite C) | 813-369-9287 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D851&outFields=%2A&f=json) |
-| abt | `1991-0000057` | 2023-05-12 | abt | Ybor City | restaurant | **83** | Grand Central Cafe | 1910 E 7th Ave | 703-851-7595 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D50009&outFields=%2A&f=json) |
-| abt | `ORD. 2024-135` | 2025-04-04 | abt | Ybor City | restaurant | **83** | The Rockefeller Room | 2000 E. 11th Ave. | (813) 247-4731 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D61736&outFields=%2A&f=json) |
 | abt | `AB1-25-0000049` | 2025-09-29 | abt | Downtown Riverwalk | restaurant | **83** | Kinjo | 801 W. Platt St. (Unit 224) | 813-304-0000 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D77739&outFields=%2A&f=json) |
 | abt | `AB1-22-0000001` | 2025-09-29 | abt | Water Street | restaurant | **83** | Sip & Dry Tampa | 534 Channelside Dr. (1051 E Cumberland Ave) | 813-873-0414 (+2) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D77339&outFields=%2A&f=json) |
+| abt | `ORD. 2024-135` | 2025-10-06 | abt | Ybor City | restaurant | **83** | The Rockefeller Room | 2000 E. 11th Ave. | (813) 247-4731 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D61736&outFields=%2A&f=json) |
 | abt | `AB1-23-0000003` | 2025-11-25 | abt | Ybor City | restaurant | **83** | Mise en Place | 1205 E 8th Ave (1229 E 8th ave) | 813-254-5373 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D79739&outFields=%2A&f=json) |
 | abt | `AB1-26-0000007` | 2026-02-12 | abt | Downtown Riverwalk | restaurant | **83** | On A Roll Sushi | 101 N Franklin St (Suite C) | 813-400-1100 (+2) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81739&outFields=%2A&f=json) |
+| abt | `2014-0000042-AB1` | 2026-05-28 | abt | Downtown Riverwalk | restaurant | **83** | Mitas Cocina Moderna | 301 W Plattt St (Suite C) | 813-369-9287 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D851&outFields=%2A&f=json) |
 | abt | `AB1-26-0000021` | 2026-07-20 | abt | Ybor City | restaurant | **83** | Tommy's Chophouse | 1616 E 7th Ave (Unit 1626) | (727) 444-1414 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81748&outFields=%2A&f=json) |
 | abt | `AB1-24-0000030` | 2025-09-25 | abt | Downtown Riverwalk | restaurant | **73** | Tampa Sun Football Club | 1701 N Boulevard | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D76939&outFields=%2A&f=json) |
 | abt | `AB1-25-0000048` | 2025-12-12 | abt | Downtown Riverwalk | restaurant | **73** | Ocho Trece Restaurant | 800 W Kennedy Blvd | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D80939&outFields=%2A&f=json) |
@@ -152,7 +148,6 @@ A wet-zoning record moved — new, newly placarded, or newly Active. The one sou
 | abt | `2000-39` | 2026-05-12 | abt | Water Street | other | **58** | Event Network LLC | 505 Water St | 858-222-8973 (+2) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81746&outFields=%2A&f=json) |
 | abt | `2026-74` | 2026-07-27 | abt | Ybor City | hospitality | **58** | — | 1302 E 2nd Ave | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81751&outFields=%2A&f=json) |
 | abt | `2026-74` | 2026-07-27 | abt | Ybor City | hospitality | **58** | — | 1302 E 4th Ave | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81750&outFields=%2A&f=json) |
-| abt | `2026-74` | 2026-07-27 | abt | Ybor City | hospitality | **58** | — | 1302 E 4th Ave (1306 E 4th Ave) | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81749&outFields=%2A&f=json) |
 | abt | `ORD 2026-73` | 2026-07-27 | abt | Ybor City | hospitality | **58** | — | 1281 Ray Charles Blvd | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81752&outFields=%2A&f=json) |
 | abt | `AB1-22-01` | 2025-09-16 | abt | Water Street | restaurant | **53** | Chipotle Mexican Grill | 1055 E Cumberland Ave (Block H - Lot 2 Area N-18) | 813-273-5161 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D76539&outFields=%2A&f=json) |
 | abt | `AB1-25-0000050` | 2025-12-01 | abt | Ybor City | retail | **53** | Package Sales-Shopper's Goods | 1720 Nuccio Parkway | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D80139&outFields=%2A&f=json) |
@@ -222,7 +217,7 @@ A live rezoning, variance or special-use case with a hearing date. The earliest 
 | entitlement | `REZ-26-0000109` | 2026-07-16 | pre_permit | Airport / Westshore | other | **50** | Rezoning case, hearing 2026-12-10 | 4507 W Gray St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=01YW8&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000110` | 2026-07-16 | pre_permit | Downtown Riverwalk | other | **50** | Rezoning case, hearing 2026-12-10 | 1710 N Tampa St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=01YWQ&agencyCode=TAMPA) |
 
-## revision (51)
+## revision (50)
 
 A change to an in-flight permit. The job is active.
 
@@ -230,7 +225,6 @@ A change to an in-flight permit. The job is active.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | permit | `BLD-26-0520463` | 2025-11-19 | revision | Downtown Riverwalk | medical | **78** | University of Tampa Science | 505 UT McNeel Ct | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02U90&agencyCode=TAMPA) |
 | permit | `BLD-26-0522346` | 2026-02-04 | revision | Airport / Westshore | medical | **78** | Inlumia Imaging | 5041 W Cypress St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=0074E&agencyCode=TAMPA) |
-| permit | `BLD-26-0522346` | 2026-02-04 | revision | Airport / Westshore | medical | **78** | Inlumia Imaging | 5041 W Cypress St #FS | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=0074E&agencyCode=TAMPA) |
 | permit | `BLD-26-0522431` | 2026-02-05 | revision | Davis Islands | medical | **78** | HMT 820 Clinic Expansion | 5 Tampa General Cir | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=007QJ&agencyCode=TAMPA) |
 | permit | `BLD-26-0523685` | 2026-03-23 | revision | Dale Mabry | medical | **78** | BayCare | 3001 W Dr Martin Luther King Jr Blvd #1-2 | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00H35&agencyCode=TAMPA) |
 | permit | `BLD-26-0520953` | 2025-12-05 | revision | Downtown Riverwalk | restaurant | **73** | Hotel Tampa Riverwalk | 200 N Ashley Dr | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02X81&agencyCode=TAMPA) |
@@ -286,21 +280,20 @@ A change to an in-flight permit. The job is active.
 |---|---|---|---|---|---|---|---|
 | Water Street |  | 3 | 3 | 2 | 2 | 2 | **12** |
 | Davis Islands | 1 | 1 |  |  | 2 | 8 | **12** |
-| Ybor City | 1 | 8 | 4 | 2 | 1 | 19 | **35** |
+| Ybor City | 1 | 7 | 3 | 2 | 1 | 19 | **33** |
 | Downtown Riverwalk | 1 | 8 | 2 |  | 6 | 5 | **22** |
 | Downtown Tampa |  |  |  |  |  | 1 | **1** |
 | Westshore Marina |  |  |  |  | 1 | 7 | **8** |
 | Dale Mabry | 2 | 2 |  | 1 | 2 | 8 | **15** |
-| Airport / Westshore | 2 |  | 3 | 4 | 8 | 19 | **36** |
+| Airport / Westshore | 1 |  | 3 | 4 | 8 | 19 | **35** |
 
-## Already permitted (63)
+## Already permitted (62)
 
 Not an outreach list. This is who is building what, where — the input to win-rate analysis (PLAN Phase 4).
 
 | Source | Ref | Filed | Stage | Submarket | Trade | Entity / scope | Address | Contact | Value | Link |
 |---|---|---|---|---|---|---|---|---|---|---|
 | permit | `BLD-26-0523439` | 2026-03-11 | issued | Dale Mabry | medical | Alterations | 2809 W Virginia Ave | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00F3G&agencyCode=TAMPA) |
-| permit | `BLD-26-0523439` | 2026-03-11 | issued | Dale Mabry | medical | Alterations | 2810 W Dr Martin Luther King Jr Blvd | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00F3G&agencyCode=TAMPA) |
 | permit | `BLD-26-0524159` | 2026-04-09 | issued | Ybor City | medical | Dr. Matt Robison, DDS | 1203 Ray Charles Blvd | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00KS2&agencyCode=TAMPA) |
 | permit | `BLD-26-0523359` | 2026-03-09 | issued | Airport / Westshore | restaurant | Charley's Steakhouse | 1965 N West Shore Blvd | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00EI8&agencyCode=TAMPA) |
 | permit | `BLD-26-0523757` | 2026-03-24 | issued | Dale Mabry | restaurant | HTeaO Bar | 4355 N Himes Ave | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00HOH&agencyCode=TAMPA) |
@@ -359,8 +352,9 @@ Not an outreach list. This is who is building what, where — the input to win-r
 | permit | `BLD-26-0526643` | 2026-07-16 | issued | Airport / Westshore | office | Interior Alteration - 2nd Floor Common Areas | 4300 W Cypress St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=01Z75&agencyCode=TAMPA) |
 | permit | `BLD-26-0526740` | 2026-07-21 | issued | Water Street | other | Sea Lion and Penguin Exhibits | 701 Channelside Dr | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=02069&agencyCode=TAMPA) |
 | permit | `BLD-26-0521536` | 2025-12-30 | issued | Water Street | other | New Detached Electrical Building | 200 N 19th St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=030AI&agencyCode=TAMPA) |
+| permit | `BLD-26-0522797` | 2026-02-19 | issued | Ybor City | retail | Publix Deli Department | 1105 E Twiggs St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00AKH&agencyCode=TAMPA) |
 
-_…and 3 more in `signals.jsonl`._
+_…and 2 more in `signals.jsonl`._
 
 ## What each source can and cannot tell you
 
@@ -369,4 +363,4 @@ _…and 3 more in `signals.jsonl`._
 - **Alcoholic-beverage permits** are the only source with a contact channel. Seat counts are filled on 23 of 4,096 rows and are not used.
 - **CRA grants** are the only source with a real dollar figure (`TOTALPROJECTCOST`); a grant that is Awarded and not Completed has committed money and outstanding work.
 
-Signals outside every tracked submarket: 426 of 653.
+Signals outside every tracked submarket: 419 of 642.
