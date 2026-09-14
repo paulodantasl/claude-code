@@ -26,6 +26,7 @@ from datetime import datetime, timedelta, timezone
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import arcgis  # noqa: E402
+import enrich  # noqa: E402
 import geo  # noqa: E402
 import score as scoring  # noqa: E402
 import sources  # noqa: E402
@@ -62,6 +63,105 @@ def scored(signal: dict) -> dict:
     return signal
 
 
+def market_share(signals: list[dict]) -> list[dict]:
+    """Contractor of record x submarket, from the enriched permits.
+
+    This is the win-rate dataset. PLAN.md Phase 4 wanted it from the
+    Hillsborough Clerk's Notices of Commencement; the Clerk's public-records
+    hosts refuse cloud traffic, and the Accela record page names the same
+    contractor with a licence number attached.
+    """
+    rows: dict[tuple[str, str], dict] = {}
+    for s in signals:
+        gc = s.get("contractor_name")
+        if not gc or not s.get("hood") or len(gc) < 3:
+            continue
+        key = (s["hood"], gc.upper())
+        row = rows.setdefault(key, {
+            "hood": s["hood"], "hood_label": geo.hood_label(s["hood"]),
+            "contractor": gc, "licence": s.get("contractor_licence"),
+            "permits": 0, "value_total": 0.0, "with_value": 0,
+            "trades": Counter(),
+        })
+        row["permits"] += 1
+        row["trades"][s.get("trade") or "other"] += 1
+        if s.get("value_est") and not s.get("value_suspect"):
+            row["value_total"] += float(s["value_est"])
+            row["with_value"] += 1
+        row["licence"] = row["licence"] or s.get("contractor_licence")
+    out = []
+    for row in rows.values():
+        row["avg_value"] = (row["value_total"] / row["with_value"]
+                            if row["with_value"] else None)
+        row["top_trade"] = row["trades"].most_common(1)[0][0]
+        row["trades"] = dict(row["trades"])
+        out.append(row)
+    return sorted(out, key=lambda r: (-r["permits"], -(r["value_total"] or 0)))
+
+
+def calibration_seed(signals: list[dict], rows: list[dict]) -> dict | None:
+    """What the qualified fitout permits in our submarkets are actually worth.
+
+    This began as a plan to seed the `avgTI` dial, which has been guessing at
+    $325,000. The first real measurement says that would be wrong: the median
+    qualified permit is $1.7M and the mean $2.65M, both above the dial's own
+    $900k ceiling, because the qualified set contains hotel renovations and
+    full-floor office jobs alongside the salon-and-dental work the dial models.
+
+    So the seed reports the distribution and nothing is adopted automatically.
+    A quartile spread says more than any single number: p25 sits in the lane we
+    bid, the median and above do not. Whether that means the model is too small
+    or the qualifying filter is too broad is a judgement for a person, and the
+    page presents it as one.
+
+    What it is NOT, and must never become: a win rate. Win rate is a fact about
+    us, and the only place it can come from is Won/Lost rows a person logged.
+    Nor is a declared job value a contract value — it is what the applicant
+    told the city the work is worth.
+    """
+    usable = [s for s in signals
+              if s.get("value_est") and not s.get("value_suspect")
+              and s.get("hood") and s.get("qualified")]
+    if not usable:
+        return None
+
+    def spread(vals: list[float]) -> dict:
+        v = sorted(vals)
+        return {"n": len(v),
+                "p25": v[len(v) // 4],
+                "median": v[len(v) // 2],
+                "p75": v[(3 * len(v)) // 4],
+                "mean": sum(v) / len(v),
+                "min": v[0], "max": v[-1]}
+
+    by_hood = {}
+    for hood in {s["hood"] for s in usable}:
+        vals = [float(s["value_est"]) for s in usable if s["hood"] == hood]
+        by_hood[hood] = {"hood_label": geo.hood_label(hood), **spread(vals)}
+
+    return {
+        "measures": "fitout permit value",
+        "basis": "declared job value on qualified fitout permits, City of Tampa Accela",
+        "caveat": "a declared job value is not a contract value, and this is the "
+                  "market, not our win rate",
+        "window_days": DAYS_BACK,
+        **spread([float(s["value_est"]) for s in usable]),
+        "by_hood": by_hood,
+        "contractors_seen": len({r["contractor"] for r in rows}),
+        "retrieved_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+
+
+def write_market_share(rows: list[dict], path: str) -> None:
+    cols = ["hood_label", "contractor", "licence", "permits", "top_trade",
+            "with_value", "value_total", "avg_value"]
+    with open(path, "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=cols, extrasaction="ignore")
+        w.writeheader()
+        for r in rows:
+            w.writerow(r)
+
+
 def run_sources(days_back: int) -> tuple[list[dict], dict]:
     """Collect every source. Ids are the §2.2 dedupe key, and a source can
     legitimately return the same record twice — the permit layer carries one
@@ -75,7 +175,7 @@ def run_sources(days_back: int) -> tuple[list[dict], dict]:
         try:
             rows = module.collect(days_back)
             fresh = [r for r in rows if r["id"] not in seen and not seen.add(r["id"])]
-            signals.extend(scored(s) for s in fresh)
+            signals.extend(fresh)
             report[module.SOURCE] = {"name": module.NAME, "fetched": len(fresh),
                                      "duplicates": len(rows) - len(fresh)}
             dupes = f" ({len(rows) - len(fresh)} duplicate ids dropped)" if len(rows) != len(fresh) else ""
@@ -135,6 +235,8 @@ def summary(signals: list[dict], report: dict, directory: list[dict] | None = No
     L.append("| Source | Records | In a submarket | Qualified |")
     L.append("|---|---|---|---|")
     for src, info in report.items():
+        if src.startswith("_"):
+            continue
         if "error" in info:
             L.append(f"| {info['name']} | ⚠️ {info['error']} | — | — |")
             continue
@@ -142,7 +244,7 @@ def summary(signals: list[dict], report: dict, directory: list[dict] | None = No
         qual = [s for s in in_hood if s.get("qualified")]
         L.append(f"| {info['name']} | {info['fetched']} | {len(in_hood)} | "
                  f"**{len(qual)}**|")
-    L.append(f"| _total_ | {sum(i.get('fetched', 0) for i in report.values())} | "
+    L.append(f"| _total_ | {sum(i.get('fetched', 0) for k, i in report.items() if not k.startswith('_'))} | "
              f"{len(tracked)} | **{len(qualified)}** |")
     L.append("")
 
@@ -221,6 +323,24 @@ def summary(signals: list[dict], report: dict, directory: list[dict] | None = No
                 L.append(f"| {geo.hood_label(hood)} | {by_hood[hood]} |")
         L.append("")
 
+    # ---- market share ------------------------------------------------
+    share = market_share(signals)
+    if share:
+        L.append(f"## Who is building fitouts here ({len(share)} contractor × submarket)")
+        L.append("")
+        L.append("The contractor of record on every enriched permit, from its own "
+                 "Accela page. This is the win-rate dataset: the share of this "
+                 "table that is ours is our measured share, per submarket. Full "
+                 "table in `market_share.csv`.")
+        L.append("")
+        L.append("| Submarket | Contractor | Licence | Permits | Top trade | Avg job value |")
+        L.append("|---|---|---|---|---|---|")
+        for r in share[:30]:
+            avg = f"${r['avg_value']:,.0f}" if r["avg_value"] else "—"
+            L.append(f"| {r['hood_label']} | {r['contractor'][:52]} | "
+                     f"{r['licence'] or '—'} | {r['permits']} | {r['top_trade']} | {avg} |")
+        L.append("")
+
     # ---- notes -------------------------------------------------------
     L.append("## What each source can and cannot tell you")
     L.append("")
@@ -235,6 +355,18 @@ def summary(signals: list[dict], report: dict, directory: list[dict] | None = No
              "undeclared except on alcoholic-beverage cases.")
     L.append("- **Alcoholic-beverage permits** are the only source with a contact "
              "channel. Seat counts are filled on 23 of 4,096 rows and are not used.")
+    en = report.get("_enrich") or {}
+    if en and "error" not in en:
+        L.append(f"- **Accela enrichment** filled {en.get('enriched', 0)} of "
+                 f"{en.get('eligible', 0)} permit rows from their own record pages "
+                 f"({en.get('fetched', 0)} fetched this run, {en.get('cached', 0)} "
+                 f"from cache, {en.get('failed', 0)} failed). That is where the "
+                 f"contractor of record, the job valuation, the real square footage "
+                 f"and the applicant's phone and email come from — the ArcGIS layer "
+                 f"has none of them.")
+    elif en:
+        L.append(f"- **Accela enrichment failed** this run: {en.get('error')}. Permit "
+                 f"rows will show no valuation and no contact.")
     L.append("- **CRA grants** are the only source with a real dollar figure "
              "(`TOTALPROJECTCOST`); a grant that is Awarded and not Completed has "
              "committed money and outstanding work.")
@@ -268,6 +400,19 @@ def main() -> int:
     print(f"collecting, {DAYS_BACK}-day window", flush=True)
     signals, report = run_sources(DAYS_BACK)
 
+    # Accela detail changes both the value and the contact components, so it
+    # has to land before anything is scored.
+    print("\nenriching permits from their Accela record pages", flush=True)
+    try:
+        report["_enrich"] = enrich.enrich(signals)
+        print(f"  {report['_enrich']}", flush=True)
+    except Exception as exc:  # noqa: BLE001
+        report["_enrich"] = {"error": f"{type(exc).__name__}: {exc}"}
+        print(f"  enrichment failed: {exc}", flush=True)
+
+    for s in signals:
+        scored(s)
+
     try:
         directory = abt_source.directory(DAYS_BACK)
         print(f"  directory    {len(directory):>5} active venues with contacts", flush=True)
@@ -281,6 +426,23 @@ def main() -> int:
             fh.write(arcgis.dumps(s) + "\n")
     if directory:
         write_directory(directory, os.path.join(DATA, "abt_directory.csv"))
+
+    share = market_share(signals)
+    if share:
+        write_market_share(share, os.path.join(DATA, "market_share.csv"))
+        print(f"\nmarket share: {len(share)} contractor x submarket rows", flush=True)
+        for r in share[:12]:
+            avg = f"avg ${r['avg_value']:,.0f}" if r["avg_value"] else "value unknown"
+            print(f"  {r['permits']:>3} {r['hood_label']:<20} {r['contractor'][:44]:<44} {avg}",
+                  flush=True)
+    seed = calibration_seed(signals, share)
+    if seed:
+        with open(os.path.join(DATA, "calibration_seed.json"), "w") as fh:
+            json.dump(seed, fh, indent=2, default=str)
+        print(f"calibration seed: {seed['n']} valued permits, "
+              f"p25 ${seed['p25']:,.0f} / median ${seed['median']:,.0f} / "
+              f"p75 ${seed['p75']:,.0f}", flush=True)
+
     with open(os.path.join(DATA, "summary.md"), "w") as fh:
         fh.write(summary(signals, report, directory) + "\n")
 

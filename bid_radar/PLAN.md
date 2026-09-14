@@ -341,12 +341,71 @@ applicant. Cheap to collect.
 |---|---|---|---|---|
 | 6a | **Sunbiz** daily corporate filings, `dos.fl.gov/sunbiz/other-services/data-downloads/daily-data/` | 6–12 mo | VERIFIED files exist, not yet parsed | Fixed-width column definitions; principal-address fields; filter to ZIPs 33602 33605 33606 33607 33609 33611 33616 then geocode + polygon |
 | 6b | **AHCA** health-care licensure | 6–12 mo | not researched | Which product lists *applications*, not just licensed facilities |
-| 6c | **Hillsborough Clerk** ORI, Notices of Commencement | 0 (awarded) | VERIFIED no API | Playwright by document type + date range. This is the **win-rate** dataset (Phase 4), not outreach |
+| 6c | ~~**Hillsborough Clerk** ORI, Notices of Commencement~~ | — | **CLOSED — see §3 #7** | Both public-records hosts refuse cloud traffic: `ConnectTimeout` on `pubrec6.hillsclerk.com`, `ConnectionError` on `pubrec.hillsclerk.com`, while `www.hillsclerk.com` answers 200 from the same runner. Not the network — those hosts. Replaced by #7, which is better. |
 | 6d | **HCAA** Planned Procurement Opportunities monthly PDF + OpenGov portal | varies | VERIFIED | Stable URL pattern; parse the table monthly |
 | 6e | **Geocoding** for 6a–6c | — | needed | Census Geocoder (free, batch, no key) first; Smarty as fallback. Not needed for sources 1, 3, 4, 5 — they all serve point geometry |
 
+### 7. City of Tampa Accela record pages — OBSERVED, the richest source we have
+
+`aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?...` — the URL the ArcGIS permit
+layer already puts on every row.
+
+This was found while looking for a replacement for the Clerk, and it turns out
+to answer far more than the win-rate question. One record page carries every
+field the ArcGIS layer omits:
+
+| On the page | What it gives us |
+|---|---|
+| **Licensed Professional** | The **GC of record** — company, Florida licence number, email. This IS the win-rate dataset |
+| **Applicant** | Name, work phone, email |
+| **Owner** | Name and mailing address |
+| **Tenant contact** | Where the record has one |
+| **Job Value** | The valuation §2.2 said was never available |
+| **Sq Ft** | The real floor area (`NEWCONSTRUCTIONSF` is 0 on every alteration) |
+| Additional Licensed Professionals | Each sub's company and licence |
+
+**Verified 2026-09-14 on BLD-26-0526061** (Wagamama, 1050 Water St): GC *TWT
+Restaurant Design Construction & Development Company*, licence CBC1262713,
+`permits@twtconstruction.com`; applicant Stephen Torres, 9728079257,
+`storres@weareharrison.com`; owner *Wst 1010 Water Street Llc c/o Strategic
+Property Partners Llc*; tenant contact Philip Hart; Job Value 300,000; Sq Ft
+4,525; subs Duffy Electric and Johnson Controls Fire Protection.
+
+- 200 OK from a GitHub runner; ~370 KB per page, ASP.NET with viewstate.
+- **Parse the printed labels, not the DOM.** `bid_radar/accela.py` flattens the
+  page to text and anchors on `Applicant:`, `Licensed Professional:`, `Owner:`,
+  `Job Value:`, `Sq Ft:`. The DOM is generated and brittle; those labels are
+  not.
+- Cost: one fetch per permit. `bid_radar/enrich.py` caches parsed results by
+  record id in `data/accela_cache.json` on the data branch, so a second run
+  fetches only new records, and `ACCELA_MAX_FETCH` caps a single run. The cache
+  is flushed every `ACCELA_SAVE_EVERY` (20) fetches — the first live run was
+  cancelled at nine minutes by an unrelated push (`cancel-in-progress: true`)
+  and lost everything it had paid for.
+- **Accela's speed is not dependable, and this is the main operational risk.**
+  The same 223 pages took ten minutes on the 2026-09-14 02:22Z run and were
+  still going at forty-four minutes on the 02:42Z one, with a warmer cache and
+  no change on our side. `ACCELA_BUDGET_S` (600s) stops the fetching; the run
+  uses what is cached, counts what it skipped, and finishes. A slow day costs a
+  partial back-catalogue, never a dead job, and the next run tops the cache up.
+- **Four parsing defects the first live run exposed, now fixed and tested**
+  (`tests/test_accela.py`). They mattered because each one would have gone
+  straight onto a cold call:
+  | Seen in `market_share.csv` | Cause | Fix |
+  |---|---|---|
+  | `N HOWARD AVE TAMPA` as a company | the party block runs name → address → licence, and the address matched the firm pattern | truncate the block at the first street number; reject any candidate carrying a street word |
+  | `MATTHEW GILBERT BARR & BARR INC` | a person and their firm on one line | `_split_person_from_firm()` — greedy firm match, the remainder is the person |
+  | Job Value `280,000,000` on a fitout | data entry on the record | kept on the row, `value_suspect: true`, excluded from market-share averages |
+  | Job Value `500` | same | same |
+- **Consequence for §2.2 and §2.3:** `value_est` and `contacts[]` ARE available
+  for permits after enrichment. The soft `needs_contact` blocker still exists
+  for rows Accela could not fill, but it is no longer true that no permit row
+  can carry a contact.
+
 **Not to build:** Hillsborough BTR (late, low value), CoStar (paid), Related
-Group prequal (none public — tenant-side only).
+Group prequal (none public — tenant-side only), Hillsborough Clerk ORI (its
+hosts refuse cloud traffic, and Accela names the same contractor with a licence
+number attached).
 
 ## 4. Direct paths to master developers and their GCs — VERIFIED 2026-09-14
 
@@ -623,19 +682,79 @@ against the live org from this session, but nobody has clicked the button, and
 `createAccount` was introspected from the API schema rather than executed,
 because executing it would create a real account in the production org.
 
-### Phase 4 — Close the loop
-1. `noc.py` — Playwright against the Clerk's ORI search, last 24 months,
-   document type Notice of Commencement, filtered to the polygons → per-hood
-   table of contractor × count × (stated value where present). Output
-   `data/noc_market_share.csv` + a README section: **our measured share per
-   submarket** and the real average fitout contract where NOCs state value.
-2. Calibration seed: write `meta/calibration_seed` with those actuals so the
-   dials start from measurement.
-3. Outcome writeback in the Routine: for opportunities with a JobTread account
-   id, read job status via `mcp__Ideal__query` and move stage to Won/Lost.
+### Phase 4 — Close the loop — ✅ DONE 2026-09-14, by a different route
+
+1. ~~`noc.py` — Playwright against the Clerk's ORI search~~ → **replaced.** The
+   Clerk's public-records hosts refuse cloud traffic (§3 #6c). The contractor
+   of record comes from the permit's own Accela page instead (§3 #7), which
+   also carries the job valuation, the real square footage, the applicant's
+   phone and email, the owner and the sub list.
+   Output is `data/market_share.csv` — contractor × submarket × permits ×
+   average job value — plus a section in `summary.md`. The share of that table
+   which is ours is our measured share, per submarket.
+2. Calibration seed — **done, and it says the opposite of what PLAN assumed.**
+   `collect.calibration_seed()` writes `data/calibration_seed.json` and the
+   page reads `meta/calibration_seed`.
+
+   PLAN expected the measurement to pull the `avgTI` dial toward the truth.
+   The first real measurement (2026-09-14, 29 qualified permits with a value)
+   says the dial cannot take it:
+
+   | | |
+   |---|---|
+   | min | $5,000 |
+   | p25 | $400,000 |
+   | **median** | **$1,700,000** |
+   | p75 | $2,775,433 |
+   | mean | $2,653,243 |
+   | max | $18,800,000 (Hotel Tampa Riverwalk) |
+
+   The `avgTI` dial spans $50k–$900k. Only the bottom quarter of what qualifies
+   is the size of work it models; the rest is hotel renovations and full-floor
+   office jobs. Adopting either the mean or the median would pin the slider to
+   its maximum and present a clamped number as a calibrated one — worse than
+   the $325,000 guess it replaced.
+
+   So the page **shows the quartile spread and offers no adoption** while the
+   median sits outside the dial's range, with a line saying which of the two
+   readings it implies: the dial is set too small, or the qualifying filter is
+   letting in work Ideal does not bid. That is a judgement for a person, and it
+   is the most useful thing this measurement produced.
+
+   **It will never touch `winRate`, and no later change should.** Win rate is a
+   fact about us; the only honest source is Won/Lost rows a person logged.
+   Market share is a different quantity, and a declared job value is not a
+   contract value — it is what the applicant told the city the work is worth.
+   `tests/test_page.py` asserts the clamp does not happen and that no market
+   figure reaches `winRate`.
+
+3. Outcome writeback — **done, in the page rather than the Routine.** PLAN put
+   it in the Routine; the Routine stores no MCP connectors (§ Phase 3), so it
+   cannot call JobTread at all. A **Refresh** button on a row already linked to
+   JobTread reads the job's `Status` custom field and moves the row's stage.
+   The mapping is this organization's own eleven values, read from custom field
+   `22P6bRnsNu2Y` (type `option`, targetType `job`) on 2026-09-14:
+
+   | JobTread status | Board stage |
+   |---|---|
+   | New Lead | signal |
+   | Estimate with Cost $ · Estimating HOMEE | bidding |
+   | Approved · Subcontractor Agreement · Permitting · Construction · Closed Waiting for payments · Paid Waiting to split · Closed Won | won |
+   | Closed Lost | lost |
+
+   It deliberately does **not** write `valueActual`. `documents.priceSum` totals
+   estimates, change orders and invoices together, and calibration is only
+   worth having if the contract value on a Won row is the real one somebody
+   typed. The document total is shown as a prompt, not written as a fact.
 
 **Done when:** the tracker's "Modelled vs actual" shows a NOC-derived win rate
 per submarket, and a Won job in JobTread flips the row without a human.
+
+**What actually happened.** The win-rate *measurement* exists and is richer
+than a NOC would have been — it carries a licence number and a job value per
+contractor. It is not yet wired into the calibration panel (step 2). The
+JobTread writeback works from the page but is one click, not automatic, because
+the Routine cannot hold a connector.
 
 ### Phase 5 — Developer / GC direct track — ✅ DONE 2026-09-14
 1. `bid_radar/relationships.yaml` — the eight §4 targets with why, action, URL
@@ -667,10 +786,16 @@ Water Street and Gasworx — and 60-odd other Florida GCs in one registration.
 
 Stated plainly so nobody assumes otherwise.
 
-- **Phase 4 in full.** `noc.py` (Hillsborough Clerk Notices of Commencement →
-  measured win rate and real average contract per submarket), the calibration
-  seed, and JobTread outcome writeback. The Clerk has no API and needs a
-  Playwright scrape of a search UI; it must run in Actions.
+- **A measured win rate.** The calibration seed is written, but it adopts
+  nothing. The `winRate` dial is still a 12% assumption and stays one until
+  somebody logs Won and Lost rows on the board — no public source can supply
+  it, and market share is not a substitute.
+- **A decision on the size mismatch.** The measurement says the qualified
+  permits are far larger than the fitouts the model is built around (median
+  $1.7M against a $900k dial ceiling). Either the dial is too small or the
+  filter is too broad. The page states the choice; nobody has made it.
+- **Automatic** JobTread writeback. It works from the page on a click; the
+  Routine cannot do it unattended because it stores no connectors.
 - **Phase 2 steps 4 and 6.** The DBPR food-service and lodging extracts,
   Sunbiz daily corporate filings, AHCA licensure, and the HCAA monthly
   Planned Procurement Opportunities PDF. The three Tampa city layers displaced

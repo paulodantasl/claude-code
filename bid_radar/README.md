@@ -371,3 +371,116 @@ Ordered by leverage:
 
 `owner` is blank on every row on purpose. Who chases what is not a decision a
 script should make.
+
+---
+
+## Who is building fitouts here (Phase 4)
+
+The plan's route to a measured win rate was the Hillsborough Clerk's Notices of
+Commencement. **Both of the Clerk's public-records hosts refuse traffic from a
+cloud runner** — `ConnectTimeout` on `pubrec6.hillsclerk.com`,
+`ConnectionError` on `pubrec.hillsclerk.com`, while `www.hillsclerk.com`
+answers 200 from the same machine. That route is closed.
+
+The replacement is better than the original, and it was sitting in the data the
+whole time. Every permit row already carries a per-record Accela URL, and that
+page holds every field the ArcGIS layer omits:
+
+| On the page | What it gives us |
+|---|---|
+| **Licensed Professional** | The **GC of record** — company, Florida licence number, email |
+| **Applicant** | Name, work phone, email |
+| **Owner** | Name and mailing address |
+| **Tenant contact** | Where the record has one |
+| **Job Value** | The valuation the ArcGIS layer does not carry |
+| **Sq Ft** | The real floor area |
+| Additional Licensed Professionals | Each sub's company and licence |
+
+Verified on `BLD-26-0526061` — the Wagamama fitout at 1050 Water St: GC *TWT
+Restaurant Design Construction & Development Company*, licence CBC1262713, with
+an email; applicant Stephen Torres with a phone and an email; owner *Wst 1010
+Water Street Llc c/o Strategic Property Partners Llc*; Job Value $300,000;
+4,525 sq ft; Duffy Electric and Johnson Controls on the sub list.
+
+So this closes the biggest gap in the system, not just the win-rate question. A
+permit row stops being *something happened at this address* and becomes a lead
+with a name, a number and a real dollar value.
+
+`accela.py` parses the page by its printed labels rather than its DOM — the DOM
+is generated and brittle, the labels are not. `enrich.py` caches parsed results
+by record id on the data branch, so a second run fetches only what is new.
+Enrichment happens **before** scoring, because value and contacts both move the
+score.
+
+Accela's speed is not dependable — the same 223 pages took ten minutes one run
+and were still going at forty-four the next — so enrichment is bounded twice
+over: at most `ACCELA_MAX_FETCH` pages and at most `ACCELA_BUDGET_S` seconds of
+fetching, with the cache flushed every 20 pages. A slow day leaves part of the
+back-catalogue for tomorrow; it never leaves the job hanging.
+
+**`market_share.csv`** is the output: contractor of record × submarket ×
+permits × average job value. The share of that table which is ours is our
+measured share, per submarket — which is what two of the five calibration dials
+have been guessing at.
+
+The first live run put four bad rows in that table, and all four are fixed:
+a street address read as a company name (the record prints name, then address,
+then licence, and the address looked like a firm), a qualifier and their firm
+run together on one line, and two job values — $280,000,000 and $500 — that are
+data entry on the record rather than real. A suspect value stays on the row,
+flagged, but is left out of the averages. These mattered because every one of
+them would have gone straight onto a cold call.
+
+### The calibration seed, and what it actually found
+
+The `avgTI` dial — average contract — has been guessing at $325,000. The
+collector now measures it: the declared job value of every qualified fitout
+permit in our submarkets, suspect values excluded, written to
+`calibration_seed.json` and seeded into the tracker.
+
+The first measurement, 29 permits over twelve months:
+
+| | |
+|---|---|
+| p25 | $400,000 |
+| **median** | **$1,700,000** |
+| p75 | $2,775,433 |
+| largest | $18,800,000 — Hotel Tampa Riverwalk |
+
+**The dial only goes to $900,000.** Only the bottom quarter of what currently
+qualifies is the size of work the model is built around; above that sit hotel
+renovations and full-floor office jobs. So the page shows the spread and
+offers no one-click adoption while the median is out of range — pinning the
+slider to its maximum would look like calibration and be a worse number than
+the guess it replaced.
+
+That leaves a real question on the screen for someone to answer: is the dial
+set too small, or is the qualifying filter letting in work we do not bid?
+Either way it is worth knowing, and it is the most useful thing this
+measurement produced.
+
+**Win rate stays where it is.** It is a fact about Ideal, and the only place it
+can honestly come from is a Won or Lost row someone logged on the board. Market
+share is a different number, and a declared job value is not a contract value —
+it is what the applicant told the city the work is worth.
+
+## JobTread status writeback
+
+A **Refresh** button on any row already linked to JobTread reads the job's
+`Status` custom field and moves the row's stage. The mapping is this
+organization's own eleven values, read from custom field `22P6bRnsNu2Y`:
+
+| JobTread status | Board stage |
+|---|---|
+| New Lead | signal |
+| Estimate with Cost $ · Estimating HOMEE | bidding |
+| Approved · Subcontractor Agreement · Permitting · Construction · Closed Waiting for payments · Paid Waiting to split · Closed Won | won |
+| Closed Lost | lost |
+
+It deliberately does **not** write the contract value. `documents.priceSum`
+totals estimates, change orders and invoices together, and calibration is only
+worth having if the value on a Won row is the real contract somebody typed. The
+document total is shown as a prompt, not written as a fact.
+
+This lives in the page rather than the daily Routine because the Routine stores
+no MCP connectors and cannot call JobTread at all.

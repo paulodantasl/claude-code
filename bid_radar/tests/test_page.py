@@ -69,13 +69,18 @@ SIGNALS = [
 
 STUB = """(() => {
   const store = {signals: __SIGNALS__};
+  const docs = __DOCS__;
   window.__writes = [];
   const col = (name) => ({
     onSnapshot(cb){ cb({docs:(store[name]||[]).map(d=>({id:d.id, data:()=>d}))}); return ()=>{}; },
     add(rec){ window.__writes.push(['add', name, rec]); return Promise.resolve({id:'new'}); }
   });
-  const doc = () => ({ onSnapshot(cb){ cb({exists:false, data:()=>({})}); return ()=>{}; } });
-  const docAt = (path) => Object.assign(doc(), {
+  const doc = (path) => ({ onSnapshot(cb){
+    const d = docs[path];
+    cb(d ? {exists:true, data:()=>d} : {exists:false, data:()=>({})});
+    return ()=>{};
+  } });
+  const docAt = (path) => Object.assign(doc(path), {
     set(v){ window.__writes.push(['set', path, v]); return Promise.resolve(); },
     update(v){ window.__writes.push(['update', path, v]); return Promise.resolve(); },
     delete(){ window.__writes.push(['delete', path]); return Promise.resolve(); }
@@ -117,6 +122,11 @@ def pw():
         yield instance
 
 
+def _stub(signals, docs=None):
+    return (STUB.replace("__SIGNALS__", json.dumps(signals))
+                .replace("__DOCS__", json.dumps(docs or {})))
+
+
 @pytest.fixture(scope="module")
 def bare(pw):
     p = _Page(pw, None)
@@ -126,7 +136,7 @@ def bare(pw):
 
 @pytest.fixture(scope="module")
 def wired(pw):
-    p = _Page(pw, STUB.replace("__SIGNALS__", json.dumps(SIGNALS)))
+    p = _Page(pw, _stub(SIGNALS))
     yield p
     p.browser.close()
 
@@ -299,3 +309,118 @@ def test_a_relationship_row_does_not_inflate_live_pipeline(rel):
 
 def test_no_console_errors_with_a_relationship_row(rel):
     assert rel.errors == []
+
+
+# ----------------------------------------------- JobTread status mapping
+
+# The eleven values Ideal's own `Status` custom field offers on a job, read
+# from custom field 22P6bRnsNu2Y (type option, targetType job) on 2026-09-14.
+# Not a guess at a generic JobTread vocabulary — this organization's list.
+JOB_STATUS_OPTIONS = [
+    "New Lead", "Estimate with Cost $", "Estimating HOMEE", "Approved",
+    "Permitting", "Construction", "Closed Waiting for payments",
+    "Paid Waiting to split", "Closed Won", "Closed Lost",
+    "Subcontractor Agreement",
+]
+
+
+def test_every_jobtread_status_maps_to_a_board_stage(bare):
+    """A status the page cannot map silently leaves the row where it was."""
+    mapping = bare.page.evaluate("JT_STAGE")
+    missing = [s for s in JOB_STATUS_OPTIONS if s not in mapping]
+    assert not missing, f"unmapped JobTread statuses: {missing}"
+    assert set(mapping.values()) <= {"signal", "qualified", "bidding", "won", "lost"}
+
+
+@pytest.mark.parametrize("status,stage", [
+    ("New Lead", "signal"),
+    ("Estimate with Cost $", "bidding"),
+    ("Estimating HOMEE", "bidding"),
+    ("Approved", "won"),            # the bid was accepted
+    ("Subcontractor Agreement", "won"),
+    ("Permitting", "won"),
+    ("Construction", "won"),
+    ("Closed Won", "won"),
+    ("Closed Lost", "lost"),
+])
+def test_jobtread_status_lands_on_the_right_stage(bare, status, stage):
+    assert bare.page.evaluate("s => JT_STAGE[s]", status) == stage
+
+
+def test_the_refresh_never_writes_a_contract_value(bare):
+    """documents.priceSum totals estimates, change orders and invoices
+    together. Calibration is only worth having if the value on a Won row is
+    the real contract somebody typed."""
+    src = bare.page.evaluate("refreshFromJobTread.toString()")
+    assert "valueActual" not in src
+    assert "jobtreadStatus" in src
+
+
+# --------------------------------------------------------- calibration seed
+
+# Shaped like the real 2026-09-14 measurement: 29 valued permits whose median
+# is $1.7M, well above the avgTI dial's $900k ceiling.
+SEED_REAL = {"measures": "fitout permit value", "n": 29, "window_days": 365,
+             "p25": 400000.0, "median": 1700000.0, "p75": 2775433.0,
+             "mean": 2653242.91, "min": 5000.0, "max": 18800000.0,
+             "basis": "declared job value on qualified fitout permits, City of Tampa Accela",
+             "by_hood": {"waterst": {"hood_label": "Water Street", "n": 5,
+                                     "median": 2658013.0}},
+             "retrieved_at": "2026-09-14T03:05:20+00:00"}
+
+# The same shape but inside the dial's range, which is what a narrower filter
+# or a quieter year would produce.
+SEED_IN_RANGE = {**SEED_REAL, "p25": 180000.0, "median": 410000.0,
+                 "p75": 620000.0, "mean": 455000.0}
+
+
+@pytest.fixture(scope="module")
+def seeded(pw):
+    p = _Page(pw, _stub(SIGNALS, {"meta/calibration_seed": SEED_REAL}))
+    yield p
+    p.browser.close()
+
+
+@pytest.fixture(scope="module")
+def seeded_in_range(pw):
+    p = _Page(pw, _stub(SIGNALS, {"meta/calibration_seed": SEED_IN_RANGE}))
+    yield p
+    p.browser.close()
+
+
+def test_without_a_seed_the_market_lines_stay_hidden(wired):
+    assert wired.page.locator("#applymarket").is_hidden()
+    assert "Quartile spread" not in wired.page.locator("#calbody").inner_text()
+
+
+def test_the_spread_is_shown_not_a_single_flattering_number(seeded):
+    body = seeded.page.locator("#calbody").inner_text()
+    assert "29 with a value" in body
+    # p25 -> median -> p75, because one number hides that the qualified set
+    # spans a $5,000 job and an $18.8M hotel.
+    assert "$400k → $1.7M → $2.8M" in body, body
+    assert "not a contract value" in body
+    assert "not our win rate" in body
+
+
+def test_a_median_above_the_dial_is_reported_not_silently_clamped(seeded):
+    """Pinning a $1.7M median onto a $900k slider would read as calibration and
+    be a worse number than the default it replaced."""
+    body = seeded.page.locator("#calbody").inner_text()
+    assert "above this dial" in body
+    assert seeded.page.locator("#applymarket").is_hidden()
+    assert seeded.page.evaluate("dials.avgTI") == 325000      # untouched
+    assert seeded.errors == []
+
+
+def test_a_median_inside_the_dial_is_offered_and_moves_only_avgti(seeded_in_range):
+    before = seeded_in_range.page.evaluate("({...dials})")
+    assert seeded_in_range.page.locator("#applymarket").is_visible()
+    assert "above this dial" not in seeded_in_range.page.locator("#calbody").inner_text()
+    seeded_in_range.page.locator("#applymarket").click()
+    seeded_in_range.page.wait_for_timeout(200)
+    after = seeded_in_range.page.evaluate("({...dials})")
+    assert after["avgTI"] == 410000               # the median, to the nearest $1k
+    assert after["winRate"] == before["winRate"]  # never, from any market figure
+    assert after["perFitout"] == before["perFitout"]
+    assert seeded_in_range.errors == []
