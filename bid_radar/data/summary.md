@@ -1,6 +1,6 @@
 # Tampa Bid Radar
 
-Collected 2026-09-14T02:22:22+00:00 · 365-day window · eight tracked submarkets
+Collected 2026-09-14T02:42:17+00:00 · 365-day window · eight tracked submarkets
 
 | Source | Records | In a submarket | Qualified |
 |---|---|---|---|
@@ -252,7 +252,7 @@ A change to an in-flight permit. The job is active.
 | permit | `BLD-26-0521550` | 2025-12-31 | revision | Ybor City | retail | **52** | Ybor Art Studio- Interior Build out | 1705 N 16th St #Unit 1 | mrdesigntampa@gmail.com (+2) | $40,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=030DN&agencyCode=TAMPA) |
 | permit | `BLD-26-0522582` | 2026-02-11 | revision | Downtown Riverwalk | office | **52** | Jessica Lowe | 400 N Ashley Dr #BS | jessica.lowe@littleonline.com (+2) | $599,811 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=008WE&agencyCode=TAMPA) |
 | permit | `BLD-26-0523633` | 2026-03-19 | revision | Downtown Riverwalk | office | **52** | CIBC Wealth Office Renovation | 100 N Tampa St | judyspermitservice@judysps.com (+2) | $693,872 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00GMQ&agencyCode=TAMPA) |
-| permit | `BLD-26-0524352` | 2026-04-15 | revision | Water Street | office | **52** | Kevin Murphy ICONSTRUCTORS LLC | 1001 Water St #100 | kjmurphy@iconstructors.com (+1) | $462,416 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00M0Q&agencyCode=TAMPA) |
+| permit | `BLD-26-0524352` | 2026-04-15 | revision | Water Street | office | **52** | Kevin Murphy | 1001 Water St #100 | kjmurphy@iconstructors.com (+1) | $462,416 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00M0Q&agencyCode=TAMPA) |
 | permit | `BLD-26-0524448` | 2026-04-20 | revision | Airport / Westshore | office | **51** | Lonza | 4901 W Grace St | nikki@savvysolutions4upermits.com (+2) | $260,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00MVY&agencyCode=TAMPA) |
 | permit | `BLD-26-0524769` | 2026-05-04 | revision | Downtown Riverwalk | office | **50** | Thornton Tomasetti | 400 N Ashley Dr | judyspermitservice@judysps.com (+2) | $150,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00PKW&agencyCode=TAMPA) |
 | permit | `BLD-26-0526369` | 2026-07-06 | revision | Downtown Riverwalk | office | **50** | Altieri Ins. Consultants | 400 N Tampa St #FS | sepermits@gmail.com (+2) | $213,576 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=01WDJ&agencyCode=TAMPA) |
@@ -264,7 +264,7 @@ A change to an in-flight permit. The job is active.
 | permit | `BLD-26-0523470` | 2026-03-12 | revision | Downtown Riverwalk | other | **40** | Priscilla Castellano | 777 N Ashley Dr #1316 | priscilla@andrealaureninteriors.com (+2) | $150,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00FEV&agencyCode=TAMPA) |
 | permit | `BLD-26-0522335` | 2026-02-03 | revision | Davis Islands | other | **39** | Fema | 2 Adalia Ave #601 | ahstephan@me.com (+1) | $75,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00720&agencyCode=TAMPA) |
 | permit | `BLD-26-0525493` | 2026-05-31 | revision | Davis Islands | other | **39** | Craig C Drake ARRYS ROOFING SERVICE INC. | 216 Columbia Dr | ecroat@arrysroofing.com (+1) | $97,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00USJ&agencyCode=TAMPA) |
-| permit | `BLD-26-0524813` | 2026-05-05 | revision | Dale Mabry | other | **35** | Jason Samuel Giardina Neo Homes LLC | 4422 N Hale Ave #F | jason@neohomes.net (+2) | $6,500 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00PXH&agencyCode=TAMPA) |
+| permit | `BLD-26-0524813` | 2026-05-05 | revision | Dale Mabry | other | **35** | Jason Samuel Giardina Neo Homes | 4422 N Hale Ave #F | jason@neohomes.net (+2) | $6,500 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00PXH&agencyCode=TAMPA) |
 
 ## Submarket × trade (live stages only)
 
@@ -360,22 +360,21 @@ The contractor of record on every enriched permit, from its own Accela page. Thi
 | Water Street | RELIANCE CONSTRUCTION COMPANY LLC | CGC048539 | 2 | hospitality | $4,607,316 |
 | Dale Mabry | ROBINSMORTON.COM THE ROBINS & MORTON GROUP | CGC1523017 | 2 | medical | $2,750,000 |
 | Airport / Westshore | AXECEL CONSTRUCTION LLC | CBC1261274 | 2 | office | $1,747,958 |
-| Airport / Westshore | SCOTT PATRICK LYONS | CGC1524578 | 2 | other | $1,346,689 |
+| Airport / Westshore | DPR CONSTRUCTION | CGC1524578 | 2 | other | $1,346,689 |
 | Airport / Westshore | ABI COMPANIES INC | CGC1522944 | 2 | office | $983,689 |
-| Dale Mabry | N HOWARD AVE TAMPA | CGC049808 | 2 | office | $756,650 |
+| Dale Mabry | CARLOS BENITO RANON | CGC049808 | 2 | office | $756,650 |
 | Airport / Westshore | ED TAYLOR CONSTRUCTION | CGC049804 | 2 | office | $592,334 |
 | Dale Mabry | RUBICON GENERAL CONTRACTORS | CGC1511762 | 2 | office | $402,500 |
 | Dale Mabry | BUILDIFY GENERAL CONTRACTORS | CGC1534286 | 2 | office | $365,000 |
 | Water Street | ICONSTRUCTORS LLC | CGC1535583 | 2 | office | $331,626 |
-| Airport / Westshore | BAYCO CONTRACTING FL LLC | CBC1266613 | 2 | office | $253,058 |
+| Airport / Westshore | Ronald E Allen | CBC1266613 | 2 | office | $253,058 |
 | Airport / Westshore | AXIS ONE CONSTRUCTION COMPANY | CGC1516931 | 2 | office | $101,313 |
-| Airport / Westshore | KENT A WISSLER | CGC1520910 | 2 | other | $159,800 |
-| Airport / Westshore | SDI COMPANY LLC | CGC1522623 | 2 | other | $500 |
-| Water Street | SCOTT PATRICK LYONS | CGC1524578 | 2 | retail | — |
-| Airport / Westshore | Justin Starnes | CGC1533664 | 1 | other | $280,000,000 |
+| Airport / Westshore | NWR CONSTRUCTION | CGC1520910 | 2 | other | $159,800 |
+| Water Street | DPR CONSTRUCTION | CGC1524578 | 2 | retail | — |
+| Airport / Westshore | SDI COMPANY LLC | CGC1522623 | 2 | other | — |
 | Dale Mabry | JAVIER J ISTURIZ | CGC1504355 | 1 | office | $7,000,000 |
 | Water Street | KELSO BUILDING SERVICES | CAC1820797 | 1 | hospitality | $6,000,000 |
-| Ybor City | Donald Michael Hartzog ARCO MURRAY CONSTRUCTION COMP | CGC1513959 | 1 | medical | $3,000,000 |
+| Ybor City | ARCO MURRAY CONSTRUCTION COMPANY | CGC1513959 | 1 | medical | $3,000,000 |
 | Downtown Riverwalk | DHGRIFFIN.COM D H GRIFFIN WRECKING COMPANY | CGC1518009 | 1 | other | $2,900,000 |
 | Airport / Westshore | THE PERRY COMPANY | CGC1516353 | 1 | office | $2,800,000 |
 | Ybor City | PCL CONSTRUCTION SERVICES | CGC1538053 | 1 | office | $2,800,000 |
@@ -384,6 +383,7 @@ The contractor of record on every enriched permit, from its own Accela page. Thi
 | Airport / Westshore | PCL CONSTRUCTION SERVICES LLC | CGC1523408 | 1 | hospitality | $2,195,767 |
 | Airport / Westshore | William R Chavez | CBC1263714 | 1 | hospitality | $2,100,000 |
 | Dale Mabry | JOHNSON-LAUX CONSTRUCTION LLC | CGC1519701 | 1 | office | $2,000,000 |
+| Dale Mabry | INTERSTRUCTINC.COM INTERSTRUCT TAMPA LLC | CGC1525332 | 1 | office | $1,800,000 |
 
 ## What each source can and cannot tell you
 
