@@ -434,25 +434,80 @@ Deferred out of Phase 0, deliberately: `data/vocab_tampa.json` is written by
 `RECORDTYPE` + `OCCUPANCYCATEGORY` rather than on the `PERMITTYPE`/`WORKCLASS`
 fields PLAN named, because those fields do not exist.
 
-### Phase 1 — Classify, score, and shake hands with JobTread
-1. `bid_radar/classify.py` — `FitoutClassifier` (trade from work class +
-   description keywords + applicant name patterns such as "DDS", "DMD",
-   "Dental", "MD", "PA", "Grill", "Kitchen", "Salon"; `stage_hint`;
-   confidence). Unit-test against 30 rows sampled from Phase 0 output,
-   hand-labelled in `bid_radar/tests/fixtures/labels.csv`.
-2. `bid_radar/score.py` — §2.3 + §2.4. `blocklist.yaml`.
-3. Extend `ideal_apis` `Source` literal with `permit abt dbpr_hr sunbiz ahca noc`;
-   `bid_radar/to_leads.py` maps qualified signals → `LeadRecord` → existing
-   `ApprovalBatch` (`ideal-api leads collect` path) so the approve → JobTread
-   → QUO flow works unchanged, dry-run by default.
-4. From the session, confirm the JobTread handshake with one
-   `mcp__Ideal__query` call (`currentGrant → organization → id`, then
-   `accounts where name like`) — observe the real response shape before any
-   page code calls it.
+### Phase 1 — Classify, score, and shake hands with JobTread — ✅ DONE 2026-09-14
+
+1. `bid_radar/classify.py` — trade from the filed FBC occupancy category
+   (0.9 confidence), keywords as fallback (0.5), tenant name parsed from
+   `PROJECTNAME2` / `PROJECTDESCRIPTION`. Two rules came out of hand-labelling
+   the first real run and are worth keeping:
+   - **Demolition guard.** A demolition record type returns `other` without
+     consulting keywords. Without it, "demolition of two story wood framed
+     office buildings" classified as `office` and put a teardown on the
+     outreach list.
+   - **Strip-out stage.** When the record says the space is being emptied and
+     the build-back comes under a separate permit, the trade is not declared
+     yet — but the tenant is committed and the fitout has not been bid. That
+     is `stage_hint = strip_out`, scored on its own fit band (§2.4), and it is
+     one of the more actionable rows the layer produces. Detection is
+     deliberately conservative: it fires only when the record itself says the
+     build-back is separate, because mistaking a real fitout for a strip-out
+     loses the lead.
+2. `bid_radar/score.py` + `blocklist.yaml` — §2.3 and §2.4. Two adaptations,
+   both recorded in §2.3: value is unknowable from permits so it takes the
+   plan's own 8/20 for unknown, and the contact-channel requirement is a SOFT
+   blocker (`needs_contact`) rather than a hard gate, because enforcing it
+   would qualify nothing at all until Phase 2.
+   PLAN's Access "+10 owner-occupier or local LLC" is implemented as the proxy
+   `named_local_entity`: an entity was resolved and it is not blocklisted.
+   Labelled as a proxy, not as verified ownership, until Sunbiz/HCPA confirm it.
+3. `bid_radar/to_leads.py` — qualified signals → `LeadRecord` → the existing
+   `ApprovalBatch`, dry-run by default. Signals with contacts become contact
+   leads (JobTread-eligible); signals without become **intel** leads, which is
+   the slot the batch already has for non-contactable rows. Every permit signal
+   is intel today. The only edit to `ideal_apis` is the `Source` literal.
+4. JobTread handshake — **OBSERVED via `mcp__Ideal__query`, 2026-09-14.** Both
+   shapes Phase 3's page code will need:
+
+   ```
+   REQ  {"currentGrant": {"organization": {"id": {}, "name": {}},
+                          "user": {"id": {}, "name": {}}}}
+   RES  {"currentGrant": {"organization": {"id": "22P6bRn5p6Pn",
+                            "name": "Ideal Construction - CGC1537480 / MRSR5016"},
+                          "user": {"id": "22NsRpDbCjaP", "name": "Ideal Construction"}}}
+
+   REQ  {"organization": {"$": {"id": "22P6bRn5p6Pn"},
+           "accounts": {"$": {"where": {"and": [["type","customer"],
+                                                ["name","like","%Ramos%"]]}, "size": 5},
+                        "count": {}, "nodes": {"id": {}, "name": {}}}}}
+   RES  {"organization": {"accounts": {"count": 2, "nodes": [
+           {"id":"22P6bShi6gag","name":"Ramos Design Companies"},
+           {"id":"22P6c2J3bJT2","name":"Ramos Design Build Corporation 2"}]}}}
+   ```
+
+   `currentGrant.user` has **no** `email` field — asking for it errors. The org
+   holds 259 `customer` accounts. `createAccount` takes
+   `{organizationId, name, type, suffixIfNecessary, isTaxable, notify,
+   customFieldValues}`; `suffixIfNecessary` appends a number to keep the name
+   unique, which is what "Send to JobTread" should pass so a repeat push cannot
+   collide. **No page code may call anything not shown above.**
 
 **Done when:** precision ≥ 0.8 on the labelled sample for `trade`; scores are
-written into `signals.jsonl`; `ideal-api leads status --show-leads` lists
-permit-sourced leads with `source_url`; one dry-run JobTread push validated.
+written into `signals.jsonl`; permit-sourced leads carry `source_url`; one
+dry-run JobTread push validated.
+
+**What actually happened.** Precision is 29/29 on `tests/fixtures/labels.csv` —
+which is every row of the first real run, hand-labelled, and also the set the
+two rules above were derived from, so read it as a fit to the sample and expect
+the held-out number from the next run. Scoring is wired into the collector.
+The dry run reports 4 qualified of 29: Wagamama Pan Asian (73, restaurant,
+early start, Water Street), Edikted (63, retail, early start, WestShore Plaza),
+Altieri Ins. Consultants (58, office, revision, 400 N Tampa St) and Nationwide
+(58, office, revision, 4200 W Cypress St). 214 tests.
+
+**The number that matters: the permit feed alone yields about four qualified
+leads a quarter, none with a contact channel.** That is not a threshold problem
+— 19 of the 29 are already-issued permits, which §2.3(d) correctly refuses to
+call outreach. It is the argument for Phase 2.
 
 ### Phase 2 — Leading indicators (REORDERED after discovery)
 

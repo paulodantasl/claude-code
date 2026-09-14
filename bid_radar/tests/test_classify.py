@@ -78,7 +78,7 @@ REAL = [
      "other", "issued", "Sea Lion and Penguin Exhibits"),
     ("", "Demo 2-Story Buildings",
      "Demolition of (2) two story wood framed office buildings.",
-     "office", "issued", None),
+     "other", "issued", None),
     ("B-9 Business-Professional Office",
      "FEMA: PP: SEC: Interior Reno suite 103",
      "THE PROPOSED SCOPE OF WORK CONSISTS OF THE INTERIOR RENOVATION OF AN "
@@ -97,9 +97,15 @@ REAL = [
 IDS = [f"{i}-{row[1][:28] or 'blank'}" for i, row in enumerate(REAL)]
 
 
+def _record_type(name2: str, desc: str) -> str:
+    return ("Commercial Demolition Permit" if name2.lower().startswith("demo")
+            else "Commercial Building Alterations (Renovations)")
+
+
 @pytest.mark.parametrize("occ,name2,desc,trade,stage,entity", REAL, ids=IDS)
 def test_trade(occ, name2, desc, trade, stage, entity):
-    got, conf = classify.trade_of(occ, name2, desc)
+    got, conf = classify.trade_of(occ, name2, desc,
+                                  record_type=_record_type(name2, desc))
     assert got == trade
     assert 0.0 <= conf <= 1.0
 
@@ -117,7 +123,8 @@ def test_entity(occ, name2, desc, trade, stage, entity):
 
 def test_trade_precision_on_the_real_sample():
     """PLAN.md Phase 1 gate: precision >= 0.8 for `trade`."""
-    hits = sum(classify.trade_of(o, n, d)[0] == t for o, n, d, t, _, _ in REAL)
+    hits = sum(classify.trade_of(o, n, d, record_type=_record_type(n, d))[0] == t
+               for o, n, d, t, _, _ in REAL)
     assert hits / len(REAL) >= 0.8
 
 
@@ -196,3 +203,56 @@ def test_trailing_parenthetical_brand(name2, expected):
 ])
 def test_scope_label_strips_administrative_prefixes(name2, expected):
     assert classify.scope_label(name2, None) == expected
+
+
+# --- strip-outs ------------------------------------------------------------
+
+STRIP_OUT_REAL = (
+    "Suite 100: Interior Demolition",
+    "Interior demolition of existing lease space, to include demolition of "
+    "partitions, ceilings, and fixtures. Remodel permit for build back to be "
+    "pulled under separate permit.",
+)
+
+NOT_STRIP_OUT = [
+    # An ordinary fitout that happens to include selective demolition.
+    ("SEC: FEMA: Interior ALT (Suite 2200)",
+     "Interior alterations to an existing vacant office Suite 2200, for a tenant "
+     "relocating into this Suite. work will include selective demolition of "
+     "partitions, millwork and ceiling elements. And the construction of new "
+     "partitions"),
+    ("INT. Remodel STE 250 (Nationwide)",
+     "THRESHOLD BUILDING Ste 250: Demolition of existing partitions and "
+     "installation of new millwork"),
+    ("THRESHOLD BUILDING Interior Build-Out - Suite 855 - CFS Staffing",
+     "BUILD-OUT OF SUITE 855. ALTERATIONS INCLUDE MINOR DEMOLITION, CONSTRUCTION "
+     "OF NEW INTERIOR PARTITIONS"),
+    ("Demo 2-Story Buildings", "Demolition of (2) two story wood framed office buildings."),
+]
+
+
+def test_strip_out_is_detected_when_the_record_says_build_back_is_separate():
+    assert classify.is_strip_out(*STRIP_OUT_REAL)
+    assert classify.stage_of("Issued", *STRIP_OUT_REAL) == "strip_out"
+
+
+def test_strip_out_declares_no_trade():
+    """Saying `office` because the word appears in a strip-out scope is a guess."""
+    trade, conf = classify.trade_of(
+        "A-3 Assembly-Worship. Amusement. Arcade. Church. Community Hall",
+        *STRIP_OUT_REAL, record_type=ALT)
+    assert trade == "other"
+    assert conf < 0.5
+
+
+@pytest.mark.parametrize("name2,desc", NOT_STRIP_OUT,
+                         ids=[n[:30] for n, _ in NOT_STRIP_OUT])
+def test_ordinary_fitouts_are_not_mistaken_for_strip_outs(name2, desc):
+    """A false positive here demotes a real fitout's trade to `other` and
+    loses the lead — costlier than missing a strip-out."""
+    assert not classify.is_strip_out(name2, desc)
+
+
+def test_early_start_wins_over_strip_out():
+    name2, desc = "EARLY START: " + STRIP_OUT_REAL[0], STRIP_OUT_REAL[1]
+    assert classify.stage_of("Issued", name2, desc) == "early_start"

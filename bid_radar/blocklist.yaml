@@ -1,0 +1,72 @@
+# Entities that run construction in-house or through a closed national
+# programme. A permit naming one of these is market intelligence, not a lead —
+# no amount of relationship work opens the door.
+#
+# Matching is case-insensitive on a normalised entity name; each pattern is a
+# substring. Keep this short and defensible: a name here is a decision never to
+# call, so a wrong entry costs a real opportunity.
+
+national_in_house:
+  # Grocery and big box — all run national construction programmes
+  - publix
+  - walmart
+  - sam's club
+  - target
+  - costco
+  - aldi
+  - sprouts
+  - whole foods
+  - trader joe
+
+  # Logistics and fulfilment
+  - amazon
+  - fedex
+  - ups store          # note: franchise fitouts DO come to local GCs; see review note
+  - dollar general
+  - dollar tree
+  - family dollar
+
+  # National F&B with tied GC benches
+  - starbucks
+  - chipotle
+  - mcdonald
+  - wendy
+  - burger king
+  - taco bell
+  - chick-fil-a
+  - dunkin
+  - panera
+
+  # Bank branch programmes
+  - bank of america
+  - wells fargo
+  - chase bank
+  - jpmorgan
+  - truist
+  - pnc bank
+  - regions bank
+  - fifth third
+
+  # Pharmacy
+  - cvs
+  - walgreens
+
+  # Telecom retail
+  - verizon
+  - at&t
+  - t-mobile
+
+# Public bodies whose work comes through formal procurement, not a tenant
+# introduction. Not "never bid" — bid them through the portal, not this feed.
+public_procurement:
+  - city of tampa
+  - hillsborough county
+  - tampa police
+  - tampa fire
+  - hillsborough county public schools
+  - university of south florida
+  - hillsborough community college
+
+# Reviewed 2026-09-14. "ups store" is listed because the corporate programme
+# controls the store fitout; if we ever win a franchisee-funded UPS Store
+# buildout, take it out.
