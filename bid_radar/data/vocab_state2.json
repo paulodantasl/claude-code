@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-09-14T10:19:52+00:00",
+  "retrieved_at": "2026-09-14T10:37:26+00:00",
   "dbpr": {
     "newfood.csv": {
       "url": "https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv",
@@ -1142,7 +1142,7 @@
       "method": "GET",
       "status": 200,
       "content_type": "text/html; charset=utf-8",
-      "bytes": 201702,
+      "bytes": 201707,
       "download_links": [
         "/files/AllFacilityData_MiamiDade_08242026.xlsx",
         "/files/Clinical Lab Facility Data_08242026.xlsx"
@@ -1161,7 +1161,7 @@
       "method": "GET",
       "status": 200,
       "content_type": "text/html; charset=utf-8",
-      "bytes": 88576,
+      "bytes": 88566,
       "download_links": [
         "/files/AllFacilityData_MiamiDade_08242026.xlsx",
         "/files/Clinical Lab Facility Data_08242026.xlsx"

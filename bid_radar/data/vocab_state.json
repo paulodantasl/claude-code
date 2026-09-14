@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-09-14T10:19:47+00:00",
+  "retrieved_at": "2026-09-14T10:37:21+00:00",
   "dbpr": {
     "pages": [
       {
@@ -467,7 +467,7 @@
         "method": "GET",
         "status": 403,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 5714,
+        "bytes": 5736,
         "final_url": "https://dos.sunbiz.org/data-definitions/cor.html"
       }
     ],
@@ -730,7 +730,7 @@
         "method": "GET",
         "status": 403,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 5705,
+        "bytes": 5727,
         "final_url": "https://procurement.opengov.com/portal/tampaairport"
       },
       {

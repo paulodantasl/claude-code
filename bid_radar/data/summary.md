@@ -1,6 +1,6 @@
 # Tampa Bid Radar
 
-Collected 2026-09-14T10:20:09+00:00 · 365-day window · eight tracked submarkets
+Collected 2026-09-14T10:37:43+00:00 · 365-day window · eight tracked submarkets
 
 | Source | Records | In a submarket | Qualified |
 |---|---|---|---|
@@ -8,7 +8,10 @@ Collected 2026-09-14T10:20:09+00:00 · 365-day window · eight tracked submarket
 | Active entitlements | 272 | 58 | **26**|
 | Alcoholic-beverage permits | 36 | 19 | **15**|
 | CRA commercial grants | 38 | 10 | **3**|
-| _total_ | 642 | 223 | **76** |
+| DBPR food service and lodging | 229 | 0 | **0**|
+| HCAA planned procurement | 21 | 21 | **0**|
+| Sunbiz new entities | 0 | 0 | **0**|
+| _total_ | 892 | 244 | **76** |
 
 ## Qualified — call these (76)
 
@@ -144,7 +147,7 @@ A wet-zoning record moved — new, newly placarded, or newly Active. The one sou
 | abt | `AB1-22-01` | 2025-09-16 | abt | Water Street | restaurant | **53** | Chipotle Mexican Grill | 1055 E Cumberland Ave (Block H - Lot 2 Area N-18) | 813-273-5161 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D76539&outFields=%2A&f=json) |
 | abt | `AB1-25-0000050` | 2025-12-01 | abt | Ybor City | retail | **53** | Package Sales-Shopper's Goods | 1720 Nuccio Parkway | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D80139&outFields=%2A&f=json) |
 
-## pre_permit (58)
+## pre_permit (79)
 
 A live rezoning, variance or special-use case with a hearing date. The earliest signal we have; no tenant named yet.
 
@@ -208,6 +211,27 @@ A live rezoning, variance or special-use case with a hearing date. The earliest 
 | entitlement | `REZ-26-0000104` | 2026-07-02 | pre_permit | Dale Mabry | other | **50** | Rezoning case, hearing 2026-12-10 | 2055 N Dale Mabry Hwy | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=01VV7&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000109` | 2026-07-16 | pre_permit | Airport / Westshore | other | **50** | Rezoning case, hearing 2026-12-10 | 4507 W Gray St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=01YW8&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000110` | 2026-07-16 | pre_permit | Downtown Riverwalk | other | **50** | Rezoning case, hearing 2026-12-10 | 1710 N Tampa St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=01YWQ&agencyCode=TAMPA) |
+| hcaa_ppo | `HCAA-September2026-e6b3d5db` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-09/Planned%20Procurement%20Opportunities%20Report%20-%20September%202026.pdf) |
+| hcaa_ppo | `HCAA-September2026-10947e85` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-09/Planned%20Procurement%20Opportunities%20Report%20-%20September%202026.pdf) |
+| hcaa_ppo | `HCAA-September2026-ad95abed` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-09/Planned%20Procurement%20Opportunities%20Report%20-%20September%202026.pdf) |
+| hcaa_ppo | `HCAA-September2026-54d27399` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-09/Planned%20Procurement%20Opportunities%20Report%20-%20September%202026.pdf) |
+| hcaa_ppo | `HCAA-September2026-3efc626c` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-09/Planned%20Procurement%20Opportunities%20Report%20-%20September%202026.pdf) |
+| hcaa_ppo | `HCAA-September2026-b7eb271d` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-09/Planned%20Procurement%20Opportunities%20Report%20-%20September%202026.pdf) |
+| hcaa_ppo | `HCAA-September2026-c5222e12` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-09/Planned%20Procurement%20Opportunities%20Report%20-%20September%202026.pdf) |
+| hcaa_ppo | `HCAA-August2026-d8e930bc` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-08/Planned%20Procurement%20Opportunities%20Report%20-%20August%202026.pdf) |
+| hcaa_ppo | `HCAA-August2026-59cc5c29` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-08/Planned%20Procurement%20Opportunities%20Report%20-%20August%202026.pdf) |
+| hcaa_ppo | `HCAA-June2026-cf8437f6` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-06/Planned%20Procurement%20Opportunities%20Report%20-%20June%202026.pdf) |
+| hcaa_ppo | `HCAA-June2026-48b7ba61` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-06/Planned%20Procurement%20Opportunities%20Report%20-%20June%202026.pdf) |
+| hcaa_ppo | `HCAA-May2026-36a78686` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-04/Planned%20Procurement%20Opportunities%20Report%20-%20May%202026.pdf) |
+| hcaa_ppo | `HCAA-May2026-e25d2d9a` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-04/Planned%20Procurement%20Opportunities%20Report%20-%20May%202026.pdf) |
+| hcaa_ppo | `HCAA-May2026-6d4b74b7` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-04/Planned%20Procurement%20Opportunities%20Report%20-%20May%202026.pdf) |
+| hcaa_ppo | `HCAA-May2026-39c7e7fa` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-04/Planned%20Procurement%20Opportunities%20Report%20-%20May%202026.pdf) |
+| hcaa_ppo | `HCAA-April2026-fd7b5e17` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-04/Planned%20Procurement%20Opportunities%20Report%20-%20April%202026.pdf) |
+| hcaa_ppo | `HCAA-April2026-71c4ecd9` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-04/Planned%20Procurement%20Opportunities%20Report%20-%20April%202026.pdf) |
+| hcaa_ppo | `HCAA-March2026-e1be3f14` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-03/Planned%20Procurement%20Opportunities%20Report%20-%20March%202026.pdf) |
+| hcaa_ppo | `HCAA-March2026-d7437762` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-03/Planned%20Procurement%20Opportunities%20Report%20-%20March%202026.pdf) |
+| hcaa_ppo | `HCAA-March2026-fa3c8670` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-03/Planned%20Procurement%20Opportunities%20Report%20-%20March%202026.pdf) |
+| hcaa_ppo | `HCAA-March2026-6fe634a2` | — | pre_permit | Airport / Westshore | relationship | **38** | Hillsborough County Aviation Authority | Tampa International Airport | — | — | [record](https://www.tampaairport.com/sites/default/files/2026-03/Planned%20Procurement%20Opportunities%20Report%20-%20March%202026.pdf) |
 
 ## revision (50)
 
@@ -277,7 +301,7 @@ A change to an in-flight permit. The job is active.
 | Downtown Tampa |  |  |  |  |  | 1 | **1** |
 | Westshore Marina |  |  |  |  | 1 | 7 | **8** |
 | Dale Mabry | 2 | 2 |  | 1 | 2 | 8 | **15** |
-| Airport / Westshore | 1 |  | 3 | 4 | 8 | 19 | **35** |
+| Airport / Westshore | 1 |  | 3 | 4 | 8 | 19 | **56** |
 
 ## Already permitted (62)
 
@@ -393,4 +417,4 @@ The contractor of record on every enriched permit, from its own Accela page. Thi
 - **Accela enrichment** filled 136 of 136 permit rows from their own record pages (136 fetched this run, 0 from cache, 0 failed). That is where the contractor of record, the job valuation, the real square footage and the applicant's phone and email come from — the ArcGIS layer has none of them.
 - **CRA grants** are the only source with a real dollar figure (`TOTALPROJECTCOST`); a grant that is Awarded and not Completed has committed money and outstanding work.
 
-Signals outside every tracked submarket: 419 of 642.
+Signals outside every tracked submarket: 648 of 892.

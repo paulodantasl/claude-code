@@ -1,0 +1,88 @@
+{
+  "retrieved_at": "2026-09-14T10:37:30+00:00",
+  "census": {
+    "one_line": [
+      {
+        "address": "1050 Water St, Tampa, FL 33602",
+        "expected_hood": "waterst",
+        "status": 200,
+        "content_type": "application/json",
+        "n_matches": 0
+      },
+      {
+        "address": "1616 E 7th Ave, Tampa, FL 33605",
+        "expected_hood": "ybor",
+        "status": 200,
+        "content_type": "application/json",
+        "n_matches": 1,
+        "lon": -82.441460343029,
+        "lat": 27.960332331173,
+        "matched": "1616 E 7TH AVE, TAMPA, FL, 33605",
+        "hood": "ybor",
+        "agrees": true
+      },
+      {
+        "address": "253 N West Shore Blvd, Tampa, FL 33609",
+        "expected_hood": "airport",
+        "status": 200,
+        "content_type": "application/json",
+        "n_matches": 1,
+        "lon": -82.524155107224,
+        "lat": 27.946456976484,
+        "matched": "253 N WEST SHORE BLVD, TAMPA, FL, 33609",
+        "hood": "airport",
+        "agrees": true
+      },
+      {
+        "address": "12908 N Dale Mabry Hwy, Tampa, FL 33618",
+        "expected_hood": null,
+        "status": 200,
+        "content_type": "application/json",
+        "n_matches": 1,
+        "lon": -82.5043937309,
+        "lat": 28.063877502186,
+        "matched": "12908 N DALE MABRY HWY, TAMPA, FL, 33618",
+        "hood": null,
+        "agrees": null
+      }
+    ],
+    "benchmark": null,
+    "batch": {
+      "status": 200,
+      "bytes": 495,
+      "head": "\"1\",\"1050 Water St, Tampa, FL, 33602\",\"Tie\"\n\"2\",\"1616 E 7th Ave, Tampa, FL, 33605\",\"Match\",\"Exact\",\"1616 E 7TH AVE, TAMPA, FL, 33605\",\"-82.441460343028,27.960332331173\",\"104524202\",\"L\"\n\"3\",\"253 N West Shore Blvd, Tampa, FL, 33609\",\"Match\",\"Exact\",\"253 N WEST SHORE BLVD, TAMPA, FL, 33609\",\"-82.524155107224,27.946456976484\",\"104524580\",\"R\"\n\"4\",\"12908 N Dale Mabry Hwy, Tampa, FL, 33618\",\"Match\",\"Exac"
+    }
+  },
+  "ahca": {
+    "hidden_fields": [],
+    "selects": [
+      "AHCAFieldOffice",
+      "CurrentEmergencyActions",
+      "FacilityTypeSelection",
+      "IsForProfit",
+      "LicenseStatus",
+      "OpenClosed_LicenseStatus",
+      "countySelection"
+    ],
+    "text_inputs": [
+      "general-address",
+      "general-name"
+    ],
+    "script_urls": [
+      "/Facility-Search/FacilityLocateSearch",
+      "/Facility-Search/FacilityProximitySearch"
+    ],
+    "post_county_only": {
+      "status": 400,
+      "bytes": 0,
+      "content_type": "",
+      "hillsborough_mentions": 0
+    },
+    "post_county_+_type": {
+      "status": 400,
+      "bytes": 0,
+      "content_type": "",
+      "hillsborough_mentions": 0
+    }
+  }
+}
