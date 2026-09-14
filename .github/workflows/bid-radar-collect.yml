@@ -66,9 +66,11 @@ jobs:
         run: python -m playwright install --with-deps chromium || echo "chromium unavailable"
 
       - name: DISCOVER — Hillsborough Clerk NOC search
-        # workflow_dispatch is unavailable until this file reaches the default
-        # branch, so the phase-4 branch runs it on push.
-        if: ${{ endsWith(github.ref, '-p4') || (github.event_name == 'workflow_dispatch' && inputs.discover != 'false') }}
+        # Settled: both public-records hosts refuse cloud traffic (PLAN.md §3
+        # #6c), and Accela replaced the route. Kept so the finding can be
+        # re-checked on demand, but no longer run on every push — it cost 100
+        # seconds a run to re-prove something we already know.
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.discover != 'false' }}
         continue-on-error: true
         run: python bid_radar/discover_noc.py
 
