@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tampa Bid Radar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS — light is the base set; dark redefines tokens only.
+   Neutrals are biased green to sit with the ink (#17231F).
+   ============================================================ */
+:root{
+  --paper:#FBFAF7;
+  --panel:#FFFFFF;
+  --panel-2:#F4F2EC;
+  --ink:#17231F;
+  --ink-2:#5A6560;
+  --ink-3:#8A938E;
+  --rule:#D9D7CF;
+  --rule-2:#EDEBE4;
+  --go:#0F6B5C;
+  --go-soft:#DCEAE5;
+  --hold:#8A5A00;
+  --hold-soft:#F3E7CE;
+  --hot:#A31F34;
+  --hot-soft:#F6DEE2;
+  --off:#9A9A93;
+  --off-soft:#EFEFEA;
+  --shadow:none;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#121614;
+    --panel:#191F1C;
+    --panel-2:#212926;
+    --ink:#E9EEEB;
+    --ink-2:#9BA8A2;
+    --ink-3:#71807A;
+    --rule:#2B3531;
+    --rule-2:#222B28;
+    --go:#4FB39B;
+    --go-soft:#17322C;
+    --hold:#D7A64F;
+    --hold-soft:#332813;
+    --hot:#E97187;
+    --hot-soft:#361A20;
+    --off:#7C857F;
+    --off-soft:#222926;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121614;
+  --panel:#191F1C;
+  --panel-2:#212926;
+  --ink:#E9EEEB;
+  --ink-2:#9BA8A2;
+  --ink-3:#71807A;
+  --rule:#2B3531;
+  --rule-2:#222B28;
+  --go:#4FB39B;
+  --go-soft:#17322C;
+  --hold:#D7A64F;
+  --hold-soft:#332813;
+  --hot:#E97187;
+  --hot-soft:#361A20;
+  --off:#7C857F;
+  --off-soft:#222926;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Archivo','Helvetica Neue',Arial,sans-serif;
+  font-size:16px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+.wrap{max-width:1120px;margin:0 auto;padding-block:20px 80px;padding-left:18px;padding-right:18px}
+a{color:var(--go)}
+h1,h2,h3{margin:0;font-weight:800;letter-spacing:-0.02em;line-height:1.08;text-wrap:balance}
+h1{font-size:clamp(30px,6.5vw,52px)}
+h2{font-size:clamp(20px,3.4vw,27px);margin-bottom:6px}
+h3{font-size:17px;font-weight:600;letter-spacing:-0.01em}
+p{margin:0 0 12px}
+.sub{color:var(--ink-2);font-size:15px;max-width:66ch}
+.small{font-size:13px;color:var(--ink-2)}
+.mono{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* header */
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;
+  border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:18px;flex-wrap:wrap}
+.brand{font-weight:600;font-size:13px;color:var(--ink-2);margin-bottom:10px}
+.hcontrols{display:flex;gap:8px;align-items:center;flex:none}
+.lang{display:inline-flex;border:1.5px solid var(--ink);border-radius:2px;overflow:hidden;flex:none}
+.lang button{border:0;background:transparent;font:inherit;font-size:12px;font-weight:600;
+  padding:6px 10px;cursor:pointer;color:var(--ink)}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+/* provenance strip */
+.vintage{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:22px;font-size:12px}
+.tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);
+  background:var(--panel);padding:4px 9px;border-radius:2px;color:var(--ink-2)}
+.tag b{color:var(--ink);font-weight:600}
+.tag.warn{background:var(--hold-soft);border-color:var(--hold);color:var(--hold)}
+.tag.warn b{color:var(--hold)}
+
+section{margin:38px 0 0}
+.sec-head{border-top:1px solid var(--rule);padding-top:16px;margin-bottom:16px}
+.sec-head .eyebrow{font-size:11px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:7px;font-family:'IBM Plex Mono',ui-monospace,monospace}
+
+/* ---------- PIPELINE BOARD ---------- */
+.pipe-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.pipe-stats{display:flex;flex-wrap:wrap;gap:18px;font-size:13px;color:var(--ink-2)}
+.pipe-stats b{color:var(--ink);font-weight:700;font-size:15px}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:12px;align-items:start}
+.col{background:var(--panel-2);border:1px solid var(--rule-2);padding:10px;min-width:0}
+.col-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  padding-bottom:8px;margin-bottom:9px;border-bottom:1px solid var(--rule)}
+.col-head .nm{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.col-head .ct{font-size:12px;color:var(--ink-2);font-family:'IBM Plex Mono',monospace}
+.col[data-tone="off"] .col-head .nm{color:var(--ink-3)}
+.col[data-tone="hold"] .col-head .nm{color:var(--hold)}
+.col[data-tone="go"] .col-head .nm{color:var(--go)}
+.col[data-tone="won"] .col-head .nm{color:var(--go)}
+.col[data-tone="hot"] .col-head .nm{color:var(--hot)}
+.opp{background:var(--panel);border:1px solid var(--rule);border-left:3px solid var(--rule);
+  padding:9px 10px;margin-bottom:8px;font-size:13px}
+.opp:last-child{margin-bottom:0}
+.opp[data-tone="off"]{border-left-color:var(--off)}
+.opp[data-tone="hold"]{border-left-color:var(--hold)}
+.opp[data-tone="go"]{border-left-color:var(--go)}
+.opp[data-tone="won"]{border-left-color:var(--go);background:var(--go-soft)}
+.opp[data-tone="hot"]{border-left-color:var(--hot)}
+.opp .nm{font-weight:600;line-height:1.25;margin-bottom:3px}
+.opp .loc{font-size:11.5px;color:var(--ink-2);margin-bottom:6px}
+.opp .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:11.5px;color:var(--ink-2)}
+.opp .row b{color:var(--ink);font-weight:700}
+.opp .act{margin-top:7px;padding-top:7px;border-top:1px dotted var(--rule);font-size:11.5px;color:var(--ink-2)}
+.opp .act b{color:var(--ink);font-weight:600}
+.opp select,.opp input{font:inherit;font-size:11.5px;padding:2px 4px;border:1px solid var(--rule);
+  background:var(--panel);color:var(--ink);border-radius:2px;max-width:100%}
+.opp .tools{display:flex;gap:6px;margin-top:7px;align-items:center;flex-wrap:wrap}
+.xbtn{border:1px solid var(--rule);background:transparent;color:var(--ink-2);font:inherit;
+  font-size:11px;padding:2px 7px;cursor:pointer;border-radius:2px}
+.xbtn:hover{border-color:var(--hot);color:var(--hot)}
+.ex-chip{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--hold);background:var(--hold-soft);border:1px solid var(--hold);padding:1px 5px;border-radius:2px}
+.empty{font-size:12px;color:var(--ink-3);padding:6px 2px;font-style:italic}
+
+/* add form */
+.addform{background:var(--panel);border:1px solid var(--ink);padding:14px;margin-bottom:14px}
+.addgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.addgrid label{display:block;font-size:11px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-2);margin-bottom:3px}
+.addgrid input,.addgrid select{width:100%;font:inherit;font-size:13px;padding:6px 8px;
+  border:1px solid var(--rule);background:var(--panel);color:var(--ink);border-radius:2px}
+
+/* ---------- DIALS + CALIBRATION ---------- */
+.calwrap{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:860px){.calwrap{grid-template-columns:1.55fr 1fr}}
+.dials{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:16px;
+  background:var(--panel);border:1px solid var(--rule);padding:16px}
+.dial label{display:block;font-size:13px;font-weight:600;margin-bottom:2px}
+.dial .hint{font-size:12px;color:var(--ink-2);margin-bottom:8px;min-height:44px}
+.dial input[type=range]{width:100%;accent-color:var(--go)}
+.dial output{font-weight:800;font-size:19px;font-family:'IBM Plex Mono',monospace}
+.calib{background:var(--panel);border:1px solid var(--rule);padding:16px;display:flex;flex-direction:column;gap:12px}
+.calrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  padding-bottom:9px;border-bottom:1px solid var(--rule-2)}
+.calrow:last-of-type{border-bottom:0;padding-bottom:0}
+.calrow .k{font-size:12.5px;color:var(--ink-2)}
+.calrow .v{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;text-align:right}
+.calrow .v .m{color:var(--ink-3)}
+.calrow .v .a{color:var(--go);font-weight:500}
+.calrow .v .none{color:var(--ink-3);font-style:italic;font-family:'Archivo',sans-serif;font-size:12.5px}
+
+/* ---------- CHART ---------- */
+.chart{background:var(--panel);border:1px solid var(--rule);padding:18px 16px 12px}
+.bars{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;height:250px;margin-top:8px}
+.barcol{display:flex;flex-direction:column;justify-content:flex-end;height:100%;min-width:0}
+.barval{font-size:12px;font-weight:700;text-align:center;margin-bottom:4px;
+  font-family:'IBM Plex Mono',monospace}
+.barstack{flex:1;min-height:0;display:flex;flex-direction:column-reverse;justify-content:flex-start}
+.seg{width:100%;min-height:0}
+.barlabel{font-size:12px;text-align:center;padding-top:6px;border-top:1px solid var(--rule);
+  color:var(--ink-2);font-family:'IBM Plex Mono',monospace}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;display:inline-block;border-radius:1px;flex:none}
+
+/* ---------- TABLES ---------- */
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;font-size:12px;color:var(--ink-2);
+  border-bottom:1px solid var(--ink);padding:0 8px 7px 0;white-space:nowrap}
+th[data-sort]{cursor:pointer;user-select:none}
+th[data-sort]:hover{color:var(--ink)}
+th .ind{color:var(--go);font-weight:800}
+td{padding:11px 8px 11px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+.num{text-align:right;padding-right:0}
+.score{display:inline-block;min-width:38px;text-align:center;font-weight:800;
+  padding:3px 6px;border-radius:2px;font-size:13px;font-family:'IBM Plex Mono',monospace}
+.s-hi{background:var(--go);color:var(--panel)}
+.s-mid{background:var(--hold-soft);color:var(--hold)}
+.s-lo{background:var(--off-soft);color:var(--off)}
+.meter{height:6px;background:var(--off-soft);margin-top:6px;max-width:180px}
+.meter i{display:block;height:100%;background:var(--go)}
+.beyond{color:var(--ink-3);font-size:11.5px;display:block}
+
+/* ---------- SIGNALS ---------- */
+.sigtable td{vertical-align:middle}
+.lead{display:flex;align-items:center;gap:8px;min-width:150px}
+.leadbar{height:8px;background:var(--go-soft);border-left:2px solid var(--go);flex:none}
+.leadtxt{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-2);white-space:nowrap}
+.wired{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  padding:2px 6px;border-radius:2px;white-space:nowrap}
+.w-live{background:var(--go-soft);color:var(--go);border:1px solid var(--go)}
+.w-part{background:var(--hold-soft);color:var(--hold);border:1px solid var(--hold)}
+.w-none{background:var(--off-soft);color:var(--off);border:1px solid var(--off)}
+.endpoint{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-2);
+  word-break:break-all;display:block;margin-top:3px}
+
+/* ---------- PROJECTS ---------- */
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.chip{border:1px solid var(--rule);background:var(--panel);font:inherit;font-size:12.5px;
+  font-weight:500;padding:6px 11px;cursor:pointer;border-radius:2px;color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.proj{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--rule);
+  padding:14px 16px;margin-bottom:10px}
+.proj.f5,.proj.f4{border-left-color:var(--go)}
+.proj.f3{border-left-color:var(--hold)}
+.proj.f2,.proj.f1{border-left-color:var(--off)}
+.proj-top{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
+.proj-meta{font-size:12.5px;color:var(--ink-2);margin:3px 0 9px}
+.angle{font-size:14px;margin-bottom:10px;max-width:78ch}
+.facts{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--ink-2)}
+.facts b{color:var(--ink);font-weight:700}
+.window{margin-top:11px;height:22px;position:relative;background:var(--off-soft)}
+.window i{position:absolute;top:0;bottom:0;background:var(--go-soft);border-left:2px solid var(--go)}
+.window u{position:absolute;top:0;bottom:0;width:1px;background:var(--ink);opacity:.45;text-decoration:none}
+.window em{position:absolute;font-style:normal;font-size:11px;color:var(--go);font-weight:700;
+  top:3px;padding-left:5px;white-space:nowrap}
+.wscale{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-2);margin-top:3px;
+  font-family:'IBM Plex Mono',monospace}
+
+.note{background:var(--hold-soft);border-left:3px solid var(--hold);padding:12px 14px;font-size:13.5px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.btn{border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);font:inherit;
+  font-size:13px;font-weight:600;padding:9px 14px;cursor:pointer;border-radius:2px}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--go);outline-offset:2px}
+
+@media (max-width:640px){
+  .hide-s{display:none}
+  td,th{font-size:13px}
+  .bars{height:200px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .seg{transition:height .25s ease}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <div class="brand" data-t="brand"></div>
+    <h1 data-t="title"></h1>
+  </div>
+  <div class="hcontrols">
+    <div class="lang" role="group" aria-label="Language">
+      <button id="en" aria-pressed="true">EN</button>
+      <button id="pt" aria-pressed="false">PT-BR</button>
+    </div>
+  </div>
+</header>
+
+<div class="vintage" id="vintage"></div>
+
+<p class="sub" data-t="lede"></p>
+
+<!-- PIPELINE -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow" data-t="eb_pipe"></div>
+    <h2 data-t="h_pipe"></h2>
+    <p class="sub" data-t="p_pipe"></p>
+  </div>
+  <div id="exbanner"></div>
+  <div class="pipe-bar">
+    <div class="pipe-stats" id="pipestats"></div>
+    <div class="tools" style="margin-top:0">
+      <button class="btn" id="addtoggle" data-t="btn_add"></button>
+      <button class="btn ghost" id="oppcsv" data-t="btn_oppcsv"></button>
+    </div>
+  </div>
+  <form class="addform" id="addform" hidden>
+    <div class="addgrid">
+      <div><label for="f_name" data-t="f_name"></label><input id="f_name" required></div>
+      <div><label for="f_hood" data-t="f_hood"></label><select id="f_hood"></select></div>
+      <div><label for="f_trade" data-t="f_trade"></label><select id="f_trade"></select></div>
+      <div><label for="f_stage" data-t="f_stage"></label><select id="f_stage"></select></div>
+      <div><label for="f_val" data-t="f_val"></label><input id="f_val" type="number" min="0" step="1000"></div>
+      <div><label for="f_bid" data-t="f_bid"></label><input id="f_bid" type="date"></div>
+      <div><label for="f_owner" data-t="f_owner"></label><input id="f_owner"></div>
+      <div><label for="f_src" data-t="f_src"></label><select id="f_src"></select></div>
+      <div><label for="f_next" data-t="f_next"></label><input id="f_next"></div>
+    </div>
+    <div class="tools">
+      <button class="btn" type="submit" data-t="btn_save"></button>
+      <button class="btn ghost" type="button" id="addcancel" data-t="btn_cancel"></button>
+    </div>
+  </form>
+  <div class="board" id="board"></div>
+</section>
+
+<!-- CALIBRATION -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow" data-t="eb_dials"></div>
+    <h2 data-t="h_dials"></h2>
+    <p class="sub" data-t="p_dials"></p>
+  </div>
+  <div class="calwrap">
+    <div class="dials">
+      <div class="dial">
+        <label for="d1" data-t="d1"></label>
+        <div class="hint" data-t="d1h"></div>
+        <input id="d1" type="range" min="60" max="500" step="10" value="200">
+        <output id="o1"></output>
+      </div>
+      <div class="dial">
+        <label for="d2" data-t="d2"></label>
+        <div class="hint" data-t="d2h"></div>
+        <input id="d2" type="range" min="50" max="900" step="25" value="325">
+        <output id="o2"></output>
+      </div>
+      <div class="dial">
+        <label for="d3" data-t="d3"></label>
+        <div class="hint" data-t="d3h"></div>
+        <input id="d3" type="range" min="2" max="40" step="1" value="12">
+        <output id="o3"></output>
+      </div>
+      <div class="dial">
+        <label for="d4" data-t="d4"></label>
+        <div class="hint" data-t="d4h"></div>
+        <input id="d4" type="range" min="3" max="24" step="1" value="9">
+        <output id="o4"></output>
+      </div>
+      <div class="dial">
+        <label for="d5" data-t="d5"></label>
+        <div class="hint" data-t="d5h"></div>
+        <input id="d5" type="range" min="1" max="6" step="1" value="2">
+        <output id="o5"></output>
+      </div>
+    </div>
+    <div class="calib">
+      <h3 data-t="h_cal"></h3>
+      <div id="calbody"></div>
+      <div class="tools" style="margin-top:auto">
+        <button class="btn" id="applyactual" data-t="btn_apply"></button>
+        <button class="btn ghost" id="reset" data-t="btn_reset"></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHART -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow" data-t="eb_chart"></div>
+    <h2 data-t="h_chart"></h2>
+    <p class="sub" data-t="p_chart"></p>
+  </div>
+  <div class="chart">
+    <div class="bars" id="bars"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+</section>
+
+<!-- SUBMARKETS -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow" data-t="eb_sub"></div>
+    <h2 data-t="h_sub"></h2>
+    <p class="sub" data-t="p_sub"></p>
+  </div>
+  <div class="tscroll">
+    <table id="subtable">
+      <thead><tr>
+        <th data-sort="name" data-t="th_sub"></th>
+        <th data-sort="won" data-t="th_score"></th>
+        <th class="num hide-s" data-sort="units" data-t="th_units"></th>
+        <th class="num hide-s" data-sort="fitouts" data-t="th_fit"></th>
+        <th class="num" data-sort="value" data-t="th_val"></th>
+        <th class="num" data-sort="won" data-t="th_won"></th>
+        <th class="num" data-sort="live" data-t="th_live"></th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="tools">
+    <button class="btn" id="csv" data-t="btn_csv"></button>
+  </div>
+</section>
+
+<!-- SIGNALS -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow" data-t="eb_sig"></div>
+    <h2 data-t="h_sig"></h2>
+    <p class="sub" data-t="p_sig"></p>
+  </div>
+  <div class="tscroll">
+    <table class="sigtable" id="sigtable">
+      <thead><tr>
+        <th data-t="th_signal"></th>
+        <th data-t="th_lead"></th>
+        <th class="hide-s" data-t="th_source"></th>
+        <th data-t="th_wired"></th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <p class="sub" style="margin-top:14px" data-t="p_sig2"></p>
+</section>
+
+<!-- PROJECTS -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow" data-t="eb_proj"></div>
+    <h2 data-t="h_proj"></h2>
+    <p class="sub" data-t="p_proj"></p>
+  </div>
+  <div class="filters" id="filters"></div>
+  <div id="projects"></div>
+</section>
+
+<!-- INSURANCE -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow" data-t="eb_ins"></div>
+    <h2 data-t="h_ins"></h2>
+  </div>
+  <div class="note" data-t="p_ins"></div>
+</section>
+
+<!-- METHOD -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow" data-t="eb_method"></div>
+    <h2 data-t="h_method"></h2>
+  </div>
+  <p class="sub" data-t="p_method"></p>
+  <p class="sub" data-t="p_method2"></p>
+</section>
+
+</div>
+
+<script>
+/* =====================================================================
+   TAMPA BID RADAR v2
+
+   Provenance rule, unchanged from v1:
+     - Pipeline FACTS (name, hood, status, dates, units, floors, developer,
+       architect) come from the public Tampa market page, retrieved 13 Sep 2026.
+     - Anything with a "fit", "access" or "seed" value is OUR judgement.
+     - Anything in EXAMPLES is an ILLUSTRATIVE PLACEHOLDER, not a real lease,
+       tenant or bid. It disappears the moment a real row is added.
+   ===================================================================== */
+
+const DATA_VINTAGE = '2026-09-13';
+
+const P = [
+ {id:'gasworx', name:'Gasworx', hood:'Ybor City', cat:'Mixed-Use', status:'UC',
+  start:2023, done:2027, units:5000, floors:10, dev:'KETTLER / Darryl Shaw', arch:'S9 / Sasaki',
+  fit:5, access:0.75, seed:6, type:'retail',
+  en:'The single biggest rooftop event in Tampa. 5,000 units in Ybor means ground-floor and adjacent-block fitouts — salon, dental, coffee, quick-service — from 2027 through 2030. Master developer uses national GCs for the shell; the fitouts are bid individually by the tenants. That is our lane.',
+  pt:'O maior evento de "rooftops" de Tampa. 5.000 unidades em Ybor significa fitouts no térreo e nas quadras vizinhas — salão, odontologia, café, fast-food — de 2027 a 2030. O incorporador usa GCs nacionais na estrutura; os fitouts são licitados pelos próprios inquilinos. Essa é a nossa faixa.'},
+
+ {id:'pendry', name:'The Pendry Tampa and Residences', hood:'Downtown Riverwalk', cat:'Mixed-Use', status:'UC',
+  start:2023, done:2027, units:207, floors:38, dev:'Two Roads / Pendry', arch:'Arquitectonica',
+  fit:4, access:0.45, seed:3, type:'hospitality',
+  en:'Delivers in about 16 months, so tenant fitouts at the base are being scoped now. Luxury hotel F&B and retail — high finish, high schedule pressure, good margin if we prequalify early. Two Roads will vet heavily; get in front of them this quarter or miss it.',
+  pt:'Entrega em cerca de 16 meses, então os fitouts dos inquilinos na base estão sendo escopados agora. F&B e varejo de hotel de luxo — acabamento alto, forte pressão de prazo, boa margem se nos pré-qualificarmos cedo. A Two Roads avalia com rigor; procure-os neste trimestre ou perca a janela.'},
+
+ {id:'manor', name:'Manor Riverwalk District', hood:'Downtown Tampa', cat:'Mixed-Use', status:'UC',
+  start:2026, done:2028, units:369, floors:24, dev:'Related Group', arch:'Arquitectonica',
+  fit:3, access:0.35, seed:2, type:'retail',
+  en:'First phase of a $1B master plan. Related runs a closed subcontractor and GC bench — realistic entry is a ground-floor tenant fitout after CO, not the base building. Worth tracking for the tenant names, not for a direct approach to Related.',
+  pt:'Primeira fase de um master plan de US$ 1 bi. A Related trabalha com um banco fechado de GCs e subs — a entrada realista é um fitout de inquilino no térreo após o habite-se, não o edifício base. Vale acompanhar pelos nomes dos inquilinos, não para abordagem direta à Related.'},
+
+ {id:'onetampa', name:'ONE Tampa', hood:'Downtown Tampa', cat:'Residences', status:'UC',
+  start:2024, done:2027, units:225, floors:42, dev:'Kolter Urban', arch:'Adache Group',
+  fit:2, access:0.3, seed:1, type:'retail',
+  en:'Topped out at 519 ft. Almost entirely residential, so very little tenant work. Value to us is as a demand signal for Downtown service retail, not as a job.',
+  pt:'Estrutura concluída a 519 pés. Quase inteiramente residencial, portanto pouquíssimo trabalho de inquilino. O valor para nós é como sinal de demanda para varejo de serviços no Downtown, não como obra.'},
+
+ {id:'ora', name:'Hotel Ora + Private Residences', hood:'Downtown Tampa', cat:'Hotel', status:'BG',
+  start:2026, done:2029, units:31, floors:39, dev:'ARC Realty / Prosper / Sunwest', arch:'Adache Group',
+  fit:4, access:0.65, seed:3, type:'hospitality',
+  en:'Regional developer group with Sunwest Construction attached — a smaller, more reachable ownership than Related or SPP. Hotel amenity, spa and F&B fitouts in 2028-29 fit our commercial TI profile closely. Best relationship target on this list.',
+  pt:'Grupo regional com a Sunwest Construction envolvida — propriedade menor e mais acessível que Related ou SPP. Fitouts de amenidades, spa e F&B do hotel em 2028-29 se encaixam bem no nosso perfil de TI comercial. Melhor alvo de relacionamento desta lista.'},
+
+ {id:'tgh', name:'TGH Taneja Surgical & Transplant Tower', hood:'Davis Islands', cat:'Healthcare', status:'UC',
+  start:2024, done:2028, units:0, floors:13, dev:'Tampa General Hospital', arch:'—',
+  fit:5, access:0.6, seed:5, type:'medical',
+  en:'Healthcare is our proven niche. The tower itself goes to a national healthcare GC, but a 13-floor surgical and transplant program pulls specialist practices, imaging and dental-adjacent offices into Davis Islands, Hyde Park and Bayshore for years afterward. Those medical office fitouts are exactly what we already price and build.',
+  pt:'Saúde é o nosso nicho comprovado. A torre em si vai para um GC nacional de healthcare, mas um programa cirúrgico e de transplantes de 13 andares atrai consultórios especializados, imagem e clínicas odontológicas para Davis Islands, Hyde Park e Bayshore por anos. Esses fitouts de consultório são exatamente o que já orçamos e construímos.'},
+
+ {id:'ws2', name:'Water Street Phase Two', hood:'Water Street', cat:'Mixed-Use', status:'BG',
+  start:2025, done:2029, units:420, floors:26, dev:'Strategic Property Partners', arch:'Gensler',
+  fit:3, access:0.3, seed:3, type:'retail',
+  en:'SPP is the most active developer in the market and runs a tightly controlled vendor list. Treat as a tenant-side opportunity in 2029, or as a source of subcontractor relationships we can use elsewhere.',
+  pt:'A SPP é a incorporadora mais ativa do mercado e mantém uma lista de fornecedores bem fechada. Trate como oportunidade pelo lado do inquilino em 2029, ou como fonte de relacionamentos com subs que podemos usar em outros lugares.'},
+
+ {id:'wsent', name:'Water Street Entertainment District', hood:'Water Street', cat:'Mixed-Use', status:'ANN',
+  start:2027, done:2031, units:0, floors:2, dev:'SPP / Vinik Sports Group', arch:'Gensler',
+  fit:4, access:0.3, seed:8, type:'retail',
+  en:'Two floors, pure restaurant and retail product — the highest concentration of fitout work per square foot in the whole pipeline. The obstacle is access, not fit: SPP and Vinik will pick GCs from a short list. Worth a two-year relationship play starting now.',
+  pt:'Dois andares, produto puro de restaurante e varejo — a maior concentração de trabalho de fitout por pé quadrado de todo o pipeline. O obstáculo é o acesso, não a aderência: SPP e Vinik escolherão GCs de uma lista curta. Vale um trabalho de relacionamento de dois anos começando agora.'},
+
+ {id:'livenation', name:'Live Nation Gasworx', hood:'Ybor City', cat:'Entertainment', status:'ANN',
+  start:2027, done:2028, units:0, floors:0, dev:'KETTLER', arch:'TVS',
+  fit:3, access:0.5, seed:3, type:'hospitality',
+  en:'Music venue inside Gasworx. Back-of-house, concessions and bar fitouts are specialty work on a hard opening date. Same owner as Gasworx, so a relationship built on one carries to the other.',
+  pt:'Casa de shows dentro do Gasworx. Fitouts de bastidores, concessões e bares são trabalho especializado com data de abertura rígida. Mesmo proprietário do Gasworx, então um relacionamento construído em um vale para o outro.'},
+
+ {id:'yborharbor', name:'Ybor Harbor', hood:'Ybor City', cat:'Mixed-Use', status:'ANN',
+  start:2027, done:2034, units:2586, floors:0, dev:'Darryl Shaw', arch:'Morris Adjmi',
+  fit:3, access:0.6, seed:4, type:'retail',
+  en:'2,586 units but delivery runs to 2034 — outside any bid horizon we should staff against. Keep on watch: it doubles the Ybor thesis, and Darryl Shaw is the same owner as Gasworx.',
+  pt:'2.586 unidades, mas a entrega vai até 2034 — fora de qualquer horizonte de licitação para o qual devamos alocar equipe. Manter em observação: dobra a tese de Ybor, e Darryl Shaw é o mesmo proprietário do Gasworx.'},
+
+ {id:'marinapointe', name:'Marina Pointe: Luna', hood:'Westshore Marina', cat:'Residences', status:'ANN',
+  start:2026, done:2028, units:151, floors:17, dev:'BTI Partners', arch:'Kobi Karp',
+  fit:3, access:0.6, seed:2, type:'retail',
+  en:'Part of a larger marina district build-out. Modest unit count, but Westshore Marina is filling in and BTI is a reachable Florida developer. Neighborhood retail and service fitouts follow through 2029.',
+  pt:'Parte de um build-out maior do distrito da marina. Contagem de unidades modesta, mas Westshore Marina está se adensando e a BTI é uma incorporadora da Flórida acessível. Fitouts de varejo e serviços de bairro seguem até 2029.'},
+
+ {id:'aqua', name:'AQUA at Westshore Yacht Club', hood:'Westshore Marina', cat:'Residences', status:'OPEN',
+  start:2024, done:2026, units:248, floors:17, dev:'WCI / Lennar', arch:'Curtis Gaines Hall Jones',
+  fit:4, access:0.8, seed:1, type:'retail',
+  en:'Delivered April 2026 and absorbing residents right now. This is the only project on the list generating demand today — service retail, medical and salon tenants signing Westshore leases over the next 18 months. Nearest-term revenue on the board.',
+  pt:'Entregue em abril de 2026 e absorvendo moradores agora. É o único projeto da lista gerando demanda hoje — varejo de serviços, clínicas e salões assinando contratos em Westshore nos próximos 18 meses. A receita mais próxima do quadro.'},
+
+ {id:'rays', name:'Tampa Bay Rays Stadium', hood:'Dale Mabry', cat:'Stadium', status:'ANN',
+  start:2027, done:2029, units:0, floors:0, dev:'Tampa Bay Rays / Hines', arch:'Populous',
+  fit:3, access:0.4, seed:7, type:'hospitality',
+  en:'The stadium bowl is out of reach. The district around it is not — restaurants, bars, retail and services along Dale Mabry will chase a 2029 opening, and that corridor is closer to our existing subcontractor base than Downtown is.',
+  pt:'O estádio em si está fora de alcance. O distrito ao redor não — restaurantes, bares, varejo e serviços ao longo da Dale Mabry vão correr atrás da abertura de 2029, e esse corredor está mais perto da nossa base atual de subs do que o Downtown.'},
+
+ {id:'tpa', name:'Tampa International Airport (Expansion)', hood:'Airport / Westshore', cat:'Travel', status:'UC',
+  start:2024, done:2029, units:0, floors:0, dev:'Tampa International Airport', arch:'HOK',
+  fit:2, access:0.35, seed:4, type:'hospitality',
+  en:'Concession fitouts are real TI work but sit behind airport prequalification, badging and bonding requirements we do not hold today. Pursue only if we decide to build the public-work credential set deliberately.',
+  pt:'Fitouts de concessões são trabalho real de TI, mas exigem pré-qualificação aeroportuária, credenciamento e bonding que não temos hoje. Perseguir apenas se decidirmos construir deliberadamente o conjunto de credenciais de obra pública.'},
+
+ {id:'ashley', name:'601 N. Ashley Drive', hood:'Downtown Tampa', cat:'Mixed-Use', status:'ANN',
+  start:null, done:null, units:0, floors:48, dev:'STOCK Development', arch:'—',
+  fit:2, access:0.4, seed:2, type:'retail',
+  en:'Tallest in the pipeline at 48 floors but no start or completion date published. No bid window to plan against yet — leave it on watch.',
+  pt:'O mais alto do pipeline com 48 andares, mas sem data de início ou conclusão publicada. Ainda não há janela de licitação para planejar — deixar em observação.'}
+];
+
+const HOODS = [...new Set(P.map(p=>p.hood))];
+
+/* ---------- PIPELINE STAGES ---------- */
+const STAGES = [
+  {id:'signal',    tone:'off',  en:'Signal',    pt:'Sinal'},
+  {id:'qualified', tone:'hold', en:'Qualified', pt:'Qualificado'},
+  {id:'bidding',   tone:'go',   en:'Bidding',   pt:'Licitando'},
+  {id:'won',       tone:'won',  en:'Won',       pt:'Ganho'},
+  {id:'lost',      tone:'hot',  en:'Lost',      pt:'Perdido'}
+];
+const STAGE = Object.fromEntries(STAGES.map(s=>[s.id,s]));
+
+const TRADES = [
+  {id:'medical',     en:'Medical / dental office', pt:'Consultório médico / odonto'},
+  {id:'restaurant',  en:'Restaurant / bar',        pt:'Restaurante / bar'},
+  {id:'retail',      en:'Retail / service',        pt:'Varejo / serviços'},
+  {id:'office',      en:'Office',                  pt:'Escritório'},
+  {id:'hospitality', en:'Hotel / amenity',         pt:'Hotel / amenidades'},
+  {id:'other',       en:'Other',                   pt:'Outro'}
+];
+
+/* Where a row came from — mirrors the signal table below. */
+const SOURCES = [
+  {id:'permit',   en:'Building permit',        pt:'Alvará de obra'},
+  {id:'abt',      en:'Liquor licence (ABT)',   pt:'Licença de bebidas (ABT)'},
+  {id:'dbpr',     en:'DBPR food / lodging',    pt:'DBPR alimentação / hosp.'},
+  {id:'ahca',     en:'AHCA facility licence',  pt:'Licença AHCA'},
+  {id:'sunbiz',   en:'Sunbiz new entity',      pt:'Nova empresa (Sunbiz)'},
+  {id:'broker',   en:'Leasing broker',         pt:'Corretor de locação'},
+  {id:'siteplan', en:'Site plan / rezoning',   pt:'Projeto / rezoneamento'},
+  {id:'noc',      en:'Notice of Commencement', pt:'Notice of Commencement'},
+  {id:'referral', en:'Referral / relationship',pt:'Indicação / relacionamento'},
+  {id:'manual',   en:'Manual entry',           pt:'Entrada manual'}
+];
+
+/* ILLUSTRATIVE PLACEHOLDERS ONLY — no real tenant, lease or bid.
+   Deliberately generic ("Ground-floor F&B") so nothing here can be
+   mistaken for market intelligence. Replaced the moment a real row lands. */
+const EXAMPLES = [
+  {id:'x1', example:true, name:'Ground-floor F&B — Gasworx Blk A', hood:'Ybor City',
+   trade:'restaurant', stage:'signal', valueEst:340000, source:'broker',
+   bidDate:'2027-02-01', owner:'—', nextAction:'Identify leasing agent'},
+  {id:'x2', example:true, name:'Specialist practice — Davis Islands', hood:'Davis Islands',
+   trade:'medical', stage:'qualified', valueEst:520000, source:'ahca',
+   bidDate:'2026-12-15', owner:'—', nextAction:'Request drawings'},
+  {id:'x3', example:true, name:'Service retail — AQUA Westshore', hood:'Westshore Marina',
+   trade:'retail', stage:'bidding', valueEst:210000, source:'permit',
+   bidDate:'2026-10-20', owner:'—', nextAction:'Submit proposal'},
+  {id:'x4', example:true, name:'Hotel spa fitout — Ora', hood:'Downtown Tampa',
+   trade:'hospitality', stage:'signal', valueEst:610000, source:'siteplan',
+   bidDate:'2028-06-01', owner:'—', nextAction:'Prequalify with Sunwest'}
+];
+
+/* ---------- SIGNAL SOURCES ----------
+   leadLo/leadHi = months before the fitout goes out to bid.
+   wired: live | partial | none — against THIS repo's permit_scraper + ideal_apis. */
+const SIGNALS = [
+  {lo:12, hi:24, wired:'none',
+   en:'Retail leasing brochure / anchor announcement', pt:'Folheto de locação / anúncio de âncora',
+   sEn:'Developer leasing page; CoStar, Crexi, LoopNet', sPt:'Página de locação do incorporador; CoStar, Crexi, LoopNet',
+   note:'The leasing agent knows the tenant a year before any public record does.',
+   notePt:'O corretor sabe do inquilino um ano antes de qualquer registro público.'},
+
+  {lo:9, hi:18, wired:'none',
+   en:'Rezoning / site plan (DRC) submittal', pt:'Rezoneamento / projeto (DRC)',
+   sEn:'City of Tampa Construction Services; Hillsborough DSD agendas', sPt:'Construction Services de Tampa; pautas do Hillsborough DSD',
+   note:'Names the intended use, sometimes the tenant, before any lease is public.',
+   notePt:'Nomeia o uso pretendido, às vezes o inquilino, antes de qualquer contrato público.'},
+
+  {lo:6, hi:12, wired:'partial',
+   en:'New LLC registered to a submarket address', pt:'Nova LLC registrada em endereço do submercado',
+   sEn:'Sunbiz daily data downloads (fixed-width, free, weekdays)', sPt:'Downloads diários do Sunbiz (largura fixa, grátis, dias úteis)',
+   endpoint:'dos.fl.gov/sunbiz/other-services/data-downloads/daily-data/',
+   note:'ideal_apis.property already does OpenCorporates lookups — the daily bulk file is the missing half.',
+   notePt:'ideal_apis.property já consulta OpenCorporates — falta o arquivo diário em massa.'},
+
+  {lo:6, hi:12, wired:'none',
+   en:'AHCA health-care facility licence application', pt:'Pedido de licença de unidade de saúde (AHCA)',
+   sEn:'AHCA facility locator / licensure filings', sPt:'Localizador de unidades e licenciamento da AHCA',
+   note:'Highest-value signal for the medical TI niche we already win.',
+   notePt:'Sinal de maior valor para o nicho de TI médico que já ganhamos.'},
+
+  {lo:4, hi:9, wired:'none',
+   en:'Alcoholic beverage licence (2COP / 4COP) at address', pt:'Licença de bebidas (2COP / 4COP) no endereço',
+   sEn:'DBPR ABT daily licence status data (free CSV)', sPt:'Dados diários de licenças ABT do DBPR (CSV grátis)',
+   endpoint:'www2.myfloridalicense.com/alcoholic-beverages-and-tobacco/daily-license-status-reporting-data/',
+   note:'A liquor licence filed at a shell address is a restaurant fitout, every time.',
+   notePt:'Uma licença de bebidas em endereço de shell é sempre um fitout de restaurante.'},
+
+  {lo:3, hi:9, wired:'none',
+   en:'DBPR food service / lodging licence', pt:'Licença DBPR de alimentação / hospedagem',
+   sEn:'DBPR public records CSV extracts (free)', sPt:'Extrações CSV de registros públicos do DBPR (grátis)',
+   endpoint:'www2.myfloridalicense.com/instant-public-records/',
+   note:'Confirms the ABT signal and adds seating count — a proxy for build size.',
+   notePt:'Confirma o sinal do ABT e traz a lotação — proxy do tamanho da obra.'},
+
+  {lo:3, hi:6, wired:'none',
+   en:'Local business tax receipt issued', pt:'Business tax receipt emitido',
+   sEn:'City of Tampa / Hillsborough County BTR', sPt:'BTR da cidade de Tampa / condado de Hillsborough',
+   note:'Late but cheap to check; good for verifying a tenant actually landed.',
+   notePt:'Tardio mas barato; bom para confirmar que o inquilino de fato chegou.'},
+
+  {lo:0, hi:4, wired:'live',
+   en:'Building permit application (the fitout itself)', pt:'Pedido de alvará (o próprio fitout)',
+   sEn:'Tampa ArcGIS PermitsAll FeatureServer — public, no auth; Hillsborough Accela', sPt:'ArcGIS PermitsAll de Tampa — público, sem auth; Accela de Hillsborough',
+   endpoint:'arcgis.tampagov.net/arcgis/rest/services/Planning/PermitsAll/FeatureServer/0',
+   note:'Already scraped by permit_scraper (city_tampa, hillsborough_county). Application date, not issue date, is the one to watch.',
+   notePt:'Já coletado pelo permit_scraper (city_tampa, hillsborough_county). A data de pedido, não a de emissão, é a que importa.'},
+
+  {lo:0, hi:0, wired:'none',
+   en:'Notice of Commencement recorded', pt:'Notice of Commencement registrado',
+   sEn:'Hillsborough Clerk official records (search UI, no API)', sPt:'Registros oficiais do Hillsborough Clerk (busca web, sem API)',
+   endpoint:'pubrec6.hillsclerk.com/ORIPublicAccess/',
+   note:'Too late to bid — but it names the GC who won, which is how we measure our real win rate per submarket.',
+   notePt:'Tarde demais para licitar — mas nomeia o GC vencedor, e é assim que medimos nossa taxa real por submercado.'}
+];
+
+/* ============ I18N ============ */
+const T = {
+ en:{
+  brand:'Ideal Construction · market intelligence',
+  title:'Tampa Bid Radar',
+  lede:'A development tracker reframed for a general contractor. Public trackers score Tampa on supply pressure, which is what a condo investor needs. We need the opposite reading: where the new rooftops, hotel keys and hospital beds land, and when the tenant fitouts they create come out to bid. v1 sized the market. v2 names the jobs, records what we bid, and corrects the model against what we actually won.',
+
+  eb_pipe:'Layer 1 — named opportunities',
+  h_pipe:'The pipeline',
+  p_pipe:'One row per real fitout: a tenant, an address, a stage, a next action and an owner. Move a row to Won or Lost and enter the contract value — that is what recalibrates the dials below. Nothing here is modelled.',
+  btn_add:'Add opportunity', btn_oppcsv:'Export pipeline',
+  btn_save:'Save', btn_cancel:'Cancel',
+  f_name:'Tenant / space', f_hood:'Submarket', f_trade:'Type', f_stage:'Stage',
+  f_val:'Est. contract ($)', f_bid:'Bid date', f_owner:'Owner', f_src:'Source', f_next:'Next action',
+  ex_banner:'Showing four illustrative placeholders so the board is not empty. They are not real tenants, leases or bids, and they disappear as soon as you add a real row.',
+  st_open:'Open', st_bidding:'Out to bid', st_wonval:'Won value', st_pipeval:'Weighted pipeline',
+  none_here:'Nothing here yet',
+  lbl_est:'est', lbl_actual:'actual', lbl_bid:'bid', lbl_next:'Next',
+  del:'Delete', delconf:'Delete this opportunity?',
+
+  eb_dials:'Layer 2 — the model, and its error',
+  h_dials:'Our assumptions',
+  p_dials:'These five numbers drive the forecast. They start as estimates. Every Won or Lost row you log above pulls them toward the truth.',
+  d1:'Residents per fitout', d1h:'How many delivered residential units it takes to generate one commercial fitout in or near the building.',
+  d2:'Average fitout contract', d2h:'Typical contract value for the commercial TI work we actually sign.',
+  d3:'Win rate', d3h:'Share of fitouts in a submarket we realistically capture once we are established there.',
+  d4:'Lead time', d4h:'Months before certificate of occupancy that tenant fitouts start going out to bid.',
+  d5:'Absorption', d5h:'Years after completion that a district keeps signing tenants. A master plan absorbs slower than a hotel.',
+  h_cal:'Modelled vs actual',
+  cal_n:'Decided bids logged', cal_win:'Win rate', cal_ti:'Average contract',
+  cal_need:'Log a Won or Lost row to compare',
+  cal_model:'model', cal_real:'actual',
+  btn_apply:'Adopt actuals', btn_reset:'Reset to defaults',
+
+  eb_chart:'Forecast',
+  h_chart:'When the work comes out to bid',
+  p_chart:'Biddable tenant-improvement value by year and submarket, after applying our access discount. Shell and core is excluded — we do not chase 40-storey base buildings.',
+
+  eb_sub:'Where to concentrate',
+  h_sub:'Submarket priority',
+  p_sub:'Ranked by biddable value we could realistically win over the horizon. Score is indexed to the strongest submarket. Live is what is actually in the pipeline above — the gap between Our share and Live is the work not yet being chased.',
+  th_sub:'Submarket', th_score:'Priority', th_units:'Units', th_fit:'Fitouts',
+  th_val:'Biddable', th_won:'Our share', th_live:'Live',
+  btn_csv:'Export submarkets as CSV',
+  beyond:'beyond horizon',
+
+  eb_sig:'How to fill layer 1',
+  h_sig:'Finding the tenants',
+  p_sig:'Every fitout leaves a public trail before it goes out to bid. Ordered by how much warning each one gives. A liquor licence tells you a restaurant is coming nine months out; a Notice of Commencement tells you who beat you.',
+  th_signal:'Signal', th_lead:'Warning', th_source:'Where it lives', th_wired:'In our stack',
+  w_live:'Wired', w_part:'Partial', w_none:'Not yet',
+  p_sig2:'permit_scraper already covers the bottom of this table — City of Tampa via the public ArcGIS feed, Hillsborough via Accela, with fuzzy company matching and Slack alerts. The work is not building a scraper. It is adding the licence feeds above it, filtering everything to these submarkets, and writing matches into the pipeline instead of a CSV.',
+  mo:'mo', mo_plus:'mo+', at_bid:'at bid',
+
+  eb_proj:'The pipeline that creates the fitouts',
+  h_proj:'Project by project',
+  p_proj:'Pipeline facts are from the public Tampa market page, 13 Sep 2026. The read on each — fit, access, and whether it is worth our time — is ours.',
+
+  eb_ins:'Blind spot',
+  h_ins:'One thing this pipeline does not tell us',
+  p_ins:'Insurance and restoration is our third line of business and none of it is driven by new development. That work is driven by storm landfall, the age of the building stock, and carrier panel access — coastal Pinellas, Madeira Beach, Treasure Island, older Hillsborough stock. It needs its own tracker with different inputs. Do not let a strong TI score here pull resources away from it.',
+
+  eb_method:'Method',
+  h_method:'How the model works',
+  p_method:'Each project generates fitouts: residential units divided by the residents-per-fitout dial, plus a fixed count for non-residential drivers such as a hotel, a hospital programme, a stadium district or a retail-only floor plate. Those fitouts are spread evenly across a bid window that opens at completion minus the lead time and closes after the absorption period. Biddable value is fitouts times average contract. Our share applies an access factor per project — low where a national developer runs a closed GC bench, high where ownership is regional and reachable — and then the win rate.',
+  p_method2:'Known limits, stated rather than hidden: projects delivering past the horizon are excluded from the forecast and counted separately in the Units column, so nothing disappears silently. Gasworx and Ybor Harbor share an owner and a trade area, so their resident-driven fitouts partly double-count. Absorption is one number for every project type. Access is a judgement, not a measurement. Fix those in order of how much money each one moves.',
+
+  all:'All submarkets',
+  fitlabel:['','Watch only','Low fit','Worth tracking','Strong fit','Core target'],
+  bidopens:'Bid window',
+  u_units:'units', u_fl:'fl', u_delivery:'delivery', u_fitouts:'fitouts',
+  vint_data:'Pipeline data', vint_stale:'Judgement calls are ours', vint_sync:'Pipeline',
+  sync_shared:'shared with your team', sync_local:'this browser only'
+ },
+ pt:{
+  brand:'Ideal Construction · inteligência de mercado',
+  title:'Radar de Licitações — Tampa',
+  lede:'Um rastreador de empreendimentos reformulado para um general contractor. Os rastreadores públicos pontuam Tampa por pressão de oferta, que é o que um investidor de condomínio precisa. Precisamos da leitura oposta: onde caem as novas unidades, chaves de hotel e leitos hospitalares, e quando os fitouts de inquilinos que eles geram vão a mercado. A v1 dimensionou o mercado. A v2 nomeia as obras, registra o que orçamos e corrige o modelo pelo que de fato ganhamos.',
+
+  eb_pipe:'Camada 1 — oportunidades nomeadas',
+  h_pipe:'O funil',
+  p_pipe:'Uma linha por fitout real: inquilino, endereço, estágio, próxima ação e responsável. Mova uma linha para Ganho ou Perdido e informe o valor do contrato — é isso que recalibra os controles abaixo. Nada aqui é modelado.',
+  btn_add:'Nova oportunidade', btn_oppcsv:'Exportar funil',
+  btn_save:'Salvar', btn_cancel:'Cancelar',
+  f_name:'Inquilino / espaço', f_hood:'Submercado', f_trade:'Tipo', f_stage:'Estágio',
+  f_val:'Contrato est. (US$)', f_bid:'Data da proposta', f_owner:'Responsável', f_src:'Origem', f_next:'Próxima ação',
+  ex_banner:'Mostrando quatro exemplos ilustrativos para o quadro não ficar vazio. Não são inquilinos, contratos ou propostas reais, e somem assim que você adicionar uma linha de verdade.',
+  st_open:'Abertas', st_bidding:'Em licitação', st_wonval:'Valor ganho', st_pipeval:'Funil ponderado',
+  none_here:'Nada aqui ainda',
+  lbl_est:'est', lbl_actual:'real', lbl_bid:'proposta', lbl_next:'Próx.',
+  del:'Excluir', delconf:'Excluir esta oportunidade?',
+
+  eb_dials:'Camada 2 — o modelo e seu erro',
+  h_dials:'Nossas premissas',
+  p_dials:'Estes cinco números movem a previsão. Começam como estimativas. Cada linha Ganho ou Perdido registrada acima os puxa para a realidade.',
+  d1:'Moradores por fitout', d1h:'Quantas unidades residenciais entregues geram um fitout comercial no prédio ou perto dele.',
+  d2:'Contrato médio de fitout', d2h:'Valor típico do contrato de TI comercial que de fato assinamos.',
+  d3:'Taxa de conversão', d3h:'Parcela dos fitouts de um submercado que capturamos de forma realista uma vez estabelecidos ali.',
+  d4:'Antecedência', d4h:'Meses antes do habite-se em que os fitouts de inquilinos começam a ir a mercado.',
+  d5:'Absorção', d5h:'Anos após a conclusão em que o distrito segue assinando inquilinos. Um master plan absorve mais devagar que um hotel.',
+  h_cal:'Modelado vs. real',
+  cal_n:'Propostas decididas', cal_win:'Taxa de conversão', cal_ti:'Contrato médio',
+  cal_need:'Registre um Ganho ou Perdido para comparar',
+  cal_model:'modelo', cal_real:'real',
+  btn_apply:'Adotar valores reais', btn_reset:'Restaurar padrões',
+
+  eb_chart:'Previsão',
+  h_chart:'Quando o trabalho vai a mercado',
+  p_chart:'Valor licitável de tenant improvement por ano e submercado, já com nosso desconto de acesso. Estrutura e fachada estão fora — não perseguimos edifícios base de 40 andares.',
+
+  eb_sub:'Onde concentrar',
+  h_sub:'Prioridade por submercado',
+  p_sub:'Ordenado pelo valor licitável que poderíamos realisticamente ganhar no horizonte. A pontuação é indexada ao submercado mais forte. "Ativo" é o que está de fato no funil acima — a diferença entre Nossa parcela e Ativo é o trabalho que ainda não estamos perseguindo.',
+  th_sub:'Submercado', th_score:'Prioridade', th_units:'Unidades', th_fit:'Fitouts',
+  th_val:'Licitável', th_won:'Nossa parcela', th_live:'Ativo',
+  btn_csv:'Exportar submercados em CSV',
+  beyond:'além do horizonte',
+
+  eb_sig:'Como preencher a camada 1',
+  h_sig:'Encontrando os inquilinos',
+  p_sig:'Todo fitout deixa um rastro público antes de ir a mercado. Ordenado por quanta antecedência cada sinal dá. Uma licença de bebidas avisa que vem restaurante nove meses antes; um Notice of Commencement avisa quem ganhou de nós.',
+  th_signal:'Sinal', th_lead:'Antecedência', th_source:'Onde fica', th_wired:'No nosso stack',
+  w_live:'Ligado', w_part:'Parcial', w_none:'Ainda não',
+  p_sig2:'O permit_scraper já cobre a base desta tabela — cidade de Tampa pelo feed público do ArcGIS, Hillsborough pelo Accela, com correspondência fuzzy de empresas e alertas no Slack. O trabalho não é construir um scraper. É acrescentar os feeds de licenças acima dele, filtrar tudo para estes submercados, e gravar as correspondências no funil em vez de um CSV.',
+  mo:'m', mo_plus:'m+', at_bid:'na licitação',
+
+  eb_proj:'O pipeline que gera os fitouts',
+  h_proj:'Projeto a projeto',
+  p_proj:'Os fatos do pipeline vêm da página pública de mercado de Tampa, 13 set 2026. A leitura de cada um — aderência, acesso e se vale nosso tempo — é nossa.',
+
+  eb_ins:'Ponto cego',
+  h_ins:'Uma coisa que este pipeline não nos diz',
+  p_ins:'Seguros e restauração é nossa terceira linha de negócio e nada nela é movido por novos empreendimentos. Esse trabalho é movido por chegada de tempestades, idade do estoque construído e acesso a painéis de seguradoras — Pinellas litorânea, Madeira Beach, Treasure Island, estoque antigo de Hillsborough. Precisa do seu próprio rastreador, com outras entradas. Não deixe uma pontuação forte de TI aqui desviar recursos dela.',
+
+  eb_method:'Método',
+  h_method:'Como o modelo funciona',
+  p_method:'Cada projeto gera fitouts: unidades residenciais divididas pelo controle de moradores-por-fitout, mais uma contagem fixa para geradores não residenciais como hotel, programa hospitalar, distrito de estádio ou uma laje só de varejo. Esses fitouts são distribuídos igualmente ao longo de uma janela que abre na conclusão menos a antecedência e fecha ao fim do período de absorção. O valor licitável é fitouts vezes o contrato médio. Nossa parcela aplica um fator de acesso por projeto — baixo onde uma incorporadora nacional mantém banco fechado de GCs, alto onde a propriedade é regional e acessível — e depois a taxa de conversão.',
+  p_method2:'Limites conhecidos, declarados em vez de escondidos: projetos que entregam além do horizonte ficam fora da previsão e são contados à parte na coluna Unidades, para que nada suma em silêncio. Gasworx e Ybor Harbor têm o mesmo dono e a mesma área de influência, então seus fitouts por moradores se sobrepõem em parte. A absorção é um número único para todo tipo de projeto. Acesso é julgamento, não medição. Corrija na ordem de quanto dinheiro cada um move.',
+
+  all:'Todos os submercados',
+  fitlabel:['','Só observar','Baixa aderência','Vale acompanhar','Boa aderência','Alvo central'],
+  bidopens:'Janela de licitação',
+  u_units:'unid.', u_fl:'and.', u_delivery:'entrega', u_fitouts:'fitouts',
+  vint_data:'Dados do pipeline', vint_stale:'Julgamentos são nossos', vint_sync:'Funil',
+  sync_shared:'compartilhado com a equipe', sync_local:'só neste navegador'
+ }
+};
+let L='en';
+const t = () => T[L];
+
+/* ============ UTIL ============ */
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>(
+  {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function money(n){
+  if(!isFinite(n)||n===0) return '$0';
+  const a=Math.abs(n);
+  if(a>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
+  if(a>=1000) return '$'+Math.round(n/1000)+'k';
+  return '$'+Math.round(n);
+}
+const uid = () => 'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+/* ============ MODEL ============ */
+const DEFAULTS = {perFitout:200, avgTI:325000, winRate:0.12, lead:9, absorb:2};
+const dials = {...DEFAULTS};
+const HORIZON = 6;
+
+function years(){
+  const y0 = new Date().getFullYear();
+  return Array.from({length:HORIZON},(_,i)=>y0+i);
+}
+function nowDecimal(){
+  const d=new Date();
+  return d.getFullYear() + (d.getMonth()+d.getDate()/30.44)/12;
+}
+function fitoutsFor(p){
+  return (p.units>0 ? p.units/dials.perFitout : 0) + p.seed;
+}
+function windowFor(p){
+  if(!p.done) return null;
+  return {open: p.done - dials.lead/12, close: p.done + dials.absorb};
+}
+function spread(p){
+  const w = windowFor(p); if(!w) return {};
+  const f = fitoutsFor(p), span = w.close - w.open, out = {};
+  if(span<=0) return out;
+  years().forEach(y=>{
+    const lo=Math.max(w.open,y), hi=Math.min(w.close,y+1);
+    if(hi>lo) out[y] = f*(hi-lo)/span;
+  });
+  return out;
+}
+
+/* Aggregate by submarket.
+   v1 bug fixed here: units were added for EVERY project including ones whose
+   whole bid window falls outside the chart horizon (Ybor Harbor, 2034), while
+   their fitouts were not — so Ybor read as 7,586 units producing Gasworx's
+   fitouts alone. In-horizon and beyond-horizon units are now separated and
+   both are shown. */
+function agg(){
+  const by = {};
+  HOODS.forEach(h => by[h] = {name:h, units:0, unitsBeyond:0, fitouts:0, value:0, won:0, live:0, years:{}});
+  P.forEach(p=>{
+    const b = by[p.hood];
+    const sp = spread(p);
+    const inHorizon = Object.keys(sp).length > 0;
+    if(inHorizon) b.units += p.units; else b.unitsBeyond += p.units;
+    for(const y in sp){
+      const f = sp[y];
+      b.fitouts += f;
+      b.value   += f*dials.avgTI;
+      const w = f*dials.avgTI*p.access*dials.winRate;
+      b.won += w;
+      b.years[y] = (b.years[y]||0) + w;
+    }
+  });
+  // Live pipeline value per submarket, from real rows only.
+  rows().forEach(r=>{
+    if(r.example) return;
+    if(r.stage==='lost') return;
+    const b = by[r.hood]; if(!b) return;
+    b.live += (r.stage==='won' ? (+r.valueActual||+r.valueEst||0) : (+r.valueEst||0));
+  });
+  return Object.values(by).filter(b => b.fitouts>0.05 || b.live>0).sort((a,b)=>b.won-a.won);
+}
+
+/* ============ PIPELINE STATE ============ */
+let DBH = null;                 // db namespace, or null
+let OPPS = [];                  // real rows
+let usingExamples = true;
+const LS_KEY = 'bidradar.v2';
+
+function rows(){ return usingExamples ? EXAMPLES : OPPS; }
+
+function calibration(){
+  const real = OPPS.filter(r=>!r.example);
+  const won  = real.filter(r=>r.stage==='won');
+  const lost = real.filter(r=>r.stage==='lost');
+  const wonWithValue = won.filter(r=>+r.valueActual>0);
+  const decided = won.length + lost.length;
+  return {
+    decided,
+    won: won.length,
+    lost: lost.length,
+    winRate: decided ? won.length/decided : null,
+    avgTI: wonWithValue.length
+      ? wonWithValue.reduce((s,r)=>s+(+r.valueActual),0)/wonWithValue.length
+      : null
+  };
+}
+
+/* ---------- persistence: db when granted, localStorage otherwise ---------- */
+function loadLocal(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      const s = JSON.parse(raw);
+      if(s.dials) Object.assign(dials, s.dials);
+      if(Array.isArray(s.opps)) OPPS = s.opps;
+      if(s.L) L = s.L;
+    }
+  }catch(e){}
+  usingExamples = OPPS.length === 0;
+}
+function saveLocal(){
+  if(DBH) return;
+  try{ localStorage.setItem(LS_KEY, JSON.stringify({dials, opps:OPPS, L})); }catch(e){}
+}
+
+async function initStore(){
+  let db = null;
+  try{ db = await claude.use('db'); }catch(e){ db = null; }
+  if(!db) return;                       // localStorage path already live
+  DBH = db;
+  try{
+    db.collection('opportunities').onSnapshot(snap=>{
+      OPPS = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      usingExamples = OPPS.length === 0;
+      renderPipeline(); renderCalib(); renderTable(); renderVintage();
+    }, ()=>{ DBH=null; renderVintage(); });
+    db.doc('meta/dials').onSnapshot(s=>{
+      if(!s.exists) return;
+      Object.assign(dials, s.data());
+      syncDialInputs(); renderAll();
+    }, ()=>{});
+  }catch(e){ DBH=null; }
+  renderVintage();
+}
+
+async function persistDials(){
+  if(DBH){ try{ await DBH.doc('meta/dials').set({...dials}); }catch(e){} }
+  else saveLocal();
+}
+async function addOpp(rec){
+  if(DBH){
+    try{ await DBH.collection('opportunities').add(rec); return; }catch(e){}
+  }
+  OPPS = OPPS.concat([{id:uid(), ...rec}]);
+  usingExamples = false;
+  saveLocal(); renderPipeline(); renderCalib(); renderTable(); renderChart();
+}
+async function patchOpp(id, patch){
+  if(DBH){
+    try{ await DBH.doc('opportunities/'+id).update(patch); return; }catch(e){}
+  }
+  OPPS = OPPS.map(r => r.id===id ? {...r, ...patch} : r);
+  saveLocal(); renderPipeline(); renderCalib(); renderTable(); renderChart();
+}
+async function delOpp(id){
+  if(DBH){
+    try{ await DBH.doc('opportunities/'+id).delete(); return; }catch(e){}
+  }
+  OPPS = OPPS.filter(r => r.id!==id);
+  usingExamples = OPPS.length === 0;
+  saveLocal(); renderPipeline(); renderCalib(); renderTable(); renderChart();
+}
+
+/* ============ COLOR ============ */
+const HCOL = {};
+const PALETTE = ['#0F6B5C','#2F8F7C','#8A5A00','#C08A2E','#4A6B8A','#7D8F99','#A31F34','#5E6E68'];
+HOODS.forEach((h,i)=> HCOL[h] = PALETTE[i % PALETTE.length]);
+
+/* ============ RENDER: provenance ============ */
+function renderVintage(){
+  const T_ = t();
+  const age = Math.max(0, Math.round((Date.now() - new Date(DATA_VINTAGE).getTime())/86400000));
+  const stale = age > 120;
+  document.getElementById('vintage').innerHTML =
+    `<span class="tag${stale?' warn':''}"><b>${T_.vint_data}</b> <span class="mono">${DATA_VINTAGE}</span> · ${age}d</span>`+
+    `<span class="tag">${T_.vint_stale}</span>`+
+    `<span class="tag"><b>${T_.vint_sync}</b> ${DBH ? T_.sync_shared : T_.sync_local}</span>`;
+}
+
+/* ============ RENDER: pipeline ============ */
+function renderPipeline(){
+  const T_ = t(), list = rows();
+
+  document.getElementById('exbanner').innerHTML = usingExamples
+    ? `<div class="note" style="margin-bottom:14px">${T_.ex_banner}</div>` : '';
+
+  const real = list.filter(r=>!r.example);
+  const openN = list.filter(r=>['signal','qualified','bidding'].includes(r.stage)).length;
+  const biddingN = list.filter(r=>r.stage==='bidding').length;
+  const wonVal = real.filter(r=>r.stage==='won')
+                     .reduce((s,r)=>s+(+r.valueActual||+r.valueEst||0),0);
+  const WEIGHT = {signal:0.1, qualified:0.3, bidding:0.5, won:1, lost:0};
+  const weighted = list.filter(r=>r.stage!=='lost')
+                       .reduce((s,r)=>s+(+r.valueEst||0)*(WEIGHT[r.stage]||0),0);
+
+  document.getElementById('pipestats').innerHTML =
+    `<span>${T_.st_open} <b>${openN}</b></span>`+
+    `<span>${T_.st_bidding} <b>${biddingN}</b></span>`+
+    `<span>${T_.st_wonval} <b>${money(wonVal)}</b></span>`+
+    `<span>${T_.st_pipeval} <b>${money(weighted)}</b></span>`;
+
+  document.getElementById('board').innerHTML = STAGES.map(st=>{
+    const inCol = list.filter(r=>r.stage===st.id);
+    const cards = inCol.length ? inCol.map(r=>oppCard(r,st)).join('')
+                               : `<div class="empty">${T_.none_here}</div>`;
+    return `<div class="col" data-tone="${st.tone}">
+      <div class="col-head">
+        <span class="nm">${st[L]}</span>
+        <span class="ct">${inCol.length}</span>
+      </div>${cards}</div>`;
+  }).join('');
+
+  // stage change
+  document.querySelectorAll('#board select[data-stage-for]').forEach(sel=>{
+    sel.onchange = () => patchOpp(sel.dataset.stageFor, {stage: sel.value});
+  });
+  // actual value on won rows
+  document.querySelectorAll('#board input[data-actual-for]').forEach(inp=>{
+    inp.onchange = () => patchOpp(inp.dataset.actualFor, {valueActual: +inp.value||0});
+  });
+  // delete
+  document.querySelectorAll('#board button[data-del]').forEach(b=>{
+    b.onclick = () => { if(confirm(T_.delconf)) delOpp(b.dataset.del); };
+  });
+}
+
+function oppCard(r, st){
+  const T_ = t();
+  const trade = TRADES.find(x=>x.id===r.trade);
+  const src = SOURCES.find(x=>x.id===r.source);
+  const isWon = r.stage==='won';
+  const val = isWon && +r.valueActual>0 ? +r.valueActual : +r.valueEst||0;
+
+  const stageSel = r.example ? '' :
+    `<select data-stage-for="${esc(r.id)}" aria-label="${T_.f_stage}">`+
+    STAGES.map(s=>`<option value="${s.id}"${s.id===r.stage?' selected':''}>${s[L]}</option>`).join('')+
+    `</select>`;
+
+  const actualIn = (!r.example && isWon) ?
+    `<label class="mono" style="font-size:11px;color:var(--ink-2)">${T_.lbl_actual}
+       <input type="number" min="0" step="1000" value="${+r.valueActual||''}"
+              data-actual-for="${esc(r.id)}" style="width:88px" aria-label="${T_.lbl_actual}">
+     </label>` : '';
+
+  return `<article class="opp" data-tone="${st.tone}">
+    <div class="nm">${esc(r.name)}</div>
+    <div class="loc">${esc(r.hood)}${trade?' · '+esc(trade[L]):''}${r.example?' <span class="ex-chip">example</span>':''}</div>
+    <div class="row">
+      <span>${isWon?T_.lbl_actual:T_.lbl_est} <b>${money(val)}</b></span>
+      ${r.bidDate?`<span class="mono">${T_.lbl_bid} ${esc(r.bidDate)}</span>`:''}
+    </div>
+    ${src?`<div class="row" style="margin-top:4px"><span>${esc(src[L])}</span></div>`:''}
+    ${r.nextAction?`<div class="act"><b>${T_.lbl_next}:</b> ${esc(r.nextAction)}${r.owner&&r.owner!=='—'?' — '+esc(r.owner):''}</div>`:''}
+    ${(stageSel||actualIn)?`<div class="tools">${stageSel}${actualIn}
+      <button class="xbtn" data-del="${esc(r.id)}">${T_.del}</button></div>`:''}
+  </article>`;
+}
+
+/* ============ RENDER: calibration ============ */
+function renderCalib(){
+  const T_ = t(), c = calibration();
+  const pct = v => Math.round(v*100)+'%';
+  const line = (k, modelled, actual) =>
+    `<div class="calrow"><span class="k">${k}</span><span class="v">`+
+    `<span class="m">${modelled}</span>`+
+    (actual!=null ? ` &rarr; <span class="a">${actual}</span>` : ` <span class="none">${T_.cal_need}</span>`)+
+    `</span></div>`;
+
+  document.getElementById('calbody').innerHTML =
+    `<div class="calrow"><span class="k">${T_.cal_n}</span>`+
+    `<span class="v">${c.decided} <span class="m">(${c.won}W / ${c.lost}L)</span></span></div>`+
+    line(T_.cal_win, pct(dials.winRate), c.winRate!=null ? pct(c.winRate) : null)+
+    line(T_.cal_ti, money(dials.avgTI), c.avgTI!=null ? money(c.avgTI) : null);
+
+  document.getElementById('applyactual').disabled = (c.winRate==null && c.avgTI==null);
+}
+
+/* ============ RENDER: chart ============ */
+function renderChart(){
+  const rowsA = agg(), YRS = years();
+  const totals = YRS.map(y => rowsA.reduce((s,r)=>s+(r.years[y]||0),0));
+  const max = Math.max(...totals, 1);
+  document.getElementById('bars').innerHTML = YRS.map((y,i)=>{
+    const segs = rowsA.map(r=>{
+      const v = r.years[y]||0;
+      if(v<=0) return '';
+      return `<div class="seg" style="height:${(v/max*100).toFixed(2)}%;background:${HCOL[r.name]}"
+                   title="${esc(r.name)} ${y}: ${money(v)}"></div>`;
+    }).join('');
+    return `<div class="barcol">
+      <div class="barval">${totals[i]>0?money(totals[i]):'—'}</div>
+      <div class="barstack">${segs}</div>
+      <div class="barlabel">${y}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('legend').innerHTML = rowsA
+    .filter(r=>r.fitouts>0.05)
+    .map(r=>`<span><i class="sw" style="background:${HCOL[r.name]}"></i>${esc(r.name)}</span>`).join('');
+}
+
+/* ============ RENDER: submarket table ============ */
+let sortKey='won', sortDir=-1;
+function renderTable(){
+  const T_ = t(), rowsA = agg();
+  const top = Math.max(...rowsA.map(r=>r.won), 1);
+  rowsA.sort((a,b)=>{
+    if(sortKey==='name') return sortDir * a.name.localeCompare(b.name);
+    return sortDir * ((a[sortKey]||0) - (b[sortKey]||0));
+  });
+  document.querySelector('#subtable tbody').innerHTML = rowsA.map(r=>{
+    const sc = Math.round(r.won/top*100);
+    const cls = sc>=60?'s-hi':sc>=25?'s-mid':'s-lo';
+    return `<tr>
+      <td><b>${esc(r.name)}</b><div class="meter"><i style="width:${sc}%"></i></div></td>
+      <td><span class="score ${cls}">${sc}</span></td>
+      <td class="num hide-s">${r.units.toLocaleString()}
+        ${r.unitsBeyond?`<span class="beyond">+${r.unitsBeyond.toLocaleString()} ${T_.beyond}</span>`:''}</td>
+      <td class="num hide-s">${r.fitouts.toFixed(1)}</td>
+      <td class="num">${money(r.value)}</td>
+      <td class="num"><b>${money(r.won)}</b></td>
+      <td class="num">${r.live>0?money(r.live):'—'}</td>
+    </tr>`;
+  }).join('');
+
+  document.querySelectorAll('#subtable th[data-sort]').forEach(th=>{
+    const k = th.dataset.sort;
+    const base = T_[th.dataset.t] || '';
+    th.innerHTML = esc(base) + (sortKey===k ? ` <span class="ind">${sortDir<0?'▼':'▲'}</span>` : '');
+    th.setAttribute('aria-sort', sortKey===k ? (sortDir<0?'descending':'ascending') : 'none');
+  });
+}
+
+/* ============ RENDER: signals ============ */
+function renderSignals(){
+  const T_ = t();
+  const maxLead = 24;
+  document.querySelector('#sigtable tbody').innerHTML = SIGNALS.map(s=>{
+    const w = Math.max(3, (s.hi/maxLead)*100);
+    const label = s.hi===0 ? T_.at_bid
+      : s.lo===s.hi ? `${s.hi} ${T_.mo}`
+      : `${s.lo}–${s.hi} ${T_.mo}`;
+    const wcls = s.wired==='live'?'w-live':s.wired==='partial'?'w-part':'w-none';
+    const wtxt = s.wired==='live'?T_.w_live:s.wired==='partial'?T_.w_part:T_.w_none;
+    return `<tr>
+      <td><b>${esc(L==='en'?s.en:s.pt)}</b>
+        <div class="small" style="margin-top:3px;max-width:52ch">${esc(L==='en'?s.note:s.notePt)}</div></td>
+      <td><div class="lead"><i class="leadbar" style="width:${w.toFixed(0)}%"></i>
+        <span class="leadtxt">${label}</span></div></td>
+      <td class="hide-s">${esc(L==='en'?s.sEn:s.sPt)}
+        ${s.endpoint?`<span class="endpoint">${esc(s.endpoint)}</span>`:''}</td>
+      <td><span class="wired ${wcls}">${wtxt}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ============ RENDER: projects ============ */
+let filter='__all';
+function renderProjects(){
+  const T_ = t();
+  const list = P.filter(p => filter==='__all' || p.hood===filter)
+                .sort((a,b)=> b.fit-a.fit || ((a.done||9999)-(b.done||9999)));
+  const lo = new Date().getFullYear(), hi = lo + HORIZON, sp = hi - lo;
+  const nowPct = ((nowDecimal()-lo)/sp*100);
+
+  document.getElementById('projects').innerHTML = list.map(p=>{
+    const w = windowFor(p);
+    let win = '';
+    if(w && w.close>lo && w.open<hi){
+      const left  = Math.max(0, (w.open-lo)/sp*100);
+      const right = Math.min(100, (w.close-lo)/sp*100);
+      win = `<div class="window">
+               <i style="left:${left.toFixed(1)}%;width:${Math.max(2,right-left).toFixed(1)}%"><em>${T_.bidopens}</em></i>
+               <u style="left:${Math.min(100,Math.max(0,nowPct)).toFixed(1)}%"></u>
+             </div>
+             <div class="wscale"><span>${lo}</span><span>${lo+Math.round(sp/2)}</span><span>${hi}</span></div>`;
+    }
+    return `<article class="proj f${p.fit}">
+      <div class="proj-top">
+        <h3>${esc(p.name)}</h3>
+        <span class="small">${T_.fitlabel[p.fit]}</span>
+      </div>
+      <div class="proj-meta">${esc(p.hood)} · ${esc(p.cat)} · ${esc(p.dev)}${p.arch!=='—'?' · '+esc(p.arch):''}</div>
+      <p class="angle">${esc(L==='en'?p.en:p.pt)}</p>
+      <div class="facts">
+        ${p.units?`<span><b>${p.units.toLocaleString()}</b> ${T_.u_units}</span>`:''}
+        ${p.floors?`<span><b>${p.floors}</b> ${T_.u_fl}</span>`:''}
+        <span><b>${p.done||'—'}</b> ${p.done?T_.u_delivery:''}</span>
+        <span><b>${fitoutsFor(p).toFixed(1)}</b> ${T_.u_fitouts}</span>
+        <span><b>${money(fitoutsFor(p)*dials.avgTI*p.access*dials.winRate)}</b></span>
+      </div>
+      ${win}
+    </article>`;
+  }).join('');
+}
+
+function renderFilters(){
+  const T_ = t();
+  document.getElementById('filters').innerHTML =
+    [`<button class="chip" data-h="__all" aria-pressed="${filter==='__all'}">${T_.all}</button>`]
+    .concat(HOODS.map(h=>`<button class="chip" data-h="${esc(h)}" aria-pressed="${filter===h}">${esc(h)}</button>`))
+    .join('');
+  document.querySelectorAll('#filters .chip').forEach(b=>{
+    b.onclick = () => { filter = b.dataset.h; renderFilters(); renderProjects(); };
+  });
+}
+
+/* ============ RENDER: form + text ============ */
+function renderForm(){
+  const T_ = t();
+  const opts = (arr, val) => arr.map(o=>`<option value="${o.id}"${o.id===val?' selected':''}>${o[L]}</option>`).join('');
+  document.getElementById('f_hood').innerHTML  = HOODS.map(h=>`<option value="${esc(h)}">${esc(h)}</option>`).join('');
+  document.getElementById('f_trade').innerHTML = opts(TRADES,'retail');
+  document.getElementById('f_stage').innerHTML = opts(STAGES,'signal');
+  document.getElementById('f_src').innerHTML   = opts(SOURCES,'manual');
+}
+
+function syncDialInputs(){
+  d1.value = dials.perFitout;
+  d2.value = Math.round(dials.avgTI/1000);
+  d3.value = Math.round(dials.winRate*100);
+  d4.value = dials.lead;
+  d5.value = dials.absorb;
+}
+
+function renderText(){
+  const T_ = t();
+  document.querySelectorAll('[data-t]').forEach(el=>{
+    if(T_[el.dataset.t] != null) el.textContent = T_[el.dataset.t];
+  });
+  document.documentElement.lang = L==='en' ? 'en' : 'pt-BR';
+  document.getElementById('o1').textContent = dials.perFitout + ' ' + T_.u_units;
+  document.getElementById('o2').textContent = '$' + Math.round(dials.avgTI/1000) + 'k';
+  document.getElementById('o3').textContent = Math.round(dials.winRate*100) + '%';
+  document.getElementById('o4').textContent = dials.lead + ' ' + T_.mo;
+  document.getElementById('o5').textContent = dials.absorb + (L==='en' ? ' yr' : ' anos');
+}
+
+function renderAll(){
+  renderText(); renderVintage(); renderPipeline(); renderCalib();
+  renderChart(); renderTable(); renderSignals(); renderFilters(); renderProjects();
+}
+
+/* ============ EVENTS ============ */
+document.getElementById('en').onclick = () => { L='en'; setLang(); };
+document.getElementById('pt').onclick = () => { L='pt'; setLang(); };
+function setLang(){
+  document.getElementById('en').setAttribute('aria-pressed', L==='en');
+  document.getElementById('pt').setAttribute('aria-pressed', L==='pt');
+  renderForm(); renderAll(); saveLocal();
+}
+
+const bind = (id, fn) => document.getElementById(id).addEventListener('input', e=>{
+  fn(+e.target.value); renderAll(); persistDials();
+});
+bind('d1', v => dials.perFitout = v);
+bind('d2', v => dials.avgTI = v*1000);
+bind('d3', v => dials.winRate = v/100);
+bind('d4', v => dials.lead = v);
+bind('d5', v => dials.absorb = v);
+
+document.getElementById('reset').onclick = () => {
+  Object.assign(dials, DEFAULTS);
+  syncDialInputs(); renderAll(); persistDials();
+};
+document.getElementById('applyactual').onclick = () => {
+  const c = calibration();
+  if(c.winRate != null) dials.winRate = Math.min(0.40, Math.max(0.02, c.winRate));
+  if(c.avgTI   != null) dials.avgTI   = Math.min(900000, Math.max(50000, Math.round(c.avgTI/1000)*1000));
+  syncDialInputs(); renderAll(); persistDials();
+};
+
+// sortable submarket headers (v1 declared the state but never bound the click)
+document.querySelectorAll('#subtable th[data-sort]').forEach(th=>{
+  th.onclick = () => {
+    const k = th.dataset.sort;
+    if(sortKey===k) sortDir = -sortDir; else { sortKey = k; sortDir = (k==='name'?1:-1); }
+    renderTable();
+  };
+});
+
+// add form
+const form = document.getElementById('addform');
+document.getElementById('addtoggle').onclick = () => {
+  form.hidden = !form.hidden;
+  if(!form.hidden) document.getElementById('f_name').focus();
+};
+document.getElementById('addcancel').onclick = () => { form.hidden = true; };
+form.onsubmit = e => {
+  e.preventDefault();
+  const name = document.getElementById('f_name').value.trim();
+  if(!name) return;
+  addOpp({
+    name,
+    hood:       document.getElementById('f_hood').value,
+    trade:      document.getElementById('f_trade').value,
+    stage:      document.getElementById('f_stage').value,
+    valueEst:   +document.getElementById('f_val').value || 0,
+    valueActual:0,
+    bidDate:    document.getElementById('f_bid').value || '',
+    owner:      document.getElementById('f_owner').value.trim() || '—',
+    source:     document.getElementById('f_src').value,
+    nextAction: document.getElementById('f_next').value.trim() || '',
+    createdAt:  new Date().toISOString()
+  });
+  form.reset(); renderForm(); form.hidden = true;
+};
+
+/* exports — the artifact viewer blocks script-started downloads, so use the
+   downloads capability there and fall back to an anchor in a plain browser. */
+let DL = null;
+(async () => { try{ DL = await claude.use('downloads'); }catch(e){ DL = null; } })();
+
+async function download(name, text){
+  if(DL){
+    try{ await DL.save({filename:name, data:text}); return; }catch(e){}
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type:'text/csv'}));
+  a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+const csvCell = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+
+document.getElementById('csv').onclick = () => {
+  const rowsA = agg(), YRS = years();
+  const head = ['Submarket','UnitsInHorizon','UnitsBeyondHorizon','Fitouts','BiddableUSD','OurShareUSD','LivePipelineUSD']
+                 .concat(YRS).join(',');
+  const body = rowsA.map(r =>
+    [r.name, r.units, r.unitsBeyond, r.fitouts.toFixed(2), Math.round(r.value),
+     Math.round(r.won), Math.round(r.live)]
+      .concat(YRS.map(y=>Math.round(r.years[y]||0)))
+      .map(csvCell).join(',')).join('\n');
+  download('tampa-submarkets.csv', head+'\n'+body);
+};
+
+document.getElementById('oppcsv').onclick = () => {
+  const head = 'Name,Submarket,Type,Stage,Source,EstValueUSD,ActualValueUSD,BidDate,Owner,NextAction,Example';
+  const body = rows().map(r =>
+    [r.name, r.hood, r.trade, r.stage, r.source, r.valueEst||0, r.valueActual||0,
+     r.bidDate||'', r.owner||'', r.nextAction||'', r.example?'YES':'']
+      .map(csvCell).join(',')).join('\n');
+  download('tampa-pipeline.csv', head+'\n'+body);
+};
+
+/* ============ BOOT ============ */
+loadLocal();
+syncDialInputs();
+renderForm();
+setLang();
+initStore();   // upgrades to shared db if this view grants it
+</script>
+</body>
+</html>
