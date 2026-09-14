@@ -1,0 +1,22 @@
+{
+  "type": "FeatureCollection",
+  "name": "Real City of Tampa permit points, retrieved 2026-09-14",
+  "note": "Coordinates are the ArcGIS feature geometry as served (outSR=4326) — not geocoded, not estimated. Source: arcgis.tampagov.net/arcgis/rest/services/Planning/PermitsAll/FeatureServer/0. `expect` is the submarket the point must resolve to, and is the substantive test of the polygons.",
+  "features": [
+    {"type":"Feature","properties":{"record_id":"BLD-26-0526061","address":"1050 Water St","tenant":"Wagamama Pan Asian","expect":"waterst"},"geometry":{"type":"Point","coordinates":[-82.45073699971667,27.94439700040301]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0526036","address":"1209 E Cumberland Ave","tenant":null,"expect":"waterst"},"geometry":{"type":"Point","coordinates":[-82.44737999962425,27.944477999745345]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0526501","address":"1000 N Ashley Dr","tenant":"AIC Architecture","expect":"riverwalk"},"geometry":{"type":"Point","coordinates":[-82.46237399994992,27.952190999723463]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0525912","address":"777 N Ashley Dr","tenant":null,"expect":"riverwalk"},"geometry":{"type":"Point","coordinates":[-82.46036700023826,27.94998599981148]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0526369","address":"400 N Tampa St","tenant":"Altieri Ins. Consultants","expect":"riverwalk"},"geometry":{"type":"Point","coordinates":[-82.45906649981688,27.94759199983116]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0526530","address":"275 Bayshore Blvd","tenant":null,"expect":"davis"},"geometry":{"type":"Point","coordinates":[-82.45998449977462,27.941391000052114]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0526342","address":"2223 N West Shore Blvd","tenant":"Edikted","expect":"airport"},"geometry":{"type":"Point","coordinates":[-82.52074349980326,27.96380999965244]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0526643","address":"4300 W Cypress St","tenant":"Meridian Two","expect":"airport"},"geometry":{"type":"Point","coordinates":[-82.51650899987168,27.95168700025251]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0526311","address":"4400 W Tampa Bay Blvd","tenant":"Tampa Police Aviation","expect":"dalemabry"},"geometry":{"type":"Point","coordinates":[-82.5175169999204,27.97355700031754]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0525929","address":"4300 W Tampa Bay Blvd","tenant":"Fly USA Hangar","expect":"dalemabry"},"geometry":{"type":"Point","coordinates":[-82.51640100006601,27.973584000133286]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0526302","address":"3644 W Kennedy Blvd","tenant":"The Violet Stone Pizzeria","expect":null},"geometry":{"type":"Point","coordinates":[-82.5033735004976,27.944486999858793]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0526641","address":"8800 Grand Oak Cir","tenant":"Coca-Cola","expect":null},"geometry":{"type":"Point","coordinates":[-82.35573750038219,28.072872000079425]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0526912","address":"6701 S Dale Mabry Hwy","tenant":null,"expect":null},"geometry":{"type":"Point","coordinates":[-82.50737850050815,27.86962499981814]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0526740","address":"701 Channelside Dr","tenant":"Florida Aquarium exhibits","expect":"waterst"},"geometry":{"type":"Point","coordinates":[-82.44492749992787,27.94409100043412]}},
+    {"type":"Feature","properties":{"record_id":"BLD-26-0526062","address":"2001 E Fowler Ave","tenant":"Designers Closet","expect":null},"geometry":{"type":"Point","coordinates":[-82.43635499982557,28.053926999574117]}}
+  ]
+}
