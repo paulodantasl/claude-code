@@ -1,6 +1,6 @@
 # Tampa Bid Radar
 
-Collected 2026-09-14T02:42:17+00:00 · 365-day window · eight tracked submarkets
+Collected 2026-09-14T02:55:24+00:00 · 365-day window · eight tracked submarkets
 
 | Source | Records | In a submarket | Qualified |
 |---|---|---|---|

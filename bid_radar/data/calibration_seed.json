@@ -1,0 +1,48 @@
+{
+  "measures": "avgTI",
+  "basis": "declared job value on qualified fitout permits, City of Tampa Accela",
+  "window_days": 365,
+  "n": 29,
+  "avg_value": 2653242.9134482755,
+  "median_value": 1700000.0,
+  "by_hood": {
+    "airport": {
+      "hood_label": "Airport / Westshore",
+      "n": 8,
+      "value_total": 10812803.5,
+      "avg_value": 1351600.4375
+    },
+    "waterst": {
+      "hood_label": "Water Street",
+      "n": 5,
+      "value_total": 13290065.0,
+      "avg_value": 2658013.0
+    },
+    "ybor": {
+      "hood_label": "Ybor City",
+      "n": 5,
+      "value_total": 7002850.99,
+      "avg_value": 1400570.198
+    },
+    "riverwalk": {
+      "hood_label": "Downtown Riverwalk",
+      "n": 6,
+      "value_total": 35283528.0,
+      "avg_value": 5880588.0
+    },
+    "dalemabry": {
+      "hood_label": "Dale Mabry",
+      "n": 4,
+      "value_total": 10153300.0,
+      "avg_value": 2538325.0
+    },
+    "davis": {
+      "hood_label": "Davis Islands",
+      "n": 1,
+      "value_total": 401497.0,
+      "avg_value": 401497.0
+    }
+  },
+  "contractors_seen": 103,
+  "retrieved_at": "2026-09-14T03:05:20+00:00"
+}
