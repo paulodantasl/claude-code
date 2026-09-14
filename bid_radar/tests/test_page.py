@@ -299,3 +299,48 @@ def test_a_relationship_row_does_not_inflate_live_pipeline(rel):
 
 def test_no_console_errors_with_a_relationship_row(rel):
     assert rel.errors == []
+
+
+# ----------------------------------------------- JobTread status mapping
+
+# The eleven values Ideal's own `Status` custom field offers on a job, read
+# from custom field 22P6bRnsNu2Y (type option, targetType job) on 2026-09-14.
+# Not a guess at a generic JobTread vocabulary — this organization's list.
+JOB_STATUS_OPTIONS = [
+    "New Lead", "Estimate with Cost $", "Estimating HOMEE", "Approved",
+    "Permitting", "Construction", "Closed Waiting for payments",
+    "Paid Waiting to split", "Closed Won", "Closed Lost",
+    "Subcontractor Agreement",
+]
+
+
+def test_every_jobtread_status_maps_to_a_board_stage(bare):
+    """A status the page cannot map silently leaves the row where it was."""
+    mapping = bare.page.evaluate("JT_STAGE")
+    missing = [s for s in JOB_STATUS_OPTIONS if s not in mapping]
+    assert not missing, f"unmapped JobTread statuses: {missing}"
+    assert set(mapping.values()) <= {"signal", "qualified", "bidding", "won", "lost"}
+
+
+@pytest.mark.parametrize("status,stage", [
+    ("New Lead", "signal"),
+    ("Estimate with Cost $", "bidding"),
+    ("Estimating HOMEE", "bidding"),
+    ("Approved", "won"),            # the bid was accepted
+    ("Subcontractor Agreement", "won"),
+    ("Permitting", "won"),
+    ("Construction", "won"),
+    ("Closed Won", "won"),
+    ("Closed Lost", "lost"),
+])
+def test_jobtread_status_lands_on_the_right_stage(bare, status, stage):
+    assert bare.page.evaluate("s => JT_STAGE[s]", status) == stage
+
+
+def test_the_refresh_never_writes_a_contract_value(bare):
+    """documents.priceSum totals estimates, change orders and invoices
+    together. Calibration is only worth having if the value on a Won row is
+    the real contract somebody typed."""
+    src = bare.page.evaluate("refreshFromJobTread.toString()")
+    assert "valueActual" not in src
+    assert "jobtreadStatus" in src
