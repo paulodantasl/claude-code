@@ -62,6 +62,16 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.discover != 'false' }}
         run: python bid_radar/discover_leading.py
 
+      - name: Install chromium
+        run: python -m playwright install --with-deps chromium || echo "chromium unavailable"
+
+      - name: DISCOVER — Hillsborough Clerk NOC search
+        # workflow_dispatch is unavailable until this file reaches the default
+        # branch, so the phase-4 branch runs it on push.
+        if: ${{ endsWith(github.ref, '-p4') || (github.event_name == 'workflow_dispatch' && inputs.discover != 'false') }}
+        continue-on-error: true
+        run: python bid_radar/discover_noc.py
+
       - name: Unit and page tests
         env:
           PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
