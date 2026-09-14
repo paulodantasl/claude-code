@@ -49,7 +49,8 @@ KEYWORD_TRADE = [
                    r"surgical|imaging|radiolog|urgent care|physician|pediatric|\bmd\b|"
                    r"veterinar|dialysis|pharmacy|therapy|wellness center)"),
     ("retail",     r"\b(retail|store|shop\b|boutique|salon|barber|spa\b|showroom|"
-                   r"mercantile|tenant improvement within the mall)"),
+                   r"mercantile|tenant improvement within the mall|"
+                   r"fitness|gym\b|yoga|pilates|cycling studio|nail|lash|med spa)"),
     ("hospitality", r"\b(hotel|motel|resort|lodging|guest room|ballroom|banquet)"),
     ("office",     r"\b(office|suite \d|workplace|coworking|law firm|headquarters)"),
 ]
@@ -60,6 +61,13 @@ FITOUT_RECORD_TYPES = {
     "Commercial New Construction and Additions",
 }
 COMMERCIAL_RECORD_TYPES = FITOUT_RECORD_TYPES | {"Commercial Demolition Permit"}
+DEMOLITION_RECORD_TYPES = {"Commercial Demolition Permit", "Residential Demolition Permit"}
+
+# Occupancy categories broad enough that the free text is the better guide.
+# A-3 is "Worship. Amusement. Arcade. Church. Community Hall" — a fitness
+# studio, an arcade and a church all file under it, and a Hotworx buildout is
+# a retail fitout while a sanctuary is not.
+AMBIGUOUS_OCCUPANCY = {"A-3", "A-5", "B-9"}
 
 # Occupancy codes that mean "someone's home". These show up under commercial
 # record types because the building is a threshold high-rise, but the work is
@@ -68,6 +76,37 @@ COMMERCIAL_RECORD_TYPES = FITOUT_RECORD_TYPES | {"Commercial Demolition Permit"}
 DWELLING_OCCUPANCY = {"R-2", "R-3", "R-3A", "R-3B", "R-3C", "R-3D"}
 
 _EARLY_START = re.compile(r"\bEARLY\s*START\b", re.I)
+
+# A strip-out: the lease space is being demolished and the build-back will come
+# under a separate permit. The trade is not declared yet, but the tenant is
+# committed and the fitout has not been bid — which makes this one of the more
+# actionable rows the layer produces, not noise.
+_DEMO_SCOPE = re.compile(
+    r"\b(interior\s+demolition|demolition\s+of\s+(?:existing\s+)?"
+    r"(?:lease\s+space|partitions|interior)|strip[-\s]?out|gut\b)", re.I)
+_BUILD_BACK_PENDING = re.compile(
+    r"\b(?:build[-\s]?back|remodel\s+permit|fit[-\s]?out|build[-\s]?out|"
+    r"tenant\s+improvement)\b[^.]{0,100}?\b(?:separate\s+permit|under\s+separate|"
+    r"future\s+permit|to\s+be\s+(?:pulled|applied|submitted|permitted))"
+    r"|\b(?:separate|future)\s+permit\b[^.]{0,60}?\b(?:build[-\s]?back|remodel)"
+    , re.I)
+# Build-back described in this same permit — an ordinary fitout, not a strip-out.
+_BUILD_BACK_HERE = re.compile(
+    r"\b(construction\s+of\s+new|new\s+partitions|installation\s+of\s+new|"
+    r"new\s+finishes|build[-\s]?out\s+of|new\s+millwork|new\s+ceilings?)\b", re.I)
+
+
+def is_strip_out(*text: str | None) -> bool:
+    blob = " ".join(t for t in text if t)
+    if not _DEMO_SCOPE.search(blob):
+        return False
+    if _BUILD_BACK_HERE.search(blob):
+        return False
+    # Only when the record itself says the build-back comes later. Being
+    # conservative here is deliberate: mistaking a real fitout for a strip-out
+    # demotes its trade to `other` and loses the lead, which costs more than
+    # missing a strip-out and treating it as an ordinary record.
+    return bool(_BUILD_BACK_PENDING.search(blob))
 
 # --- Tenant-name extraction -------------------------------------------------
 # There is no applicant or contractor field in this layer (PLAN.md §3 #1). The
@@ -173,15 +212,46 @@ def occupancy_code(occupancy_category: str | None) -> str | None:
     return m.group(1) if m else None
 
 
-def trade_of(occupancy_category: str | None, *text: str | None) -> tuple[str, float]:
-    """(trade, confidence). Occupancy code is authoritative; keywords are a guess."""
-    code = occupancy_code(occupancy_category)
-    if code and code in OCCUPANCY_TRADE:
-        return OCCUPANCY_TRADE[code], 0.9
-    blob = " ".join(t for t in text if t)
+def _keyword_trade(blob: str) -> str | None:
     for trade, pattern in KEYWORD_TRADE:
         if re.search(pattern, blob, re.I):
-            return trade, 0.5
+            return trade
+    return None
+
+
+def trade_of(occupancy_category: str | None, *text: str | None,
+             record_type: str | None = None) -> tuple[str, float]:
+    """(trade, confidence).
+
+    The filed FBC occupancy code is authoritative, with two exceptions:
+
+      * A demolition permit has no fitout trade at all. Without this guard the
+        keyword fallback reads "demolition of two story wood framed office
+        buildings" and returns `office`, which would put a teardown on the
+        outreach list.
+      * A handful of occupancy codes are grab-bags (AMBIGUOUS_OCCUPANCY); for
+        those the description is the better guide and keywords are tried first.
+    """
+    if (record_type or "") in DEMOLITION_RECORD_TYPES:
+        return "other", 0.3
+
+    blob = " ".join(t for t in text if t)
+    if is_strip_out(*text):
+        # The space is being emptied; the trade is declared on the build-back
+        # permit, which has not been filed. Saying `office` here because the
+        # word appears in the scope would be a guess.
+        return "other", 0.3
+    code = occupancy_code(occupancy_category)
+
+    if code in AMBIGUOUS_OCCUPANCY:
+        kw = _keyword_trade(blob)
+        if kw and kw != OCCUPANCY_TRADE.get(code):
+            return kw, 0.7
+    if code and code in OCCUPANCY_TRADE:
+        return OCCUPANCY_TRADE[code], 0.9
+    kw = _keyword_trade(blob)
+    if kw:
+        return kw, 0.5
     return "other", 0.2
 
 
@@ -195,6 +265,8 @@ def stage_of(project_status: str | None, *text: str | None) -> str:
     blob = " ".join(t for t in text if t)
     if _EARLY_START.search(blob):
         return "early_start"
+    if is_strip_out(*text):
+        return "strip_out"
     if (project_status or "").strip().lower() == "revision":
         return "revision"
     return "issued"

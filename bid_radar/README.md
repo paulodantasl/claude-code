@@ -200,3 +200,68 @@ point geometry (see PLAN.md §3):
   that yields a real dollar value.
 
 Those are Phase 2.
+
+---
+
+## Scoring (Phase 1)
+
+`score.py` turns a signal into a 0–100 score and a qualify/no decision, per
+PLAN.md §2.3 and §2.4. `blocklist.yaml` holds the names we will never win —
+national programmes with in-house construction, and public bodies whose work
+comes through a procurement portal rather than a tenant introduction.
+
+Two honest adaptations, because the permit source cannot supply what the plan
+assumed:
+
+- **Value is unknown on every permit row.** The plan already scores an unknown
+  value at 8/20, so permits take that. The CRA grant layer (Phase 2) is the one
+  source with a real dollar figure.
+- **Nothing has a contact channel.** The qualified-lead definition requires
+  one; enforcing it as a hard gate would qualify zero rows. It is a *soft*
+  blocker instead — the row still qualifies, carries `needs_contact`, and joins
+  the queue that Phase 2 enriches from the alcoholic-beverage layer.
+
+Hard blockers, which do disqualify: outside every submarket, trade `other`
+(except a strip-out, where the trade is genuinely not declared yet),
+blocklisted, already awarded, or below the size gate.
+
+### Two rules that came out of labelling the first real run
+
+- A **demolition** record returns `other` and never consults keywords.
+  Otherwise "demolition of two story wood framed office buildings" reads as an
+  office lead and a teardown lands on the call list.
+- A **strip-out** — the record says the space is being emptied and the
+  build-back comes under a separate permit — gets its own stage. The tenant is
+  committed, the fitout has not been bid, and the trade is declared later.
+  Detection only fires when the record itself says the build-back is separate;
+  a false positive would demote a real fitout to `other` and lose the lead.
+
+### The funnel, measured
+
+29 commercial permits in 90 days → 16 in a tracked submarket → **4 qualified**:
+Wagamama Pan Asian (73), Edikted (63), Altieri Ins. Consultants (58),
+Nationwide (58). Nineteen of the 29 were already-issued permits, which the
+definition correctly refuses to call outreach.
+
+**Four qualified leads a quarter, none with a phone number, is the honest
+ceiling of the permit source on its own.** Phase 2 is where the volume is.
+
+## Into JobTread (Phase 1)
+
+`to_leads.py` maps qualified signals onto the existing `ideal_apis` pipeline —
+`LeadRecord` → `ApprovalBatch` → the approve → JobTread → QUO flow, unchanged.
+Dry run by default:
+
+```
+python bid_radar/to_leads.py --signals bid_radar/data/signals.jsonl
+python bid_radar/to_leads.py --signals bid_radar/data/signals.jsonl --write
+```
+
+Signals with a contact become **contact leads** and are eligible for a JobTread
+push. Signals without become **intel leads** — the slot the batch already has
+for non-contactable rows. Every permit signal is intel today.
+
+The JobTread handshake was observed live through the `Ideal` connector, not
+assumed: org `22P6bRn5p6Pn`, 259 customer accounts, and the `accounts … name
+like` and `createAccount` shapes are recorded in PLAN.md §6 Phase 1. Nothing in
+the tracker page will call a shape that has not been observed.

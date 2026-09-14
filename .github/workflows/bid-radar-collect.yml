@@ -47,6 +47,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install requests tenacity pyyaml shapely pytest
+          pip install -e ./ideal_apis
 
       - name: DISCOVER — Tampa ArcGIS vocabulary
         if: ${{ github.event.inputs.discover != 'false' }}
@@ -70,6 +71,12 @@ jobs:
             python bid_radar/collect.py
           else
             echo "collect.py not written yet — discovery-only run"
+          fi
+
+      - name: Qualified leads → ideal_apis approval batch (dry run)
+        run: |
+          if [ -f bid_radar/data/signals.jsonl ]; then
+            python bid_radar/to_leads.py --signals bid_radar/data/signals.jsonl
           fi
 
       - name: Summary to job log

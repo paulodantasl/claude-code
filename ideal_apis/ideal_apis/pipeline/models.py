@@ -6,7 +6,13 @@ from typing import Any, Literal
 
 Priority = Literal["high", "medium", "low"]
 Brand = Literal["ideal_dental", "ideal_cgc", "ideal_remodeling"]
-Source = Literal["nppes", "yelp", "openfema", "usaspending", "federal_contracts", "weather", "manual"]
+Source = Literal[
+    # Existing daily-pipeline sources
+    "nppes", "yelp", "openfema", "usaspending", "federal_contracts", "weather", "manual",
+    # Bid Radar (bid_radar/) — Tampa submarket fitout signals
+    "permit", "entitlement", "abt", "dbpr_hr", "sunbiz", "ahca", "noc",
+    "cra_grant", "hcaa_ppo",
+]
 
 
 @dataclass

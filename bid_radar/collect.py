@@ -39,6 +39,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import classify  # noqa: E402
 import geo  # noqa: E402
+import score as scoring  # noqa: E402
 
 SERVICE = os.environ.get(
     "TAMPA_SERVICE",
@@ -102,7 +103,7 @@ def to_signal(feat: dict) -> dict | None:
     occ = (a.get("OCCUPANCYCATEGORY") or "").strip()
     record_type = (a.get("RECORDTYPE") or "").strip()
 
-    trade, confidence = classify.trade_of(occ, name2, desc)
+    trade, confidence = classify.trade_of(occ, name2, desc, record_type=record_type)
     address = " ".join((a.get("ADDRESS") or "").split())
     unit = (a.get("UNIT") or "").strip()
     sqft = a.get("NEWCONSTRUCTIONSF") or None
@@ -147,6 +148,11 @@ def to_signal(feat: dict) -> dict | None:
     }
 
 
+def scored(signal: dict) -> dict:
+    signal.update(scoring.score(signal))
+    return signal
+
+
 def summary(signals: list[dict], stats: dict) -> str:
     tracked = [s for s in signals if s["hood"]]
     fitouts = [s for s in tracked if s["is_fitout"]]
@@ -165,6 +171,8 @@ def summary(signals: list[dict], stats: dict) -> str:
     L.append(f"- {stats['fetched']} commercial records in the window")
     L.append(f"- **{len(fitouts)}** fitout-capable records inside a tracked submarket "
              f"— **{len(recent)}** of them filed in the last {HEADLINE_DAYS} days")
+    L.append(f"- **{len([s for s in fitouts if s.get('qualified')])}** qualified "
+             f"(score ≥ {scoring.QUALIFY_AT}, no hard blocker)")
     L.append(f"- **{len(early)}** at EARLY START, where buyout is still open")
     L.append("")
     L.append("> **What this source can tell you.** The layer publishes permits at "
@@ -199,12 +207,40 @@ def summary(signals: list[dict], stats: dict) -> str:
         L.append("_No fitout-capable records inside a tracked submarket in this window._")
     L.append("")
 
+    qualified = sorted([s for s in fitouts if s.get("qualified")],
+                       key=lambda s: -s["score"])
+    strip = [s for s in fitouts if s["stage_hint"] == "strip_out"]
+
+    L.append(f"## Qualified — call these ({len(qualified)})")
+    L.append("")
+    L.append(f"Score at or above {scoring.QUALIFY_AT}/100 with no hard blocker "
+             f"(PLAN §2.3/§2.4). `needs_contact` on a row means the entity is "
+             f"named but the permit layer carries no phone or email — that is "
+             f"every permit row, and it is what the alcoholic-beverage layer "
+             f"fixes in Phase 2.")
+    L.append("")
+    L.append(_table(qualified, score_col=True) if qualified else "_none in this window_")
+    L.append("")
+
     if early:
         L.append(f"## EARLY START — main permit still pending, buyout open ({len(early)})")
         L.append("")
-        L.append("These are the only rows in this file with a live bid window.")
+        L.append("The city has released interior non-structural work while the "
+                 "main permit is in review. The rest of the scope is still being "
+                 "bought out.")
         L.append("")
-        L.append(_table(_by_date(early)))
+        L.append(_table(_by_date(early), score_col=True))
+        L.append("")
+
+    if strip:
+        L.append(f"## Strip-outs — build-back permit not yet filed ({len(strip)})")
+        L.append("")
+        L.append("The lease space is being emptied and the record says the "
+                 "build-back comes under a separate permit. The tenant is "
+                 "committed; the fitout has not been bid; the trade is not "
+                 "declared yet.")
+        L.append("")
+        L.append(_table(_by_date(strip), score_col=True))
         L.append("")
 
     L.append(f"## Filed in the last {HEADLINE_DAYS} days ({len(recent)})")
@@ -249,19 +285,24 @@ def _by_date(rows: list[dict]) -> list[dict]:
     return sorted(rows, key=lambda s: (s["filed_at"] or ""), reverse=True)
 
 
-def _table(rows: list[dict]) -> str:
-    head = ("| Permit | Filed | Stage | Submarket | Trade | Tenant / project | "
-            "Address | Source |")
-    out = [head, "|---|---|---|---|---|---|---|---|"]
+def _table(rows: list[dict], *, score_col: bool = False) -> str:
+    cols = ["Permit", "Filed", "Stage", "Submarket", "Trade"]
+    if score_col:
+        cols.append("Score")
+    cols += ["Tenant / project", "Address", "Flags", "Source"]
+    out = ["| " + " | ".join(cols) + " |", "|" + "---|" * len(cols)]
     for s in rows:
         name = (s["entity"] or s["scope"] or "—").replace("|", "/")
-        if len(name) > 60:
-            name = name[:57] + "…"
+        if len(name) > 55:
+            name = name[:52] + "…"
         link = f"[record]({s['source_url']})" if s["source_url"] else "—"
-        out.append(
-            f"| `{s['source_id']}` | {s['filed_at'] or '—'} | {s['stage_hint']} | "
-            f"{geo.hood_label(s['hood'])} | {s['trade']} | {name} | "
-            f"{s['address'] or '—'} | {link} |")
+        flags = ", ".join((s.get("blockers") or []) + (s.get("warnings") or [])) or "—"
+        cells = [f"`{s['source_id']}`", s["filed_at"] or "—", s["stage_hint"],
+                 geo.hood_label(s["hood"]), s["trade"]]
+        if score_col:
+            cells.append(f"**{s.get('score', 0)}**")
+        cells += [name, s["address"] or "—", flags, link]
+        out.append("| " + " | ".join(cells) + " |")
     return "\n".join(out)
 
 
@@ -274,7 +315,7 @@ def main() -> int:
     feats = fetch(where)
     print(f"fetched {len(feats)} features", flush=True)
 
-    signals = [s for s in (to_signal(f) for f in feats) if s]
+    signals = [scored(s) for s in (to_signal(f) for f in feats) if s]
     signals.sort(key=lambda s: (s["filed_at"] or ""), reverse=True)
 
     try:
