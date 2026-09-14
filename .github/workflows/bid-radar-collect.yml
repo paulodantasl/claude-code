@@ -12,7 +12,7 @@ on:
       days_back:
         description: "Look-back window in days"
         required: false
-        default: "90"
+        default: "365"
       discover:
         description: "Re-run the ArcGIS vocabulary discovery"
         required: false
@@ -35,7 +35,7 @@ jobs:
   collect:
     runs-on: ubuntu-latest
     env:
-      DAYS_BACK: ${{ github.event.inputs.days_back || '90' }}
+      DAYS_BACK: ${{ github.event.inputs.days_back || '365' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -48,22 +48,26 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests tenacity pyyaml shapely pytest
           pip install -e ./ideal_apis
+          pip install playwright   # browser tests for the tracker page
 
       - name: DISCOVER — Tampa ArcGIS vocabulary
-        if: ${{ github.event.inputs.discover != 'false' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.discover != 'false' }}
         run: python bid_radar/discover_tampa.py
 
       - name: DISCOVER — other Tampa sources
-        if: ${{ github.event.inputs.discover != 'false' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.discover != 'false' }}
         run: python bid_radar/discover_sources.py
 
       - name: DISCOVER — leading-indicator layers
-        if: ${{ github.event.inputs.discover != 'false' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.discover != 'false' }}
         run: python bid_radar/discover_leading.py
 
-      - name: Unit tests
+      - name: Unit and page tests
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
         run: |
-          if [ -d bid_radar/tests ]; then pytest -q bid_radar/tests; else echo "no tests yet"; fi
+          python -m playwright install --with-deps chromium ||             echo "chromium unavailable — page tests will skip"
+          pytest -q bid_radar/tests
 
       - name: COLLECT — build signals
         run: |

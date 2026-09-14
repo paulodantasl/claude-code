@@ -1,151 +1,60 @@
 """
-Bid Radar collector — City of Tampa building permits.
+Bid Radar collector — orchestrates every Tampa source.
 
-Reads the public ArcGIS FeatureServer layer, keeps commercial records inside
-the eight tracked submarkets, classifies them, and writes:
+Runs each collector in `bid_radar/sources/`, scores the signals, filters to the
+eight tracked submarkets and writes:
 
-    bid_radar/data/signals.jsonl   one RawSignal per line
-    bid_radar/data/summary.md      what a human reads on Monday morning
+    bid_radar/data/signals.jsonl        one scored signal per line
+    bid_radar/data/summary.md           what a human reads on Monday morning
+    bid_radar/data/abt_directory.csv    Active licensed venues in our
+                                        submarkets, with contact details
 
 Runs in GitHub Actions; the Claude sandbox cannot reach the host (PLAN.md §0).
-
-What this source can and cannot tell us — established from the layer itself on
-2026-09-14, not assumed:
-
-  * PROJECTSTATUS only ever reads `Issued` or `Revision`. There is no
-    application or in-review stage, so a permit here is NOT advance notice of
-    a job going out to bid. The exception is `EARLY START`, where the city has
-    released interior non-structural work while the main permit is still
-    pending — those have a live buyout window.
-  * There is no valuation, applicant, owner or contractor field. Value cannot
-    be scored from this source and the tenant has to be parsed out of
-    PROJECTNAME2 / PROJECTDESCRIPTION.
-  * CREATEDDATE is the intake date and LASTUPDATE the issue/update date; the
-    gap ran 15-66 days (median 35) across the 25 most recent commercial
-    records.
+One source failing does not stop the others — an outage on one layer should
+cost that section of the report, not the report.
 """
 from __future__ import annotations
 
-import hashlib
+import csv
 import json
 import os
 import sys
+import traceback
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 
-import requests
-
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import classify  # noqa: E402
+import arcgis  # noqa: E402
 import geo  # noqa: E402
 import score as scoring  # noqa: E402
+import sources  # noqa: E402
+from sources import abt as abt_source  # noqa: E402
+from sources.permits import to_signal  # noqa: E402,F401  (re-exported for tests)
 
-SERVICE = os.environ.get(
-    "TAMPA_SERVICE",
-    "https://arcgis.tampagov.net/arcgis/rest/services/Planning/PermitsAll/FeatureServer",
-)
-LAYER = int(os.environ.get("TAMPA_LAYER", "0"))
-QUERY = f"{SERVICE}/{LAYER}/query"
 DAYS_BACK = int(os.environ.get("DAYS_BACK", "365"))
 HEADLINE_DAYS = int(os.environ.get("HEADLINE_DAYS", "90"))
-PAGE = 1000
-TIMEOUT = 60
-
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 RETRIEVED_AT = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 TRADE_ORDER = ["medical", "restaurant", "hospitality", "retail", "office", "other"]
 
+# Stages a human can act on, most urgent first. Anything else is history.
+LIVE_STAGES = ["early_start", "strip_out", "cra_awarded", "abt", "pre_permit", "revision"]
 
-def _ms_to_date(v) -> str | None:
-    if not isinstance(v, (int, float)) or v <= 0:
-        return None
-    return datetime.fromtimestamp(v / 1000, timezone.utc).date().isoformat()
-
-
-def fetch(where: str) -> list[dict]:
-    """Page through the layer. Geometry is requested in WGS84."""
-    out, offset = [], 0
-    while True:
-        resp = requests.get(QUERY, params={
-            "where": where,
-            "outFields": "*",
-            "returnGeometry": "true",
-            "outSR": 4326,
-            "orderByFields": "CREATEDDATE DESC",
-            "resultOffset": offset,
-            "resultRecordCount": PAGE,
-            "f": "json",
-        }, timeout=TIMEOUT)
-        resp.raise_for_status()
-        body = resp.json()
-        if "error" in body:
-            raise RuntimeError(f"ArcGIS error: {body['error']}")
-        feats = body.get("features", [])
-        out.extend(feats)
-        if not feats or not body.get("exceededTransferLimit"):
-            return out
-        offset += PAGE
-
-
-def to_signal(feat: dict) -> dict | None:
-    a = feat.get("attributes", {})
-    g = feat.get("geometry") or {}
-    lon, lat = g.get("x"), g.get("y")
-    record_id = (a.get("RECORD_ID") or "").strip()
-    if not record_id:
-        return None
-
-    name2 = (a.get("PROJECTNAME2") or "").strip()
-    name1 = (a.get("PROJECTNAME1") or "").strip()
-    desc = (a.get("PROJECTDESCRIPTION") or "").strip()
-    occ = (a.get("OCCUPANCYCATEGORY") or "").strip()
-    record_type = (a.get("RECORDTYPE") or "").strip()
-
-    trade, confidence = classify.trade_of(occ, name2, desc, record_type=record_type)
-    address = " ".join((a.get("ADDRESS") or "").split())
-    unit = (a.get("UNIT") or "").strip()
-    sqft = a.get("NEWCONSTRUCTIONSF") or None
-
-    return {
-        "id": "permit-" + hashlib.sha1(f"permit:{record_id}".encode()).hexdigest()[:16],
-        "source": "permit",
-        "source_id": record_id,
-        "source_url": (a.get("URL") or "").strip() or None,
-        "retrieved_at": RETRIEVED_AT,
-
-        "hood": geo.hood_of(lon, lat),
-        "address": f"{address} #{unit}" if unit else address,
-        "zip": (a.get("ZIP") or "").strip() or None,
-        "lat": lat, "lon": lon,
-        "city_neighborhood": (a.get("NEIGHBORHOOD") or "").strip() or None,
-        "cra": (a.get("CRA") or "").strip() or None,
-        "council_district": (a.get("COUNCIL") or "").strip() or None,
-
-        "entity": classify.entity_of(name2, desc),
-        "brand": None,                    # Phase 1
-        "trade": trade,
-        "confidence": confidence,
-        "stage_hint": classify.stage_of(a.get("PROJECTSTATUS"), name2, desc),
-        "record_type": record_type,
-        "occupancy_category": occ or None,
-        "occupancy_type": (a.get("OCCUPANCYTYPE") or "").strip() or None,
-        "is_fitout": classify.is_fitout(record_type, occ),
-        "is_dwelling": classify.is_dwelling(occ),
-
-        "value_est": None,                # field does not exist in this layer
-        "sqft": sqft,
-        "seats": None,
-        "filed_at": _ms_to_date(a.get("CREATEDDATE")),
-        "issued_at": _ms_to_date(a.get("LASTUPDATE")),
-        "project_name": name2 or name1 or None,
-        "scope": classify.scope_label(name2, desc),
-        "description": desc or None,
-        "private_provider": (a.get("PRIVATEPROVIDER") or "").strip() or None,
-        "stop_work_order": (a.get("STOPWORKORDER") or "").strip() or None,
-        "contacts": [],                   # no contact field in this source
-    }
+STAGE_BLURB = {
+    "early_start": "The city released interior non-structural work while the main "
+                   "permit is still in review. The rest of the scope is being bought out now.",
+    "strip_out": "The lease space is being emptied and the record says the build-back "
+                 "comes under a separate permit. Committed tenant, unbid fitout.",
+    "cra_awarded": "CRA grant money is committed and the work is not finished. "
+                   "The only source here with a real dollar figure.",
+    "abt": "A wet-zoning record moved — new, newly placarded, or newly Active. "
+           "The one source that comes with a phone number.",
+    "pre_permit": "A live rezoning, variance or special-use case with a hearing date. "
+                  "The earliest signal we have; no tenant named yet.",
+    "revision": "A change to an in-flight permit. The job is active.",
+}
 
 
 def scored(signal: dict) -> dict:
@@ -153,44 +62,117 @@ def scored(signal: dict) -> dict:
     return signal
 
 
-def summary(signals: list[dict], stats: dict) -> str:
-    tracked = [s for s in signals if s["hood"]]
-    fitouts = [s for s in tracked if s["is_fitout"]]
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=HEADLINE_DAYS)).date().isoformat()
-    recent = [s for s in fitouts if (s["filed_at"] or "") >= cutoff]
-    older = [s for s in fitouts if (s["filed_at"] or "") < cutoff]
-    early = [s for s in fitouts if s["stage_hint"] == "early_start"]
+def run_sources(days_back: int) -> tuple[list[dict], dict]:
+    """Collect every source. Ids are the §2.2 dedupe key, and a source can
+    legitimately return the same record twice — the permit layer carries one
+    feature per address unit, so BLD-26-0522346 arrives as both
+    `5041 W Cypress St` and `5041 W Cypress St #FS`. Keep the first; they
+    would collide on one document id in the tracker anyway."""
+    signals: list[dict] = []
+    seen: set[str] = set()
+    report: dict = {}
+    for module in sources.ALL:
+        try:
+            rows = module.collect(days_back)
+            fresh = [r for r in rows if r["id"] not in seen and not seen.add(r["id"])]
+            signals.extend(scored(s) for s in fresh)
+            report[module.SOURCE] = {"name": module.NAME, "fetched": len(fresh),
+                                     "duplicates": len(rows) - len(fresh)}
+            dupes = f" ({len(rows) - len(fresh)} duplicate ids dropped)" if len(rows) != len(fresh) else ""
+            print(f"  {module.SOURCE:<12} {len(fresh):>5} records{dupes}", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            report[module.SOURCE] = {"name": module.NAME, "error": f"{type(exc).__name__}: {exc}"}
+            print(f"  {module.SOURCE:<12} FAILED {type(exc).__name__}: {exc}", flush=True)
+            traceback.print_exc()
+    return signals, report
+
+
+# --------------------------------------------------------------------- report
+
+def _table(rows: list[dict], *, score_col: bool = True) -> str:
+    cols = ["Source", "Ref", "Filed", "Stage", "Submarket", "Trade"]
+    if score_col:
+        cols.append("Score")
+    cols += ["Entity / scope", "Address", "Contact", "Value", "Link"]
+    out = ["| " + " | ".join(cols) + " |", "|" + "---|" * len(cols)]
+    for s in rows:
+        name = (s.get("entity") or s.get("scope") or "—").replace("|", "/")
+        if len(name) > 46:
+            name = name[:43] + "…"
+        contacts = s.get("contacts") or []
+        contact = contacts[0]["value"] if contacts else "—"
+        if len(contacts) > 1:
+            contact += f" (+{len(contacts) - 1})"
+        value = f"${s['value_est']:,.0f}" if s.get("value_est") else "—"
+        link = f"[record]({s['source_url']})" if s.get("source_url") else "—"
+        cells = [s["source"], f"`{s['source_id']}`", s.get("filed_at") or "—",
+                 s.get("stage_hint") or "—",
+                 geo.hood_label(s["hood"]) if s.get("hood") else "—",
+                 s.get("trade") or "—"]
+        if score_col:
+            cells.append(f"**{s.get('score', 0)}**")
+        cells += [name, s.get("address") or "—", contact, value, link]
+        out.append("| " + " | ".join(cells) + " |")
+    return "\n".join(out)
+
+
+def _by_score(rows: list[dict]) -> list[dict]:
+    return sorted(rows, key=lambda s: (-(s.get("score") or 0), s.get("filed_at") or ""))
+
+
+def summary(signals: list[dict], report: dict, directory: list[dict] | None = None) -> str:
+    tracked = [s for s in signals if s.get("hood")]
+    qualified = _by_score([s for s in tracked if s.get("qualified")])
+    directory = directory or []
 
     L: list[str] = []
-    L.append("# Tampa Bid Radar — permit signals")
+    L.append("# Tampa Bid Radar")
     L.append("")
-    L.append(f"Collected {RETRIEVED_AT} · {DAYS_BACK}-day window by application date "
-             f"(CREATEDDATE) · source "
-             f"[City of Tampa PermitsAll]({SERVICE}/{LAYER})")
-    L.append("")
-    L.append(f"- {stats['fetched']} commercial records in the window")
-    L.append(f"- **{len(fitouts)}** fitout-capable records inside a tracked submarket "
-             f"— **{len(recent)}** of them filed in the last {HEADLINE_DAYS} days")
-    L.append(f"- **{len([s for s in fitouts if s.get('qualified')])}** qualified "
-             f"(score ≥ {scoring.QUALIFY_AT}, no hard blocker)")
-    L.append(f"- **{len(early)}** at EARLY START, where buyout is still open")
-    L.append("")
-    L.append("> **What this source can tell you.** The layer publishes permits at "
-             "issuance — it has no application or in-review stage — so a row here is "
-             "a job that is already permitted, unless it is tagged `early_start`: "
-             "there the city has released interior non-structural work while the "
-             "main permit is still pending, and the rest of the scope is still being "
-             "bought out. Intake to issue ran 15-66 days (median 35) across the most "
-             "recent commercial records. The layer carries no valuation, applicant, "
-             "owner or contractor field, so those columns are absent rather than "
-             "guessed; the tenant is parsed out of the project name and description "
-             "and is blank where it could not be read with confidence.")
+    L.append(f"Collected {RETRIEVED_AT} · {DAYS_BACK}-day window · "
+             f"eight tracked submarkets")
     L.append("")
 
-    L.append("## By submarket × trade")
+    L.append("| Source | Records | In a submarket | Qualified |")
+    L.append("|---|---|---|---|")
+    for src, info in report.items():
+        if "error" in info:
+            L.append(f"| {info['name']} | ⚠️ {info['error']} | — | — |")
+            continue
+        in_hood = [s for s in tracked if s["source"] == src]
+        qual = [s for s in in_hood if s.get("qualified")]
+        L.append(f"| {info['name']} | {info['fetched']} | {len(in_hood)} | "
+                 f"**{len(qual)}**|")
+    L.append(f"| _total_ | {sum(i.get('fetched', 0) for i in report.values())} | "
+             f"{len(tracked)} | **{len(qualified)}** |")
     L.append("")
+
+    # ---- the list ----------------------------------------------------
+    L.append(f"## Qualified — call these ({len(qualified)})")
+    L.append("")
+    L.append(f"Score ≥ {scoring.QUALIFY_AT}/100 with no hard blocker (PLAN §2.3/§2.4), "
+             f"inside one of the eight submarkets, bid window still open.")
+    L.append("")
+    L.append(_table(qualified) if qualified else "_none in this window_")
+    L.append("")
+
+    # ---- by stage ----------------------------------------------------
+    for stage in LIVE_STAGES:
+        rows = _by_score([s for s in tracked if s.get("stage_hint") == stage])
+        if not rows:
+            continue
+        L.append(f"## {stage} ({len(rows)})")
+        L.append("")
+        L.append(STAGE_BLURB.get(stage, ""))
+        L.append("")
+        L.append(_table(rows))
+        L.append("")
+
+    # ---- grid --------------------------------------------------------
+    L.append("## Submarket × trade (live stages only)")
+    L.append("")
+    live = [s for s in tracked if s.get("stage_hint") in LIVE_STAGES]
     grid: dict[str, Counter] = defaultdict(Counter)
-    for s in fitouts:
+    for s in live:
         grid[s["hood"]][s["trade"]] += 1
     trades = [t for t in TRADE_ORDER if any(g[t] for g in grid.values())]
     if trades:
@@ -204,146 +186,118 @@ def summary(signals: list[dict], stats: dict) -> str:
                      + " | ".join(str(row[t] or "") for t in trades)
                      + f" | **{sum(row.values())}** |")
     else:
-        L.append("_No fitout-capable records inside a tracked submarket in this window._")
+        L.append("_nothing live in a tracked submarket in this window_")
     L.append("")
 
-    qualified = sorted([s for s in fitouts if s.get("qualified")],
-                       key=lambda s: -s["score"])
-    strip = [s for s in fitouts if s["stage_hint"] == "strip_out"]
+    # ---- already awarded --------------------------------------------
+    late = _by_score([s for s in tracked if s.get("late") and s.get("is_fitout")])
+    if late:
+        L.append(f"## Already permitted ({len(late)})")
+        L.append("")
+        L.append("Not an outreach list. This is who is building what, where — the "
+                 "input to win-rate analysis (PLAN Phase 4).")
+        L.append("")
+        L.append(_table(late[:60], score_col=False))
+        if len(late) > 60:
+            L.append("")
+            L.append(f"_…and {len(late) - 60} more in `signals.jsonl`._")
+        L.append("")
 
-    L.append(f"## Qualified — call these ({len(qualified)})")
+    # ---- directory ---------------------------------------------------
+    if directory:
+        by_hood = Counter(s["hood"] for s in directory)
+        L.append(f"## Licensed venue directory ({len(directory)})")
+        L.append("")
+        L.append("Every **Active** alcoholic-beverage venue inside a tracked "
+                 "submarket that publishes a phone or an email. Not leads — a "
+                 "prospecting list of the bars and restaurants in our eight "
+                 "submarkets, with the owner's own contact details from the "
+                 "public record. Full table in `abt_directory.csv`.")
+        L.append("")
+        L.append("| Submarket | Venues with contact details |")
+        L.append("|---|---|")
+        for hood in geo.all_hoods():
+            if by_hood.get(hood):
+                L.append(f"| {geo.hood_label(hood)} | {by_hood[hood]} |")
+        L.append("")
+
+    # ---- notes -------------------------------------------------------
+    L.append("## What each source can and cannot tell you")
     L.append("")
-    L.append(f"Score at or above {scoring.QUALIFY_AT}/100 with no hard blocker "
-             f"(PLAN §2.3/§2.4). `needs_contact` on a row means the entity is "
-             f"named but the permit layer carries no phone or email — that is "
-             f"every permit row, and it is what the alcoholic-beverage layer "
-             f"fixes in Phase 2.")
+    L.append("- **Building permits** publish at issuance. There is no application "
+             "stage, no valuation, and no applicant or contractor field. Only "
+             "`early_start` and `strip_out` rows have a live bid window; the "
+             "tenant is parsed from the project description and is blank where it "
+             "could not be read with confidence.")
+    L.append("- **Active entitlements** are the earliest signal — a live rezoning "
+             "or special-use case with a published hearing date — but the layer "
+             "names no applicant, so the address is the lead and the trade is "
+             "undeclared except on alcoholic-beverage cases.")
+    L.append("- **Alcoholic-beverage permits** are the only source with a contact "
+             "channel. Seat counts are filled on 23 of 4,096 rows and are not used.")
+    L.append("- **CRA grants** are the only source with a real dollar figure "
+             "(`TOTALPROJECTCOST`); a grant that is Awarded and not Completed has "
+             "committed money and outstanding work.")
     L.append("")
-    L.append(_table(qualified, score_col=True) if qualified else "_none in this window_")
-    L.append("")
-
-    if early:
-        L.append(f"## EARLY START — main permit still pending, buyout open ({len(early)})")
-        L.append("")
-        L.append("The city has released interior non-structural work while the "
-                 "main permit is in review. The rest of the scope is still being "
-                 "bought out.")
-        L.append("")
-        L.append(_table(_by_date(early), score_col=True))
-        L.append("")
-
-    if strip:
-        L.append(f"## Strip-outs — build-back permit not yet filed ({len(strip)})")
-        L.append("")
-        L.append("The lease space is being emptied and the record says the "
-                 "build-back comes under a separate permit. The tenant is "
-                 "committed; the fitout has not been bid; the trade is not "
-                 "declared yet.")
-        L.append("")
-        L.append(_table(_by_date(strip), score_col=True))
-        L.append("")
-
-    L.append(f"## Filed in the last {HEADLINE_DAYS} days ({len(recent)})")
-    L.append("")
-    L.append(_table(_by_date(recent)) if recent else "_none_")
-    L.append("")
-
-    if older:
-        L.append(f"## Filed {HEADLINE_DAYS}-{DAYS_BACK} days ago ({len(older)})")
-        L.append("")
-        L.append("Already built or building — this is the win-rate and "
-                 "who-is-active-where record, not an outreach list.")
-        L.append("")
-        L.append(_table(_by_date(older)))
-        L.append("")
-
-    dwellings = [s for s in tracked if s["is_dwelling"]]
-    demo = [s for s in tracked
-            if s["record_type"] == "Commercial Demolition Permit"]
-    if demo:
-        L.append(f"## Commercial demolition in tracked submarkets ({len(demo)})")
-        L.append("")
-        L.append("A precursor: something is coming to this address.")
-        L.append("")
-        L.append(_table(_by_date(demo)))
-        L.append("")
-
-    L.append("## Source notes")
-    L.append("")
-    L.append(f"- Layer total {stats.get('layer_total', 'n/a')} features; record types "
-             f"present: {', '.join(sorted(stats['record_types']))}")
-    L.append(f"- {stats['fetched'] - len(tracked)} commercial records fell outside "
-             f"every tracked submarket")
-    L.append(f"- {len(dwellings)} records were dropped as dwelling occupancies "
-             f"(R-2/R-3) — condo kitchen and bathroom remodels pulled under a "
-             f"commercial permit because the building is a threshold high-rise")
-    L.append("- `source_url` is the City of Tampa Accela record page for that permit")
+    L.append(f"Signals outside every tracked submarket: "
+             f"{len(signals) - len(tracked)} of {len(signals)}.")
     return "\n".join(L)
 
 
-def _by_date(rows: list[dict]) -> list[dict]:
-    return sorted(rows, key=lambda s: (s["filed_at"] or ""), reverse=True)
-
-
-def _table(rows: list[dict], *, score_col: bool = False) -> str:
-    cols = ["Permit", "Filed", "Stage", "Submarket", "Trade"]
-    if score_col:
-        cols.append("Score")
-    cols += ["Tenant / project", "Address", "Flags", "Source"]
-    out = ["| " + " | ".join(cols) + " |", "|" + "---|" * len(cols)]
-    for s in rows:
-        name = (s["entity"] or s["scope"] or "—").replace("|", "/")
-        if len(name) > 55:
-            name = name[:52] + "…"
-        link = f"[record]({s['source_url']})" if s["source_url"] else "—"
-        flags = ", ".join((s.get("blockers") or []) + (s.get("warnings") or [])) or "—"
-        cells = [f"`{s['source_id']}`", s["filed_at"] or "—", s["stage_hint"],
-                 geo.hood_label(s["hood"]), s["trade"]]
-        if score_col:
-            cells.append(f"**{s.get('score', 0)}**")
-        cells += [name, s["address"] or "—", flags, link]
-        out.append("| " + " | ".join(cells) + " |")
-    return "\n".join(out)
+def write_directory(rows: list[dict], path: str) -> None:
+    cols = ["hood", "entity", "owner_name", "address", "zip", "phone", "email",
+            "sale_type", "occupancy_type", "sqft", "ab_status_at", "source_url"]
+    with open(path, "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=cols)
+        w.writeheader()
+        for s in sorted(rows, key=lambda s: (s["hood"], s.get("entity") or "")):
+            contacts = s.get("contacts") or []
+            w.writerow({
+                "hood": geo.hood_label(s["hood"]),
+                "entity": s.get("entity"), "owner_name": s.get("owner_name"),
+                "address": s.get("address"), "zip": s.get("zip"),
+                "phone": next((c["value"] for c in contacts if c["kind"] == "phone"), ""),
+                "email": next((c["value"] for c in contacts if c["kind"] == "email"), ""),
+                "sale_type": s.get("sale_type"), "occupancy_type": s.get("occupancy_type"),
+                "sqft": s.get("sqft"), "ab_status_at": s.get("ab_status_at"),
+                "source_url": s.get("source_url"),
+            })
 
 
 def main() -> int:
-    since = (datetime.now(timezone.utc) - timedelta(days=DAYS_BACK)).strftime("%Y-%m-%d")
-    types = "','".join(sorted(classify.COMMERCIAL_RECORD_TYPES))
-    where = f"CREATEDDATE >= DATE '{since}' AND RECORDTYPE IN ('{types}')"
-    print(f"WHERE {where}", flush=True)
-
-    feats = fetch(where)
-    print(f"fetched {len(feats)} features", flush=True)
-
-    signals = [scored(s) for s in (to_signal(f) for f in feats) if s]
-    signals.sort(key=lambda s: (s["filed_at"] or ""), reverse=True)
+    print(f"collecting, {DAYS_BACK}-day window", flush=True)
+    signals, report = run_sources(DAYS_BACK)
 
     try:
-        total = requests.get(QUERY, params={"where": "1=1", "returnCountOnly": "true",
-                                            "f": "json"}, timeout=TIMEOUT).json().get("count")
-    except Exception:  # noqa: BLE001
-        total = None
-
-    stats = {
-        "fetched": len(signals),
-        "layer_total": total,
-        "record_types": {s["record_type"] for s in signals if s["record_type"]},
-    }
+        directory = abt_source.directory(DAYS_BACK)
+        print(f"  directory    {len(directory):>5} active venues with contacts", flush=True)
+    except Exception as exc:  # noqa: BLE001
+        print(f"  directory    FAILED {type(exc).__name__}: {exc}", flush=True)
+        directory = []
 
     os.makedirs(DATA, exist_ok=True)
     with open(os.path.join(DATA, "signals.jsonl"), "w") as fh:
-        for s in signals:
-            fh.write(json.dumps(s, separators=(",", ":")) + "\n")
+        for s in _by_score(signals):
+            fh.write(arcgis.dumps(s) + "\n")
+    if directory:
+        write_directory(directory, os.path.join(DATA, "abt_directory.csv"))
     with open(os.path.join(DATA, "summary.md"), "w") as fh:
-        fh.write(summary(signals, stats) + "\n")
+        fh.write(summary(signals, report, directory) + "\n")
 
-    tracked = [s for s in signals if s["hood"]]
-    print(f"wrote {len(signals)} signals, {len(tracked)} in a tracked submarket", flush=True)
+    tracked = [s for s in signals if s.get("hood")]
+    qualified = [s for s in tracked if s.get("qualified")]
+    print(f"\n{len(signals)} signals · {len(tracked)} in a tracked submarket · "
+          f"{len(qualified)} qualified", flush=True)
     for hood, n in Counter(s["hood"] for s in tracked).most_common():
         print(f"  {hood:<12} {n}", flush=True)
-    if not tracked:
-        print("WARNING: no signal landed in a tracked submarket — check the "
-              "polygons or widen DAYS_BACK", flush=True)
+    for s in _by_score(qualified)[:25]:
+        print(f"  {s['score']:>3} {s['source']:<12} {s['stage_hint']:<12} "
+              f"{geo.hood_label(s['hood']):<20} {(s.get('entity') or s.get('scope') or '')[:38]}",
+              flush=True)
+
+    failed = [k for k, v in report.items() if "error" in v]
+    if failed:
+        print(f"\nWARNING: sources failed: {', '.join(failed)}", flush=True)
     return 0
 
 

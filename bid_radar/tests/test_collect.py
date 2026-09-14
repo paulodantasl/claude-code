@@ -74,12 +74,69 @@ def test_every_signal_carries_provenance(feat):
 
 
 def test_summary_renders_without_a_network_call():
-    signals = [s for s in (collect.to_signal(f) for f in FEATURES) if s]
-    md = collect.summary(signals, {"fetched": len(signals), "layer_total": 2577,
-                                   "record_types": {"Commercial Building Alterations "
-                                                    "(Renovations)"}})
+    signals = [collect.scored(s) for s in (collect.to_signal(f) for f in FEATURES) if s]
+    md = collect.summary(signals, {"permit": {"name": "Building permits",
+                                              "fetched": len(signals)}})
     assert "# Tampa Bid Radar" in md
     assert "Wagamama Pan Asian" in md
-    assert "EARLY START" in md
-    # the condo remodel must not appear as a fitout row
-    assert "1209 E Cumberland Ave #903" not in md.split("## Source notes")[0]
+    assert "early_start" in md
+
+
+def test_summary_reports_a_failed_source_rather_than_hiding_it():
+    md = collect.summary([], {"abt": {"name": "Alcoholic-beverage permits",
+                                      "error": "ArcGISError: boom"}})
+    assert "ArcGISError: boom" in md
+    assert "⚠️" in md
+
+
+def test_one_record_arriving_as_two_features_is_collected_once(monkeypatch):
+    """The permit layer carries a feature per address unit, so BLD-26-0522346
+    arrived as both `5041 W Cypress St` and `5041 W Cypress St #FS`."""
+    import sources
+
+    dup = {"id": "permit-same", "source": "permit", "source_id": "BLD-26-0522346",
+           "source_url": "https://x", "retrieved_at": "now", "hood": "airport",
+           "address": "5041 W Cypress St", "trade": "medical",
+           "stage_hint": "revision", "entity": "Inlumia Imaging", "contacts": [],
+           "is_fitout": True, "filed_at": "2026-02-04"}
+
+    class _Fake:
+        SOURCE = "permit"
+        NAME = "Building permits"
+
+        @staticmethod
+        def collect(days_back):
+            return [dict(dup), dict(dup, address="5041 W Cypress St #FS")]
+
+    monkeypatch.setattr(sources, "ALL", [_Fake])
+    signals, report = collect.run_sources(365)
+    assert len(signals) == 1
+    assert report["permit"]["duplicates"] == 1
+
+
+def test_a_source_that_raises_does_not_take_the_others_down(monkeypatch):
+    import sources
+
+    class _Boom:
+        SOURCE = "abt"
+        NAME = "Alcoholic-beverage permits"
+
+        @staticmethod
+        def collect(days_back):
+            raise RuntimeError("upstream 503")
+
+    class _Fine:
+        SOURCE = "permit"
+        NAME = "Building permits"
+
+        @staticmethod
+        def collect(days_back):
+            return [{"id": "a", "source": "permit", "hood": "ybor", "trade": "restaurant",
+                     "stage_hint": "early_start", "entity": "X", "contacts": [],
+                     "is_fitout": True, "filed_at": "2026-08-01"}]
+
+    monkeypatch.setattr(sources, "ALL", [_Boom, _Fine])
+    signals, report = collect.run_sources(365)
+    assert len(signals) == 1
+    assert "upstream 503" in report["abt"]["error"]
+    assert report["permit"]["fetched"] == 1

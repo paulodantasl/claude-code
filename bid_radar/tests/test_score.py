@@ -120,7 +120,7 @@ def test_strip_out_qualifies_despite_an_undeclared_trade():
                         confidence=0.3), TODAY)
     assert r["score_components"]["fit"] == score.FIT_PRECURSOR
     assert "trade_other" not in r["blockers"]
-    assert "trade_undeclared_strip_out" in r["warnings"]
+    assert "trade_undeclared" in r["warnings"]
     assert r["qualified"] is True
 
 

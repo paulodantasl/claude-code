@@ -1,0 +1,237 @@
+"""
+Browser tests for tampa-bid-radar.html.
+
+The page is the product; a broken tray is worse than a broken collector,
+because nobody sees a stack trace. These load the real file in Chromium with
+a stubbed `claude.use` and assert the behaviours that matter:
+
+  * it renders with NO capabilities at all (a plain browser, no db, no mcp)
+  * the tray shows only signals that are neither dismissed nor promoted
+  * Promote writes ONE opportunity at a deterministic id and records the
+    promotion on the signal — it never touches any other machine-owned field
+  * Dismiss writes only `dismissed`
+  * PT-BR renders
+
+Skipped when Playwright or Chromium is unavailable.
+"""
+from __future__ import annotations
+
+import json
+import os
+import pathlib
+
+import pytest
+
+pytest.importorskip("playwright", reason="playwright not installed")
+from playwright.sync_api import sync_playwright  # noqa: E402
+
+PAGE = pathlib.Path(__file__).resolve().parent.parent / "tampa-bid-radar.html"
+# This sandbox ships Chromium at a fixed path; CI installs it where Playwright
+# expects it. Prefer the sandbox copy, otherwise let Playwright resolve its own.
+CHROME = next((p for p in (
+    "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
+    "/opt/pw-browsers/chromium/chrome-linux/chrome",
+) if os.path.exists(p)), None)
+
+SIGNALS = [
+    {"id": "abt-1", "source": "abt", "source_id": "AB1-26-0000021",
+     "source_url": "https://arcgis.tampagov.net/x", "hood": "ybor",
+     "address": "1616 E 7th Ave", "entity": "Tommy's Chophouse",
+     "trade": "restaurant", "stage_hint": "abt", "score": 83,
+     "filed_at": "2026-07-20", "sqft": 4445,
+     "bid_window": {"open": "2026-10-14", "close": "2027-04-12"},
+     "contacts": [{"kind": "phone", "value": "(727) 444-1414"},
+                  {"kind": "email", "value": "owner@example.com"}],
+     "warnings": [], "blockers": []},
+    {"id": "permit-1", "source": "permit", "source_id": "BLD-26-0526061",
+     "source_url": "https://aca-prod.accela.com/y", "hood": "waterst",
+     "address": "1050 Water St", "entity": "Wagamama Pan Asian",
+     "trade": "restaurant", "stage_hint": "early_start", "score": 73,
+     "filed_at": "2026-06-22",
+     "bid_window": {"open": "2026-09-14", "close": "2026-11-13"},
+     "contacts": [], "warnings": ["needs_contact"], "blockers": []},
+    {"id": "ent-1", "source": "entitlement", "source_id": "REZ-26-0000116",
+     "source_url": "https://aca-prod.accela.com/z", "hood": "airport",
+     "address": "253 N West Shore Blvd", "entity": None,
+     "scope": "Rezoning case, hearing 2026-11-05", "trade": "other",
+     "stage_hint": "pre_permit", "score": 58, "filed_at": "2026-08-10",
+     "bid_window": {"open": "2026-11-05", "close": "2027-05-04"},
+     "contacts": [], "warnings": ["trade_undeclared", "needs_contact"],
+     "blockers": []},
+    {"id": "dismissed-1", "source": "permit", "source_id": "OLD", "hood": "ybor",
+     "address": "x", "entity": "Dismissed already", "trade": "retail",
+     "stage_hint": "issued", "score": 60, "contacts": [], "dismissed": True},
+    {"id": "promoted-1", "source": "permit", "source_id": "OLD2", "hood": "ybor",
+     "address": "y", "entity": "Promoted already", "trade": "retail",
+     "stage_hint": "revision", "score": 61, "contacts": [],
+     "promotedTo": "sig-promoted-1"},
+]
+
+STUB = """(() => {
+  const store = {signals: __SIGNALS__};
+  window.__writes = [];
+  const col = (name) => ({
+    onSnapshot(cb){ cb({docs:(store[name]||[]).map(d=>({id:d.id, data:()=>d}))}); return ()=>{}; },
+    add(rec){ window.__writes.push(['add', name, rec]); return Promise.resolve({id:'new'}); }
+  });
+  const doc = () => ({ onSnapshot(cb){ cb({exists:false, data:()=>({})}); return ()=>{}; } });
+  const docAt = (path) => Object.assign(doc(), {
+    set(v){ window.__writes.push(['set', path, v]); return Promise.resolve(); },
+    update(v){ window.__writes.push(['update', path, v]); return Promise.resolve(); },
+    delete(){ window.__writes.push(['delete', path]); return Promise.resolve(); }
+  });
+  window.claude = { use: async (n) => n === 'db' ? {collection: col, doc: docAt} : null };
+})();"""
+
+
+def _errors_filter(text: str) -> bool:
+    """Google Fonts is blocked in CI; that is the sandbox, not the page."""
+    return "ERR_CONNECTION" not in text and "ERR_NAME_NOT_RESOLVED" not in text
+
+
+class _Page:
+    def __init__(self, pw, stub):
+        self.errors: list[str] = []
+        launch = {"args": ["--no-sandbox"]}
+        if CHROME:
+            launch["executable_path"] = CHROME
+        try:
+            self.browser = pw.chromium.launch(**launch)
+        except Exception as exc:  # noqa: BLE001
+            pytest.skip(f"chromium unavailable: {exc}")
+        self.page = self.browser.new_page()
+        self.page.on("pageerror", lambda e: self.errors.append(f"PAGEERROR {e}"))
+        self.page.on("console", lambda m: self.errors.append(m.text)
+                     if m.type == "error" and _errors_filter(m.text) else None)
+        if stub:
+            self.page.add_init_script(stub)
+        self.page.goto(PAGE.as_uri())
+        self.page.wait_for_timeout(900)
+
+
+@pytest.fixture(scope="module")
+def pw():
+    """One Playwright context for the module — the sync API does not allow two
+    to be open in the same thread."""
+    with sync_playwright() as instance:
+        yield instance
+
+
+@pytest.fixture(scope="module")
+def bare(pw):
+    p = _Page(pw, None)
+    yield p
+    p.browser.close()
+
+
+@pytest.fixture(scope="module")
+def wired(pw):
+    p = _Page(pw, STUB.replace("__SIGNALS__", json.dumps(SIGNALS)))
+    yield p
+    p.browser.close()
+
+
+# --------------------------------------------------------------- no capabilities
+
+def test_page_renders_with_no_capabilities_at_all(bare):
+    assert bare.page.title() == "Tampa Bid Radar"
+    assert bare.page.locator("#projects .proj").count() == 15
+    assert bare.page.locator("#subtable tbody tr").count() == 8
+    assert bare.page.locator("#bars .barcol").count() == 6
+    assert bare.page.locator("#board .opp").count() == 4        # the placeholders
+
+
+def test_the_tray_stays_hidden_without_a_shared_database(bare):
+    """Signals only arrive through db; an empty tray heading would be noise."""
+    assert bare.page.locator("#traysec").is_hidden()
+
+
+def test_the_rays_row_names_the_construction_manager(bare):
+    row = bare.page.locator("#projects .proj", has_text="Rays").first.inner_text()
+    assert "AECOM Hunt" in row and "Turner" in row
+    assert "28 Aug 2026" in row                                  # Hillsborough approval
+
+
+def test_portuguese_renders(bare):
+    bare.page.click("#pt")
+    bare.page.wait_for_timeout(250)
+    try:
+        assert "Radar de Licitações" in bare.page.locator("h1").inner_text()
+        row = bare.page.locator("#projects .proj", has_text="Rays").first.inner_text()
+        assert "28/08/2026" in row
+    finally:
+        bare.page.click("#en")
+        bare.page.wait_for_timeout(200)
+
+
+def test_no_console_errors_on_a_bare_load(bare):
+    assert bare.errors == []
+
+
+# ------------------------------------------------------------------- the tray
+
+def test_tray_shows_only_undecided_signals(wired):
+    assert wired.page.locator("#traysec").is_visible()
+    assert wired.page.locator("#tray .sig").count() == 3       # 5 minus 1 dismissed, 1 promoted
+
+
+def test_tray_is_ordered_by_score(wired):
+    texts = wired.page.locator("#tray .sig").all_inner_texts()
+    assert "Tommy's Chophouse" in texts[0]
+    assert "Wagamama" in texts[1]
+
+
+def test_contacts_are_click_to_call_and_click_to_mail(wired):
+    assert wired.page.locator('#tray .sig a[href^="tel:"]').count() == 1
+    assert wired.page.locator('#tray .sig a[href^="mailto:"]').count() == 1
+
+
+def test_an_undeclared_trade_says_so_rather_than_guessing(wired):
+    card = wired.page.locator('#tray .sig[data-sig="ent-1"]').inner_text()
+    assert "trade not declared yet" in card
+    assert "Rezoning case" in card
+
+
+@pytest.mark.parametrize("key,expected", [("all", 3), ("contact", 1), ("hot", 2)])
+def test_tray_filters(wired, key, expected):
+    wired.page.click(f'#trayfilters button[data-tray="{key}"]')
+    wired.page.wait_for_timeout(150)
+    assert wired.page.locator("#tray .sig").count() == expected
+    wired.page.click('#trayfilters button[data-tray="all"]')
+    wired.page.wait_for_timeout(150)
+
+
+def test_promote_and_dismiss_touch_only_human_owned_fields(wired):
+    wired.page.evaluate("window.__writes = []")
+    wired.page.click('#tray .sig[data-sig="permit-1"] button[data-promote]')
+    wired.page.wait_for_timeout(250)
+    wired.page.click('#tray .sig[data-sig="ent-1"] button[data-dismiss]')
+    wired.page.wait_for_timeout(250)
+    writes = wired.page.evaluate("window.__writes")
+
+    paths = [w[1] for w in writes]
+    # exactly one opportunity, at an id derived from the signal so a second
+    # promote updates the same row instead of duplicating it
+    assert paths.count("opportunities/sig-permit-1") == 1
+    assert sum(1 for p in paths if p.startswith("opportunities/")) == 1
+
+    promo = next(w for w in writes if w[1] == "signals/permit-1")
+    assert promo[0] == "update"
+    assert set(promo[2]) == {"promotedTo", "promotedAt"}
+    assert promo[2]["promotedTo"] == "sig-permit-1"
+
+    dismiss = next(w for w in writes if w[1] == "signals/ent-1")
+    assert dismiss[0] == "update"
+    assert set(dismiss[2]) == {"dismissed", "dismissedAt"}
+
+    opp = next(w for w in writes if w[1] == "opportunities/sig-permit-1")[2]
+    assert opp["name"] == "Wagamama Pan Asian"
+    assert opp["hood"] == "Water Street"        # submarket id mapped to the board label
+    assert opp["address"] == "1050 Water St"
+    assert opp["sourceUrl"].startswith("https://aca-prod.accela.com/")
+    assert opp["signalId"] == "permit-1"
+    assert opp["stage"] == "signal"
+
+
+def test_no_console_errors_with_the_tray_wired(wired):
+    assert wired.errors == []

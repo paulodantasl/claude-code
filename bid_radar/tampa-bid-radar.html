@@ -249,6 +249,34 @@ td{padding:11px 8px 11px 0;border-bottom:1px solid var(--rule);vertical-align:to
 .wscale{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-2);margin-top:3px;
   font-family:'IBM Plex Mono',monospace}
 
+/* ---------- SIGNAL TRAY ---------- */
+.tray{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:10px}
+.sig{background:var(--panel);border:1px solid var(--rule);border-left:3px solid var(--go);
+  padding:11px 12px;font-size:13px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.sig.low{border-left-color:var(--off)}
+.sig.mid{border-left-color:var(--hold)}
+.sig-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.sig .nm{font-weight:600;line-height:1.25;min-width:0;overflow-wrap:anywhere}
+.sig .addr{font-size:11.5px;color:var(--ink-2);overflow-wrap:anywhere}
+.sig .meta{display:flex;flex-wrap:wrap;gap:6px;font-size:11px;color:var(--ink-2)}
+.sig .meta span{border:1px solid var(--rule-2);background:var(--panel-2);padding:1px 6px;border-radius:2px}
+.sig .contact{font-family:'IBM Plex Mono',monospace;font-size:11.5px;overflow-wrap:anywhere}
+.sig .contact a{text-decoration:none}
+.sig .flags{font-size:10.5px;color:var(--ink-3);font-style:italic}
+.sig .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:6px;
+  border-top:1px dotted var(--rule)}
+.sbtn{border:1px solid var(--ink);background:var(--ink);color:var(--paper);font:inherit;
+  font-size:11.5px;font-weight:600;padding:4px 10px;cursor:pointer;border-radius:2px}
+.sbtn.ghost{background:transparent;color:var(--ink-2);border-color:var(--rule)}
+.sbtn.ghost:hover{border-color:var(--hot);color:var(--hot)}
+.sbtn:disabled{opacity:.45;cursor:not-allowed}
+.traybar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+  margin-bottom:12px}
+.trayfilters{display:flex;gap:6px;flex-wrap:wrap}
+.jt{font-size:11px;padding:2px 6px;border-radius:2px;border:1px solid var(--go);
+  color:var(--go);background:var(--go-soft)}
+.jt.err{border-color:var(--hot);color:var(--hot);background:var(--hot-soft)}
+
 .note{background:var(--hold-soft);border-left:3px solid var(--hold);padding:12px 14px;font-size:13.5px}
 .tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 .btn{border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);font:inherit;
@@ -286,6 +314,22 @@ td{padding:11px 8px 11px 0;border-bottom:1px solid var(--rule);vertical-align:to
 <div class="vintage" id="vintage"></div>
 
 <p class="sub" data-t="lede"></p>
+
+<!-- SIGNAL TRAY -->
+<section id="traysec" hidden>
+  <div class="sec-head">
+    <div class="eyebrow" data-t="eb_tray"></div>
+    <h2 data-t="h_tray"></h2>
+    <p class="sub" data-t="p_tray"></p>
+  </div>
+  <div class="traybar">
+    <div class="trayfilters" id="trayfilters"></div>
+    <div class="tools" style="margin-top:0">
+      <button class="btn ghost" id="sigcsv" data-t="btn_sigcsv"></button>
+    </div>
+  </div>
+  <div class="tray" id="tray"></div>
+</section>
 
 <!-- PIPELINE -->
 <section>
@@ -553,10 +597,11 @@ const P = [
   pt:'Entregue em abril de 2026 e absorvendo moradores agora. É o único projeto da lista gerando demanda hoje — varejo de serviços, clínicas e salões assinando contratos em Westshore nos próximos 18 meses. A receita mais próxima do quadro.'},
 
  {id:'rays', name:'Tampa Bay Rays Stadium', hood:'Dale Mabry', cat:'Stadium', status:'ANN',
-  start:2027, done:2029, units:0, floors:0, dev:'Tampa Bay Rays / Hines', arch:'Populous',
+  start:2027, done:2029, units:0, floors:0,
+  dev:'Tampa Bay Rays / Hines · CM: AECOM Hunt / Turner', arch:'Populous',
   fit:3, access:0.4, seed:7, type:'hospitality',
-  en:'The stadium bowl is out of reach. The district around it is not — restaurants, bars, retail and services along Dale Mabry will chase a 2029 opening, and that corridor is closer to our existing subcontractor base than Downtown is.',
-  pt:'O estádio em si está fora de alcance. O distrito ao redor não — restaurantes, bares, varejo e serviços ao longo da Dale Mabry vão correr atrás da abertura de 2029, e esse corredor está mais perto da nossa base atual de subs do que o Downtown.'},
+  en:'Approved by Hillsborough County on 28 Aug 2026, with AECOM Hunt and Turner named construction manager. Site prep started Sep 2026; demolition Dec 2026, foundations Mar 2027, Opening Day 2029, inside a 113-acre mixed-use district on the Hillsborough College Dale Mabry site. The bowl is out of reach. The district around it is not — restaurants, bars, retail and services will chase the 2029 opening, and that corridor is closer to our existing subcontractor base than Downtown is. Get on the AECOM Hunt and Turner subcontractor lists now: the retail and F&B fitouts follow the bowl.',
+  pt:'Aprovado pelo condado de Hillsborough em 28/08/2026, com AECOM Hunt e Turner nomeados construction manager. Preparação do terreno iniciada em set/2026; demolição em dez/2026, fundações em mar/2027, abertura em 2029, dentro de um distrito de uso misto de 113 acres no terreno do Hillsborough College na Dale Mabry. O estádio em si está fora de alcance. O distrito ao redor não — restaurantes, bares, varejo e serviços vão correr atrás da abertura de 2029, e esse corredor está mais perto da nossa base atual de subs do que o Downtown. Entrar agora nas listas de subcontratados da AECOM Hunt e da Turner: os fitouts de varejo e F&B vêm depois do estádio.'},
 
  {id:'tpa', name:'Tampa International Airport (Expansion)', hood:'Airport / Westshore', cat:'Travel', status:'UC',
   start:2024, done:2029, units:0, floors:0, dev:'Tampa International Airport', arch:'HOK',
@@ -572,6 +617,16 @@ const P = [
 ];
 
 const HOODS = [...new Set(P.map(p=>p.hood))];
+
+/* The collector emits submarket ids (bid_radar/submarkets.geojson); the board
+   is keyed on the labels P[] uses. A signal carries hoodLabel, but map it here
+   too so a row written by an older collector still lands in the right column. */
+const HOOD_BY_ID = {
+  ybor:'Ybor City', riverwalk:'Downtown Riverwalk', downtown:'Downtown Tampa',
+  davis:'Davis Islands', waterst:'Water Street', wsmarina:'Westshore Marina',
+  dalemabry:'Dale Mabry', airport:'Airport / Westshore'
+};
+const hoodLabelOf = sig => sig.hoodLabel || HOOD_BY_ID[sig.hood] || sig.hood || '—';
 
 /* ---------- PIPELINE STAGES ---------- */
 const STAGES = [
@@ -601,6 +656,8 @@ const SOURCES = [
   {id:'sunbiz',   en:'Sunbiz new entity',      pt:'Nova empresa (Sunbiz)'},
   {id:'broker',   en:'Leasing broker',         pt:'Corretor de locação'},
   {id:'siteplan', en:'Site plan / rezoning',   pt:'Projeto / rezoneamento'},
+  {id:'entitlement', en:'Live entitlement case', pt:'Processo de entitlement'},
+  {id:'cra_grant',en:'CRA commercial grant',  pt:'Subsídio comercial do CRA'},
   {id:'noc',      en:'Notice of Commencement', pt:'Notice of Commencement'},
   {id:'referral', en:'Referral / relationship',pt:'Indicação / relacionamento'},
   {id:'manual',   en:'Manual entry',           pt:'Entrada manual'}
@@ -695,6 +752,24 @@ const T = {
   title:'Tampa Bid Radar',
   lede:'A development tracker reframed for a general contractor. Public trackers score Tampa on supply pressure, which is what a condo investor needs. We need the opposite reading: where the new rooftops, hotel keys and hospital beds land, and when the tenant fitouts they create come out to bid. v1 sized the market. v2 names the jobs, records what we bid, and corrects the model against what we actually won.',
 
+  eb_tray:'Collected overnight',
+  h_tray:'New signals',
+  p_tray:'Written by the collector, not by a person. Each card is a public record inside one of our eight submarkets that scored above the bar and still has an open bid window. Promote moves it into the pipeline; Dismiss hides it for good. Neither is undone by the next collection run.',
+  btn_sigcsv:'Export signals',
+  tray_empty:'No new signals. Either the collector has not run yet, or everything it found has been promoted or dismissed.',
+  tray_all:'All', tray_contact:'With a contact', tray_hot:'Score 70+',
+  sig_promote:'Promote', sig_dismiss:'Dismiss', sig_source:'Record',
+  sig_filed:'filed', sig_window:'bid window', sig_score:'score',
+  sig_undeclared:'trade not declared yet',
+  sig_nocontact:'no contact in this source',
+  promoted_action:'Introduce the company',
+  jt_send:'Send to JobTread', jt_sending:'Sending…', jt_sent:'In JobTread',
+  jt_exists:'Already in JobTread', jt_unavail:'JobTread not connected in this view',
+  jt_reauth:'JobTread needs reconnecting in your claude.ai connectors',
+  jt_denied:'JobTread access was declined',
+  jt_failed:'JobTread refused this',
+  jt_retry:'JobTread is unreachable — try again',
+
   eb_pipe:'Layer 1 — named opportunities',
   h_pipe:'The pipeline',
   p_pipe:'One row per real fitout: a tenant, an address, a stage, a next action and an owner. Move a row to Won or Lost and enter the contract value — that is what recalibrates the dials below. Nothing here is modelled.',
@@ -766,6 +841,24 @@ const T = {
   brand:'Ideal Construction · inteligência de mercado',
   title:'Radar de Licitações — Tampa',
   lede:'Um rastreador de empreendimentos reformulado para um general contractor. Os rastreadores públicos pontuam Tampa por pressão de oferta, que é o que um investidor de condomínio precisa. Precisamos da leitura oposta: onde caem as novas unidades, chaves de hotel e leitos hospitalares, e quando os fitouts de inquilinos que eles geram vão a mercado. A v1 dimensionou o mercado. A v2 nomeia as obras, registra o que orçamos e corrige o modelo pelo que de fato ganhamos.',
+
+  eb_tray:'Coletado durante a noite',
+  h_tray:'Novos sinais',
+  p_tray:'Escrito pelo coletor, não por uma pessoa. Cada cartão é um registro público dentro de um dos nossos oito submercados que pontuou acima do corte e ainda tem janela de proposta aberta. Promover leva para o funil; Descartar esconde definitivamente. Nenhum dos dois é desfeito pela próxima coleta.',
+  btn_sigcsv:'Exportar sinais',
+  tray_empty:'Nenhum sinal novo. Ou o coletor ainda não rodou, ou tudo o que ele achou já foi promovido ou descartado.',
+  tray_all:'Todos', tray_contact:'Com contato', tray_hot:'Nota 70+',
+  sig_promote:'Promover', sig_dismiss:'Descartar', sig_source:'Registro',
+  sig_filed:'protocolo', sig_window:'janela', sig_score:'nota',
+  sig_undeclared:'tipo ainda não declarado',
+  sig_nocontact:'sem contato nesta fonte',
+  promoted_action:'Apresentar a empresa',
+  jt_send:'Enviar ao JobTread', jt_sending:'Enviando…', jt_sent:'No JobTread',
+  jt_exists:'Já está no JobTread', jt_unavail:'JobTread não conectado nesta visualização',
+  jt_reauth:'JobTread precisa ser reconectado nos seus conectores do claude.ai',
+  jt_denied:'Acesso ao JobTread recusado',
+  jt_failed:'O JobTread recusou esta operação',
+  jt_retry:'JobTread inacessível — tente de novo',
 
   eb_pipe:'Camada 1 — oportunidades nomeadas',
   h_pipe:'O funil',
@@ -974,6 +1067,11 @@ async function initStore(){
       Object.assign(dials, s.data());
       syncDialInputs(); renderAll();
     }, ()=>{});
+    // machine-owned: written by the collector Action via a Claude Routine
+    db.collection('signals').onSnapshot(snap=>{
+      SIGS = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      renderTray();
+    }, ()=>{ SIGS=[]; renderTray(); });
   }catch(e){ DBH=null; }
   renderVintage();
 }
@@ -1004,6 +1102,225 @@ async function delOpp(id){
   OPPS = OPPS.filter(r => r.id!==id);
   usingExamples = OPPS.length === 0;
   saveLocal(); renderPipeline(); renderCalib(); renderTable(); renderChart();
+}
+
+/* ============ SIGNAL TRAY ============
+   signals/ is machine-owned: the collector Action writes it and a Claude
+   Routine syncs it here. The page only ever writes the three human-owned
+   fields — dismissed, promotedTo, notes — so a re-collection cannot undo a
+   decision somebody made.                                                  */
+let SIGS = [];
+let trayFilter = 'all';
+
+function liveSignals(){
+  return SIGS.filter(x => !x.dismissed && !x.promotedTo)
+             .filter(x => trayFilter !== 'contact' || (x.contacts||[]).length)
+             .filter(x => trayFilter !== 'hot' || (+x.score||0) >= 70)
+             .sort((a,b) => (+b.score||0) - (+a.score||0));
+}
+
+function contactLink(c){
+  const v = esc(c.value);
+  if(c.kind === 'phone') return `<a href="tel:${v.replace(/[^0-9+]/g,'')}">${v}</a>`;
+  if(c.kind === 'email') return `<a href="mailto:${v}">${v}</a>`;
+  return v;
+}
+
+function sigCard(x){
+  const T_ = t();
+  const score = +x.score || 0;
+  const tone = score >= 70 ? '' : score >= 60 ? ' mid' : ' low';
+  const trade = TRADES.find(y => y.id === x.trade);
+  const src   = SOURCES.find(y => y.id === x.source);
+  const name  = x.entity || x.scope || x.source_id || '—';
+  const win   = x.bid_window || {};
+  const contacts = x.contacts || [];
+  const size = x.value_est ? money(+x.value_est)
+             : x.seats ? `${x.seats} seats`
+             : x.sqft ? `${Math.round(x.sqft).toLocaleString()} sf` : '';
+
+  const flags = [];
+  if((x.warnings||[]).includes('trade_undeclared')) flags.push(T_.sig_undeclared);
+  if((x.warnings||[]).includes('needs_contact') && !contacts.length) flags.push(T_.sig_nocontact);
+
+  return `<article class="sig${tone}" data-sig="${esc(x.id)}">
+    <div class="sig-top">
+      <div class="nm">${esc(name)}</div>
+      <span class="score ${score>=70?'s-hi':score>=60?'s-mid':'s-lo'}">${score}</span>
+    </div>
+    <div class="addr">${esc(x.address||'')}</div>
+    <div class="meta">
+      <span>${esc(hoodLabelOf(x))}</span>
+      ${trade?`<span>${esc(trade[L])}</span>`:''}
+      ${x.stage_hint?`<span class="mono">${esc(x.stage_hint)}</span>`:''}
+      ${size?`<span>${esc(size)}</span>`:''}
+      ${x.filed_at?`<span class="mono">${T_.sig_filed} ${esc(x.filed_at)}</span>`:''}
+      ${win.open?`<span class="mono">${T_.sig_window} ${esc(win.open)}→${esc(win.close||'')}</span>`:''}
+    </div>
+    ${contacts.length?`<div class="contact">${contacts.slice(0,3).map(contactLink).join(' · ')}</div>`:''}
+    ${flags.length?`<div class="flags">${esc(flags.join(' · '))}</div>`:''}
+    <div class="acts">
+      <button class="sbtn" data-promote="${esc(x.id)}">${T_.sig_promote}</button>
+      <button class="sbtn ghost" data-dismiss="${esc(x.id)}">${T_.sig_dismiss}</button>
+      ${x.source_url?`<a class="sbtn ghost" href="${esc(x.source_url)}" target="_blank" rel="noopener">${T_.sig_source}</a>`:''}
+      ${src?`<span class="flags" style="align-self:center">${esc(src[L])}</span>`:''}
+    </div>
+  </article>`;
+}
+
+function renderTray(){
+  const T_ = t();
+  const sec = document.getElementById('traysec');
+  // The tray only exists where the shared db does — signals arrive from it.
+  if(!DBH || !SIGS.length){ sec.hidden = true; return; }
+  sec.hidden = false;
+
+  const counts = {
+    all: SIGS.filter(x=>!x.dismissed && !x.promotedTo).length,
+    contact: SIGS.filter(x=>!x.dismissed && !x.promotedTo && (x.contacts||[]).length).length,
+    hot: SIGS.filter(x=>!x.dismissed && !x.promotedTo && (+x.score||0)>=70).length
+  };
+  document.getElementById('trayfilters').innerHTML =
+    [['all',T_.tray_all],['contact',T_.tray_contact],['hot',T_.tray_hot]].map(([k,lbl])=>
+      `<button class="chip" data-tray="${k}" aria-pressed="${trayFilter===k}">${lbl} (${counts[k]})</button>`
+    ).join('');
+
+  const list = liveSignals();
+  document.getElementById('tray').innerHTML =
+    list.length ? list.map(sigCard).join('') : `<div class="empty">${T_.tray_empty}</div>`;
+
+  document.querySelectorAll('#trayfilters button[data-tray]').forEach(b=>{
+    b.onclick = () => { trayFilter = b.dataset.tray; renderTray(); };
+  });
+  document.querySelectorAll('#tray button[data-promote]').forEach(b=>{
+    b.onclick = () => promoteSignal(b.dataset.promote, b);
+  });
+  document.querySelectorAll('#tray button[data-dismiss]').forEach(b=>{
+    b.onclick = () => dismissSignal(b.dataset.dismiss, b);
+  });
+}
+
+/* Promote writes the opportunity at a deterministic id, so promoting the same
+   signal twice updates one row rather than making two. */
+async function promoteSignal(sigId, btn){
+  const x = SIGS.find(y => y.id === sigId);
+  if(!x || !DBH) return;
+  btn.disabled = true;
+  const oppId = 'sig-' + sigId;
+  const rec = {
+    name: x.entity || x.scope || x.source_id || 'Untitled',
+    hood: hoodLabelOf(x),
+    trade: x.trade && x.trade !== 'other' ? x.trade : 'other',
+    stage: 'signal',
+    valueEst: +x.value_est || 0,
+    source: x.source,
+    bidDate: (x.bid_window && x.bid_window.open) || x.filed_at || '',
+    owner: '',
+    nextAction: t().promoted_action,
+    address: x.address || '',
+    sourceUrl: x.source_url || '',
+    contacts: x.contacts || [],
+    signalId: sigId,
+    score: +x.score || 0,
+    createdAt: new Date().toISOString()
+  };
+  try{
+    await DBH.doc('opportunities/' + oppId).set(rec);
+    await DBH.doc('signals/' + sigId).update({
+      promotedTo: oppId, promotedAt: new Date().toISOString()
+    });
+  }catch(e){ btn.disabled = false; }
+}
+
+async function dismissSignal(sigId, btn){
+  if(!DBH) return;
+  btn.disabled = true;
+  try{
+    await DBH.doc('signals/' + sigId).update({
+      dismissed: true, dismissedAt: new Date().toISOString()
+    });
+  }catch(e){ btn.disabled = false; }
+}
+
+/* ============ JOBTREAD ============
+   Calls the viewer's own Ideal connector (JobTread Pave API) with the
+   viewer's credentials. Both query shapes below were run against the live
+   org in the session that wrote this page — see PLAN.md §6 Phase 1.        */
+const JT_ORG = '22P6bRn5p6Pn';
+let MCP = null;
+let mcpReady = (async () => { try{ MCP = await claude.use('mcp'); }catch(e){ MCP = null; } })();
+
+function jtMessage(err){
+  const T_ = t();
+  switch(err && err.code){
+    case 'server_not_connected': return T_.jt_unavail;
+    case 'needs_reauth':         return T_.jt_reauth;
+    case 'blocked_by_policy':
+    case 'approval_required':    return T_.jt_denied;
+    case 'tool_error':           return T_.jt_failed + (err.message ? ': ' + err.message : '');
+    case 'server_unavailable':
+    case 'upstream_error':       return T_.jt_retry;
+    default:                     return T_.jt_failed;
+  }
+}
+
+async function jtFindAccount(name){
+  const res = await MCP.callTool('Ideal', 'query', {query: {
+    organization: {
+      $: {id: JT_ORG},
+      accounts: {
+        $: {where: {and: [['type','customer'], ['name','like','%' + name.slice(0,40) + '%']]}, size: 1},
+        nodes: {id: {}, name: {}}
+      }
+    }
+  }});
+  const p = res && res.payload;
+  const nodes = (p && p.organization && p.organization.accounts && p.organization.accounts.nodes) || [];
+  return nodes[0] || null;
+}
+
+async function jtCreateAccount(name){
+  const res = await MCP.callTool('Ideal', 'query', {query: {
+    createAccount: {
+      $: {organizationId: JT_ORG, name: name.slice(0, 120),
+          type: 'customer', suffixIfNecessary: true},
+      createdAccount: {id: {}, name: {}}
+    }
+  }});
+  const p = res && res.payload;
+  return (p && p.createAccount && p.createAccount.createdAccount) || null;
+}
+
+async function sendToJobTread(oppId, btn){
+  const T_ = t();
+  const r = OPPS.find(x => x.id === oppId);
+  if(!r) return;
+  await mcpReady;
+  const note = btn.parentElement.querySelector('.jt') || (() => {
+    const el = document.createElement('span'); el.className = 'jt';
+    btn.parentElement.appendChild(el); return el;
+  })();
+
+  if(!MCP){ note.className = 'jt err'; note.textContent = T_.jt_unavail; return; }
+
+  btn.disabled = true; note.className = 'jt'; note.textContent = T_.jt_sending;
+  try{
+    let acct = await jtFindAccount(r.name);
+    if(acct){
+      note.textContent = T_.jt_exists + ' — ' + acct.name;
+    }else{
+      if(!confirm(`${T_.jt_send}: ${r.name}?`)){
+        btn.disabled = false; note.textContent = ''; return;
+      }
+      acct = await jtCreateAccount(r.name);
+      note.textContent = acct ? T_.jt_sent : T_.jt_failed;
+    }
+    if(acct && acct.id) await patchOpp(oppId, {jobtreadAccountId: acct.id, jobtreadName: acct.name});
+  }catch(err){
+    note.className = 'jt err';
+    note.textContent = jtMessage(err);
+    btn.disabled = false;
+  }
 }
 
 /* ============ COLOR ============ */
@@ -1067,6 +1384,10 @@ function renderPipeline(){
   document.querySelectorAll('#board button[data-del]').forEach(b=>{
     b.onclick = () => { if(confirm(T_.delconf)) delOpp(b.dataset.del); };
   });
+  // push to JobTread through the viewer's own Ideal connector
+  document.querySelectorAll('#board button[data-jt]').forEach(b=>{
+    b.onclick = () => sendToJobTread(b.dataset.jt, b);
+  });
 }
 
 function oppCard(r, st){
@@ -1087,17 +1408,29 @@ function oppCard(r, st){
               data-actual-for="${esc(r.id)}" style="width:88px" aria-label="${T_.lbl_actual}">
      </label>` : '';
 
+  const contacts = r.contacts || [];
+  const jtBtn = (!r.example && !r.jobtreadAccountId)
+    ? `<button class="xbtn" data-jt="${esc(r.id)}">${T_.jt_send}</button>` : '';
+  const jtNote = r.jobtreadAccountId
+    ? `<span class="jt">${T_.jt_sent}${r.jobtreadName?' — '+esc(r.jobtreadName):''}</span>` : '';
+
   return `<article class="opp" data-tone="${st.tone}">
     <div class="nm">${esc(r.name)}</div>
     <div class="loc">${esc(r.hood)}${trade?' · '+esc(trade[L]):''}${r.example?' <span class="ex-chip">example</span>':''}</div>
+    ${r.address?`<div class="loc">${esc(r.address)}</div>`:''}
     <div class="row">
       <span>${isWon?T_.lbl_actual:T_.lbl_est} <b>${money(val)}</b></span>
       ${r.bidDate?`<span class="mono">${T_.lbl_bid} ${esc(r.bidDate)}</span>`:''}
+      ${r.score?`<span class="mono">${T_.sig_score} ${esc(r.score)}</span>`:''}
     </div>
-    ${src?`<div class="row" style="margin-top:4px"><span>${esc(src[L])}</span></div>`:''}
+    ${contacts.length?`<div class="row" style="margin-top:4px"><span class="contact">${contacts.slice(0,2).map(contactLink).join(' · ')}</span></div>`:''}
+    ${(src||r.sourceUrl)?`<div class="row" style="margin-top:4px">
+      ${src?`<span>${esc(src[L])}</span>`:''}
+      ${r.sourceUrl?`<a href="${esc(r.sourceUrl)}" target="_blank" rel="noopener">${T_.sig_source}</a>`:''}
+    </div>`:''}
     ${r.nextAction?`<div class="act"><b>${T_.lbl_next}:</b> ${esc(r.nextAction)}${r.owner&&r.owner!=='—'?' — '+esc(r.owner):''}</div>`:''}
-    ${(stageSel||actualIn)?`<div class="tools">${stageSel}${actualIn}
-      <button class="xbtn" data-del="${esc(r.id)}">${T_.del}</button></div>`:''}
+    ${(stageSel||actualIn||jtBtn||jtNote)?`<div class="tools">${stageSel}${actualIn}${jtBtn}${jtNote}
+      ${r.example?'':`<button class="xbtn" data-del="${esc(r.id)}">${T_.del}</button>`}</div>`:''}
   </article>`;
 }
 
@@ -1281,7 +1614,7 @@ function renderText(){
 }
 
 function renderAll(){
-  renderText(); renderVintage(); renderPipeline(); renderCalib();
+  renderText(); renderVintage(); renderTray(); renderPipeline(); renderCalib();
   renderChart(); renderTable(); renderSignals(); renderFilters(); renderProjects();
 }
 
@@ -1385,6 +1718,22 @@ document.getElementById('oppcsv').onclick = () => {
      r.bidDate||'', r.owner||'', r.nextAction||'', r.example?'YES':'']
       .map(csvCell).join(',')).join('\n');
   download('tampa-pipeline.csv', head+'\n'+body);
+};
+
+document.getElementById('sigcsv').onclick = () => {
+  const head = 'Score,Source,Ref,Stage,Submarket,Trade,Entity,Address,Phone,Email,'+
+               'Filed,WindowOpen,WindowClose,ValueUSD,SqFt,Flags,SourceURL';
+  const body = liveSignals().map(x => {
+    const c = x.contacts || [], w = x.bid_window || {};
+    return [x.score||0, x.source, x.source_id||'', x.stage_hint||'', hoodLabelOf(x),
+            x.trade||'', x.entity||x.scope||'', x.address||'',
+            (c.find(y=>y.kind==='phone')||{}).value||'',
+            (c.find(y=>y.kind==='email')||{}).value||'',
+            x.filed_at||'', w.open||'', w.close||'', x.value_est||'', x.sqft||'',
+            (x.warnings||[]).join(' '), x.source_url||'']
+           .map(csvCell).join(',');
+  }).join('\n');
+  download('tampa-signals.csv', head+'\n'+body);
 };
 
 /* ============ BOOT ============ */

@@ -31,6 +31,11 @@ QUALIFY_AT = 55
 FIT = {"medical": 30, "restaurant": 25, "hospitality": 20, "retail": 15,
        "office": 10, "other": 0}
 
+# Stages where the trade is genuinely not declared yet — the build-back permit
+# or the tenant is still to come. Blocking these on `trade == other` would drop
+# the earliest signals we have, which are the point of the whole exercise.
+PRECURSOR_STAGES = {"strip_out", "pre_permit", "cra_awarded"}
+
 # A strip-out declares no trade — the build-back permit does that, and it has
 # not been filed. Scoring it 0 would bury a committed tenant whose fitout is
 # still unbid, so it gets a stated band of its own, between retail and
@@ -48,8 +53,9 @@ BID_WINDOW = {
     "strip_out": (0, 90),         # build-back permit still to be filed
     "revision": (0, 45),
     "issued": (0, 0),
-    "pre_permit": (30, 180),      # entitlement / licence filed
-    "abt": (30, 180),
+    "pre_permit": (30, 180),      # entitlement filed; hearing still ahead
+    "abt": (30, 180),             # wet zoning moved; the buildout follows
+    "cra_awarded": (0, 180),      # grant money committed, work outstanding
     "dbpr_hr": (30, 180),
     "sunbiz": (90, 365),
     "ahca": (60, 270),
@@ -85,14 +91,22 @@ def blocklist_hit(*names: str | None) -> str | None:
     return None
 
 
-def bid_window(stage_hint: str, filed_at: str | None, today: date | None = None
-               ) -> tuple[str | None, str | None]:
-    """(open, close) as ISO dates, inferred from the stage. PLAN.md §2.4."""
+def bid_window(stage_hint: str, filed_at: str | None, today: date | None = None,
+               *, hearing_at: str | None = None) -> tuple[str | None, str | None]:
+    """(open, close) as ISO dates, inferred from the stage. PLAN.md §2.4.
+
+    An entitlement is the one case with a real date rather than an offset: the
+    tentative hearing is published, and the buildout follows approval, so the
+    window opens at the hearing.
+    """
     today = today or date.today()
-    offset, length = BID_WINDOW.get(stage_hint, (0, 0))
     if stage_hint == "issued":
         # Already awarded: the window closed when the permit issued.
         return (filed_at, filed_at)
+    if stage_hint == "pre_permit" and hearing_at:
+        opens = max(date.fromisoformat(hearing_at[:10]), today)
+        return (opens.isoformat(), (opens + timedelta(days=180)).isoformat())
+    offset, length = BID_WINDOW.get(stage_hint, (0, 0))
     opens = today + timedelta(days=offset)
     return (opens.isoformat(), (opens + timedelta(days=length)).isoformat())
 
@@ -153,7 +167,8 @@ def access_points(signal: dict, blocked: str | None) -> int:
 def meets_size_gate(signal: dict) -> bool:
     """§2.3(c). Licence-type sources pass on the second branch, because value
     is unknowable there — and so do permits, for the same reason."""
-    if signal.get("source") in {"abt", "ahca", "dbpr_hr", "permit", "entitlement"}:
+    if signal.get("source") in {"abt", "ahca", "dbpr_hr", "permit",
+                                "entitlement", "cra_grant"}:
         return True
     return bool((signal.get("value_est") or 0) >= 75_000
                 or (signal.get("sqft") or 0) >= 1_200
@@ -167,12 +182,13 @@ def score(signal: dict, today: date | None = None) -> dict:
     blockers are reported but do not disqualify.
     """
     stage = signal.get("stage_hint") or "issued"
-    opens, closes = bid_window(stage, signal.get("filed_at"), today)
+    opens, closes = bid_window(stage, signal.get("filed_at"), today,
+                               hearing_at=signal.get("hearing_at"))
     blocked = blocklist_hit(signal.get("entity"), signal.get("brand"),
                             signal.get("project_name"))
 
     trade = signal.get("trade") or "other"
-    precursor = stage == "strip_out" and trade == "other"
+    precursor = stage in PRECURSOR_STAGES and trade == "other"
     fit = FIT_PRECURSOR if precursor else FIT.get(trade, 0)
     urg = urgency_points(opens, stage, today)
     val = value_points(signal.get("value_est"))
@@ -189,6 +205,10 @@ def score(signal: dict, today: date | None = None) -> dict:
         hard.append(f"blocklist:{blocked}")
     if stage == "issued":
         hard.append("already_awarded")
+    if signal.get("is_fitout") is False:
+        # A record type no GC bids: a dwelling remodel under a commercial
+        # permit, a demolition, a residential variance, a temporary event.
+        hard.append("not_fitout")
     if not meets_size_gate(signal):
         hard.append("below_size_gate")
 
@@ -199,7 +219,7 @@ def score(signal: dict, today: date | None = None) -> dict:
     if (signal.get("confidence") or 0) < 0.5:
         soft.append("low_confidence_trade")
     if precursor:
-        soft.append("trade_undeclared_strip_out")
+        soft.append("trade_undeclared")
 
     return {
         "score": total,

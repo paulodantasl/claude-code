@@ -509,7 +509,7 @@ leads a quarter, none with a contact channel.** That is not a threshold problem
 — 19 of the 29 are already-issued permits, which §2.3(d) correctly refuses to
 call outreach. It is the argument for Phase 2.
 
-### Phase 2 — Leading indicators (REORDERED after discovery)
+### Phase 2 — Leading indicators (REORDERED after discovery) — ✅ DONE 2026-09-14
 
 The state-file collectors PLAN originally listed are no longer the first
 things to build. Tampa publishes earlier, geocoded, contact-bearing versions
@@ -541,29 +541,87 @@ entitlement-sourced and one ABT-sourced signal in a tracked submarket appear
 in `signals.jsonl`, the ABT one with a phone or email taken from the public
 record.
 
-### Phase 3 — Into the tracker, live
-1. Routine per §5 (`create_trigger`, fresh session, 9am ET weekdays) whose
-   prompt is complete and standalone: fetch → diff → `write_db` batch → prune
-   → digest. Dedupe rule and human-owned-field rule stated in the prompt.
-2. Page changes to `tampa-bid-radar.html`:
-   - **New-signals tray** above the board: `signals/` where
-     `!dismissed && !promotedTo`, sorted by score; each card shows hood,
-     trade, entity, address, value/seats, filed date, source link, contacts;
-     buttons **Promote** (creates `opportunities/{id}` copying the record,
-     sets `signals/{id}.promotedTo`) and **Dismiss**.
-   - Extend opportunity cards with address, source link, contacts.
-   - **Send to JobTread** on an opportunity, via the `mcp` capability
-     (`capabilities: {db:{}, downloads:true, mcp:{servers:[{server:"Ideal",
-     tools:["query"]}]}}`) — only after Phase 1 step 4 observed a real
-     request/response; store the returned account id on the row.
-   - Update the Rays row (`dev` → add AECOM Hunt / Turner as CM; note
-     Hillsborough approval 2026-08-28).
-3. Republish the artifact at the same URL (keep favicon/icon).
+**What actually happened.** All three city collectors are green. Over a
+365-day window: 642 records, 223 inside a tracked submarket, **84 qualified** —
+40 permits, 26 entitlements, 15 alcoholic-beverage, 3 CRA grants. Seven carry
+a phone and an email from the public record, all restaurants in Ybor, Water
+Street and the Riverwalk. Steps 4 (the DBPR/Sunbiz/AHCA state files), 5 (the
+geocoder — not needed, all four city layers serve point geometry) and 6 (the
+HCAA monthly PDF) are NOT done and remain the next work.
 
-**Done when:** a signal collected by the Action appears in the tray within
-one business day with no human step; Promote/Dismiss round-trip survives a
-reload for a second viewer; one opportunity pushed to JobTread from the page
-and found via `mcp__Ideal__query`.
+Four defects that only reading the real output would have found, each now
+tested:
+
+1. **Residential entitlements flooded the list.** 25 of the first 34 qualified
+   rows were entitlements at an identical 58, and most were a setback variance
+   on a Davis Islands house. Of 160 live cases, 62 were Variance Review Board
+   or Design Exception. Only Rezoning, General Land Use, Special Use and AB
+   Special Use are fitout-capable now, and `is_fitout` is a hard blocker
+   everywhere rather than a display flag.
+2. **Every CRA grant was dropped.** Centro Asturiano's $987,850 Special
+   Projects grant is Awarded with no completion date and was failing on
+   `trade_other`. Awarded grants are precursors now.
+3. **A status change is not an opening.** Including `HISTORY_ACT_DT` put Mise
+   en Place (licensed 1991), Grand Central Cafe and Mitas Cocina Moderna at the
+   top of the call list. Only `CREATEDATE` (a new record) and `PLACARD_DT` (a
+   posted notice) make a signal; a status change goes to the directory. Mise en
+   Place survives the filter on its own merits — it filed a *new* record in Nov
+   2025 at a new address.
+4. **An administrative note is not a tenant.** `BUS_NAME` held "No Signoff -
+   Initial Approval 4-28-2026", so the list carried a restaurant called No
+   Signoff.
+
+Also: the permit layer returns one feature per address unit, so one record
+could arrive twice (BLD-26-0522346 as both `5041 W Cypress St` and
+`5041 W Cypress St #FS`); ids are deduped at collection.
+
+### Phase 3 — Into the tracker, live — ✅ DONE 2026-09-14 (one gap, below)
+
+1. Routine `trig_01T15GEET3skCnyJVEn92noq`, "Bid Radar — sync signals into the
+   tracker": fresh session, `0 13 * * 1-5` (9am ET weekdays, after the 7am
+   collector). The prompt is standalone and carries the dedupe rule, the
+   human-owned-field rule, the submarket-id→label map, the 180-day prune and
+   the digest format.
+   **Gap:** the Routine stores no MCP connectors — `create_trigger` refused the
+   `connectors` parameter for this organization — so a fired session may not
+   have `mcp__github__*`. Step 1 therefore reads the data branch with plain
+   `git fetch` / `git show`, which works on the session's own repository
+   credentials, and falls back to the GitHub tool only if it is loaded. Watch
+   the first firing; if it cannot read the branch either way, the user can
+   recreate the Routine from the claude.ai routines UI, where connectors can
+   be attached.
+2. Page changes to `tampa-bid-radar.html`, published as artifact **version 2**
+   at the same URL, capabilities `db` + `downloads` + `mcp{Ideal:[query]}`:
+   - **New-signals tray** above the board, reading `signals/` where
+     `!dismissed && !promotedTo`, sorted by score, filterable by "with a
+     contact" and "score 70+". Cards carry submarket, trade, entity, address,
+     size, filed date, bid window, score, the public-record link, and
+     click-to-call / click-to-mail contacts. **Promote** writes ONE opportunity
+     at `opportunities/sig-{signalId}` — a deterministic id, so promoting twice
+     updates one row rather than making two — and records `promotedTo` on the
+     signal. **Dismiss** writes only `dismissed`.
+   - Opportunity cards gained address, source link, contacts and score.
+   - **Send to JobTread** calls the viewer's own `Ideal` connector. The account
+     search is the shape observed in §6 Phase 1; `createAccount` is behind a
+     confirm with `suffixIfNecessary: true`. Errors branch by code.
+   - Rays row updated: AECOM Hunt / Turner as CM, Hillsborough approval
+     2026-08-28, both languages.
+3. Republished at the same URL, favicon and icon unchanged.
+
+**Done when:** a signal collected by the Action appears in the tray within one
+business day with no human step; Promote/Dismiss round-trip survives a reload
+for a second viewer; one opportunity pushed to JobTread from the page and found
+via `mcp__Ideal__query`.
+
+**What actually happened.** The tray, Promote and Dismiss are covered by 14
+browser tests that run the real file in Chromium against a stubbed database and
+assert that promote and dismiss touch only the three human-owned fields. The
+first Routine firing is 2026-09-14 13:00Z — the "within one business day with
+no human step" criterion is not yet observed and should be checked then. The
+JobTread push has not been exercised end to end: the search query was run
+against the live org from this session, but nobody has clicked the button, and
+`createAccount` was introspected from the API schema rather than executed,
+because executing it would create a real account in the production org.
 
 ### Phase 4 — Close the loop
 1. `noc.py` — Playwright against the Clerk's ORI search, last 24 months,
