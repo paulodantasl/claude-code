@@ -82,6 +82,14 @@ _DATE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4})$")
 #: files are full of them — `Rank Code` DWEL with modifier SNGL.
 _DWELLING_RANKS = {"DWEL"}
 
+#: Licence classes that are not a buildout at all, and which the first live run
+#: put straight onto the call list — 9 of 23 qualified rows:
+#:   MFDV  mobile food dispensing vehicle — a food truck
+#:   VEND  vending machine operator
+#: Five of the MFDV rows shared one address, 4601 N Lois Ave, which is a
+#: commissary where trucks register. That is one kitchen, not five fitouts.
+_NOT_A_BUILDOUT = {"MFDV", "VEND", "THEA", "CATE"}
+
 
 def _clean(v) -> str:
     return " ".join(str(v or "").split()).strip()
@@ -239,7 +247,7 @@ def _signal(rec: dict, fname: str, label: str, trade: str, stage: str,
         "record_type": label,
         "occupancy_category": None,
         "occupancy_type": rec.get("Rank Code") or None,
-        "is_fitout": rank not in _DWELLING_RANKS,
+        "is_fitout": rank not in _DWELLING_RANKS | _NOT_A_BUILDOUT,
         "work_type": "interior",
         "is_dwelling": rank in _DWELLING_RANKS,
 

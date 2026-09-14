@@ -87,47 +87,69 @@ def test_the_layout_is_flagged_unverified_until_a_real_file_confirms_it():
 
 # -------------------------------------------------------------------- hcaa
 
-REPORT = """
-Planned Procurement Opportunities Report - September 2026
+FIXTURE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                       "fixtures", "hcaa_report_2026-09.txt")
 
-Request for Proposals to establish a prequalified contractors list for
-building construction, site work and paving
-Planning and Development Department
-Advertise 4/20/2026  Pre-proposal 4/27/2026  Due 9/3/2026
-Contact: Nick Diaz ndiaz@tampaairport.com
-Estimated value $25,000,000
-
-Airside C concourse terminal renovation - general trades
-Advertise 11/15/2026  Due 1/20/2027
-Contact: procurement@tampaairport.com
-Estimated value $4,500,000
-
-Janitorial services for the main terminal
-Advertise 10/1/2026
-Contact: procurement@tampaairport.com
-
-Employee staffing and temporary labor
-Advertise 10/5/2026
-"""
+hcaa_fixture = pytest.mark.skipif(not os.path.exists(FIXTURE),
+                                  reason="hcaa fixture not present")
 
 
-def test_the_report_parser_keeps_construction_and_drops_the_rest():
-    rows = hcaa_ppo.parse_rows(REPORT)
-    titles = " | ".join(r["title"] for r in rows)
-    assert "prequalified contractors" in titles
-    assert "concourse terminal renovation" in titles
-    # Real lines from a real report that Ideal cannot bid.
-    assert "Janitorial" not in titles
-    assert "staffing" not in titles.lower()
+@pytest.fixture(scope="module")
+def report_rows():
+    with open(FIXTURE, encoding="utf-8", errors="replace") as fh:
+        return hcaa_ppo.parse_rows(fh.read())
 
 
-def test_the_prequal_row_carries_its_dates_contact_and_value():
-    row = next(r for r in hcaa_ppo.parse_rows(REPORT)
-               if "prequalified" in r["title"])
-    assert "2026-04-20" in row["dates"]
-    assert "2026-09-03" in row["dates"]
-    assert "ndiaz@tampaairport.com" in row["emails"]
-    assert row["value_est"] == 25_000_000.0
+@hcaa_fixture
+def test_the_real_report_yields_named_contracts_not_table_fragments(report_rows):
+    """The first parser split on blank lines and produced titles like "Small
+    Projects" and "Invitation to Bid" — table cells, not contracts. pdf text
+    extraction shreds the table, so the contact email is the anchor instead."""
+    titles = [r["title"] for r in report_rows]
+    assert "Maintenance Small Projects" in titles
+    assert "General Aviation Apron Rehabilitation" in titles
+    assert "Police K9 and Training Facility Renovation and Expansion" in titles
+    # The fragments the first attempt produced must not come back.
+    assert "Small Projects" not in titles
+    assert "Invitation to Bid" not in titles
+    assert "General Aviation" not in titles
+
+
+@hcaa_fixture
+def test_the_running_header_does_not_leak_into_a_title(report_rows):
+    """A contract's cells straddle a page break, so the header lands in the
+    middle of its text."""
+    for r in report_rows:
+        assert "Planned Procurement" not in r["title"]
+        assert "Page" not in r["title"].split()
+
+
+@hcaa_fixture
+def test_the_description_is_split_off_the_project_name(report_rows):
+    """_DESC_START is deliberately unanchored: the prose starts in the middle
+    of the joined cell text, which is where the name ends."""
+    for r in report_rows:
+        assert "The purpose of this" not in r["title"]
+        assert len(r["title"]) < 120
+
+
+@hcaa_fixture
+def test_the_prequalification_row_carries_nick_diaz_and_a_real_date(report_rows):
+    """PLAN §4 names emailing Nick Diaz about the next prequalification cycle
+    as the earliest dated action on the board. The collector must find him."""
+    emails = {e for r in report_rows for e in r["emails"]}
+    assert "ndiaz@tampaairport.com" in emails
+    assert all(r["dates"] for r in report_rows if r["emails"])
+    prequal = next(r for r in report_rows if "Maintenance Small Projects" in r["title"])
+    assert "prequalify vendors" in prequal["blob"]
+    assert "2026-08-24" in prequal["dates"]
+
+
+@hcaa_fixture
+def test_every_row_has_exactly_one_contact_email(report_rows):
+    for r in report_rows:
+        assert len(r["emails"]) == 1
+        assert r["emails"][0].endswith("@tampaairport.com")
 
 
 def test_a_stray_dollar_figure_is_not_taken_as_a_contract_value():
@@ -262,3 +284,23 @@ def test_newlodg_has_no_location_county_and_falls_back_to_the_city():
     assert "Location County" not in rec
     assert rec["Location City"] == "TAMPA"
     assert dbpr_hr._in_tampa(rec) is True
+
+
+def test_a_food_truck_is_not_a_buildout():
+    """The first live run put 9 of 23 qualified DBPR rows on the call list as
+    food trucks and vending machines. Five MFDV rows shared one address —
+    4601 N Lois Ave, a commissary where trucks register. One kitchen, not
+    five fitouts."""
+    for rank in ("MFDV", "VEND"):
+        row = list(ROW_HAVELI)
+        row[6] = rank
+        sig = dbpr_hr._signal(dbpr_hr._row(FOOD_HEADER, row), "newfood.csv",
+                              "New food-service licence", "restaurant",
+                              "dbpr_hr", None, "2026-09-14T00:00:00", None)
+        assert sig["is_fitout"] is False, rank
+
+    # A seated restaurant still is one.
+    sig = dbpr_hr._signal(dbpr_hr._row(FOOD_HEADER, ROW_HAVELI), "newfood.csv",
+                          "New food-service licence", "restaurant", "dbpr_hr",
+                          None, "2026-09-14T00:00:00", None)
+    assert sig["is_fitout"] is True

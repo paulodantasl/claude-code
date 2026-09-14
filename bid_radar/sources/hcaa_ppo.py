@@ -140,44 +140,92 @@ def _iso(m: re.Match) -> str | None:
 
 
 def parse_rows(text: str) -> list[dict]:
-    """One row per procurement line the report names.
+    """One row per procurement the report names.
 
-    The report is a table flattened by text extraction, so rows are recovered
-    by blank-line blocks rather than by column position — the same reasoning
-    as accela.py: the printed content is stable, the layout is not.
+    The report is a table, and pdf text extraction shreds it: every cell lands
+    on its own line, so a project name arrives as "Maintenance" / "Small
+    Projects" and a contact as "Rayesha" / "Cotton". Splitting on blank lines —
+    the first thing tried — produced rows whose title was "Small Projects".
+
+    The reliable anchor is the contact email. Every contract in the report has
+    exactly one `@tampaairport.com` address and nothing else in the document
+    does, so the file is cut at each email and each piece is one contract: the
+    dates before it, the description after it.
     """
-    rows, block = [], []
-    for line in text.splitlines():
-        line = line.strip()
-        if line:
-            block.append(line)
-            continue
-        if block:
-            rows.append(block)
-            block = []
-    if block:
-        rows.append(block)
+    lines = [l.strip() for l in text.splitlines()]
+    marks = [i for i, l in enumerate(lines) if EMAIL.search(l)]
+    if not marks:
+        return []
 
     out = []
-    for block in rows:
-        blob = " ".join(block)
+    for n, at in enumerate(marks):
+        start = marks[n - 1] + 1 if n else 0
+        stop = marks[n + 1] if n + 1 < len(marks) else len(lines)
+        before = [l for l in lines[start:at] if l]
+        after = [l for l in lines[at + 1:stop] if l]
+
+        emails = sorted(set(EMAIL.findall(lines[at])))
+        dates = sorted({d for d in (_iso(m) for l in before
+                                    for m in DATE_US.finditer(l)) if d})
+
+        # After the email come the solicitation method, then the project name,
+        # then the prose description. The method is a known phrase; the name is
+        # what follows it, up to the sentence that starts the description.
+        body = _rejoin(after)
+        title, description = _split_title(body)
+        blob = f"{title} {description}"
         if len(blob) < 25:
             continue
         if SKIP_WORDS.search(blob) or not BUILD_WORDS.search(blob):
             continue
-        dates = [d for d in (_iso(m) for m in DATE_US.finditer(blob)) if d]
-        emails = EMAIL.findall(blob)
-        money = MONEY.findall(blob)
-        # The title is the first line long enough to be one.
-        title = next((l for l in block if len(l) > 12), blob[:120])
         out.append({
-            "title": title[:180],
+            "title": title[:180] or blob[:120],
             "blob": blob[:600],
-            "dates": sorted(set(dates)),
-            "emails": sorted(set(emails)),
-            "value_est": _money(money),
+            "dates": dates,
+            "emails": emails,
+            "value_est": _money(MONEY.findall(blob)),
         })
     return out
+
+
+#: The solicitation methods the report's own overview page lists.
+_METHOD = re.compile(
+    r"^(request for (information|qualifications|proposals)|invitation to "
+    r"(bid|negotiate|quote)|reverse auction|rfi|rfq|rfp|itb|itn|itq|ra)\b",
+    re.I)
+#: The description always opens with one of these. Deliberately NOT anchored
+#: with ^ — it is searched for in the middle of the joined cell text, which is
+#: exactly where the project name ends and the prose begins.
+_DESC_START = re.compile(
+    r"\b(the purpose of this|this solicitation|utilizing a|the authority)\b",
+    re.I)
+
+
+#: The running header and footer land in the middle of a row's text, because
+#: a contract's cells straddle a page break.
+_BOILER = re.compile(
+    r"Planned\s+Procurement\s+Opportunities\s*(Report)?\s*"
+    r"[A-Z][a-z]+\s+\d{4}\s*(Page\s*\d+)?", re.I)
+
+
+def _rejoin(lines: list[str]) -> str:
+    """Undo the column shredding: a cell wrapped across several lines is one
+    phrase, and the report never ends a cell mid-word."""
+    joined = " ".join(l for l in lines if l and l != "N/A")
+    return " ".join(_BOILER.sub(" ", joined).split())
+
+
+def _split_title(body: str) -> tuple[str, str]:
+    """Separate the project name from the prose that follows it."""
+    body = " ".join(body.split())
+    # Drop a leading solicitation method — it is the column before the name.
+    m = _METHOD.match(body)
+    if m:
+        body = body[m.end():].strip()
+    d = _DESC_START.search(body)
+    if d and d.start() > 0:
+        return body[:d.start()].strip(" .-"), body[d.start():].strip()
+    return body[:120].strip(" .-"), body
 
 
 def _money(found: list[str]) -> float | None:
