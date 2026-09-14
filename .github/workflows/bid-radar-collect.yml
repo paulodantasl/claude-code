@@ -78,6 +78,15 @@ jobs:
         continue-on-error: true
         run: python bid_radar/discover_noc.py
 
+      - name: DISCOVER — DBPR, Sunbiz, AHCA, HCAA
+        # The four sources PLAN.md §2 steps 4 and 6 left unbuilt. Runs on the
+        # phase-6 branch while they are being wired, and on demand after that;
+        # workflow_dispatch is unavailable until this file reaches the default
+        # branch.
+        if: ${{ endsWith(github.ref, '-p6') || (github.event_name == 'workflow_dispatch' && inputs.discover != 'false') }}
+        continue-on-error: true
+        run: python bid_radar/discover_state.py
+
       - name: Unit and page tests
         run: pytest -q bid_radar/tests
 
