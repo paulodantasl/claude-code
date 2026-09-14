@@ -686,12 +686,22 @@ because executing it would create a real account in the production org.
    Output is `data/market_share.csv` — contractor × submarket × permits ×
    average job value — plus a section in `summary.md`. The share of that table
    which is ours is our measured share, per submarket.
-2. Calibration seed — **not done.** The measurement now exists in
-   `market_share.csv`, but `meta/calibration_seed` is not written and the
-   page's "Modelled vs actual" still compares only against Won/Lost rows a
-   person logged. Writing the seed is the remaining step, and it should wait
-   for a run where the enrichment has covered the full back-catalogue rather
-   than one window.
+2. Calibration seed — **done, and narrower than PLAN implied.**
+   `collect.calibration_seed()` writes `data/calibration_seed.json` and it is
+   seeded into the tracker at `meta/calibration_seed`. The page shows it as a
+   third line in the calibration panel with a **Use market average** button.
+
+   It moves exactly one dial, `avgTI`, whose default was a $325,000 guess. It
+   is the average declared job value of the qualified fitout permits we
+   actually observed, per submarket and overall, suspect values excluded.
+
+   **It deliberately does not touch `winRate`, and no future change should.**
+   Win rate is a fact about us; the only honest source for it is Won/Lost rows
+   a person logged on the board. Market share is a different quantity, and a
+   permit's declared job value is not a contract value either — it is what the
+   applicant told the city the work is worth. The panel says so in both
+   languages, and `tests/test_page.py` asserts that the button moves `avgTI`
+   and leaves `winRate` alone.
 3. Outcome writeback — **done, in the page rather than the Routine.** PLAN put
    it in the Routine; the Routine stores no MCP connectors (§ Phase 3), so it
    cannot call JobTread at all. A **Refresh** button on a row already linked to
@@ -750,10 +760,10 @@ Water Street and Gasworx — and 60-odd other Florida GCs in one registration.
 
 Stated plainly so nobody assumes otherwise.
 
-- **The calibration seed** (Phase 4 step 2). `market_share.csv` now measures
-  who builds fitouts in each submarket, but `meta/calibration_seed` is not
-  written, so the page's "Modelled vs actual" still compares only against
-  Won/Lost rows a person logged.
+- **A measured win rate.** The calibration seed (Phase 4 step 2) is written,
+  but it moves only `avgTI`. The `winRate` dial is still a 12% assumption and
+  stays one until somebody logs Won and Lost rows on the board. No public
+  source can supply it, and market share is not a substitute.
 - **Automatic** JobTread writeback. It works from the page on a click; the
   Routine cannot do it unattended because it stores no connectors.
 - **Phase 2 steps 4 and 6.** The DBPR food-service and lodging extracts,

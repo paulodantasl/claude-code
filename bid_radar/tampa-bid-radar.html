@@ -412,6 +412,7 @@ td{padding:11px 8px 11px 0;border-bottom:1px solid var(--rule);vertical-align:to
       <div id="calbody"></div>
       <div class="tools" style="margin-top:auto">
         <button class="btn" id="applyactual" data-t="btn_apply"></button>
+        <button class="btn ghost" id="applymarket" data-t="btn_mkt" hidden></button>
         <button class="btn ghost" id="reset" data-t="btn_reset"></button>
       </div>
     </div>
@@ -804,7 +805,9 @@ const T = {
   cal_n:'Decided bids logged', cal_win:'Win rate', cal_ti:'Average contract',
   cal_need:'Log a Won or Lost row to compare',
   cal_model:'model', cal_real:'actual',
-  btn_apply:'Adopt actuals', btn_reset:'Reset to defaults',
+  cal_mkt:'Market average fitout permit', cal_mkt_n:n=>`${n} valued permits, last 12 months`,
+  cal_mkt_note:'Declared job value on permits in our submarkets — the market, not our win rate.',
+  btn_apply:'Adopt actuals', btn_mkt:'Use market average', btn_reset:'Reset to defaults',
 
   eb_chart:'Forecast',
   h_chart:'When the work comes out to bid',
@@ -898,7 +901,9 @@ const T = {
   cal_n:'Propostas decididas', cal_win:'Taxa de conversão', cal_ti:'Contrato médio',
   cal_need:'Registre um Ganho ou Perdido para comparar',
   cal_model:'modelo', cal_real:'real',
-  btn_apply:'Adotar valores reais', btn_reset:'Restaurar padrões',
+  cal_mkt:'Média de mercado por alvará de fitout', cal_mkt_n:n=>`${n} alvarás com valor, últimos 12 meses`,
+  cal_mkt_note:'Valor declarado nos alvarás dos nossos submercados — o mercado, não a nossa conversão.',
+  btn_apply:'Adotar valores reais', btn_mkt:'Usar média de mercado', btn_reset:'Restaurar padrões',
 
   eb_chart:'Previsão',
   h_chart:'Quando o trabalho vai a mercado',
@@ -1080,6 +1085,13 @@ async function initStore(){
       Object.assign(dials, s.data());
       syncDialInputs(); renderAll();
     }, ()=>{});
+    // machine-owned: the measured prior for the avgTI dial. It is the market's
+    // average declared job value, NOT our win rate — win rate can only come
+    // from Won/Lost rows a person logged.
+    db.doc('meta/calibration_seed').onSnapshot(s=>{
+      SEED = s.exists ? s.data() : null;
+      renderCalib();
+    }, ()=>{ SEED=null; renderCalib(); });
     // machine-owned: written by the collector Action via a Claude Routine
     db.collection('signals').onSnapshot(snap=>{
       SIGS = snap.docs.map(d=>({id:d.id, ...d.data()}));
@@ -1123,6 +1135,7 @@ async function delOpp(id){
    fields — dismissed, promotedTo, notes — so a re-collection cannot undo a
    decision somebody made.                                                  */
 let SIGS = [];
+let SEED = null;          // meta/calibration_seed, machine-owned
 let trayFilter = 'all';
 
 function liveSignals(){
@@ -1552,9 +1565,16 @@ function renderCalib(){
     `<div class="calrow"><span class="k">${T_.cal_n}</span>`+
     `<span class="v">${c.decided} <span class="m">(${c.won}W / ${c.lost}L)</span></span></div>`+
     line(T_.cal_win, pct(dials.winRate), c.winRate!=null ? pct(c.winRate) : null)+
-    line(T_.cal_ti, money(dials.avgTI), c.avgTI!=null ? money(c.avgTI) : null);
+    line(T_.cal_ti, money(dials.avgTI), c.avgTI!=null ? money(c.avgTI) : null)+
+    (SEED && SEED.avg_value ?
+      `<div class="calrow"><span class="k">${T_.cal_mkt}</span>`+
+      `<span class="v"><span class="a">${money(SEED.avg_value)}</span> `+
+      `<span class="m">${esc(T_.cal_mkt_n(SEED.n))}</span></span></div>`+
+      `<div class="hint">${esc(T_.cal_mkt_note)}</div>`
+      : '');
 
   document.getElementById('applyactual').disabled = (c.winRate==null && c.avgTI==null);
+  document.getElementById('applymarket').hidden = !(SEED && SEED.avg_value);
 }
 
 /* ============ RENDER: chart ============ */
@@ -1748,6 +1768,13 @@ document.getElementById('applyactual').onclick = () => {
   const c = calibration();
   if(c.winRate != null) dials.winRate = Math.min(0.40, Math.max(0.02, c.winRate));
   if(c.avgTI   != null) dials.avgTI   = Math.min(900000, Math.max(50000, Math.round(c.avgTI/1000)*1000));
+  syncDialInputs(); renderAll(); persistDials();
+};
+// Moves ONE dial, avgTI, and deliberately not winRate: the market tells us what
+// a fitout is worth, never how often we win one.
+document.getElementById('applymarket').onclick = () => {
+  if(!(SEED && SEED.avg_value)) return;
+  dials.avgTI = Math.min(900000, Math.max(50000, Math.round(SEED.avg_value/1000)*1000));
   syncDialInputs(); renderAll(); persistDials();
 };
 

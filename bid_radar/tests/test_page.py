@@ -69,13 +69,18 @@ SIGNALS = [
 
 STUB = """(() => {
   const store = {signals: __SIGNALS__};
+  const docs = __DOCS__;
   window.__writes = [];
   const col = (name) => ({
     onSnapshot(cb){ cb({docs:(store[name]||[]).map(d=>({id:d.id, data:()=>d}))}); return ()=>{}; },
     add(rec){ window.__writes.push(['add', name, rec]); return Promise.resolve({id:'new'}); }
   });
-  const doc = () => ({ onSnapshot(cb){ cb({exists:false, data:()=>({})}); return ()=>{}; } });
-  const docAt = (path) => Object.assign(doc(), {
+  const doc = (path) => ({ onSnapshot(cb){
+    const d = docs[path];
+    cb(d ? {exists:true, data:()=>d} : {exists:false, data:()=>({})});
+    return ()=>{};
+  } });
+  const docAt = (path) => Object.assign(doc(path), {
     set(v){ window.__writes.push(['set', path, v]); return Promise.resolve(); },
     update(v){ window.__writes.push(['update', path, v]); return Promise.resolve(); },
     delete(){ window.__writes.push(['delete', path]); return Promise.resolve(); }
@@ -117,6 +122,11 @@ def pw():
         yield instance
 
 
+def _stub(signals, docs=None):
+    return (STUB.replace("__SIGNALS__", json.dumps(signals))
+                .replace("__DOCS__", json.dumps(docs or {})))
+
+
 @pytest.fixture(scope="module")
 def bare(pw):
     p = _Page(pw, None)
@@ -126,7 +136,7 @@ def bare(pw):
 
 @pytest.fixture(scope="module")
 def wired(pw):
-    p = _Page(pw, STUB.replace("__SIGNALS__", json.dumps(SIGNALS)))
+    p = _Page(pw, _stub(SIGNALS))
     yield p
     p.browser.close()
 
@@ -344,3 +354,46 @@ def test_the_refresh_never_writes_a_contract_value(bare):
     src = bare.page.evaluate("refreshFromJobTread.toString()")
     assert "valueActual" not in src
     assert "jobtreadStatus" in src
+
+
+# --------------------------------------------------------- calibration seed
+
+SEED = {"measures": "avgTI", "n": 41, "avg_value": 812345.0,
+        "median_value": 410000.0, "window_days": 365,
+        "basis": "declared job value on qualified fitout permits, City of Tampa Accela",
+        "by_hood": {"waterst": {"hood_label": "Water Street", "n": 6,
+                                "avg_value": 1200000.0}},
+        "retrieved_at": "2026-09-14T02:00:00+00:00"}
+
+
+@pytest.fixture(scope="module")
+def seeded(pw):
+    p = _Page(pw, _stub(SIGNALS, {"meta/calibration_seed": SEED}))
+    yield p
+    p.browser.close()
+
+
+def test_without_a_seed_the_market_button_stays_hidden(wired):
+    assert wired.page.locator("#applymarket").is_hidden()
+    assert "Market average" not in wired.page.locator("#calbody").inner_text()
+
+
+def test_the_market_average_is_shown_and_labelled_as_the_market(seeded):
+    body = seeded.page.locator("#calbody").inner_text()
+    assert "Market average fitout permit" in body
+    assert "$812,345" in body or "$812.3k" in body or "812" in body
+    assert "41 valued permits" in body
+    # The label has to say what it is. A reader must not take a market figure
+    # for our win rate.
+    assert "not our win rate" in body
+
+
+def test_the_market_button_moves_avgti_and_never_winrate(seeded):
+    before = seeded.page.evaluate("({...dials})")
+    seeded.page.locator("#applymarket").click()
+    seeded.page.wait_for_timeout(200)
+    after = seeded.page.evaluate("({...dials})")
+    assert after["avgTI"] == 812000              # rounded to the nearest $1k
+    assert after["winRate"] == before["winRate"]
+    assert after["perFitout"] == before["perFitout"]
+    assert seeded.errors == []

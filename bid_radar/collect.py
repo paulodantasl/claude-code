@@ -99,6 +99,48 @@ def market_share(signals: list[dict]) -> list[dict]:
     return sorted(out, key=lambda r: (-r["permits"], -(r["value_total"] or 0)))
 
 
+def calibration_seed(signals: list[dict], rows: list[dict]) -> dict | None:
+    """A measured prior for the `avgTI` dial, and nothing more.
+
+    The dial has been guessing at $325,000. This replaces the guess with the
+    average declared job value of the qualified fitout permits we actually
+    observed, per submarket and overall.
+
+    What it is NOT: a win rate. Win rate is a fact about us, and the only place
+    it can come from is Won/Lost rows a person logged on the board. Market
+    share is a different quantity and must never be written into that dial.
+    Nor is a permit's declared job value a contract value — it is what the
+    applicant told the city the work is worth. It is the closest measured
+    number we have, and the page labels it as the market figure it is.
+    """
+    usable = [s for s in signals
+              if s.get("value_est") and not s.get("value_suspect")
+              and s.get("hood") and s.get("qualified")]
+    vals = [float(s["value_est"]) for s in usable]
+    if not vals:
+        return None
+    by_hood: dict[str, dict] = {}
+    for s in usable:
+        h = by_hood.setdefault(s["hood"], {"hood_label": geo.hood_label(s["hood"]),
+                                           "n": 0, "value_total": 0.0})
+        h["n"] += 1
+        h["value_total"] += float(s["value_est"])
+    for h in by_hood.values():
+        h["avg_value"] = h["value_total"] / h["n"]
+    gcs = {r["contractor"] for r in rows}
+    return {
+        "measures": "avgTI",
+        "basis": "declared job value on qualified fitout permits, City of Tampa Accela",
+        "window_days": DAYS_BACK,
+        "n": len(vals),
+        "avg_value": sum(vals) / len(vals),
+        "median_value": sorted(vals)[len(vals) // 2],
+        "by_hood": by_hood,
+        "contractors_seen": len(gcs),
+        "retrieved_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+
+
 def write_market_share(rows: list[dict], path: str) -> None:
     cols = ["hood_label", "contractor", "licence", "permits", "top_trade",
             "with_value", "value_total", "avg_value"]
@@ -382,6 +424,13 @@ def main() -> int:
             avg = f"avg ${r['avg_value']:,.0f}" if r["avg_value"] else "value unknown"
             print(f"  {r['permits']:>3} {r['hood_label']:<20} {r['contractor'][:44]:<44} {avg}",
                   flush=True)
+    seed = calibration_seed(signals, share)
+    if seed:
+        with open(os.path.join(DATA, "calibration_seed.json"), "w") as fh:
+            json.dump(seed, fh, indent=2, default=str)
+        print(f"calibration seed: avgTI ${seed['avg_value']:,.0f} "
+              f"from {seed['n']} valued permits", flush=True)
+
     with open(os.path.join(DATA, "summary.md"), "w") as fh:
         fh.write(summary(signals, report, directory) + "\n")
 

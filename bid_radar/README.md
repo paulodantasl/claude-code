@@ -417,12 +417,29 @@ permits × average job value. The share of that table which is ours is our
 measured share, per submarket — which is what two of the five calibration dials
 have been guessing at.
 
-### Not yet wired
+The first live run put four bad rows in that table, and all four are fixed:
+a street address read as a company name (the record prints name, then address,
+then licence, and the address looked like a firm), a qualifier and their firm
+run together on one line, and two job values — $280,000,000 and $500 — that are
+data entry on the record rather than real. A suspect value stays on the row,
+flagged, but is left out of the averages. These mattered because every one of
+them would have gone straight onto a cold call.
 
-The measurement exists; `meta/calibration_seed` is not written, so the page's
-"Modelled vs actual" still compares only against Won/Lost rows a person logged.
-That is the remaining step, and it should wait for a run whose enrichment has
-covered the full back-catalogue rather than one window.
+### The calibration seed
+
+The `avgTI` dial — average contract — has been guessing at $325,000. The
+collector now writes `calibration_seed.json`: the average declared job value of
+the qualified fitout permits actually observed, per submarket and overall, with
+suspect values left out. It is seeded into the tracker at
+`meta/calibration_seed`, and the calibration panel shows it with a **Use market
+average** button.
+
+That button moves one dial, `avgTI`, and nothing else. **Win rate stays where
+it is.** Win rate is a fact about Ideal, and the only place it can honestly
+come from is a Won or Lost row someone logged on the board. Market share is a
+different number. And a declared job value is not a contract value — it is what
+the applicant told the city the work is worth. It is the closest measured
+figure available, and the panel labels it as the market figure it is.
 
 ## JobTread status writeback
 
