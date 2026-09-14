@@ -469,6 +469,95 @@ can honestly come from is a Won or Lost row someone logged on the board. Market
 share is a different number, and a declared job value is not a contract value —
 it is what the applicant told the city the work is worth.
 
+## The state and federal sources (Phase 6)
+
+Three more sources, and the geocoder they turned out to need. All of it was
+discovered from a GitHub runner — the sandbox reaches none of these hosts.
+
+### DBPR — who is opening a restaurant
+
+A new food-service licence at an address means a restaurant is opening there.
+A **change of ownership** means one is being taken over, which in this trade
+almost always means a remodel. Both are public, free, and were not being read.
+
+| File | Rows | What it is |
+|---|---|---|
+| `newfood.csv` | 1,274 | New food-service licences this fiscal year |
+| `chgownr_food.csv` | 1,141 | Change of ownership |
+| `newlodg.csv` | 2,356 | New lodging licences |
+| `chgownr_lodg.csv` | 290 | Lodging change of ownership |
+
+Every row carries a trading name, a street address, a phone number and a seat
+count. **14 qualified in the eight submarkets, all with a phone number.**
+
+Three things about these files will bite anyone who reads them casually, and
+all three are handled:
+
+1. The same 38-name header ships in **two different column orders** — in one
+   file the phone is at index 15, in another at 16. A real row reads
+   `Primary Phone Number = "39"`.
+2. `newlodg.csv` has a **different, shorter header** with no `Location County`.
+3. A **Tampa mailing address is not a Tampa job** — the first row of
+   `newfood.csv` mails to Tampa 33647 and builds in Safety Harbor, Pinellas.
+
+And one the live data found: `MFDV` is a food truck and `VEND` a vending
+machine. Nine of the first 23 qualified rows were one or the other, five of
+them at a single commissary address. Neither is a buildout.
+
+### HCAA — the prequalification that was missed
+
+The airport publishes a planned-procurement report every month listing what it
+intends to advertise and when. **The 2026-09-03 prequalified-contractors RFP
+was in it months ahead.** Reading it monthly is how that stops happening.
+
+It now surfaces `Prequalified Contractors List, 1. Building Construction and
+2. …`, advertising 2026-04-20, contact `ndiaz@tampaairport.com` — the same
+cycle and the same person PLAN §4 says to email.
+
+The PDF's table is shredded by text extraction: every cell lands on its own
+line, so a contact arrives as "Rayesha" then "Cotton". The contact email is the
+anchor — exactly one per contract, and nothing else in the document has one.
+
+The OpenGov portal is **not** an alternative: it 403s to a runner and both of
+its `/api/public` endpoints return the single-page-app shell, not JSON.
+
+### Sunbiz — built, waiting on credentials
+
+A new LLC at a commercial address is the earliest signal that exists, six to
+twelve months ahead of a permit. The daily files are **not** a free download:
+they live on `sftp.floridados.gov`, which returns 401 to anonymous, and there
+is no mirror. The collector is written and gated on `SUNBIZ_USER` /
+`SUNBIZ_PASS`; it returns empty and says exactly why until those exist, then
+starts producing with no code change.
+
+Its record layout is transcribed from the published definition rather than
+observed, so `LAYOUT_VERIFIED` is `False` and that flag rides on every row it
+emits. A short line is rejected rather than sliced past the end — a wrong
+offset yields nothing, not a convincing wrong name.
+
+### The geocoder
+
+The Tampa layers serve point geometry; the state files do not. Without a
+geocoder their rows can never be placed and the scorer drops every one.
+
+The US Census geocoder is free and needs no key. It was not trusted on a 200 —
+it was checked against four addresses whose submarket the ArcGIS geometry
+already knew, and agreed on all three it could resolve. The fourth is the
+honest limit: **1050 Water St returns "Tie"**, because Water Street is new
+construction and the TIGER road file has not caught up. An unresolved row keeps
+`needs_geocode` and is never placed by ZIP — 33602 alone spans Downtown, the
+Riverwalk, Water Street and the Channel District.
+
+### AHCA — not built, and why
+
+The medical-TI niche is Ideal's proven strength, so this one is a real loss.
+There is no route that does not involve scraping a UI: per-county extracts
+exist only for Miami-Dade, and the facility search returns 400 to its own
+control names because it is a client-rendered app. Driving it with Playwright
+would work and would break on their next redesign. It is left out rather than
+shipped fragile. Medical signal continues to come from permits and
+entitlements, which is later warning than a licence application would give.
+
 ## JobTread status writeback
 
 A **Refresh** button on any row already linked to JobTread reads the job's

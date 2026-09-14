@@ -335,17 +335,88 @@ Only 8 of the 38 fall in a CRA that overlaps our submarkets (Ybor City 1/2,
 Downtown Core/Non Core) — small, but every one is a funded fitout with a named
 applicant. Cheap to collect.
 
-### 6. Sunbiz, AHCA, Hillsborough Clerk NOCs, HCAA PPO — unchanged from PLAN
+### 6. Sunbiz, AHCA, Clerk NOCs, HCAA PPO — ALL FOUR OBSERVED 2026-09-14
 
-| # | Source | Warning | Status | DISCOVER |
-|---|---|---|---|---|
-| 6a | **Sunbiz** daily corporate filings, `dos.fl.gov/sunbiz/other-services/data-downloads/daily-data/` | 6–12 mo | VERIFIED files exist, not yet parsed | Fixed-width column definitions; principal-address fields; filter to ZIPs 33602 33605 33606 33607 33609 33611 33616 then geocode + polygon |
-| 6b | **AHCA** health-care licensure | 6–12 mo | not researched | Which product lists *applications*, not just licensed facilities |
-| 6c | ~~**Hillsborough Clerk** ORI, Notices of Commencement~~ | — | **CLOSED — see §3 #7** | Both public-records hosts refuse cloud traffic: `ConnectTimeout` on `pubrec6.hillsclerk.com`, `ConnectionError` on `pubrec.hillsclerk.com`, while `www.hillsclerk.com` answers 200 from the same runner. Not the network — those hosts. Replaced by #7, which is better. |
-| 6d | **HCAA** Planned Procurement Opportunities monthly PDF + OpenGov portal | varies | VERIFIED | Stable URL pattern; parse the table monthly |
-| 6e | **Geocoding** for 6a–6c | — | needed | Census Geocoder (free, batch, no key) first; Smarty as fallback. Not needed for sources 1, 3, 4, 5 — they all serve point geometry |
+Three discovery rounds (`discover_state.py`, `_state2.py`, `_state3.py`) ran
+these from a GitHub runner. PLAN's guesses about all four were wrong in ways
+that mattered.
 
-### 7. City of Tampa Accela record pages — OBSERVED, the richest source we have
+| # | Source | Status | What was actually found |
+|---|---|---|---|
+| 6a | **Sunbiz** daily corporate filings | **BUILT, DORMANT** — `sources/sunbiz.py` | Not a free download. The files are served from `sftp.floridados.gov`, which returns **401** to an anonymous runner; `dos.myflorida.com/sunbiz/data/cor/` 404s and `search.sunbiz.org/data/cor/` 403s. There is no anonymous mirror. The collector is written and gated on `SUNBIZ_USER`/`SUNBIZ_PASS`; it returns empty and says why until those exist. |
+| 6b | **AHCA** health-care licensure | **OPEN — no route found** | Per-county extracts exist only for Miami-Dade (`AllFacilityData_MiamiDade_*.xlsx`, 726 KB, HTTP 200); the equivalent Hillsborough path 404s. The facility search posts to `/Facility-Search/FacilityLocateSearch`, which returns **400** to `County`, to its own control name `countySelection`, and to a full field set — it is a client-rendered app with no hidden form fields (`hidden_fields: []`). Remaining route is Playwright against the UI, which is brittle. **Not built, deliberately.** |
+| 6c | ~~**Hillsborough Clerk** ORI~~ | **CLOSED — see §3 #10** | Both public-records hosts refuse cloud traffic: `ConnectTimeout` on `pubrec6.hillsclerk.com`, `ConnectionError` on `pubrec.hillsclerk.com`, while `www.hillsclerk.com` answers 200 from the same runner. Not the network — those hosts. Replaced by #10, which is better. |
+| 6d | **HCAA** Planned Procurement monthly PDF | **BUILT** — `sources/hcaa_ppo.py` | URL pattern confirmed over seven consecutive months, ~180 KB each. The OpenGov portal is NOT an alternative: the portal 403s and both `/api/public/…` endpoints return 50,872 bytes of `text/html` — identical size, i.e. the SPA shell, not JSON. |
+| 6e | **Geocoding** | **BUILT** — `geocode.py` | PLAN said "not needed for sources 1, 3, 4, 5", which was right and is now insufficient: 6a and the DBPR files carry a street address and no geometry. See §3 #9. |
+| 6f | **DBPR Hotels & Restaurants** | **BUILT** — `sources/dbpr_hr.py` | PLAN pointed at the ABT daily file, which §3 #3 already replaced. The files that matter were never named in PLAN — see §3 #8. |
+
+### 8. DBPR Hotels & Restaurants extracts — OBSERVED, NEW
+
+`https://www2.myfloridalicense.com/sto/file_download/extracts/`
+
+PLAN's entry for DBPR pointed at the alcoholic-beverage daily file, which the
+Tampa ArcGIS layer already replaced (§3 #3). The valuable files are different
+ones, and the landing pages link 300 of them:
+
+| File | Rows | What it is |
+|---|---|---|
+| `newfood.csv` | 1,274 | **New food-service licences**, current fiscal year |
+| `chgownr_food.csv` | 1,141 | **Change of ownership** — in this trade, almost always a remodel |
+| `newlodg.csv` | 2,356 | New lodging licences |
+| `chgownr_lodg.csv` | 290 | Lodging change of ownership |
+| `hrfood{1..7}.csv` | 7,943–15,072 | The full licence list, one file per inspection district. **District 3 is Hillsborough** (4,710 rows; the other six have 0–8). Not needed — the `new*` files are statewide and small. |
+
+38 columns including `Location Street Address`, `Location County`,
+`Business Name` (the trading name), `Licensee Name` (the holding company),
+`Primary Phone Number`, `Number of Seats` and `License Number`.
+
+**Three traps, each seen in the real files:**
+
+1. **The column order is not the same across files.** All four ship the same
+   38-name header, but `newfood.csv` has the phone at index 15 and the county
+   code at 16 while `chgownr_food.csv` has them reversed — a real row there
+   reads `Primary Phone Number = "39"` and `Mailing County Code =
+   "8134886294"`. Mapping by header name alone gets the phone wrong in one
+   file out of two.
+2. **`newlodg.csv` ships a different, shorter header** — 34 columns, no
+   `Location County` at all. There is no single schema.
+3. **A Tampa mailing address is not a Tampa job.** The first row of
+   `newfood.csv` is BLUSH SOCIAL, mailing Tampa 33647, building at
+   101 Philippe Pkwy, Safety Harbor — Pinellas. Only the `Location …` fields
+   decide.
+
+**And one the first live run found:** `Rank Code` `MFDV` is a mobile food
+dispensing vehicle — a food truck — and `VEND` a vending machine operator.
+Nine of the first 23 qualified rows were one or the other, five of them
+sharing 4601 N Lois Ave, a commissary where trucks register. One kitchen, not
+five fitouts. Both are `not_fitout` now.
+
+`Number of Seats` is filled on these rows, which is the build-size proxy the
+ABT layer could not give (23 of 4,096 there).
+
+### 9. US Census geocoder — OBSERVED, NEW, and now required
+
+`https://geocoding.geo.census.gov/geocoder/locations/addressbatch` — free, no
+key, batch CSV in and out. It answered a runner on 2026-09-14.
+
+It was not trusted on a 200. It was checked against four Tampa addresses whose
+submarket the ArcGIS geometry already knew:
+
+| Address | Census → | ArcGIS said | |
+|---|---|---|---|
+| 1616 E 7th Ave | ybor | ybor | agreed |
+| 253 N West Shore Blvd | airport | airport | agreed |
+| 12908 N Dale Mabry Hwy | outside | outside | agreed |
+| **1050 Water St** | **"Tie"** | waterst | **no coordinates returned** |
+
+That last row is the limit of this source and the reason nothing guesses.
+Water Street is new construction and the TIGER road file has not caught up. An
+unresolved row keeps `hood: None` and `needs_geocode: True`; it is never
+placed by ZIP, because 33602 alone spans Downtown, the Riverwalk, Water Street
+and the Channel District. Misses are cached alongside hits, so a bad address
+is not re-sent every run.
+
+### 10. City of Tampa Accela record pages — OBSERVED, the richest source we have
 
 `aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?...` — the URL the ArcGIS permit
 layer already puts on every row.
@@ -694,7 +765,7 @@ afterwards returns zero rows. Nothing was left in the production org.
 
 1. ~~`noc.py` — Playwright against the Clerk's ORI search~~ → **replaced.** The
    Clerk's public-records hosts refuse cloud traffic (§3 #6c). The contractor
-   of record comes from the permit's own Accela page instead (§3 #7), which
+   of record comes from the permit's own Accela page instead (§3 #10), which
    also carries the job valuation, the real square footage, the applicant's
    phone and email, the owner and the sub list.
    Output is `data/market_share.csv` — contractor × submarket × permits ×
@@ -792,8 +863,23 @@ Water Street and Gasworx — and 60-odd other Florida GCs in one registration.
 
 ## 8. What is NOT done
 
-Stated plainly so nobody assumes otherwise.
+Stated plainly so nobody assumes otherwise. Rewritten 2026-09-14 after the
+state sources landed — five of the seven entries that used to be here are now
+built, and what remains is here with the reason.
 
+- **AHCA health-care licensure.** The one source with no route found.
+  Per-county extracts exist only for Miami-Dade; the Hillsborough path 404s.
+  The facility search returns **400** to its own control names because it is a
+  client-rendered app with no hidden form fields. The remaining option is
+  Playwright against the UI, which works but breaks on their next redesign.
+  Left unbuilt deliberately rather than shipped fragile. §3 #6b.
+  **Consequence:** the medical-TI signal comes from permits and entitlements
+  only, which is later warning than an AHCA licence application would give.
+- **Sunbiz is built but produces nothing** until somebody registers for an
+  account at `sftp.floridados.gov` and the `SUNBIZ_USER` / `SUNBIZ_PASS`
+  secrets exist. Its fixed-width layout is transcribed from the published
+  definition, not observed, so `LAYOUT_VERIFIED` is `False` and the first real
+  run must confirm the offsets before the output is trusted. §3 #6a.
 - **A measured win rate.** The calibration seed is written, but it adopts
   nothing. The `winRate` dial is still a 12% assumption and stays one until
   somebody logs Won and Lost rows on the board — no public source can supply
@@ -802,16 +888,17 @@ Stated plainly so nobody assumes otherwise.
   permits are far larger than the fitouts the model is built around (median
   $1.7M against a $900k dial ceiling). Either the dial is too small or the
   filter is too broad. The page states the choice; nobody has made it.
-- **Automatic** JobTread writeback. It works from the page on a click; the
-  Routine cannot do it unattended because it stores no connectors.
-- **Phase 2 steps 4 and 6.** The DBPR food-service and lodging extracts,
-  Sunbiz daily corporate filings, AHCA licensure, and the HCAA monthly
-  Planned Procurement Opportunities PDF. The three Tampa city layers displaced
-  them in priority, not in value: Sunbiz is still the only route to "a new LLC
-  registered at a commercial address", which is 6-12 months of warning.
-- **A geocoder.** Not needed for any source built so far — all four Tampa
-  layers serve point geometry. Sources 6a-6c will need one.
-- **The Routine's first firing** (2026-09-14 13:00Z) is unobserved, and it
-  stores no MCP connectors. See Phase 3.
-- **The JobTread push from the page.** The search shape is observed; the
-  create shape is introspected, not executed.
+- **Automatic JobTread writeback.** The push works from the page on a click,
+  and every call it makes is now verified against the live org (Phase 3). What
+  is missing is the unattended half: `create_trigger` refuses the `connectors`
+  parameter for this organization — confirmed twice — so a scheduled session
+  gets no connector tools. The remedy the tool itself names is to create the
+  Routine from the claude.ai Routines UI. A stage-refresh Routine
+  (`trig_01RfGPi58WahpfQWF7iTdk6w`, weekdays 14:00Z) exists and is written to
+  check for the connector first and report that it cannot run, rather than
+  failing silently.
+- **Addresses the Census cannot resolve.** `geocode.py` places most rows, but
+  new construction is exactly where it fails — 1050 Water St returns "Tie"
+  because TIGER has not caught up, and Water Street is a submarket we care
+  about. Those rows keep `needs_geocode: True` and never qualify. A paid
+  fallback (Smarty) would close it; nothing else will.
