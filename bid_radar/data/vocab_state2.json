@@ -1,10 +1,10 @@
 {
-  "retrieved_at": "2026-09-14T10:51:38+00:00",
+  "retrieved_at": "2026-09-14T11:20:44+00:00",
   "dbpr": {
     "newfood.csv": {
       "url": "https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv",
       "status": 200,
-      "bytes": 464069,
+      "bytes": 464438,
       "delimiter": ",",
       "columns": [
         "Application Number",
@@ -47,7 +47,7 @@
         "Secondary Risk Level"
       ],
       "n_columns": 38,
-      "n_rows": 1274,
+      "n_rows": 1275,
       "n_matching": 79,
       "sample": [
         [
@@ -267,7 +267,7 @@
           ],
           [
             "D7",
-            141
+            142
           ]
         ]
       }
@@ -1057,45 +1057,45 @@
     "districts": {
       "hrfood1.csv": {
         "status": 200,
-        "rows": 10362,
+        "rows": 10371,
         "hillsborough_rows": 2,
         "tampa_rows": 37
       },
       "hrfood2.csv": {
         "status": 200,
-        "rows": 10644,
+        "rows": 10655,
         "hillsborough_rows": 0,
         "tampa_rows": 64
       },
       "hrfood3.csv": {
         "status": 200,
-        "rows": 12295,
-        "hillsborough_rows": 4710,
-        "tampa_rows": 3923
+        "rows": 12306,
+        "hillsborough_rows": 4718,
+        "tampa_rows": 3927
       },
       "hrfood4.csv": {
         "status": 200,
-        "rows": 15072,
+        "rows": 15075,
         "hillsborough_rows": 6,
         "tampa_rows": 129
       },
       "hrfood5.csv": {
         "status": 200,
-        "rows": 7943,
+        "rows": 7955,
         "hillsborough_rows": 0,
-        "tampa_rows": 107
+        "tampa_rows": 111
       },
       "hrfood6.csv": {
         "status": 200,
-        "rows": 5316,
+        "rows": 5319,
         "hillsborough_rows": 0,
         "tampa_rows": 81
       },
       "hrfood7.csv": {
         "status": 200,
-        "rows": 7983,
+        "rows": 7996,
         "hillsborough_rows": 8,
-        "tampa_rows": 144
+        "tampa_rows": 143
       }
     },
     "district_columns": [
