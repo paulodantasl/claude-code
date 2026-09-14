@@ -87,6 +87,11 @@ jobs:
         continue-on-error: true
         run: python bid_radar/discover_state.py
 
+      - name: DISCOVER — state-source columns
+        if: ${{ endsWith(github.ref, '-p6') || (github.event_name == 'workflow_dispatch' && inputs.discover != 'false') }}
+        continue-on-error: true
+        run: python bid_radar/discover_state2.py
+
       - name: Unit and page tests
         run: pytest -q bid_radar/tests
 

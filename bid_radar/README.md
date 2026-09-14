@@ -261,10 +261,15 @@ Signals with a contact become **contact leads** and are eligible for a JobTread
 push. Signals without become **intel leads** — the slot the batch already has
 for non-contactable rows. Every permit signal is intel today.
 
-The JobTread handshake was observed live through the `Ideal` connector, not
-assumed: org `22P6bRn5p6Pn`, 259 customer accounts, and the `accounts … name
-like` and `createAccount` shapes are recorded in PLAN.md §6 Phase 1. Nothing in
-the tracker page will call a shape that has not been observed.
+Every JobTread call the page makes has been run against the live org and seen
+to work — none of it is assumed. On 2026-09-14 the account lookup, the job and
+status read, `createAccount` (including `suffixIfNecessary`, which returns
+`"… (2)"` on a name collision instead of failing) and `deleteAccount` were all
+exercised in the shapes the page sends. The two accounts created to prove the
+write path were deleted immediately and nothing was left in the org. Shapes are
+recorded in PLAN.md §6 Phase 1 and Phase 3.
+
+Nothing in the tracker page calls a shape that has not been observed.
 
 ---
 

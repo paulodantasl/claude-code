@@ -677,10 +677,18 @@ browser tests that run the real file in Chromium against a stubbed database and
 assert that promote and dismiss touch only the three human-owned fields. The
 first Routine firing is 2026-09-14 13:00Z — the "within one business day with
 no human step" criterion is not yet observed and should be checked then. The
-JobTread push has not been exercised end to end: the search query was run
-against the live org from this session, but nobody has clicked the button, and
-`createAccount` was introspected from the API schema rather than executed,
-because executing it would create a real account in the production org.
+JobTread push is now **verified end to end against the live org** (2026-09-14,
+with the owner's go-ahead), every call in the exact shape the page sends:
+
+| Call | Observed |
+|---|---|
+| `jtFindAccount` | `payload.organization.accounts.nodes[0]` → `{id, name}` |
+| `jtJobsForAccount` | real jobs with `location.account.id`, `documents.priceSum`, and `customFieldValues.nodes[].value` in `Closed Won` / `Closed Lost` — the values `JT_STAGE` maps |
+| `jtCreateAccount` | `payload.createAccount.createdAccount` → `{id, name}`; `suffixIfNecessary: true` is accepted and returns `"… (2)"` on a name collision rather than erroring, which is what the button depends on |
+| `deleteAccount` | takes `$.id`; used to undo both test accounts |
+
+Two accounts were created and deleted in the round trip; a `%ZZ TEST%` query
+afterwards returns zero rows. Nothing was left in the production org.
 
 ### Phase 4 — Close the loop — ✅ DONE 2026-09-14, by a different route
 
