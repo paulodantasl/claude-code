@@ -692,22 +692,42 @@ because executing it would create a real account in the production org.
    Output is `data/market_share.csv` — contractor × submarket × permits ×
    average job value — plus a section in `summary.md`. The share of that table
    which is ours is our measured share, per submarket.
-2. Calibration seed — **done, and narrower than PLAN implied.**
-   `collect.calibration_seed()` writes `data/calibration_seed.json` and it is
-   seeded into the tracker at `meta/calibration_seed`. The page shows it as a
-   third line in the calibration panel with a **Use market average** button.
+2. Calibration seed — **done, and it says the opposite of what PLAN assumed.**
+   `collect.calibration_seed()` writes `data/calibration_seed.json` and the
+   page reads `meta/calibration_seed`.
 
-   It moves exactly one dial, `avgTI`, whose default was a $325,000 guess. It
-   is the average declared job value of the qualified fitout permits we
-   actually observed, per submarket and overall, suspect values excluded.
+   PLAN expected the measurement to pull the `avgTI` dial toward the truth.
+   The first real measurement (2026-09-14, 29 qualified permits with a value)
+   says the dial cannot take it:
 
-   **It deliberately does not touch `winRate`, and no future change should.**
-   Win rate is a fact about us; the only honest source for it is Won/Lost rows
-   a person logged on the board. Market share is a different quantity, and a
-   permit's declared job value is not a contract value either — it is what the
-   applicant told the city the work is worth. The panel says so in both
-   languages, and `tests/test_page.py` asserts that the button moves `avgTI`
-   and leaves `winRate` alone.
+   | | |
+   |---|---|
+   | min | $5,000 |
+   | p25 | $400,000 |
+   | **median** | **$1,700,000** |
+   | p75 | $2,775,433 |
+   | mean | $2,653,243 |
+   | max | $18,800,000 (Hotel Tampa Riverwalk) |
+
+   The `avgTI` dial spans $50k–$900k. Only the bottom quarter of what qualifies
+   is the size of work it models; the rest is hotel renovations and full-floor
+   office jobs. Adopting either the mean or the median would pin the slider to
+   its maximum and present a clamped number as a calibrated one — worse than
+   the $325,000 guess it replaced.
+
+   So the page **shows the quartile spread and offers no adoption** while the
+   median sits outside the dial's range, with a line saying which of the two
+   readings it implies: the dial is set too small, or the qualifying filter is
+   letting in work Ideal does not bid. That is a judgement for a person, and it
+   is the most useful thing this measurement produced.
+
+   **It will never touch `winRate`, and no later change should.** Win rate is a
+   fact about us; the only honest source is Won/Lost rows a person logged.
+   Market share is a different quantity, and a declared job value is not a
+   contract value — it is what the applicant told the city the work is worth.
+   `tests/test_page.py` asserts the clamp does not happen and that no market
+   figure reaches `winRate`.
+
 3. Outcome writeback — **done, in the page rather than the Routine.** PLAN put
    it in the Routine; the Routine stores no MCP connectors (§ Phase 3), so it
    cannot call JobTread at all. A **Refresh** button on a row already linked to
@@ -766,10 +786,14 @@ Water Street and Gasworx — and 60-odd other Florida GCs in one registration.
 
 Stated plainly so nobody assumes otherwise.
 
-- **A measured win rate.** The calibration seed (Phase 4 step 2) is written,
-  but it moves only `avgTI`. The `winRate` dial is still a 12% assumption and
-  stays one until somebody logs Won and Lost rows on the board. No public
-  source can supply it, and market share is not a substitute.
+- **A measured win rate.** The calibration seed is written, but it adopts
+  nothing. The `winRate` dial is still a 12% assumption and stays one until
+  somebody logs Won and Lost rows on the board — no public source can supply
+  it, and market share is not a substitute.
+- **A decision on the size mismatch.** The measurement says the qualified
+  permits are far larger than the fitouts the model is built around (median
+  $1.7M against a $900k dial ceiling). Either the dial is too small or the
+  filter is too broad. The page states the choice; nobody has made it.
 - **Automatic** JobTread writeback. It works from the page on a click; the
   Routine cannot do it unattended because it stores no connectors.
 - **Phase 2 steps 4 and 6.** The DBPR food-service and lodging extracts,

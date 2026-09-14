@@ -431,21 +431,38 @@ data entry on the record rather than real. A suspect value stays on the row,
 flagged, but is left out of the averages. These mattered because every one of
 them would have gone straight onto a cold call.
 
-### The calibration seed
+### The calibration seed, and what it actually found
 
 The `avgTI` dial — average contract — has been guessing at $325,000. The
-collector now writes `calibration_seed.json`: the average declared job value of
-the qualified fitout permits actually observed, per submarket and overall, with
-suspect values left out. It is seeded into the tracker at
-`meta/calibration_seed`, and the calibration panel shows it with a **Use market
-average** button.
+collector now measures it: the declared job value of every qualified fitout
+permit in our submarkets, suspect values excluded, written to
+`calibration_seed.json` and seeded into the tracker.
 
-That button moves one dial, `avgTI`, and nothing else. **Win rate stays where
-it is.** Win rate is a fact about Ideal, and the only place it can honestly
-come from is a Won or Lost row someone logged on the board. Market share is a
-different number. And a declared job value is not a contract value — it is what
-the applicant told the city the work is worth. It is the closest measured
-figure available, and the panel labels it as the market figure it is.
+The first measurement, 29 permits over twelve months:
+
+| | |
+|---|---|
+| p25 | $400,000 |
+| **median** | **$1,700,000** |
+| p75 | $2,775,433 |
+| largest | $18,800,000 — Hotel Tampa Riverwalk |
+
+**The dial only goes to $900,000.** Only the bottom quarter of what currently
+qualifies is the size of work the model is built around; above that sit hotel
+renovations and full-floor office jobs. So the page shows the spread and
+offers no one-click adoption while the median is out of range — pinning the
+slider to its maximum would look like calibration and be a worse number than
+the guess it replaced.
+
+That leaves a real question on the screen for someone to answer: is the dial
+set too small, or is the qualifying filter letting in work we do not bid?
+Either way it is worth knowing, and it is the most useful thing this
+measurement produced.
+
+**Win rate stays where it is.** It is a fact about Ideal, and the only place it
+can honestly come from is a Won or Lost row someone logged on the board. Market
+share is a different number, and a declared job value is not a contract value —
+it is what the applicant told the city the work is worth.
 
 ## JobTread status writeback
 

@@ -358,42 +358,69 @@ def test_the_refresh_never_writes_a_contract_value(bare):
 
 # --------------------------------------------------------- calibration seed
 
-SEED = {"measures": "avgTI", "n": 41, "avg_value": 812345.0,
-        "median_value": 410000.0, "window_days": 365,
-        "basis": "declared job value on qualified fitout permits, City of Tampa Accela",
-        "by_hood": {"waterst": {"hood_label": "Water Street", "n": 6,
-                                "avg_value": 1200000.0}},
-        "retrieved_at": "2026-09-14T02:00:00+00:00"}
+# Shaped like the real 2026-09-14 measurement: 29 valued permits whose median
+# is $1.7M, well above the avgTI dial's $900k ceiling.
+SEED_REAL = {"measures": "fitout permit value", "n": 29, "window_days": 365,
+             "p25": 400000.0, "median": 1700000.0, "p75": 2775433.0,
+             "mean": 2653242.91, "min": 5000.0, "max": 18800000.0,
+             "basis": "declared job value on qualified fitout permits, City of Tampa Accela",
+             "by_hood": {"waterst": {"hood_label": "Water Street", "n": 5,
+                                     "median": 2658013.0}},
+             "retrieved_at": "2026-09-14T03:05:20+00:00"}
+
+# The same shape but inside the dial's range, which is what a narrower filter
+# or a quieter year would produce.
+SEED_IN_RANGE = {**SEED_REAL, "p25": 180000.0, "median": 410000.0,
+                 "p75": 620000.0, "mean": 455000.0}
 
 
 @pytest.fixture(scope="module")
 def seeded(pw):
-    p = _Page(pw, _stub(SIGNALS, {"meta/calibration_seed": SEED}))
+    p = _Page(pw, _stub(SIGNALS, {"meta/calibration_seed": SEED_REAL}))
     yield p
     p.browser.close()
 
 
-def test_without_a_seed_the_market_button_stays_hidden(wired):
+@pytest.fixture(scope="module")
+def seeded_in_range(pw):
+    p = _Page(pw, _stub(SIGNALS, {"meta/calibration_seed": SEED_IN_RANGE}))
+    yield p
+    p.browser.close()
+
+
+def test_without_a_seed_the_market_lines_stay_hidden(wired):
     assert wired.page.locator("#applymarket").is_hidden()
-    assert "Market average" not in wired.page.locator("#calbody").inner_text()
+    assert "Quartile spread" not in wired.page.locator("#calbody").inner_text()
 
 
-def test_the_market_average_is_shown_and_labelled_as_the_market(seeded):
+def test_the_spread_is_shown_not_a_single_flattering_number(seeded):
     body = seeded.page.locator("#calbody").inner_text()
-    assert "Market average fitout permit" in body
-    assert "$812,345" in body or "$812.3k" in body or "812" in body
-    assert "41 valued permits" in body
-    # The label has to say what it is. A reader must not take a market figure
-    # for our win rate.
+    assert "29 with a value" in body
+    # p25 -> median -> p75, because one number hides that the qualified set
+    # spans a $5,000 job and an $18.8M hotel.
+    assert "$400k → $1.7M → $2.8M" in body, body
+    assert "not a contract value" in body
     assert "not our win rate" in body
 
 
-def test_the_market_button_moves_avgti_and_never_winrate(seeded):
-    before = seeded.page.evaluate("({...dials})")
-    seeded.page.locator("#applymarket").click()
-    seeded.page.wait_for_timeout(200)
-    after = seeded.page.evaluate("({...dials})")
-    assert after["avgTI"] == 812000              # rounded to the nearest $1k
-    assert after["winRate"] == before["winRate"]
-    assert after["perFitout"] == before["perFitout"]
+def test_a_median_above_the_dial_is_reported_not_silently_clamped(seeded):
+    """Pinning a $1.7M median onto a $900k slider would read as calibration and
+    be a worse number than the default it replaced."""
+    body = seeded.page.locator("#calbody").inner_text()
+    assert "above this dial" in body
+    assert seeded.page.locator("#applymarket").is_hidden()
+    assert seeded.page.evaluate("dials.avgTI") == 325000      # untouched
     assert seeded.errors == []
+
+
+def test_a_median_inside_the_dial_is_offered_and_moves_only_avgti(seeded_in_range):
+    before = seeded_in_range.page.evaluate("({...dials})")
+    assert seeded_in_range.page.locator("#applymarket").is_visible()
+    assert "above this dial" not in seeded_in_range.page.locator("#calbody").inner_text()
+    seeded_in_range.page.locator("#applymarket").click()
+    seeded_in_range.page.wait_for_timeout(200)
+    after = seeded_in_range.page.evaluate("({...dials})")
+    assert after["avgTI"] == 410000               # the median, to the nearest $1k
+    assert after["winRate"] == before["winRate"]  # never, from any market figure
+    assert after["perFitout"] == before["perFitout"]
+    assert seeded_in_range.errors == []

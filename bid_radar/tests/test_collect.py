@@ -142,7 +142,7 @@ def test_a_source_that_raises_does_not_take_the_others_down(monkeypatch):
     assert report["permit"]["fetched"] == 1
 
 
-def test_the_calibration_seed_measures_avgti_and_only_avgti():
+def test_the_calibration_seed_reports_a_spread_and_never_a_win_rate():
     """Win rate is a fact about us and comes from Won/Lost rows a person
     logged. Market share is a different quantity. The seed must never carry
     anything a reader could mistake for our win rate."""
@@ -155,11 +155,24 @@ def test_the_calibration_seed_measures_avgti_and_only_avgti():
          "contractor_name": "BUILDIFY", "contractor_licence": "CGC2"},
     ]
     seed = collect.calibration_seed(sigs, collect.market_share(sigs))
-    assert seed["measures"] == "avgTI"
     assert "winRate" not in json.dumps(seed)
     assert seed["n"] == 3
-    assert seed["avg_value"] == 500_000.0
-    assert seed["by_hood"]["waterst"]["avg_value"] == 400_000.0
+    assert seed["median"] == 500_000.0
+    assert seed["p25"] == 300_000.0 and seed["p75"] == 700_000.0
+    assert seed["by_hood"]["waterst"]["median"] == 500_000.0
+
+
+def test_the_seed_reports_the_skew_rather_than_hiding_it_in_a_mean():
+    """The real 2026-09-14 run: an $18.8M hotel and an $11.5M guestroom job sit
+    in the same qualified set as a $5,000 permit. A mean alone would imply the
+    typical job is $2.65M; the quartiles show what is actually there."""
+    vals = [5_000, 400_000, 1_700_000, 2_775_433, 18_800_000]
+    sigs = [{"hood": "waterst", "qualified": True, "value_est": v,
+             "contractor_name": f"GC {v}", "contractor_licence": "C1"} for v in vals]
+    seed = collect.calibration_seed(sigs, collect.market_share(sigs))
+    assert seed["median"] == 1_700_000
+    assert seed["mean"] > seed["p75"]        # the skew, stated
+    assert seed["min"] == 5_000 and seed["max"] == 18_800_000
 
 
 def test_the_seed_excludes_suspect_values_and_unqualified_rows():
@@ -173,7 +186,7 @@ def test_the_seed_excludes_suspect_values_and_unqualified_rows():
     ]
     seed = collect.calibration_seed(sigs, collect.market_share(sigs))
     assert seed["n"] == 1
-    assert seed["avg_value"] == 400_000.0
+    assert seed["median"] == 400_000.0
 
 
 def test_no_valued_permits_means_no_seed_rather_than_a_zero():

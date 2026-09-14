@@ -100,43 +100,54 @@ def market_share(signals: list[dict]) -> list[dict]:
 
 
 def calibration_seed(signals: list[dict], rows: list[dict]) -> dict | None:
-    """A measured prior for the `avgTI` dial, and nothing more.
+    """What the qualified fitout permits in our submarkets are actually worth.
 
-    The dial has been guessing at $325,000. This replaces the guess with the
-    average declared job value of the qualified fitout permits we actually
-    observed, per submarket and overall.
+    This began as a plan to seed the `avgTI` dial, which has been guessing at
+    $325,000. The first real measurement says that would be wrong: the median
+    qualified permit is $1.7M and the mean $2.65M, both above the dial's own
+    $900k ceiling, because the qualified set contains hotel renovations and
+    full-floor office jobs alongside the salon-and-dental work the dial models.
 
-    What it is NOT: a win rate. Win rate is a fact about us, and the only place
-    it can come from is Won/Lost rows a person logged on the board. Market
-    share is a different quantity and must never be written into that dial.
-    Nor is a permit's declared job value a contract value — it is what the
-    applicant told the city the work is worth. It is the closest measured
-    number we have, and the page labels it as the market figure it is.
+    So the seed reports the distribution and nothing is adopted automatically.
+    A quartile spread says more than any single number: p25 sits in the lane we
+    bid, the median and above do not. Whether that means the model is too small
+    or the qualifying filter is too broad is a judgement for a person, and the
+    page presents it as one.
+
+    What it is NOT, and must never become: a win rate. Win rate is a fact about
+    us, and the only place it can come from is Won/Lost rows a person logged.
+    Nor is a declared job value a contract value — it is what the applicant
+    told the city the work is worth.
     """
     usable = [s for s in signals
               if s.get("value_est") and not s.get("value_suspect")
               and s.get("hood") and s.get("qualified")]
-    vals = [float(s["value_est"]) for s in usable]
-    if not vals:
+    if not usable:
         return None
-    by_hood: dict[str, dict] = {}
-    for s in usable:
-        h = by_hood.setdefault(s["hood"], {"hood_label": geo.hood_label(s["hood"]),
-                                           "n": 0, "value_total": 0.0})
-        h["n"] += 1
-        h["value_total"] += float(s["value_est"])
-    for h in by_hood.values():
-        h["avg_value"] = h["value_total"] / h["n"]
-    gcs = {r["contractor"] for r in rows}
+
+    def spread(vals: list[float]) -> dict:
+        v = sorted(vals)
+        return {"n": len(v),
+                "p25": v[len(v) // 4],
+                "median": v[len(v) // 2],
+                "p75": v[(3 * len(v)) // 4],
+                "mean": sum(v) / len(v),
+                "min": v[0], "max": v[-1]}
+
+    by_hood = {}
+    for hood in {s["hood"] for s in usable}:
+        vals = [float(s["value_est"]) for s in usable if s["hood"] == hood]
+        by_hood[hood] = {"hood_label": geo.hood_label(hood), **spread(vals)}
+
     return {
-        "measures": "avgTI",
+        "measures": "fitout permit value",
         "basis": "declared job value on qualified fitout permits, City of Tampa Accela",
+        "caveat": "a declared job value is not a contract value, and this is the "
+                  "market, not our win rate",
         "window_days": DAYS_BACK,
-        "n": len(vals),
-        "avg_value": sum(vals) / len(vals),
-        "median_value": sorted(vals)[len(vals) // 2],
+        **spread([float(s["value_est"]) for s in usable]),
         "by_hood": by_hood,
-        "contractors_seen": len(gcs),
+        "contractors_seen": len({r["contractor"] for r in rows}),
         "retrieved_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
 
@@ -428,8 +439,9 @@ def main() -> int:
     if seed:
         with open(os.path.join(DATA, "calibration_seed.json"), "w") as fh:
             json.dump(seed, fh, indent=2, default=str)
-        print(f"calibration seed: avgTI ${seed['avg_value']:,.0f} "
-              f"from {seed['n']} valued permits", flush=True)
+        print(f"calibration seed: {seed['n']} valued permits, "
+              f"p25 ${seed['p25']:,.0f} / median ${seed['median']:,.0f} / "
+              f"p75 ${seed['p75']:,.0f}", flush=True)
 
     with open(os.path.join(DATA, "summary.md"), "w") as fh:
         fh.write(summary(signals, report, directory) + "\n")

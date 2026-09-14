@@ -805,9 +805,11 @@ const T = {
   cal_n:'Decided bids logged', cal_win:'Win rate', cal_ti:'Average contract',
   cal_need:'Log a Won or Lost row to compare',
   cal_model:'model', cal_real:'actual',
-  cal_mkt:'Market average fitout permit', cal_mkt_n:n=>`${n} valued permits, last 12 months`,
-  cal_mkt_note:'Declared job value on permits in our submarkets — the market, not our win rate.',
-  btn_apply:'Adopt actuals', btn_mkt:'Use market average', btn_reset:'Reset to defaults',
+  cal_mkt:'Fitout permits filed', cal_mkt_n:n=>`${n} with a value, last 12 months`,
+  cal_mkt_spread:'Quartile spread',
+  cal_mkt_note:'Declared job value on qualified permits in our submarkets. A declared value is not a contract value, and this is the market, not our win rate.',
+  cal_mkt_over:'The market median is above this dial\u2019s range. Only the bottom quarter of what qualifies is the size of work the dial models — either the dial is set too small, or the filter is letting in work we do not bid.',
+  btn_apply:'Adopt actuals', btn_mkt:'Use market median', btn_reset:'Reset to defaults',
 
   eb_chart:'Forecast',
   h_chart:'When the work comes out to bid',
@@ -901,9 +903,11 @@ const T = {
   cal_n:'Propostas decididas', cal_win:'Taxa de conversão', cal_ti:'Contrato médio',
   cal_need:'Registre um Ganho ou Perdido para comparar',
   cal_model:'modelo', cal_real:'real',
-  cal_mkt:'Média de mercado por alvará de fitout', cal_mkt_n:n=>`${n} alvarás com valor, últimos 12 meses`,
-  cal_mkt_note:'Valor declarado nos alvarás dos nossos submercados — o mercado, não a nossa conversão.',
-  btn_apply:'Adotar valores reais', btn_mkt:'Usar média de mercado', btn_reset:'Restaurar padrões',
+  cal_mkt:'Alvarás de fitout protocolados', cal_mkt_n:n=>`${n} com valor, últimos 12 meses`,
+  cal_mkt_spread:'Faixa por quartil',
+  cal_mkt_note:'Valor declarado nos alvarás qualificados dos nossos submercados. Valor declarado não é valor de contrato, e isto é o mercado, não a nossa conversão.',
+  cal_mkt_over:'A mediana de mercado está acima da faixa deste controle. Só o quartil inferior do que qualifica tem o porte que o controle modela — ou o controle está baixo demais, ou o filtro está deixando entrar obra que não licitamos.',
+  btn_apply:'Adotar valores reais', btn_mkt:'Usar mediana de mercado', btn_reset:'Restaurar padrões',
 
   eb_chart:'Previsão',
   h_chart:'Quando o trabalho vai a mercado',
@@ -1049,6 +1053,15 @@ function calibration(){
       ? wonWithValue.reduce((s,r)=>s+(+r.valueActual),0)/wonWithValue.length
       : null
   };
+}
+
+/* The avgTI dial spans $50k-$900k. The first real measurement put the market
+   median at $1.7M, because the qualified permit set carries hotel renovations
+   and full-floor office work alongside the fitouts the dial models. Rather than
+   pin the slider to its maximum and call it calibrated, the page says so. */
+const DIAL_TI_MIN = 50000, DIAL_TI_MAX = 900000;
+function marketFitsDial(){
+  return !!(SEED && SEED.median >= DIAL_TI_MIN && SEED.median <= DIAL_TI_MAX);
 }
 
 /* ---------- persistence: db when granted, localStorage otherwise ---------- */
@@ -1566,15 +1579,22 @@ function renderCalib(){
     `<span class="v">${c.decided} <span class="m">(${c.won}W / ${c.lost}L)</span></span></div>`+
     line(T_.cal_win, pct(dials.winRate), c.winRate!=null ? pct(c.winRate) : null)+
     line(T_.cal_ti, money(dials.avgTI), c.avgTI!=null ? money(c.avgTI) : null)+
-    (SEED && SEED.avg_value ?
+    (SEED && SEED.median ?
       `<div class="calrow"><span class="k">${T_.cal_mkt}</span>`+
-      `<span class="v"><span class="a">${money(SEED.avg_value)}</span> `+
-      `<span class="m">${esc(T_.cal_mkt_n(SEED.n))}</span></span></div>`+
-      `<div class="hint">${esc(T_.cal_mkt_note)}</div>`
+      `<span class="v"><span class="m">${esc(T_.cal_mkt_n(SEED.n))}</span></span></div>`+
+      `<div class="calrow"><span class="k">${T_.cal_mkt_spread}</span>`+
+      `<span class="v"><span class="m">${money(SEED.p25)}</span> &rarr; `+
+      `<span class="a">${money(SEED.median)}</span> &rarr; `+
+      `<span class="m">${money(SEED.p75)}</span></span></div>`+
+      `<div class="hint">${esc(T_.cal_mkt_note)}</div>`+
+      (marketFitsDial() ? '' : `<div class="hint">${esc(T_.cal_mkt_over)}</div>`)
       : '');
 
   document.getElementById('applyactual').disabled = (c.winRate==null && c.avgTI==null);
-  document.getElementById('applymarket').hidden = !(SEED && SEED.avg_value);
+  // Offered only when the measurement fits the dial. Clamping a $1.7M median
+  // onto a $900k slider would read as a calibrated number and be a worse guess
+  // than the default it replaced.
+  document.getElementById('applymarket').hidden = !(SEED && SEED.median && marketFitsDial());
 }
 
 /* ============ RENDER: chart ============ */
@@ -1770,11 +1790,11 @@ document.getElementById('applyactual').onclick = () => {
   if(c.avgTI   != null) dials.avgTI   = Math.min(900000, Math.max(50000, Math.round(c.avgTI/1000)*1000));
   syncDialInputs(); renderAll(); persistDials();
 };
-// Moves ONE dial, avgTI, and deliberately not winRate: the market tells us what
-// a fitout is worth, never how often we win one.
+// Moves ONE dial, avgTI, and deliberately not winRate: the market can tell us
+// what a fitout is worth, never how often we win one.
 document.getElementById('applymarket').onclick = () => {
-  if(!(SEED && SEED.avg_value)) return;
-  dials.avgTI = Math.min(900000, Math.max(50000, Math.round(SEED.avg_value/1000)*1000));
+  if(!(SEED && SEED.median && marketFitsDial())) return;
+  dials.avgTI = Math.round(SEED.median/1000)*1000;
   syncDialInputs(); renderAll(); persistDials();
 };
 
