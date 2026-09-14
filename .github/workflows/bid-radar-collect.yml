@@ -91,6 +91,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           tmp="$(mktemp -d)"
           cp -r bid_radar/data/. "$tmp"/ 2>/dev/null || { echo "no data produced"; exit 0; }
+          # data/ is untracked on this branch and would block the checkout below
+          rm -rf bid_radar/data
           git fetch origin bid-radar-data --depth=1 || true
           if git rev-parse --verify origin/bid-radar-data >/dev/null 2>&1; then
             git checkout -B bid-radar-data origin/bid-radar-data
