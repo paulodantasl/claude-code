@@ -1,168 +1,137 @@
 """
-DISCOVER — Hillsborough Clerk official records (PLAN.md §3 #6c).
+DISCOVER — how to measure our real win rate per submarket (PLAN.md Phase 4).
 
-Notices of Commencement name the contractor who won a job. They are useless
-for outreach (the work is already awarded) and they are the ONLY way to measure
-our real win rate and the real average fitout contract per submarket, which is
-what Phase 4 needs to replace two of the five calibration dials with facts.
+The plan's route was the Hillsborough Clerk's official records: a Notice of
+Commencement names the GC who won. The Clerk has no API, and the first attempt
+at driving its search UI from GitHub Actions timed out after 45s with no
+response at all — no page, no gate, no captcha.
 
-The Clerk has no API — VERIFIED. This establishes whether the search UI can be
-driven at all, and what it would take:
+So this round asks two questions instead of one:
 
-  * does the page load without a session, a terms gate or a captcha?
-  * what are the form controls actually named?
-  * is there a document-type list, and what is the Notice of Commencement
-    option called?
-  * does a date-range search return results server-side, or is it a postback /
-    XHR that a scraper would have to reproduce?
+  A. Is the Clerk reachable from a cloud runner at all, or only slow? Plain
+     HTTP probes against several of its hosts, with generous timeouts.
+  B. Can the SAME measurement come from a source we already have? Every permit
+     the collector returns carries a per-record Accela URL, and an Accela
+     record page lists the contractor of record. If it does, we can measure who
+     is building fitouts in our eight submarkets without the Clerk at all.
 
-Prints everything and saves the rendered HTML plus a screenshot as artifacts.
-Never fails the build — a dead end here is a finding, not an error.
+Never fails the build. A dead end is a finding.
 """
 from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import traceback
 
-BASE = "https://pubrec6.hillsclerk.com/ORIPublicAccess/"
+import requests
+
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+
+CLERK_HOSTS = [
+    "https://pubrec6.hillsclerk.com/ORIPublicAccess/",
+    "https://pubrec.hillsclerk.com/",
+    "https://www.hillsclerk.com/",
+    "https://publicrec.hillsclerk.com/",
+]
+
+# A real commercial-alteration record from the live permit layer.
+ACCELA_SAMPLE = ("https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx"
+                 "?Module=Building&TabName=Building&capID1=26CAP&capID2=00000"
+                 "&capID3=01TOI&agencyCode=TAMPA")
+ACCELA_ROOT = "https://aca-prod.accela.com/TAMPA/Default.aspx"
+
+UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"}
 
 
 def hr(t: str) -> None:
     print("\n" + "=" * 70 + f"\n{t}\n" + "=" * 70, flush=True)
 
 
-def main() -> int:
-    from playwright.sync_api import sync_playwright
+def probe(url: str, timeout: int = 90) -> dict:
+    try:
+        r = requests.get(url, headers=UA, timeout=timeout, allow_redirects=True)
+        body = r.text or ""
+        return {"url": url, "status": r.status_code, "final": r.url,
+                "bytes": len(r.content), "title": _title(body),
+                "captcha": any(w in body.lower() for w in
+                               ("recaptcha", "hcaptcha", "cf-challenge")),
+                "terms": any(w in body.lower() for w in
+                             ("i accept", "i agree", "terms of use", "disclaimer"))}
+    except Exception as exc:  # noqa: BLE001
+        return {"url": url, "error": f"{type(exc).__name__}: {str(exc)[:200]}"}
 
-    report: dict = {"base": BASE}
+
+def _title(body: str) -> str | None:
+    m = re.search(r"<title[^>]*>(.*?)</title>", body, re.I | re.S)
+    return " ".join(m.group(1).split())[:120] if m else None
+
+
+def main() -> int:
+    report: dict = {}
     os.makedirs(OUT, exist_ok=True)
 
-    with sync_playwright() as pw:
-        browser = pw.chromium.launch(args=["--no-sandbox"])
-        page = browser.new_page(viewport={"width": 1400, "height": 1000})
-        page.set_default_timeout(45_000)
+    hr("A. Is the Hillsborough Clerk reachable from a cloud runner?")
+    report["clerk"] = []
+    for url in CLERK_HOSTS:
+        res = probe(url)
+        report["clerk"].append(res)
+        if "error" in res:
+            print(f"  {url}\n      !! {res['error']}", flush=True)
+        else:
+            print(f"  {url}\n      status={res['status']} bytes={res['bytes']} "
+                  f"title={res['title']!r} captcha={res['captcha']} terms={res['terms']}",
+                  flush=True)
+            print(f"      final={res['final']}", flush=True)
 
-        hr(f"1. GET {BASE}")
+    hr("B. Does an Accela record page name the contractor?")
+    report["accela"] = {}
+    for name, url in (("root", ACCELA_ROOT), ("record", ACCELA_SAMPLE)):
+        res = probe(url, timeout=60)
+        report["accela"][name] = res
+        print(f"\n  {name}: {url[:110]}", flush=True)
+        if "error" in res:
+            print(f"      !! {res['error']}", flush=True)
+            continue
+        print(f"      status={res['status']} bytes={res['bytes']} title={res['title']!r}",
+              flush=True)
+
+    # If the record page came back, look for the contractor block.
+    rec = report["accela"].get("record", {})
+    if rec.get("status") == 200:
         try:
-            resp = page.goto(BASE, wait_until="domcontentloaded")
-            report["status"] = resp.status if resp else None
-            report["final_url"] = page.url
-            print(f"  status={report['status']}", flush=True)
-            print(f"  final url={page.url}", flush=True)
-            print(f"  title={page.title()!r}", flush=True)
-            report["title"] = page.title()
+            body = requests.get(ACCELA_SAMPLE, headers=UA, timeout=60).text
+            report["accela"]["has_viewstate"] = "__VIEWSTATE" in body
+            markers = {}
+            for label in ("Contractor", "Licensed Professional", "Applicant",
+                          "Owner", "Valuation", "Job Value", "Square Feet",
+                          "Contact", "License"):
+                markers[label] = body.count(label)
+            report["accela"]["labels"] = markers
+            print("\n  labels present on the record page:", flush=True)
+            for k, v in markers.items():
+                print(f"      {k:<24} {v}", flush=True)
+            print(f"      __VIEWSTATE present: {report['accela']['has_viewstate']}", flush=True)
+            with open(os.path.join(OUT, "accela_record.html"), "w") as fh:
+                fh.write(body)
+            print("      saved accela_record.html", flush=True)
         except Exception as exc:  # noqa: BLE001
             print(f"  !! {type(exc).__name__}: {exc}", flush=True)
-            report["error"] = f"{type(exc).__name__}: {exc}"
-            _save(report)
-            browser.close()
-            return 0
 
-        page.wait_for_timeout(4000)
+    hr("VERDICT")
+    clerk_ok = any(c.get("status") == 200 for c in report["clerk"])
+    accela_ok = rec.get("status") == 200
+    report["verdict"] = {"clerk_reachable": clerk_ok, "accela_reachable": accela_ok}
+    print(f"  Clerk reachable from Actions : {clerk_ok}", flush=True)
+    print(f"  Accela record page reachable : {accela_ok}", flush=True)
 
-        hr("2. Gates — terms acceptance, captcha, login")
-        body = page.content()
-        gates = {
-            "recaptcha": "recaptcha" in body.lower() or "g-recaptcha" in body.lower(),
-            "hcaptcha": "hcaptcha" in body.lower(),
-            "cloudflare": "cf-challenge" in body.lower() or "cf_chl" in body.lower(),
-            "accept_terms": any(w in body.lower() for w in
-                                ("i accept", "i agree", "terms of use", "disclaimer")),
-            "login_form": page.locator("input[type=password]").count() > 0,
-        }
-        report["gates"] = gates
-        for k, v in gates.items():
-            print(f"  {k:<16} {v}", flush=True)
-
-        hr("3. Frames")
-        report["frames"] = [{"name": f.name, "url": f.url} for f in page.frames]
-        for f in report["frames"]:
-            print(f"  {f['name']!r} -> {f['url']}", flush=True)
-
-        hr("4. Form controls on every frame")
-        report["controls"] = []
-        for frame in page.frames:
-            try:
-                ctrls = frame.evaluate("""() => {
-                  const out = [];
-                  for (const el of document.querySelectorAll('input,select,textarea,button,a[href]')) {
-                    const o = {tag: el.tagName, type: el.type||null, name: el.name||null,
-                               id: el.id||null,
-                               label: (el.getAttribute('aria-label')||el.value||el.textContent||'').trim().slice(0,70),
-                               href: el.getAttribute&&el.getAttribute('href')||null};
-                    if (el.tagName === 'SELECT')
-                      o.options = [...el.options].map(x => x.textContent.trim()).slice(0,120);
-                    if (o.name || o.id || o.options || (o.tag === 'A' && o.href)) out.push(o);
-                  }
-                  return out.slice(0, 220);
-                }""")
-            except Exception as exc:  # noqa: BLE001
-                print(f"  frame {frame.name!r}: {type(exc).__name__}", flush=True)
-                continue
-            if not ctrls:
-                continue
-            print(f"\n  --- frame {frame.name!r} ({len(ctrls)} controls) ---", flush=True)
-            for c in ctrls:
-                if c.get("options"):
-                    print(f"    SELECT name={c['name']} id={c['id']} "
-                          f"({len(c['options'])} options)", flush=True)
-                    hits = [o for o in c["options"]
-                            if "commence" in o.lower() or o.strip().upper() in ("NOC", "C")]
-                    for o in c["options"][:40]:
-                        print(f"        {o}", flush=True)
-                    if hits:
-                        print(f"      >>> NOTICE OF COMMENCEMENT OPTION: {hits}", flush=True)
-                elif c["tag"] in ("INPUT", "TEXTAREA", "BUTTON"):
-                    print(f"    {c['tag']:<8} type={c['type']} name={c['name']} "
-                          f"id={c['id']} label={c['label']!r}", flush=True)
-                elif c["tag"] == "A" and c.get("href") and len(c["label"]) > 2:
-                    print(f"    LINK   {c['label'][:48]!r} -> {c['href'][:90]}", flush=True)
-            report["controls"].append({"frame": frame.name, "controls": ctrls})
-
-        hr("5. Does the app do postbacks or XHR?")
-        report["aspnet"] = "__VIEWSTATE" in body or "__doPostBack" in body
-        report["xhr_hints"] = [k for k in ("angular", "react", "vue", "kendo", "telerik",
-                                           "api/", "odata", "/search")
-                               if k in body.lower()]
-        print(f"  ASP.NET postback markers: {report['aspnet']}", flush=True)
-        print(f"  framework/API hints: {report['xhr_hints']}", flush=True)
-
-        hr("6. Network calls the page made")
-        calls = []
-        page.on("request", lambda r: calls.append((r.method, r.url[:160]))
-                if r.resource_type in ("xhr", "fetch", "document") else None)
-        try:
-            page.reload(wait_until="networkidle")
-            page.wait_for_timeout(3000)
-        except Exception as exc:  # noqa: BLE001
-            print(f"  reload: {type(exc).__name__}", flush=True)
-        report["network"] = calls[:40]
-        for m, u in calls[:40]:
-            print(f"  {m:<5} {u}", flush=True)
-
-        try:
-            page.screenshot(path=os.path.join(OUT, "noc_search.png"), full_page=True)
-            with open(os.path.join(OUT, "noc_search.html"), "w") as fh:
-                fh.write(page.content())
-            print("\n  saved noc_search.png and noc_search.html", flush=True)
-        except Exception:  # noqa: BLE001
-            pass
-
-        browser.close()
-
-    _save(report)
-    return 0
-
-
-def _save(report: dict) -> None:
     path = os.path.join(OUT, "vocab_noc.json")
-    os.makedirs(OUT, exist_ok=True)
     with open(path, "w") as fh:
         json.dump(report, fh, indent=2, default=str)
     hr(f"WROTE {path}")
+    return 0
 
 
 if __name__ == "__main__":

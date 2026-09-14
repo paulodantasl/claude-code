@@ -769,6 +769,9 @@ const T = {
   sig_nocontact:'no contact in this source',
   promoted_action:'Introduce the company',
   rel_due:'by',
+  jt_refresh:'Refresh', jt_checking:'Checking JobTread…',
+  jt_nojob:'No job on that account yet', jt_status:'JobTread status',
+  jt_docs:'documents total',
   jt_send:'Send to JobTread', jt_sending:'Sending…', jt_sent:'In JobTread',
   jt_exists:'Already in JobTread', jt_unavail:'JobTread not connected in this view',
   jt_reauth:'JobTread needs reconnecting in your claude.ai connectors',
@@ -860,6 +863,9 @@ const T = {
   sig_nocontact:'sem contato nesta fonte',
   promoted_action:'Apresentar a empresa',
   rel_due:'até',
+  jt_refresh:'Atualizar', jt_checking:'Consultando o JobTread…',
+  jt_nojob:'Ainda não há obra nessa conta', jt_status:'Status no JobTread',
+  jt_docs:'total dos documentos',
   jt_send:'Enviar ao JobTread', jt_sending:'Enviando…', jt_sent:'No JobTread',
   jt_exists:'Já está no JobTread', jt_unavail:'JobTread não conectado nesta visualização',
   jt_reauth:'JobTread precisa ser reconectado nos seus conectores do claude.ai',
@@ -1286,6 +1292,89 @@ async function jtFindAccount(name){
   return nodes[0] || null;
 }
 
+/* Ideal's own job pipeline, read from the organization's custom field
+   22P6bRnsNu2Y (type option, targetType job) on 2026-09-14. These are the
+   eleven values that field actually offers — not a guess at a generic
+   JobTread vocabulary. */
+const JT_STAGE = {
+  'New Lead': 'signal',
+  'Estimate with Cost $': 'bidding',
+  'Estimating HOMEE': 'bidding',
+  'Approved': 'won',
+  'Subcontractor Agreement': 'won',
+  'Permitting': 'won',
+  'Construction': 'won',
+  'Closed Waiting for payments': 'won',
+  'Paid Waiting to split': 'won',
+  'Closed Won': 'won',
+  'Closed Lost': 'lost'
+};
+
+async function jtJobsForAccount(accountId){
+  const res = await MCP.callTool('Ideal', 'query', {query: {
+    organization: {
+      $: {id: JT_ORG},
+      jobs: {
+        $: {size: 10},
+        nodes: {
+          id: {}, name: {}, closedOn: {},
+          location: {account: {id: {}}},
+          documents: {priceSum: {_: 'sum', $: 'price'}},
+          customFieldValues: {$: {size: 20},
+            nodes: {value: {}, customField: {name: {}}}}
+        }
+      }
+    }
+  }});
+  const p = res && res.payload;
+  const all = (p && p.organization && p.organization.jobs && p.organization.jobs.nodes) || [];
+  return all.filter(j => j.location && j.location.account && j.location.account.id === accountId);
+}
+
+function jtStatusOf(job){
+  const vals = (job.customFieldValues && job.customFieldValues.nodes) || [];
+  const f = vals.find(v => v.customField && v.customField.name === 'Status');
+  return f ? f.value : null;
+}
+
+/* Moves the row's stage to match JobTread. Deliberately does NOT write
+   valueActual: documents.priceSum totals estimates, change orders and
+   invoices together, and calibration is only worth having if the contract
+   value on a Won row is the real one somebody typed. The total is shown as a
+   prompt, not written as a fact. */
+async function refreshFromJobTread(oppId, btn){
+  const T_ = t();
+  const r = OPPS.find(x => x.id === oppId);
+  if(!r || !r.jobtreadAccountId) return;
+  await mcpReady;
+  const note = btn.parentElement.querySelector('.jt') || (() => {
+    const el = document.createElement('span'); el.className = 'jt';
+    btn.parentElement.appendChild(el); return el;
+  })();
+  if(!MCP){ note.className = 'jt err'; note.textContent = T_.jt_unavail; return; }
+
+  btn.disabled = true; note.className = 'jt'; note.textContent = T_.jt_checking;
+  try{
+    const jobs = await jtJobsForAccount(r.jobtreadAccountId);
+    if(!jobs.length){ note.textContent = T_.jt_nojob; btn.disabled = false; return; }
+    const job = jobs[0];
+    const status = jtStatusOf(job);
+    const stage = status ? JT_STAGE[status] : null;
+    if(!stage){ note.textContent = `${T_.jt_status}: ${status || '—'}`; btn.disabled = false; return; }
+
+    const patch = {stage, jobtreadJobId: job.id, jobtreadStatus: status,
+                   jobtreadCheckedAt: new Date().toISOString()};
+    await patchOpp(oppId, patch);
+    const total = job.documents && job.documents.priceSum;
+    note.textContent = `${status} → ${stage}` +
+      (stage === 'won' && total ? ` · ${T_.jt_docs} ${money(total)}` : '');
+  }catch(err){
+    note.className = 'jt err';
+    note.textContent = jtMessage(err);
+    btn.disabled = false;
+  }
+}
+
 async function jtCreateAccount(name){
   const res = await MCP.callTool('Ideal', 'query', {query: {
     createAccount: {
@@ -1395,6 +1484,10 @@ function renderPipeline(){
   document.querySelectorAll('#board button[data-jt]').forEach(b=>{
     b.onclick = () => sendToJobTread(b.dataset.jt, b);
   });
+  // pull the job's status back from JobTread onto the row
+  document.querySelectorAll('#board button[data-jtrefresh]').forEach(b=>{
+    b.onclick = () => refreshFromJobTread(b.dataset.jtrefresh, b);
+  });
 }
 
 function oppCard(r, st){
@@ -1420,7 +1513,8 @@ function oppCard(r, st){
   const jtBtn = (!r.example && !isRel && !r.jobtreadAccountId)
     ? `<button class="xbtn" data-jt="${esc(r.id)}">${T_.jt_send}</button>` : '';
   const jtNote = r.jobtreadAccountId
-    ? `<span class="jt">${T_.jt_sent}${r.jobtreadName?' — '+esc(r.jobtreadName):''}</span>` : '';
+    ? `<button class="xbtn" data-jtrefresh="${esc(r.id)}">${T_.jt_refresh}</button>`+
+      `<span class="jt">${r.jobtreadStatus?esc(r.jobtreadStatus):T_.jt_sent}</span>` : '';
 
   return `<article class="opp${isRel?' rel':''}" data-tone="${st.tone}">
     <div class="nm">${esc(r.name)}</div>
