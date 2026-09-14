@@ -50,7 +50,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests tenacity pyyaml shapely pytest
+          pip install requests tenacity pyyaml shapely pytest pypdf
           pip install -e ./ideal_apis
           pip install playwright   # browser tests for the tracker page
 
@@ -91,6 +91,13 @@ jobs:
         if: ${{ endsWith(github.ref, '-p6') || (github.event_name == 'workflow_dispatch' && inputs.discover != 'false') }}
         continue-on-error: true
         run: python bid_radar/discover_state2.py
+
+      - name: DISCOVER — dump one HCAA report's text for a fixture
+        if: ${{ endsWith(github.ref, '-p6') || (github.event_name == 'workflow_dispatch' && inputs.discover != 'false') }}
+        continue-on-error: true
+        env:
+          HCAA_DUMP: bid_radar/data/hcaa_report_sample.txt
+        run: python bid_radar/sources/hcaa_ppo.py
 
       - name: Unit and page tests
         run: pytest -q bid_radar/tests
