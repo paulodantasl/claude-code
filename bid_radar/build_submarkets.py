@@ -7,8 +7,11 @@ then grown by a trade-area buffer:
   * 0.50 mi for the ISOLATED districts (wsmarina, dalemabry, airport) — a
     tenant two blocks outside Westshore Marina is still a Westshore Marina
     lead.
-  * 0.25 mi for davis: Davis Islands is isolated, but a half mile north
-    crosses Seddon Channel into Water Street and would steal its permits.
+  * 0.10 mi for davis. Davis Islands is isolated, but it is an ISLAND: any
+    meaningful buffer crosses open water. 0.50 mi reached Water Street and
+    took Amalie Arena; 0.25 mi still crossed the Hillsborough channel and
+    claimed 201 W Platt St, which is five blocks up the mainland in Hyde Park.
+    The trade area stops at the shoreline.
   * 0.10 mi for the four CONTIGUOUS CBD districts (riverwalk, downtown,
     waterst, ybor) — these already share boundaries, so a half-mile buffer
     would make each swallow its neighbours. 0.10 mi is a half-block tolerance
@@ -61,7 +64,7 @@ CORES: dict[str, tuple[str, str, float, list[tuple[float, float]]]] = {
         (-82.4480, 27.9570), (-82.4650, 27.9570)]),
 
     # Davis Islands, including the TGH campus at the north end.
-    "davis": ("Davis Islands", "TGH Taneja Tower", 0.25, [
+    "davis": ("Davis Islands", "TGH Taneja Tower", 0.10, [
         (-82.4665, 27.9105), (-82.4405, 27.9105),
         (-82.4405, 27.9400), (-82.4665, 27.9400)]),
 

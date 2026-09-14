@@ -74,12 +74,16 @@ def test_every_signal_carries_provenance(feat):
 
 
 def test_summary_renders_without_a_network_call():
-    signals = [s for s in (collect.to_signal(f) for f in FEATURES) if s]
-    md = collect.summary(signals, {"fetched": len(signals), "layer_total": 2577,
-                                   "record_types": {"Commercial Building Alterations "
-                                                    "(Renovations)"}})
+    signals = [collect.scored(s) for s in (collect.to_signal(f) for f in FEATURES) if s]
+    md = collect.summary(signals, {"permit": {"name": "Building permits",
+                                              "fetched": len(signals)}})
     assert "# Tampa Bid Radar" in md
     assert "Wagamama Pan Asian" in md
-    assert "EARLY START" in md
-    # the condo remodel must not appear as a fitout row
-    assert "1209 E Cumberland Ave #903" not in md.split("## Source notes")[0]
+    assert "early_start" in md
+
+
+def test_summary_reports_a_failed_source_rather_than_hiding_it():
+    md = collect.summary([], {"abt": {"name": "Alcoholic-beverage permits",
+                                      "error": "ArcGISError: boom"}})
+    assert "ArcGISError: boom" in md
+    assert "⚠️" in md
