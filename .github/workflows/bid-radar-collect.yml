@@ -1,0 +1,106 @@
+name: Bid Radar collect
+
+# The Claude sandbox cannot reach any permit / licence source (PLAN.md §0), so
+# every collector is run and validated here. `push` is the iteration trigger —
+# workflow_dispatch only becomes available once this file is on the default
+# branch.
+on:
+  schedule:
+    - cron: "0 12 * * 1-5"   # 7am ET weekdays
+  workflow_dispatch:
+    inputs:
+      days_back:
+        description: "Look-back window in days"
+        required: false
+        default: "90"
+      discover:
+        description: "Re-run the ArcGIS vocabulary discovery"
+        required: false
+        default: "true"
+  push:
+    branches:
+      - "claude/bid-radar-lead-engine-**"
+    paths:
+      - "bid_radar/**"
+      - ".github/workflows/bid-radar-collect.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bid-radar-collect-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    env:
+      DAYS_BACK: ${{ github.event.inputs.days_back || '90' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests tenacity pyyaml shapely pytest
+
+      - name: DISCOVER — Tampa ArcGIS vocabulary
+        if: ${{ github.event.inputs.discover != 'false' }}
+        run: python bid_radar/discover_tampa.py
+
+      - name: Unit tests
+        run: |
+          if [ -d bid_radar/tests ]; then pytest -q bid_radar/tests; else echo "no tests yet"; fi
+
+      - name: COLLECT — build signals
+        run: |
+          if [ -f bid_radar/collect.py ]; then
+            python bid_radar/collect.py
+          else
+            echo "collect.py not written yet — discovery-only run"
+          fi
+
+      - name: Summary to job log
+        if: always()
+        run: |
+          if [ -f bid_radar/data/summary.md ]; then
+            cat bid_radar/data/summary.md >> "$GITHUB_STEP_SUMMARY"
+            cat bid_radar/data/summary.md
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bid-radar-data-${{ github.run_id }}
+          path: bid_radar/data/
+          if-no-files-found: warn
+
+      - name: Commit data to bid-radar-data branch
+        if: ${{ success() }}
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          tmp="$(mktemp -d)"
+          cp -r bid_radar/data/. "$tmp"/ 2>/dev/null || { echo "no data produced"; exit 0; }
+          git fetch origin bid-radar-data --depth=1 || true
+          if git rev-parse --verify origin/bid-radar-data >/dev/null 2>&1; then
+            git checkout -B bid-radar-data origin/bid-radar-data
+          else
+            git checkout --orphan bid-radar-data
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+          mkdir -p bid_radar/data
+          rm -rf bid_radar/data/*
+          cp -r "$tmp"/. bid_radar/data/
+          git add -A bid_radar/data
+          if git diff --cached --quiet; then
+            echo "no change"
+          else
+            git commit -m "bid-radar data $(date -u +%Y-%m-%dT%H:%MZ) (run ${GITHUB_RUN_ID})"
+            git push origin bid-radar-data
+          fi
