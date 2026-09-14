@@ -39,6 +39,24 @@ PHONE = re.compile(r"(?:Work|Mobile|Home|Primary)\s*Phone:\s*([\d\-() .]{7,20})"
 LICENCE = re.compile(r"\b((?:CBC|CGC|CRC|CCC|CFC|CAC|CMC|CPC|EC|ER|BU|PX|RF|RG|RC|SCC)"
                      r"\s?\d{4,9})\b")
 
+# A party block runs "<person> [<email>] <COMPANY> <street address> <licence>".
+# The address is where company detection goes wrong: without cutting it off,
+# "1234 N Howard Ave Tampa" reads as a construction firm.
+_STREET_START = re.compile(r"\b\d{2,6}\s+(?:[NSEW]\.?\s+)?[A-Za-z]")
+_STREET_WORD = re.compile(
+    r"\b(?:AVE|AVENUE|ST|STREET|BLVD|BOULEVARD|DR|DRIVE|RD|ROAD|HWY|HIGHWAY|"
+    r"PKWY|PARKWAY|CIR|CIRCLE|LN|LANE|WAY|TRAIL|TRL|CT|COURT|PL|PLACE|TER|"
+    r"SUITE|STE|APT|UNIT|FL|FLOOR)\b", re.I)
+# Licence-type phrases that mark the end of the name/company/address run.
+_LICENCE_TYPE = re.compile(
+    r"\b(?:Building|General|Residential|Electrical|Plumbing|Mechanical|Roofing|"
+    r"Specialty|Pollutant|Underground|Private\s+Provider)[\w\- ]{0,30}"
+    r"(?:Contractor|Qualifier|Representative|Engineer)\b", re.I)
+
+_FIRM = re.compile(r"([A-Z][A-Za-z&'.\- ]{3,70}(?:LLC|L\.L\.C|INC|CORP|COMPANY|CO|LP|"
+                   r"PA|LTD|CONSTRUCTION|CONTRACTORS?|DEVELOPMENT|GROUP|SERVICES|"
+                   r"ELECTRIC|PLUMBING|MECHANICAL|BUILDERS?|ENTERPRISES?))\b")
+
 _TAG = re.compile(r"<[^>]+>")
 _SCRIPT = re.compile(r"<(script|style)\b.*?</\1>", re.S | re.I)
 _WS = re.compile(r"[ \t\xa0\r\n]+")
@@ -64,6 +82,25 @@ def _between(text: str, start: str, stops: tuple[str, ...]) -> str | None:
     return seg or None
 
 
+def _split_person_from_firm(text: str) -> tuple[str | None, str]:
+    """"Matthew Gilbert BARR & BARR INC" -> ("Matthew Gilbert", "BARR & BARR INC").
+
+    Accela prints the qualifier and their firm in one run. Where the qualifier
+    is Title Case and the firm is not, the case change is the boundary; where
+    both are the same case there is nothing to split on, and the whole string
+    stays as the firm.
+    """
+    tokens = text.split()
+    for i, tok in enumerate(tokens):
+        if i == 0 or not re.fullmatch(r"[A-Z]{2,}[\w&'.\-]*", tok):
+            continue
+        head = tokens[:i]
+        if head and all(re.fullmatch(r"[A-Z][a-z]+[\w'.\-]*", t) for t in head):
+            return " ".join(head), " ".join(tokens[i:])
+        break
+    return None, text
+
+
 def _party(block: str | None) -> dict | None:
     """Pull a person, a company, a licence and contacts out of one party block."""
     if not block:
@@ -74,19 +111,34 @@ def _party(block: str | None) -> dict | None:
 
     # The name is whatever precedes the first email, company or address number.
     head = block
+    cut0 = _STREET_START.search(head)
+    if cut0:
+        head = head[:cut0.start()]
     for cut in emails[:1] + ([licence.group(1)] if licence else []):
         k = head.find(cut)
         if k > 0:
             head = head[:k]
     name = re.split(r"\s{2,}|\s(?=\d{2,5}\s[A-Z])", head.strip())[0].strip(" ,")
 
-    # An ALL-CAPS or Title-Case run after the name, before the address, is the firm.
+    # The firm sits between the person (and their email) and the street address.
+    # Cut the address off first — everything after the first street number is
+    # location, not identity.
+    ident = block
+    cut = _STREET_START.search(ident)
+    if cut:
+        ident = ident[:cut.start()]
     company = None
-    m = re.search(r"([A-Z][A-Za-z&'.\- ]{4,60}(?:LLC|INC|CORP|COMPANY|CO|LP|PA|LTD"
-                  r"|CONSTRUCTION|CONTRACTORS?|DEVELOPMENT|GROUP|SERVICES|ELECTRIC"
-                  r"|PLUMBING|MECHANICAL|BUILDERS?))\b", block)
+    # Greedy, so "TWT Restaurant Design Construction & Development Company"
+    # does not get cut short at the first "Construction".
+    m = _FIRM.search(ident)
     if m:
-        company = " ".join(m.group(1).split())
+        candidate = " ".join(m.group(1).split())
+        # A street name that happens to end in a suffix word is not a firm.
+        if not _STREET_WORD.search(candidate):
+            company = _split_person_from_firm(candidate)[1]
+            person_prefix = _split_person_from_firm(candidate)[0]
+            if person_prefix and (not name or name.startswith(person_prefix)):
+                name = person_prefix
 
     out = {"name": name[:80] or None, "company": company,
            "licence": (licence.group(1).replace(" ", "") if licence else None),
@@ -110,6 +162,10 @@ def parse(page_html: str) -> dict:
     tenant_raw = _between(text, "Tenant information", ("Record Details", "Fees",
                                                        "More Details"))
 
+    # A fitout permit valuation outside this band is a data-entry error on the
+    # record, not a job. Observed: one at $280,000,000 and one at $500.
+    VALUE_MIN, VALUE_MAX = 1_000.0, 50_000_000.0
+
     def _num(label: str) -> float | None:
         m = re.search(re.escape(label) + r":\s*\$?([\d,]+(?:\.\d+)?)", text)
         if not m:
@@ -128,12 +184,16 @@ def parse(page_html: str) -> dict:
         if p and p.get("company"):
             subs.append({"company": p["company"], "licence": p["licence"]})
 
+    job_value = _num("Job Value")
+    value_suspect = bool(job_value) and not (VALUE_MIN <= job_value <= VALUE_MAX)
+
     return {
         "applicant": applicant,
         "contractor": gc,
         "owner": " ".join(owner_raw.split())[:160] if owner_raw else None,
         "tenant_contact": " ".join(tenant_raw.split())[:160] if tenant_raw else None,
-        "job_value": _num("Job Value"),
+        "job_value": job_value,
+        "value_suspect": value_suspect,
         "sqft": _num("Sq Ft"),
         "subs": subs[:8],
     }

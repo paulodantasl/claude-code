@@ -117,3 +117,78 @@ def test_to_text_strips_scripts_and_styles():
 def test_licence_formats(text, expected):
     m = accela.LICENCE.search(text)
     assert (m.group(1).replace(" ", "") if m else None) == expected
+
+
+# --------------------------------------- defects found in the first live run
+
+@pytest.mark.parametrize("block,name,company", [
+    # A street address read as a construction firm. The first live run put
+    # "N HOWARD AVE TAMPA" and "E FLETCHER AVE TAMPA" in the market-share table.
+    ("Kelly Smith 1234 N Howard Ave Tampa, FL, 33607 Building Contractor CGC049808",
+     "Kelly Smith", None),
+    ("Justin Starnes 55 E Fletcher Ave Tampa, FL Building Contractor CGC1533664",
+     "Justin Starnes", None),
+    # Accela prints the qualifier and the firm in one run.
+    ("Matthew Gilbert BARR & BARR INC 100 Main St Tampa, FL Building Contractor CGC1513535",
+     "Matthew Gilbert", "BARR & BARR INC"),
+    # The firm name must not be cut short at its first suffix word.
+    ("Nicholas Tyson Roland permits@twt.com TWT RESTAURANT DESIGN CONSTRUCTION & "
+     "DEVELOPMENT COMPANY 5553 W Waters Ave Tampa Building Contractor CBC1262713",
+     "Nicholas Tyson Roland", "TWT RESTAURANT DESIGN CONSTRUCTION & DEVELOPMENT COMPANY"),
+])
+def test_party_parsing_defects_from_the_first_live_run(block, name, company):
+    p = accela._party(block)
+    assert p["name"] == name
+    assert p["company"] == company
+
+
+@pytest.mark.parametrize("text,suspect", [
+    ("Job Value: 300000", False),
+    ("Job Value: 75000", False),
+    ("Job Value: 49000000", False),
+    ("Job Value: 280000000", True),     # seen once; a fitout is not $280M
+    ("Job Value: 500", True),           # seen once
+])
+def test_an_implausible_valuation_is_flagged_not_trusted(text, suspect):
+    parsed = accela.parse(f"<html><body>{text}</body></html>")
+    assert parsed["value_suspect"] is suspect
+
+
+def test_a_suspect_value_is_kept_on_the_row_but_excluded_from_averages():
+    import collect
+    sig = {"source": "permit", "source_id": "X", "hood": "waterst", "contacts": []}
+    enrich._merge(sig, {"job_value": 280_000_000.0, "value_suspect": True,
+                        "contractor": {"company": "SOME BUILDERS INC",
+                                       "licence": "CGC1", "emails": [], "phones": []}})
+    assert sig["value_est"] == 280_000_000.0      # the record still says so
+    assert sig["value_suspect"] is True
+    row = collect.market_share([sig])[0]
+    assert row["with_value"] == 0
+    assert row["avg_value"] is None
+
+
+def test_a_cancelled_run_keeps_the_pages_it_already_paid_for(tmp_path, monkeypatch):
+    """A new push cancels the workflow mid-fetch. Nine minutes of 370 KB pages
+    must not be thrown away because the run did not reach its final save."""
+    monkeypatch.setattr(enrich, "CACHE_PATH", str(tmp_path / "accela_cache.json"))
+    monkeypatch.setattr(enrich, "SAVE_EVERY", 2)
+    monkeypatch.setattr(enrich, "PAUSE", 0.0)
+
+    fetched = []
+
+    def fake_fetch(url):
+        fetched.append(url)
+        if len(fetched) == 5:            # the run is cancelled here
+            raise KeyboardInterrupt
+        return {"job_value": 250_000.0}
+
+    monkeypatch.setattr(enrich, "fetch_one", fake_fetch)
+    signals = [{"source": "permit", "source_id": f"BLD-{i}", "hood": "waterst",
+                "source_url": f"https://aca.example/{i}"} for i in range(6)]
+
+    with pytest.raises(KeyboardInterrupt):
+        enrich.enrich(signals)
+
+    kept = enrich.load_cache()
+    assert sorted(k for k in kept if not k.startswith("_")) == ["BLD-0", "BLD-1",
+                                                               "BLD-2", "BLD-3"]

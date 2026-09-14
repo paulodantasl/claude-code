@@ -378,7 +378,19 @@ Property Partners Llc*; tenant contact Philip Hart; Job Value 300,000; Sq Ft
   not.
 - Cost: one fetch per permit. `bid_radar/enrich.py` caches parsed results by
   record id in `data/accela_cache.json` on the data branch, so a second run
-  fetches only new records, and `ACCELA_MAX_FETCH` caps a single run.
+  fetches only new records, and `ACCELA_MAX_FETCH` caps a single run. The cache
+  is flushed every `ACCELA_SAVE_EVERY` (20) fetches — the first live run was
+  cancelled at nine minutes by an unrelated push (`cancel-in-progress: true`)
+  and lost everything it had paid for.
+- **Four parsing defects the first live run exposed, now fixed and tested**
+  (`tests/test_accela.py`). They mattered because each one would have gone
+  straight onto a cold call:
+  | Seen in `market_share.csv` | Cause | Fix |
+  |---|---|---|
+  | `N HOWARD AVE TAMPA` as a company | the party block runs name → address → licence, and the address matched the firm pattern | truncate the block at the first street number; reject any candidate carrying a street word |
+  | `MATTHEW GILBERT BARR & BARR INC` | a person and their firm on one line | `_split_person_from_firm()` — greedy firm match, the remainder is the person |
+  | Job Value `280,000,000` on a fitout | data entry on the record | kept on the row, `value_suspect: true`, excluded from market-share averages |
+  | Job Value `500` | same | same |
 - **Consequence for §2.2 and §2.3:** `value_est` and `contacts[]` ARE available
   for permits after enrichment. The soft `needs_contact` blocker still exists
   for rows Accela could not fill, but it is no longer true that no permit row

@@ -74,7 +74,7 @@ def market_share(signals: list[dict]) -> list[dict]:
     rows: dict[tuple[str, str], dict] = {}
     for s in signals:
         gc = s.get("contractor_name")
-        if not gc or not s.get("hood"):
+        if not gc or not s.get("hood") or len(gc) < 3:
             continue
         key = (s["hood"], gc.upper())
         row = rows.setdefault(key, {
@@ -85,7 +85,7 @@ def market_share(signals: list[dict]) -> list[dict]:
         })
         row["permits"] += 1
         row["trades"][s.get("trade") or "other"] += 1
-        if s.get("value_est"):
+        if s.get("value_est") and not s.get("value_suspect"):
             row["value_total"] += float(s["value_est"])
             row["with_value"] += 1
         row["licence"] = row["licence"] or s.get("contractor_licence")
