@@ -1,6 +1,6 @@
 # Tampa Bid Radar — permit signals
 
-Collected 2026-09-14T01:09:09+00:00 · 90-day window by application date (CREATEDDATE) · source [City of Tampa PermitsAll](https://arcgis.tampagov.net/arcgis/rest/services/Planning/PermitsAll/FeatureServer/0)
+Collected 2026-09-14T01:12:39+00:00 · 90-day window by application date (CREATEDDATE) · source [City of Tampa PermitsAll](https://arcgis.tampagov.net/arcgis/rest/services/Planning/PermitsAll/FeatureServer/0)
 
 - 29 commercial records in the window
 - **13** fitout-capable records inside a tracked submarket — **13** of them filed in the last 90 days
