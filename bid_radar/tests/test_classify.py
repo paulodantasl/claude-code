@@ -150,10 +150,49 @@ def test_every_occupancy_code_in_the_live_vocabulary_is_mapped():
     assert not missing, f"unmapped occupancy codes: {missing}"
 
 
+ALT = "Commercial Building Alterations (Renovations)"
+
+
 def test_record_type_gates():
-    assert classify.is_fitout("Commercial Building Alterations (Renovations)")
+    assert classify.is_fitout(ALT)
     assert classify.is_fitout("Commercial New Construction and Additions")
     assert not classify.is_fitout("Commercial Demolition Permit")
     assert not classify.is_fitout("Residential New Construction and Additions (1 and 2 Family)")
     assert classify.is_commercial("Commercial Demolition Permit")
     assert not classify.is_commercial(None)
+
+
+@pytest.mark.parametrize("occ,fitout", [
+    # A condo kitchen remodel files under a commercial record type because the
+    # building is a threshold high-rise. It is not a job a GC bids.
+    ("R-2 Residential-Permanent. 3+ Dwellings Apartment. Dormitory. Timeshare", False),
+    ("R-3 Residential Townhouses", False),
+    ("R-3A Dwellings-Custom Homes", False),
+    ("R-1 Residential-Transient Boarding Houses. Hotels. Motels", True),   # hotel
+    ("R-4 Residential-Assisted Living (6-16 persons)", True),              # care facility
+    ("B-9 Business-Professional Office", True),
+    ("A-2 Assembly-Food & Drink. Restaurant. Night Club. Bar", True),
+    ("", True),
+    (None, True),
+])
+def test_dwelling_occupancies_are_not_fitouts(occ, fitout):
+    assert classify.is_fitout(ALT, occ) is fitout
+
+
+@pytest.mark.parametrize("name2,expected", [
+    ("INT. Remodel STE 250 (Nationwide)", "Nationwide"),
+    ("Interior Alteration (Suite 2200)", None),
+])
+def test_trailing_parenthetical_brand(name2, expected):
+    assert classify.entity_of(name2, "") == expected
+
+
+@pytest.mark.parametrize("name2,expected", [
+    ("EARLY START: THRESHOLD FEMA: PP: Renovation-Interior/Exterior",
+     "Renovation-Interior/Exterior"),
+    ("Fema: PP: Int. Kitchen & Bath Remodel: Unit 804",
+     "Int. Kitchen & Bath Remodel: Unit 804"),
+    ("", None),
+])
+def test_scope_label_strips_administrative_prefixes(name2, expected):
+    assert classify.scope_label(name2, None) == expected

@@ -56,6 +56,10 @@ jobs:
         if: ${{ github.event.inputs.discover != 'false' }}
         run: python bid_radar/discover_sources.py
 
+      - name: DISCOVER — leading-indicator layers
+        if: ${{ github.event.inputs.discover != 'false' }}
+        run: python bid_radar/discover_leading.py
+
       - name: Unit tests
         run: |
           if [ -d bid_radar/tests ]; then pytest -q bid_radar/tests; else echo "no tests yet"; fi

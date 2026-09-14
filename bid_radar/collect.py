@@ -46,7 +46,8 @@ SERVICE = os.environ.get(
 )
 LAYER = int(os.environ.get("TAMPA_LAYER", "0"))
 QUERY = f"{SERVICE}/{LAYER}/query"
-DAYS_BACK = int(os.environ.get("DAYS_BACK", "90"))
+DAYS_BACK = int(os.environ.get("DAYS_BACK", "365"))
+HEADLINE_DAYS = int(os.environ.get("HEADLINE_DAYS", "90"))
 PAGE = 1000
 TIMEOUT = 60
 
@@ -129,7 +130,8 @@ def to_signal(feat: dict) -> dict | None:
         "record_type": record_type,
         "occupancy_category": occ or None,
         "occupancy_type": (a.get("OCCUPANCYTYPE") or "").strip() or None,
-        "is_fitout": classify.is_fitout(record_type),
+        "is_fitout": classify.is_fitout(record_type, occ),
+        "is_dwelling": classify.is_dwelling(occ),
 
         "value_est": None,                # field does not exist in this layer
         "sqft": sqft,
@@ -137,6 +139,7 @@ def to_signal(feat: dict) -> dict | None:
         "filed_at": _ms_to_date(a.get("CREATEDDATE")),
         "issued_at": _ms_to_date(a.get("LASTUPDATE")),
         "project_name": name2 or name1 or None,
+        "scope": classify.scope_label(name2, desc),
         "description": desc or None,
         "private_provider": (a.get("PRIVATEPROVIDER") or "").strip() or None,
         "stop_work_order": (a.get("STOPWORKORDER") or "").strip() or None,
@@ -147,27 +150,36 @@ def to_signal(feat: dict) -> dict | None:
 def summary(signals: list[dict], stats: dict) -> str:
     tracked = [s for s in signals if s["hood"]]
     fitouts = [s for s in tracked if s["is_fitout"]]
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=HEADLINE_DAYS)).date().isoformat()
+    recent = [s for s in fitouts if (s["filed_at"] or "") >= cutoff]
+    older = [s for s in fitouts if (s["filed_at"] or "") < cutoff]
     early = [s for s in fitouts if s["stage_hint"] == "early_start"]
 
     L: list[str] = []
     L.append("# Tampa Bid Radar — permit signals")
     L.append("")
-    L.append(f"Collected {RETRIEVED_AT} · window {DAYS_BACK} days by application "
-             f"(CREATEDDATE) · source [City of Tampa PermitsAll]({SERVICE}/{LAYER})")
+    L.append(f"Collected {RETRIEVED_AT} · {DAYS_BACK}-day window by application date "
+             f"(CREATEDDATE) · source "
+             f"[City of Tampa PermitsAll]({SERVICE}/{LAYER})")
     L.append("")
     L.append(f"- {stats['fetched']} commercial records in the window")
-    L.append(f"- **{len(tracked)}** inside a tracked submarket "
-             f"({len(fitouts)} of them fitout-capable, {len(early)} at EARLY START)")
+    L.append(f"- **{len(fitouts)}** fitout-capable records inside a tracked submarket "
+             f"— **{len(recent)}** of them filed in the last {HEADLINE_DAYS} days")
+    L.append(f"- **{len(early)}** at EARLY START, where buyout is still open")
     L.append("")
-    L.append("> This layer publishes permits at issuance — it has no application "
-             "stage. A row below is a job that is already permitted unless it is "
-             "tagged `early_start`, where the main permit is still pending and "
-             "buyout is open. There is no valuation, applicant or contractor "
-             "field in the source, so those columns are absent rather than "
-             "guessed.")
+    L.append("> **What this source can tell you.** The layer publishes permits at "
+             "issuance — it has no application or in-review stage — so a row here is "
+             "a job that is already permitted, unless it is tagged `early_start`: "
+             "there the city has released interior non-structural work while the "
+             "main permit is still pending, and the rest of the scope is still being "
+             "bought out. Intake to issue ran 15-66 days (median 35) across the most "
+             "recent commercial records. The layer carries no valuation, applicant, "
+             "owner or contractor field, so those columns are absent rather than "
+             "guessed; the tenant is parsed out of the project name and description "
+             "and is blank where it could not be read with confidence.")
     L.append("")
 
-    L.append("## By submarket × trade (fitout-capable records)")
+    L.append("## By submarket × trade")
     L.append("")
     grid: dict[str, Counter] = defaultdict(Counter)
     for s in fitouts:
@@ -188,32 +200,53 @@ def summary(signals: list[dict], stats: dict) -> str:
     L.append("")
 
     if early:
-        L.append("## EARLY START — main permit still pending, buyout open")
+        L.append(f"## EARLY START — main permit still pending, buyout open ({len(early)})")
         L.append("")
-        L.append(_table(early))
+        L.append("These are the only rows in this file with a live bid window.")
+        L.append("")
+        L.append(_table(_by_date(early)))
         L.append("")
 
-    L.append("## All fitout-capable records in tracked submarkets")
+    L.append(f"## Filed in the last {HEADLINE_DAYS} days ({len(recent)})")
     L.append("")
-    L.append(_table(sorted(fitouts, key=lambda s: (s["filed_at"] or ""), reverse=True))
-             if fitouts else "_none in this window_")
+    L.append(_table(_by_date(recent)) if recent else "_none_")
     L.append("")
 
-    other = [s for s in tracked if not s["is_fitout"]]
-    if other:
-        L.append("## Commercial demolition in tracked submarkets (precursor signal)")
+    if older:
+        L.append(f"## Filed {HEADLINE_DAYS}-{DAYS_BACK} days ago ({len(older)})")
         L.append("")
-        L.append(_table(other))
+        L.append("Already built or building — this is the win-rate and "
+                 "who-is-active-where record, not an outreach list.")
+        L.append("")
+        L.append(_table(_by_date(older)))
+        L.append("")
+
+    dwellings = [s for s in tracked if s["is_dwelling"]]
+    demo = [s for s in tracked
+            if s["record_type"] == "Commercial Demolition Permit"]
+    if demo:
+        L.append(f"## Commercial demolition in tracked submarkets ({len(demo)})")
+        L.append("")
+        L.append("A precursor: something is coming to this address.")
+        L.append("")
+        L.append(_table(_by_date(demo)))
         L.append("")
 
     L.append("## Source notes")
     L.append("")
-    L.append(f"- Layer total: {stats.get('layer_total', 'n/a')} features; "
-             f"record types present: {', '.join(sorted(stats['record_types']))}")
-    L.append(f"- Commercial records outside every tracked submarket: "
-             f"{stats['fetched'] - len(tracked)}")
-    L.append("- `source_url` is the City of Tampa Accela record page for that permit.")
+    L.append(f"- Layer total {stats.get('layer_total', 'n/a')} features; record types "
+             f"present: {', '.join(sorted(stats['record_types']))}")
+    L.append(f"- {stats['fetched'] - len(tracked)} commercial records fell outside "
+             f"every tracked submarket")
+    L.append(f"- {len(dwellings)} records were dropped as dwelling occupancies "
+             f"(R-2/R-3) — condo kitchen and bathroom remodels pulled under a "
+             f"commercial permit because the building is a threshold high-rise")
+    L.append("- `source_url` is the City of Tampa Accela record page for that permit")
     return "\n".join(L)
+
+
+def _by_date(rows: list[dict]) -> list[dict]:
+    return sorted(rows, key=lambda s: (s["filed_at"] or ""), reverse=True)
 
 
 def _table(rows: list[dict]) -> str:
@@ -221,7 +254,7 @@ def _table(rows: list[dict]) -> str:
             "Address | Source |")
     out = [head, "|---|---|---|---|---|---|---|---|"]
     for s in rows:
-        name = (s["entity"] or s["project_name"] or "—").replace("|", "/")
+        name = (s["entity"] or s["scope"] or "—").replace("|", "/")
         if len(name) > 60:
             name = name[:57] + "…"
         link = f"[record]({s['source_url']})" if s["source_url"] else "—"

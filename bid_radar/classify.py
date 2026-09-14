@@ -61,6 +61,12 @@ FITOUT_RECORD_TYPES = {
 }
 COMMERCIAL_RECORD_TYPES = FITOUT_RECORD_TYPES | {"Commercial Demolition Permit"}
 
+# Occupancy codes that mean "someone's home". These show up under commercial
+# record types because the building is a threshold high-rise, but the work is
+# a condo kitchen or bathroom — not a job any GC bids. R-1 (hotel) and R-4
+# (assisted living) are deliberately NOT here.
+DWELLING_OCCUPANCY = {"R-2", "R-3", "R-3A", "R-3B", "R-3C", "R-3D"}
+
 _EARLY_START = re.compile(r"\bEARLY\s*START\b", re.I)
 
 # --- Tenant-name extraction -------------------------------------------------
@@ -75,6 +81,7 @@ _ADMIN_PREFIX = re.compile(
 
 # "for new tenant: X", "for a tenant (X)", "NEW TENANT: X"
 _TENANT_CUE = [
+    re.compile(r"\(([A-Z][\w&.'\- ]{2,40})\)\s*$"),
     re.compile(r"\btenants?\s*[:(]\s*([^)\n;]{3,60})", re.I),
     re.compile(r"\bfor\s+(?:a\s+|new\s+|the\s+)?tenants?\s+([A-Z][\w&.'\- ]{2,45}?)"
                r"(?=[.,;)]|\s+relocat|\s*$)", re.I),
@@ -194,8 +201,25 @@ def stage_of(project_status: str | None, *text: str | None) -> str:
 
 
 
-def is_fitout(record_type: str | None) -> bool:
-    return (record_type or "") in FITOUT_RECORD_TYPES
+def is_dwelling(occupancy_category: str | None) -> bool:
+    return occupancy_code(occupancy_category) in DWELLING_OCCUPANCY
+
+
+def is_fitout(record_type: str | None, occupancy_category: str | None = None) -> bool:
+    """A record a GC could actually bid a fitout on."""
+    return ((record_type or "") in FITOUT_RECORD_TYPES
+            and not is_dwelling(occupancy_category))
+
+
+def scope_label(*text: str | None) -> str | None:
+    """Readable scope for a record with no parsable tenant name."""
+    for blob in text:
+        if not blob:
+            continue
+        body = re.sub(r"\s+", " ", _ADMIN_PREFIX.sub("", blob)).strip(" .,;:-\u2013")
+        if len(body) >= 4:
+            return body
+    return None
 
 
 def is_commercial(record_type: str | None) -> bool:
