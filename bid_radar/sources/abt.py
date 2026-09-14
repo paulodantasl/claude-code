@@ -147,24 +147,46 @@ def _to_signal(a: dict, lon, lat, retrieved: str) -> dict | None:
 
 
 def collect(days_back: int = 365) -> list[dict]:
-    """Records that MOVED inside the window — see the module docstring."""
+    """Records where a NEW wet-zoning event happened inside the window.
+
+    The distinction matters more than it looks. Three dates can move on a
+    record, and only two of them mean a buildout:
+
+      CREATEDATE   a new wet-zoning record — somebody is opening something
+      PLACARD_DT   the public notice was posted — a live application
+      HISTORY_ACT_DT  the status changed
+
+    A status change alone is usually administrative. Including it put Mise en
+    Place (licensed 1991), Grand Central Cafe and Mitas Cocina Moderna on the
+    call list at a score of 83 — long-established restaurants whose record was
+    merely touched. Those belong in the directory, not the lead list, so a
+    status-only change is excluded here and picked up by `directory()`.
+    """
     retrieved = datetime.now(timezone.utc).isoformat(timespec="seconds")
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days_back)).date().isoformat()
 
     out = []
     for a, lon, lat in arcgis.iter_attrs(_all_features()):
-        moved = max(filter(None, [
-            arcgis.epoch_to_date(a.get("CREATEDATE")),
-            arcgis.epoch_to_date(a.get("PLACARD_DT")),
-            arcgis.epoch_to_date(a.get("HISTORY_ACT_DT")),
-        ]), default=None)
-        if not moved or moved < cutoff:
-            continue
         if arcgis.clean(a.get("HISTORY_ACTION")) == "Dry":
             continue                       # the licence was surrendered
+        created = arcgis.epoch_to_date(a.get("CREATEDATE"))
+        placard = arcgis.epoch_to_date(a.get("PLACARD_DT"))
+
+        event, moved = None, None
+        if created and created >= cutoff:
+            event, moved = "new_record", created
+        elif placard and placard >= cutoff:
+            event, moved = "placard_posted", placard
+        if not event:
+            continue
+
         sig = _to_signal(a, lon, lat, retrieved)
         if sig:
+            sig["abt_event"] = event
             sig["moved_at"] = moved
+            # The date on the card is the event that put it here, not an
+            # ordinance letter from 2014.
+            sig["filed_at"] = moved
             out.append(sig)
     return out
 

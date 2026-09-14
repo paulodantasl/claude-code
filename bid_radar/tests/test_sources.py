@@ -323,3 +323,60 @@ def test_one_ordinance_over_several_addresses_does_not_collapse():
         a = dict(base, PERMIT_ADDR=addr, PERMIT_ADDR_2=None)
         ids.add(abt._to_signal(a, -82.44, 27.96, NOW)["id"])
     assert len(ids) == 3
+
+
+# ------------------------------------------------ ABT: which date means a job
+
+def _abt_feature(**over):
+    a = dict(FIX["abt"][0]["attributes"])
+    a.update(over)
+    return a
+
+
+def _epoch(iso):
+    from datetime import date
+    y, m, d = (int(x) for x in iso.split("-"))
+    return int(datetime(y, m, d, tzinfo=timezone.utc).timestamp() * 1000)
+
+
+def test_a_status_change_alone_is_not_a_lead(monkeypatch):
+    """Mise en Place has been licensed since 1991. Its record being touched is
+    a directory update, not a restaurant opening — including HISTORY_ACT_DT
+    put it, Grand Central Cafe and Mitas Cocina Moderna on the call list at 83."""
+    from datetime import timedelta
+    recent = (datetime.now(timezone.utc) - timedelta(days=10)).date().isoformat()
+    old = "1991-05-12"
+    feat = {"attributes": _abt_feature(CREATEDATE=_epoch(old), PLACARD_DT=None,
+                                       HISTORY_ACT_DT=_epoch(recent),
+                                       HISTORY_ACTION="Active"),
+            "geometry": {"x": -82.44, "y": 27.96}}
+    monkeypatch.setattr(abt, "_all_features", lambda: [feat])
+    assert abt.collect(365) == []
+
+
+@pytest.mark.parametrize("field,event", [
+    ("CREATEDATE", "new_record"),
+    ("PLACARD_DT", "placard_posted"),
+])
+def test_a_new_record_or_a_posted_placard_is_a_lead(monkeypatch, field, event):
+    from datetime import timedelta
+    recent = (datetime.now(timezone.utc) - timedelta(days=10)).date().isoformat()
+    attrs = _abt_feature(CREATEDATE=None, PLACARD_DT=None, HISTORY_ACT_DT=None,
+                         HISTORY_ACTION="Active")
+    attrs[field] = _epoch(recent)
+    monkeypatch.setattr(abt, "_all_features",
+                        lambda: [{"attributes": attrs, "geometry": {"x": -82.44, "y": 27.96}}])
+    rows = abt.collect(365)
+    assert len(rows) == 1
+    assert rows[0]["abt_event"] == event
+    # the date on the card is the event, not an ordinance letter from 2014
+    assert rows[0]["filed_at"] == recent
+
+
+def test_a_surrendered_licence_is_never_a_lead(monkeypatch):
+    from datetime import timedelta
+    recent = (datetime.now(timezone.utc) - timedelta(days=10)).date().isoformat()
+    attrs = _abt_feature(CREATEDATE=_epoch(recent), HISTORY_ACTION="Dry")
+    monkeypatch.setattr(abt, "_all_features",
+                        lambda: [{"attributes": attrs, "geometry": {"x": -82.44, "y": 27.96}}])
+    assert abt.collect(365) == []

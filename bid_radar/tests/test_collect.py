@@ -87,3 +87,56 @@ def test_summary_reports_a_failed_source_rather_than_hiding_it():
                                       "error": "ArcGISError: boom"}})
     assert "ArcGISError: boom" in md
     assert "⚠️" in md
+
+
+def test_one_record_arriving_as_two_features_is_collected_once(monkeypatch):
+    """The permit layer carries a feature per address unit, so BLD-26-0522346
+    arrived as both `5041 W Cypress St` and `5041 W Cypress St #FS`."""
+    import sources
+
+    dup = {"id": "permit-same", "source": "permit", "source_id": "BLD-26-0522346",
+           "source_url": "https://x", "retrieved_at": "now", "hood": "airport",
+           "address": "5041 W Cypress St", "trade": "medical",
+           "stage_hint": "revision", "entity": "Inlumia Imaging", "contacts": [],
+           "is_fitout": True, "filed_at": "2026-02-04"}
+
+    class _Fake:
+        SOURCE = "permit"
+        NAME = "Building permits"
+
+        @staticmethod
+        def collect(days_back):
+            return [dict(dup), dict(dup, address="5041 W Cypress St #FS")]
+
+    monkeypatch.setattr(sources, "ALL", [_Fake])
+    signals, report = collect.run_sources(365)
+    assert len(signals) == 1
+    assert report["permit"]["duplicates"] == 1
+
+
+def test_a_source_that_raises_does_not_take_the_others_down(monkeypatch):
+    import sources
+
+    class _Boom:
+        SOURCE = "abt"
+        NAME = "Alcoholic-beverage permits"
+
+        @staticmethod
+        def collect(days_back):
+            raise RuntimeError("upstream 503")
+
+    class _Fine:
+        SOURCE = "permit"
+        NAME = "Building permits"
+
+        @staticmethod
+        def collect(days_back):
+            return [{"id": "a", "source": "permit", "hood": "ybor", "trade": "restaurant",
+                     "stage_hint": "early_start", "entity": "X", "contacts": [],
+                     "is_fitout": True, "filed_at": "2026-08-01"}]
+
+    monkeypatch.setattr(sources, "ALL", [_Boom, _Fine])
+    signals, report = collect.run_sources(365)
+    assert len(signals) == 1
+    assert "upstream 503" in report["abt"]["error"]
+    assert report["permit"]["fetched"] == 1

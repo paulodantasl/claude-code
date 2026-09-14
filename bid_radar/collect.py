@@ -63,14 +63,23 @@ def scored(signal: dict) -> dict:
 
 
 def run_sources(days_back: int) -> tuple[list[dict], dict]:
+    """Collect every source. Ids are the §2.2 dedupe key, and a source can
+    legitimately return the same record twice — the permit layer carries one
+    feature per address unit, so BLD-26-0522346 arrives as both
+    `5041 W Cypress St` and `5041 W Cypress St #FS`. Keep the first; they
+    would collide on one document id in the tracker anyway."""
     signals: list[dict] = []
+    seen: set[str] = set()
     report: dict = {}
     for module in sources.ALL:
         try:
             rows = module.collect(days_back)
-            signals.extend(scored(s) for s in rows)
-            report[module.SOURCE] = {"name": module.NAME, "fetched": len(rows)}
-            print(f"  {module.SOURCE:<12} {len(rows):>5} records", flush=True)
+            fresh = [r for r in rows if r["id"] not in seen and not seen.add(r["id"])]
+            signals.extend(scored(s) for s in fresh)
+            report[module.SOURCE] = {"name": module.NAME, "fetched": len(fresh),
+                                     "duplicates": len(rows) - len(fresh)}
+            dupes = f" ({len(rows) - len(fresh)} duplicate ids dropped)" if len(rows) != len(fresh) else ""
+            print(f"  {module.SOURCE:<12} {len(fresh):>5} records{dupes}", flush=True)
         except Exception as exc:  # noqa: BLE001
             report[module.SOURCE] = {"name": module.NAME, "error": f"{type(exc).__name__}: {exc}"}
             print(f"  {module.SOURCE:<12} FAILED {type(exc).__name__}: {exc}", flush=True)
