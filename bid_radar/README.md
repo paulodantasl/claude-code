@@ -265,3 +265,76 @@ The JobTread handshake was observed live through the `Ideal` connector, not
 assumed: org `22P6bRn5p6Pn`, 259 customer accounts, and the `accounts … name
 like` and `createAccount` shapes are recorded in PLAN.md §6 Phase 1. Nothing in
 the tracker page will call a shape that has not been observed.
+
+---
+
+## The other three sources (Phase 2)
+
+Discovery turned up three more Tampa layers on the same host as the permits —
+all public, all point geometry, no geocoder needed.
+
+| Module | Layer | What it adds |
+|---|---|---|
+| `sources/entitlements.py` | `ActiveEntitlementLocations` | Live rezoning, land-use and special-use cases with a published hearing date. The earliest signal in the system. |
+| `sources/abt.py` | `AlcoholBeverage` | **The only source with a phone number or an email.** |
+| `sources/cra_grants.py` | `CRACommercialInitiative` | **The only source with a real dollar figure.** |
+
+`arcgis.py` is the one place that talks HTTP; `collect.py` orchestrates, and a
+source that fails costs its own section of the report, not the report.
+
+### Over a 365-day window
+
+642 records → 223 inside a tracked submarket → **84 qualified**. Seven carry a
+phone and an email from the public record — all restaurants in Ybor, Water
+Street and the Riverwalk.
+
+### What each source will and will not tell you
+
+- **Entitlements** name no applicant. The address is the lead and the trade is
+  undeclared, except on alcoholic-beverage special-use cases. Only Rezoning,
+  General Land Use, Special Use and AB Special Use count: of 160 live cases, 62
+  were Variance Review Board or Design Exception, and nearly all of those are a
+  setback on somebody's house.
+- **Alcoholic-beverage records** move on three dates and only two mean work: a
+  new record (`CREATEDATE`) and a posted placard (`PLACARD_DT`). A status change
+  alone is administrative — including it put Mise en Place, licensed since 1991,
+  at the top of the call list. Seat counts are filled on 23 of 4,096 rows and
+  are not used. `abt_directory.csv` holds every Active venue in the eight
+  submarkets with contact details: a prospecting list, not leads.
+- **CRA grants** are a lead when Awarded with no completion date — committed
+  money, outstanding work. `TOTALPROJECTCOST` is the job; the grant is a slice.
+
+## The tracker page (Phase 3)
+
+The published artifact gains a **New signals** tray above the board, fed from
+the machine-owned `signals/` collection. Promote creates one opportunity at a
+deterministic id and stamps `promotedTo` on the signal; Dismiss stamps
+`dismissed`. Those three fields plus `notes` are the only things a person owns,
+and the daily sync never writes them — which is why a collection run cannot
+undo a decision somebody made.
+
+`Send to JobTread` on an opportunity calls the viewer's own `Ideal` connector
+with their credentials, searching for an existing customer account before
+offering to create one.
+
+**The daily loop:**
+
+```
+07:00 ET  GitHub Action collects → commits bid_radar/data/ to bid-radar-data
+09:00 ET  Claude Routine reads that branch → writes signals/ → digests
+   →      the tray is populated when somebody opens the page
+```
+
+The Action needs no credentials; the Routine needs no network beyond GitHub.
+Neither can reach a Tampa data source, and neither needs to.
+
+### Running the browser tests
+
+```
+pip install playwright && python -m playwright install chromium
+pytest bid_radar/tests
+```
+
+They load the real HTML file, stub `claude.use`, and assert the page renders
+with no capabilities at all — a broken tray is worse than a broken collector,
+because nobody sees a stack trace.
