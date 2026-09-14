@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import arcgis  # noqa: E402
 import enrich  # noqa: E402
+import geocode  # noqa: E402
 import geo  # noqa: E402
 import score as scoring  # noqa: E402
 import sources  # noqa: E402
@@ -409,6 +410,16 @@ def main() -> int:
     except Exception as exc:  # noqa: BLE001
         report["_enrich"] = {"error": f"{type(exc).__name__}: {exc}"}
         print(f"  enrichment failed: {exc}", flush=True)
+
+    # The state files carry a street address and no coordinates, so they are
+    # placed before scoring — `outside_submarkets` is a hard blocker and an
+    # unplaced row would be dropped for a reason that is not about its quality.
+    print("\nplacing address-only signals", flush=True)
+    try:
+        report["_geocode"] = geocode.resolve_signals(signals)
+    except Exception as exc:  # noqa: BLE001
+        report["_geocode"] = {"error": f"{type(exc).__name__}: {exc}"}
+        print(f"  geocoding failed: {exc}", flush=True)
 
     for s in signals:
         scored(s)

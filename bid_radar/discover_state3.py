@@ -145,10 +145,16 @@ def ahca_form() -> None:
     OUT["ahca"]["script_urls"] = sorted(set(urls))[:30]
     print(f"  urls named in scripts: {sorted(set(urls))[:12]}", flush=True)
 
+    # Round 3 posted "County"/"FacilityType" and got 400. The page's own
+    # controls are named `countySelection` and `FacilityTypeSelection`, so
+    # these are the names it actually expects.
     for label, payload in (
-        ("county only", {"County": "Hillsborough"}),
-        ("county + type", {"County": "Hillsborough", "FacilityType": "0",
-                           "ProviderType": "0"}),
+        ("countySelection", {"countySelection": "Hillsborough"}),
+        ("county + type", {"countySelection": "Hillsborough",
+                           "FacilityTypeSelection": "0",
+                           "LicenseStatus": "", "IsForProfit": "",
+                           "general-name": "", "general-address": ""}),
+        ("county as code", {"countySelection": "29"}),
     ):
         body = dict(hidden)
         body.update(payload)
