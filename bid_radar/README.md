@@ -371,3 +371,76 @@ Ordered by leverage:
 
 `owner` is blank on every row on purpose. Who chases what is not a decision a
 script should make.
+
+---
+
+## Who is building fitouts here (Phase 4)
+
+The plan's route to a measured win rate was the Hillsborough Clerk's Notices of
+Commencement. **Both of the Clerk's public-records hosts refuse traffic from a
+cloud runner** — `ConnectTimeout` on `pubrec6.hillsclerk.com`,
+`ConnectionError` on `pubrec.hillsclerk.com`, while `www.hillsclerk.com`
+answers 200 from the same machine. That route is closed.
+
+The replacement is better than the original, and it was sitting in the data the
+whole time. Every permit row already carries a per-record Accela URL, and that
+page holds every field the ArcGIS layer omits:
+
+| On the page | What it gives us |
+|---|---|
+| **Licensed Professional** | The **GC of record** — company, Florida licence number, email |
+| **Applicant** | Name, work phone, email |
+| **Owner** | Name and mailing address |
+| **Tenant contact** | Where the record has one |
+| **Job Value** | The valuation the ArcGIS layer does not carry |
+| **Sq Ft** | The real floor area |
+| Additional Licensed Professionals | Each sub's company and licence |
+
+Verified on `BLD-26-0526061` — the Wagamama fitout at 1050 Water St: GC *TWT
+Restaurant Design Construction & Development Company*, licence CBC1262713, with
+an email; applicant Stephen Torres with a phone and an email; owner *Wst 1010
+Water Street Llc c/o Strategic Property Partners Llc*; Job Value $300,000;
+4,525 sq ft; Duffy Electric and Johnson Controls on the sub list.
+
+So this closes the biggest gap in the system, not just the win-rate question. A
+permit row stops being *something happened at this address* and becomes a lead
+with a name, a number and a real dollar value.
+
+`accela.py` parses the page by its printed labels rather than its DOM — the DOM
+is generated and brittle, the labels are not. `enrich.py` caches parsed results
+by record id on the data branch, so a second run fetches only what is new.
+Enrichment happens **before** scoring, because value and contacts both move the
+score.
+
+**`market_share.csv`** is the output: contractor of record × submarket ×
+permits × average job value. The share of that table which is ours is our
+measured share, per submarket — which is what two of the five calibration dials
+have been guessing at.
+
+### Not yet wired
+
+The measurement exists; `meta/calibration_seed` is not written, so the page's
+"Modelled vs actual" still compares only against Won/Lost rows a person logged.
+That is the remaining step, and it should wait for a run whose enrichment has
+covered the full back-catalogue rather than one window.
+
+## JobTread status writeback
+
+A **Refresh** button on any row already linked to JobTread reads the job's
+`Status` custom field and moves the row's stage. The mapping is this
+organization's own eleven values, read from custom field `22P6bRnsNu2Y`:
+
+| JobTread status | Board stage |
+|---|---|
+| New Lead | signal |
+| Estimate with Cost $ · Estimating HOMEE | bidding |
+| Approved · Subcontractor Agreement · Permitting · Construction · Closed Waiting for payments · Paid Waiting to split · Closed Won | won |
+| Closed Lost | lost |
+
+It deliberately does **not** write the contract value. `documents.priceSum`
+totals estimates, change orders and invoices together, and calibration is only
+worth having if the value on a Won row is the real contract somebody typed. The
+document total is shown as a prompt, not written as a fact.
+
+This lives in the page rather than the daily Routine because the Routine stores
+no MCP connectors and cannot call JobTread at all.
