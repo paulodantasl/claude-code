@@ -235,3 +235,67 @@ def test_promote_and_dismiss_touch_only_human_owned_fields(wired):
 
 def test_no_console_errors_with_the_tray_wired(wired):
     assert wired.errors == []
+
+
+# ------------------------------------------------------- relationship rows
+
+REL = {
+    "id": "rel-compass", "name": "COMPASS prequalification (opens Moss + 60 FL GCs)",
+    "hood": "Water Street", "trade": "relationship", "stage": "signal",
+    "valueEst": 0, "source": "referral", "bidDate": "2026-09-26", "owner": "",
+    "priority": 1, "nextAction": "Register Ideal Construction on COMPASS",
+    "why": "Moss is the GC for Water Street and Gasworx and prequalifies through COMPASS.",
+    "sourceUrl": "https://compass.bespokemetrics.com", "contacts": [],
+}
+
+REL_STUB = """(() => {
+  const store = {opportunities: [__REL__], signals: []};
+  window.__writes = [];
+  const col = (name) => ({
+    onSnapshot(cb){ cb({docs:(store[name]||[]).map(d=>({id:d.id, data:()=>d}))}); return ()=>{}; },
+    add(){ return Promise.resolve({id:'new'}); }
+  });
+  const docAt = (path) => ({
+    onSnapshot(cb){ cb({exists:false, data:()=>({})}); return ()=>{}; },
+    set(v){ window.__writes.push(['set', path, v]); return Promise.resolve(); },
+    update(v){ window.__writes.push(['update', path, v]); return Promise.resolve(); },
+    delete(){ return Promise.resolve(); }
+  });
+  window.claude = { use: async (n) => n === 'db' ? {collection: col, doc: docAt} : null };
+})();"""
+
+
+@pytest.fixture(scope="module")
+def rel(pw):
+    p = _Page(pw, REL_STUB.replace("__REL__", json.dumps(REL)))
+    yield p
+    p.browser.close()
+
+
+def test_a_relationship_row_renders_on_the_board(rel):
+    card = rel.page.locator("#board .opp").first
+    text = card.inner_text()
+    assert "COMPASS" in text
+    assert "Relationship / prequal" in text
+    assert "2026-09-26" in text
+    assert "Moss is the GC" in text          # the `why` is the point of the row
+
+
+def test_a_relationship_row_shows_no_dollar_value(rel):
+    """These carry no value and must never read as biddable work."""
+    assert "$0" not in rel.page.locator("#board .opp").first.inner_text()
+
+
+def test_a_relationship_row_offers_no_jobtread_push(rel):
+    """A prequalification is not a customer account."""
+    assert rel.page.locator('#board .opp button[data-jt]').count() == 0
+
+
+def test_a_relationship_row_does_not_inflate_live_pipeline(rel):
+    """`Live` is what is actually in the pipeline; a vendor form is not."""
+    row = rel.page.locator("#subtable tbody tr", has_text="Water Street").first
+    assert row.locator("td").last.inner_text().strip() == "—"
+
+
+def test_no_console_errors_with_a_relationship_row(rel):
+    assert rel.errors == []

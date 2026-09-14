@@ -1,0 +1,131 @@
+# Direct paths to the master developers and the GCs who hold their work.
+# PLAN.md §4, verified 2026-09-14.
+#
+# These are relationship rows, not data rows — no collector produces them and
+# no collector will update them. They are seeded into the tracker's
+# `opportunities/` collection as `trade: relationship` so they sit on the board
+# next to real jobs and get worked like them.
+#
+# `owner` is deliberately blank on every row. Assigning a name to a piece of
+# business-development work is the company's call, not the collector's.
+#
+# `due` is the date the next action should be done by, set from 2026-09-14.
+
+seeded_at: 2026-09-14
+default_owner: ""
+
+targets:
+
+  - id: rel-compass
+    name: "COMPASS prequalification (opens Moss + 60 FL GCs)"
+    hood: "Water Street"
+    priority: 1
+    why: >
+      Moss is the GC for Water Street (Cora, and the entertainment-venue JV
+      with Barton Malow) and for Gasworx (office and Olivette). Moss
+      prequalifies subcontractors through COMPASS, which is used by more than
+      60 Florida GCs. One registration opens Moss and every other GC on it.
+      This is the highest-leverage single action on the list.
+    action: "Register Ideal Construction on COMPASS; complete the qualification statement"
+    url: "https://compass.bespokemetrics.com"
+    due: 2026-09-26
+
+  - id: rel-aecom-turner
+    name: "AECOM Hunt / Turner — Rays stadium district prequal"
+    hood: "Dale Mabry"
+    priority: 2
+    why: >
+      Named construction manager for the Rays stadium district. Hillsborough
+      County approved the deal on 2026-08-28; site prep began September 2026,
+      demolition December 2026, foundations March 2027, Opening Day 2029,
+      inside a 113-acre mixed-use district on the Hillsborough College Dale
+      Mabry site. The bowl is out of reach; the retail and F&B fitouts that
+      follow it are not, and they are bought out years before they open.
+    action: "Get on both firms' subcontractor and prequalification lists"
+    url: "https://www.aecom.com/suppliers/ | https://www.turnerconstruction.com/subcontractors"
+    due: 2026-10-03
+
+  - id: rel-sunwest
+    name: "Sunwest Construction — Hotel Ora"
+    hood: "Downtown Tampa"
+    priority: 3
+    why: >
+      Attached to Hotel Ora with ARC Realty and Prosper — a regional ownership
+      group, smaller and more reachable than Related or SPP. Hotel amenity,
+      spa and F&B fitouts land 2028-29 and match our commercial TI profile
+      closely. The strongest relationship target on the board.
+    action: "Direct introduction; ask to be included on the Ora fitout bid list"
+    url: ""
+    due: 2026-09-30
+
+  - id: rel-jpre-archer
+    name: "JPRE Development + Archer Group — Gasworx retail leasing"
+    hood: "Ybor City"
+    priority: 4
+    why: >
+      KETTLER runs Gasworx, but retail leasing for four key blocks is handled
+      by JPRE Development and Archer Group Real Estate. A leasing agent knows
+      the tenant a year before any public record does. Ferguson signed roughly
+      50,000 SF of office there in August 2026 — a live corporate fitout with
+      a tenant rep to find.
+    action: "Introduce to both leasing teams; ask who is repping the Ferguson fitout"
+    url: ""
+    due: 2026-10-10
+
+  - id: rel-tgh-vendor
+    name: "Tampa General Hospital — vendor / supplier application"
+    hood: "Davis Islands"
+    priority: 5
+    why: >
+      Healthcare is the proven niche and the Taneja tower pulls specialist
+      practices, imaging and dental-adjacent offices into Davis Islands, Hyde
+      Park and Bayshore for years. TGH runs a formal vendor and supplier
+      application with certification requirements.
+    action: "Submit the vendor application; ask for the construction-services category"
+    url: "https://www.tgh.org/vendor--supplier-information/"
+    due: 2026-09-30
+
+  - id: rel-hcaa
+    name: "HCAA / Tampa International — next prequal cycle"
+    hood: "Airport / Westshore"
+    priority: 6
+    why: >
+      The Prequalified Contractors List RFP (building construction, site work,
+      paving) closed 2026-09-03 — missed. The listed contact is Nick Diaz.
+      Concession fitout contractors are governed by the Tenant Work Permit
+      Handbook. The monthly Planned Procurement Opportunities report is the
+      standing watch item.
+    action: >
+      Email Nick Diaz (ndiaz@tampaairport.com) asking when the next
+      prequalification cycle opens; register on OpenGov and DemandStar for HCAA
+    url: "https://procurement.opengov.com/portal/tampaairport"
+    due: 2026-09-19
+
+  - id: rel-buildingconnected
+    name: "BuildingConnected + PlanHub — profile completeness"
+    hood: "Airport / Westshore"
+    priority: 7
+    why: >
+      BuildingConnected invitations are driven by the Work Performed scopes and
+      the Service Area on the profile. An incomplete profile is invisible to
+      every GC using it, which is most of them.
+    action: >
+      Set Work Performed to tenant improvement, medical office, restaurant and
+      retail; set Service Area to Hillsborough, Pinellas and Pasco. Do the same
+      on PlanHub.
+    url: "https://app.buildingconnected.com"
+    due: 2026-09-26
+
+  - id: rel-spp
+    name: "SPP / Water Street — relationship letter"
+    hood: "Water Street"
+    priority: 8
+    why: >
+      Strategic Property Partners is the most active developer in the market
+      and publishes no subcontractor prequalification. A 452-unit residential
+      tower was announced July 2026. The realistic route in is the tenant side
+      of the entertainment district, plus COMPASS via Moss. Treat this as a
+      two-year play, not a bid.
+    action: "Relationship letter to info@spprealestate.com, 1001 Water St Ste 1250"
+    url: ""
+    due: 2026-10-17
