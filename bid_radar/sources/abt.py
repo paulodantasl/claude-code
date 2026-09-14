@@ -93,9 +93,14 @@ def _to_signal(a: dict, lon, lat, retrieved: str) -> dict | None:
     trade, confidence = _trade(arcgis.clean(a.get("ABSALECONDITION")),
                                arcgis.clean(a.get("AB_CLASS_PREFIX")))
     action = arcgis.clean(a.get("HISTORY_ACTION"))
+    entity = _entity(a)
+
+    # One ordinance can cover several addresses (2026-74 covers three storefronts
+    # on E 2nd and E 4th Ave), so the dedupe key has to carry the address too.
+    dedupe = f"{SOURCE}:{key}:{addr.lower()}"
 
     return {
-        "id": "abt-" + hashlib.sha1(f"{SOURCE}:{key}".encode()).hexdigest()[:16],
+        "id": "abt-" + hashlib.sha1(dedupe.encode()).hexdigest()[:16],
         "source": SOURCE,
         "source_id": key,
         "source_url": arcgis.record_url(SERVICE, LAYER, objectid),
@@ -109,7 +114,7 @@ def _to_signal(a: dict, lon, lat, retrieved: str) -> dict | None:
         "cra": None,
         "council_district": None,
 
-        "entity": _entity(a),
+        "entity": entity,
         "brand": None,
         "trade": trade,
         "confidence": confidence,
@@ -134,7 +139,7 @@ def _to_signal(a: dict, lon, lat, retrieved: str) -> dict | None:
         "ab_status_at": arcgis.epoch_to_date(a.get("HISTORY_ACT_DT")),
         "sale_type": arcgis.clean(a.get("ABSALETYPE")),
         "owner_name": arcgis.clean(a.get("BUS_OWNER_NAME")),
-        "project_name": _entity(a),
+        "project_name": entity,
         "scope": arcgis.clean(a.get("ABSALECONDITION")),
         "description": arcgis.clean(a.get("PMT_COMMENT")),
         "contacts": _contacts(a),

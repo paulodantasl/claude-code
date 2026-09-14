@@ -34,7 +34,7 @@ FIT = {"medical": 30, "restaurant": 25, "hospitality": 20, "retail": 15,
 # Stages where the trade is genuinely not declared yet — the build-back permit
 # or the tenant is still to come. Blocking these on `trade == other` would drop
 # the earliest signals we have, which are the point of the whole exercise.
-PRECURSOR_STAGES = {"strip_out", "pre_permit"}
+PRECURSOR_STAGES = {"strip_out", "pre_permit", "cra_awarded"}
 
 # A strip-out declares no trade — the build-back permit does that, and it has
 # not been filed. Scoring it 0 would bury a committed tenant whose fitout is
@@ -205,6 +205,10 @@ def score(signal: dict, today: date | None = None) -> dict:
         hard.append(f"blocklist:{blocked}")
     if stage == "issued":
         hard.append("already_awarded")
+    if signal.get("is_fitout") is False:
+        # A record type no GC bids: a dwelling remodel under a commercial
+        # permit, a demolition, a residential variance, a temporary event.
+        hard.append("not_fitout")
     if not meets_size_gate(signal):
         hard.append("below_size_gate")
 

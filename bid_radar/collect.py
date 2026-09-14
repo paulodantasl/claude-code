@@ -84,7 +84,7 @@ def _table(rows: list[dict], *, score_col: bool = True) -> str:
     cols = ["Source", "Ref", "Filed", "Stage", "Submarket", "Trade"]
     if score_col:
         cols.append("Score")
-    cols += ["Entity", "Address", "Contact", "Value", "Link"]
+    cols += ["Entity / scope", "Address", "Contact", "Value", "Link"]
     out = ["| " + " | ".join(cols) + " |", "|" + "---|" * len(cols)]
     for s in rows:
         name = (s.get("entity") or s.get("scope") or "—").replace("|", "/")

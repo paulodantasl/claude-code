@@ -27,14 +27,29 @@ NAME = "Active entitlements"
 SERVICE = "Planning/ActiveEntitlementLocations"
 LAYER = 0
 
-# RECORDALIAS -> the case types that precede a commercial buildout, and what
-# they imply about the trade. Everything absent from this map is still
-# collected, as a precursor with an undeclared trade.
+# An alcoholic-beverage special use is an F&B tell: somebody is opening a bar
+# or a restaurant at that address.
 AB_CASES = {"AB Special Use 2", "AB Special Use 1 - Standard"}
 
-# Case types that are about land, not about a tenant: a right-of-way vacating
-# or a residential variance will not produce a fitout.
-LOW_VALUE_CASES = {"ROW Vacating", "Temp Special Event"}
+# The case types that can precede a COMMERCIAL buildout. Everything else is
+# still collected and still shown, but it does not qualify as a lead.
+#
+# Sized against the first real run: of 160 live cases, 62 were Variance Review
+# Board or Design Exception and almost all of those are residential — a
+# setback on a Davis Islands house, a design exception on a Beach Park
+# rebuild. Letting them qualify buried the nine live rezonings under twenty-five
+# rows that all scored an identical 58.
+FITOUT_CASES = {
+    "Rezoning",                    # use change — the classic precursor
+    "General Land Use",            # land-use amendment
+    "Special Use 1 - General",     # a use that needs specific approval
+    "AB Special Use 2",
+    "AB Special Use 1 - Standard",
+}
+
+# Land, not tenants.
+LOW_VALUE_CASES = {"ROW Vacating", "Temp Special Event", "Variance Review Board",
+                   "Design Exception 1", "Design Exception 2", "Formal Decision"}
 
 
 def collect(days_back: int = 365) -> list[dict]:
@@ -80,7 +95,7 @@ def collect(days_back: int = 365) -> list[dict]:
             "record_type": alias,
             "occupancy_category": None,
             "occupancy_type": None,
-            "is_fitout": alias not in LOW_VALUE_CASES,
+            "is_fitout": alias in FITOUT_CASES,
             "is_dwelling": False,
 
             "value_est": None,
@@ -90,8 +105,12 @@ def collect(days_back: int = 365) -> list[dict]:
             "issued_at": None,
             "hearing_at": hearing,
             "app_status": arcgis.clean(a.get("APPSTATUS")),
-            "project_name": alias or None,
-            "scope": f"{alias} — hearing {hearing}" if hearing else (alias or None),
+            # This layer names no applicant. `entity` stays null rather than
+            # putting the case type where a reader expects a business name.
+            "project_name": None,
+            "scope": (f"{alias} case, hearing {hearing}" if hearing
+                      else f"{alias} case"),
+            "case_type": alias or None,
             "description": None,
             "contacts": [],
         })

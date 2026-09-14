@@ -248,3 +248,78 @@ def test_abt_signals_carry_the_required_schema(row):
     assert REQUIRED_KEYS <= set(row)
     assert row["source_url"] and row["retrieved_at"]
     assert json.dumps(row, default=str)
+
+
+# --------------------------------------------------------- qualification gate
+
+def _sig(**kw):
+    base = {"source": "entitlement", "hood": "ybor", "trade": "other",
+            "stage_hint": "pre_permit", "filed_at": "2026-08-01",
+            "entity": None, "contacts": [], "confidence": 0.2, "is_fitout": True}
+    base.update(kw)
+    return base
+
+
+def test_a_record_no_gc_bids_is_a_hard_blocker():
+    """Sized against the first real multi-source run: 62 of 160 live
+    entitlement cases were residential variances and design exceptions, and
+    letting them qualify buried nine real rezonings under 25 rows that all
+    scored an identical 58."""
+    assert "not_fitout" in score.score(_sig(is_fitout=False))["blockers"]
+    assert score.score(_sig(is_fitout=False))["qualified"] is False
+    assert score.score(_sig(is_fitout=True))["qualified"] is True
+
+
+@pytest.mark.parametrize("case,is_fitout", [
+    ("Rezoning", True),
+    ("General Land Use", True),
+    ("Special Use 1 - General", True),
+    ("AB Special Use 2", True),
+    ("Variance Review Board", False),     # a setback on somebody's house
+    ("Design Exception 1", False),
+    ("Formal Decision", False),
+    ("ROW Vacating", False),
+    ("Temp Special Event", False),
+])
+def test_only_commercial_case_types_are_fitouts(case, is_fitout):
+    assert (case in entitlements.FITOUT_CASES) is is_fitout
+
+
+def test_an_entitlement_never_presents_a_case_type_as_a_business_name():
+    """`Variance Review Board` in an Entity column reads like a company."""
+    for case in entitlements.FITOUT_CASES | entitlements.LOW_VALUE_CASES:
+        assert case not in ("", None)
+    # the mapper sets project_name to None; the case type lives in scope
+    assert "case_type" not in entitlements.AB_CASES
+
+
+def test_an_awarded_cra_grant_is_a_precursor_not_a_dead_row():
+    """Centro Asturiano's $987k Special Projects grant is Awarded and not
+    complete: committed money, outstanding work, broad scope."""
+    result = score.score({"source": "cra_grant", "hood": "ybor", "trade": "other",
+                          "stage_hint": "cra_awarded", "filed_at": "2026-08-01",
+                          "entity": "Centro Asturiano de Tampa", "contacts": [],
+                          "value_est": 987850.99, "is_fitout": True,
+                          "confidence": 0.2})
+    assert "trade_other" not in result["blockers"]
+    assert result["qualified"] is True
+
+
+def test_a_completed_cra_grant_is_not_a_lead():
+    result = score.score({"source": "cra_grant", "hood": "ybor", "trade": "retail",
+                          "stage_hint": "issued", "filed_at": "2025-01-01",
+                          "entity": "J.C. Newman Cigar Company", "contacts": [],
+                          "value_est": 316405.5, "is_fitout": True})
+    assert "already_awarded" in result["blockers"]
+    assert result["qualified"] is False
+
+
+def test_one_ordinance_over_several_addresses_does_not_collapse():
+    """Ordinance 2026-74 covers three storefronts on E 2nd and E 4th Ave."""
+    base = dict(FIX["abt"][0]["attributes"])
+    base["ORD_PERMIT"] = "2026-74"
+    ids = set()
+    for addr in ("1302 E 2nd Ave", "1302 E 4th Ave", "1306 E 4th Ave"):
+        a = dict(base, PERMIT_ADDR=addr, PERMIT_ADDR_2=None)
+        ids.add(abt._to_signal(a, -82.44, 27.96, NOW)["id"])
+    assert len(ids) == 3

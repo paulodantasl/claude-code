@@ -100,7 +100,12 @@ def collect(days_back: int = 365) -> list[dict]:
             "record_type": grant_type,
             "occupancy_category": None,
             "occupancy_type": arcgis.clean(a.get("OCCUPANCY")),
-            "is_fitout": grant_type in INTERIOR_GRANTS,
+            # Every one of these is commercial construction money — interior
+            # buildout, façade, full rehabilitation. The Awarded/Completed
+            # stage decides whether it is a lead, not the grant type.
+            "is_fitout": True,
+            "work_type": ("interior" if grant_type in INTERIOR_GRANTS
+                          else "exterior" if grant_type in EXTERIOR_GRANTS else None),
             "is_dwelling": False,
 
             # TOTALPROJECTCOST is the job; the grant is a slice of it.

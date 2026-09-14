@@ -12,7 +12,7 @@ on:
       days_back:
         description: "Look-back window in days"
         required: false
-        default: "90"
+        default: "365"
       discover:
         description: "Re-run the ArcGIS vocabulary discovery"
         required: false
@@ -35,7 +35,7 @@ jobs:
   collect:
     runs-on: ubuntu-latest
     env:
-      DAYS_BACK: ${{ github.event.inputs.days_back || '90' }}
+      DAYS_BACK: ${{ github.event.inputs.days_back || '365' }}
     steps:
       - uses: actions/checkout@v4
 
