@@ -73,11 +73,7 @@ jobs:
         run: python bid_radar/discover_noc.py
 
       - name: Unit and page tests
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
-        run: |
-          python -m playwright install --with-deps chromium ||             echo "chromium unavailable — page tests will skip"
-          pytest -q bid_radar/tests
+        run: pytest -q bid_radar/tests
 
       - name: COLLECT — build signals
         run: |
