@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-09-14T03:24:04+00:00",
+  "retrieved_at": "2026-09-14T10:19:47+00:00",
   "dbpr": {
     "pages": [
       {
@@ -593,7 +593,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=utf-8",
-        "bytes": 201707,
+        "bytes": 201702,
         "final_url": "https://quality.healthfinder.fl.gov/Facility-Search/FacilityLocateSearch",
         "download_links": [
           "https://quality.healthfinder.fl.gov/files/AllFacilityData_MiamiDade_08242026.xlsx",
@@ -609,7 +609,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=utf-8",
-        "bytes": 82894,
+        "bytes": 82899,
         "final_url": "https://quality.healthfinder.fl.gov/Researchers/Order-Data/",
         "download_links": [
           "https://fhfstore.blob.core.windows.net/documents/researchers/OrderData/documents/City_State_Country Codes.xlsx",
@@ -719,7 +719,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 96323,
+        "bytes": 96324,
         "final_url": "https://www.tampaairport.com/business/procurement/current-solicitation-opportunities",
         "pdf_links": [
           "https://www.tampaairport.com/sites/default/files/2026-09/Planned%20Procurement%20Opportunities%20Report%20-%20September%202026.pdf"

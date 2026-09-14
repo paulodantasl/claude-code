@@ -1,0 +1,1182 @@
+{
+  "retrieved_at": "2026-09-14T10:19:52+00:00",
+  "dbpr": {
+    "newfood.csv": {
+      "url": "https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv",
+      "status": 200,
+      "bytes": 464069,
+      "delimiter": ",",
+      "columns": [
+        "Application Number",
+        "Application Type",
+        "Application Approval Date ",
+        "Board Code",
+        "License Type Code",
+        "Licensee Name",
+        "Rank Code",
+        "Modifier Code",
+        "Mailing Name",
+        "Mailing Street Address",
+        "Mailing Address Line 2",
+        "Mailing Address Line 3",
+        "Mailing City",
+        "Mailing State Code",
+        "Mailing Zip Code",
+        "Primary Phone Number",
+        "Mailing County Code",
+        "Business Name",
+        "Filler",
+        "Location Street Address",
+        "Location Address Line 2",
+        "Location Address Line 3",
+        "Location City",
+        "Location State Code",
+        "Location Zip Code",
+        "Location County Code",
+        "Location County",
+        "Secondary Phone Number",
+        "District",
+        "Region",
+        "License Number",
+        "Primary Status Code",
+        "Secondary Status Code",
+        "License Expiry Date",
+        "Last Inspection Date",
+        "Number of Seats",
+        "Base Risk Level",
+        "Secondary Risk Level"
+      ],
+      "n_columns": 38,
+      "n_rows": 1274,
+      "n_matching": 79,
+      "sample": [
+        [
+          "1634414",
+          "Plan Review and Initial (COMBO SEAT)",
+          "08/13/2026",
+          "200",
+          "2010",
+          "FNS RESTAURANTS INC",
+          "SEAT",
+          "",
+          "FNS RESTAURANTS INC",
+          "",
+          "20156 OAKFLOWER AVE",
+          " ",
+          "TAMPA",
+          "FL",
+          "33647",
+          "646-251-4814",
+          "39",
+          "BLUSH SOCIAL",
+          " ",
+          "101 PHILIPPE PKWY SUITE B",
+          "",
+          "",
+          "SAFETY HARBOR",
+          "FL",
+          "34695",
+          "62",
+          "Pinellas",
+          "646-251-4814",
+          "D3",
+          "10",
+          "SEA6218939",
+          "20",
+          "20",
+          "02/01/2027",
+          "08/13/2026",
+          "128"
+        ],
+        [
+          "1748126",
+          "Plan Review and Initial (COMBO SEAT)",
+          "08/10/2026",
+          "200",
+          "2010",
+          "WING STOP TAMPA 2",
+          "SEAT",
+          "",
+          "WING STOP TAMPA 2",
+          "",
+          "3801 W GANDY BLVD STE C",
+          " ",
+          "TAMPA",
+          "FL",
+          "33611",
+          "656-444-0026",
+          "39",
+          "WINGSTOP",
+          " ",
+          "3801 W GANDY BLVD STE C",
+          "",
+          "",
+          "TAMPA",
+          "FL",
+          "33611",
+          "39",
+          "Hillsborough",
+          "656-444-0026",
+          "D3",
+          "16",
+          "SEA3919583",
+          "20",
+          "20",
+          "02/01/2027",
+          "08/10/2026",
+          "30"
+        ],
+        [
+          "1763752",
+          "Plan Review and Initial (COMBO SEAT)",
+          "09/11/2026",
+          "200",
+          "2010",
+          "LA CECILIA RESTAURANT LLC",
+          "SEAT",
+          "",
+          "LA CECILIA RESTAURANT LLC",
+          "",
+          "210 E FOWLER AVE",
+          " ",
+          "TAMPA",
+          "FL",
+          "33612",
+          "813-345-8503",
+          "39",
+          "IBIZA",
+          " ",
+          "210 E FOWLER AVE",
+          "",
+          "",
+          "TAMPA",
+          "FL",
+          "33612",
+          "39",
+          "Hillsborough",
+          "813-345-8503",
+          "D3",
+          "13",
+          "SEA3919600",
+          "20",
+          "20",
+          "02/01/2027",
+          "09/11/2026",
+          "205"
+        ]
+      ],
+      "county_like": {
+        "Mailing County Code": [
+          [
+            "23",
+            160
+          ],
+          [
+            "16",
+            98
+          ],
+          [
+            "58",
+            88
+          ],
+          [
+            "39",
+            72
+          ],
+          [
+            "26",
+            55
+          ],
+          [
+            "60",
+            52
+          ]
+        ],
+        "Location County Code": [
+          [
+            "23",
+            193
+          ],
+          [
+            "58",
+            125
+          ],
+          [
+            "16",
+            99
+          ],
+          [
+            "39",
+            95
+          ],
+          [
+            "26",
+            69
+          ],
+          [
+            "60",
+            65
+          ]
+        ],
+        "Location County": [
+          [
+            "Dade",
+            193
+          ],
+          [
+            "Orange",
+            125
+          ],
+          [
+            "Broward",
+            99
+          ],
+          [
+            "Hillsborough",
+            95
+          ],
+          [
+            "Duval",
+            69
+          ],
+          [
+            "Palm Beach",
+            65
+          ]
+        ],
+        "District": [
+          [
+            "D4",
+            270
+          ],
+          [
+            "D3",
+            247
+          ],
+          [
+            "D1",
+            202
+          ],
+          [
+            "D2",
+            173
+          ],
+          [
+            "D5",
+            151
+          ],
+          [
+            "D7",
+            141
+          ]
+        ]
+      }
+    },
+    "chgownr_food.csv": {
+      "url": "https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_food.csv",
+      "status": 200,
+      "bytes": 392742,
+      "delimiter": ",",
+      "columns": [
+        "Application Number",
+        "Application Type",
+        "Application Approval Date ",
+        "Board Code",
+        "License Type Code",
+        "Licensee Name",
+        "Rank Code",
+        "Modifier Code",
+        "Mailing Name",
+        "Mailing Street Address",
+        "Mailing Address Line 2",
+        "Mailing Address Line 3",
+        "Mailing City",
+        "Mailing State Code",
+        "Mailing Zip Code",
+        "Primary Phone Number",
+        "Mailing County Code",
+        "Business Name",
+        "Filler",
+        "Location Street Address",
+        "Location Address Line 2",
+        "Location Address Line 3",
+        "Location City",
+        "Location State Code",
+        "Location Zip Code",
+        "Location County Code",
+        "Location County",
+        "Secondary Phone Number",
+        "District",
+        "Region",
+        "License Number",
+        "Primary Status Code",
+        "Secondary Status Code",
+        "License Expiry Date",
+        "Last Inspection Date",
+        "Number of Seats",
+        "Base Risk Level",
+        "Secondary Risk Level"
+      ],
+      "n_columns": 38,
+      "n_rows": 1141,
+      "n_matching": 67,
+      "sample": [
+        [
+          "1863868",
+          "Approve Change Owner Request",
+          "07/17/2026",
+          "200",
+          "2010",
+          "JAI BUA RANI LLC",
+          "SEAT",
+          "",
+          "JAI BUA RANI LLC",
+          "",
+          "12908 N DALE MABRY HWY",
+          " ",
+          "TAMPA",
+          "FL",
+          "33618",
+          "39",
+          "8134886294",
+          "HAVELI INDIAN KITCHEN",
+          " ",
+          "12908  N DALE MABRY HWY",
+          "",
+          "",
+          "TAMPA ",
+          "FL",
+          "33618",
+          "39",
+          "Hillsborough",
+          "813-488-6294",
+          "D3",
+          "15",
+          "SEA3917924",
+          "20",
+          "20",
+          "02/01/2027",
+          "07/17/2026",
+          "40"
+        ],
+        [
+          "1877968",
+          "Approve Change Owner Request",
+          "08/26/2026",
+          "200",
+          "2010",
+          "BEEF O BRADY'S OLDSMAR, LLC",
+          "SEAT",
+          "",
+          "BEEF O BRADY'S OLDSMAR, LLC",
+          "MICHELLE KNIGHT",
+          "5660 W CYPRESS ST STE A",
+          " ",
+          "TAMPA",
+          "FL",
+          "33607",
+          "39",
+          "8132262333",
+          "BEEF O BRADY'S",
+          " ",
+          "3687 TAMPA RD STE 208",
+          "",
+          "",
+          "OLDSMAR",
+          "FL",
+          "34677",
+          "62",
+          "Pinellas",
+          "(813) 328-4005",
+          "D3",
+          "10",
+          "SEA6216773",
+          "20",
+          "20",
+          "02/01/2027",
+          "08/26/2026",
+          "195"
+        ],
+        [
+          "1863386",
+          "Approve Change Owner Request",
+          "07/15/2026",
+          "200",
+          "2010",
+          "CHEF TONY MACARONI & CO LLC",
+          "SEAT",
+          "",
+          "CHEF TONY MACARONI & CO LLC",
+          "",
+          "26129 FOAMFLOWER BLVD",
+          " ",
+          "WESLEY CHAPEL",
+          "FL",
+          "33544",
+          "61",
+          "718-433-6860",
+          "CHEF TONY MACARONI & CO.",
+          " ",
+          "9000  N FLORIDA AVE",
+          "",
+          "",
+          "TAMPA",
+          "FL",
+          "33604",
+          "39",
+          "Hillsborough",
+          "813-800-8622",
+          "D3",
+          "30",
+          "SEA3919119",
+          "20",
+          "20",
+          "02/01/2027",
+          "07/15/2026",
+          "32"
+        ]
+      ],
+      "county_like": {
+        "Mailing County Code": [
+          [
+            "866-372-3035",
+            25
+          ],
+          [
+            "813-374-2413",
+            11
+          ],
+          [
+            "888-592-7753",
+            10
+          ],
+          [
+            "3057892733",
+            9
+          ],
+          [
+            "5127963663",
+            9
+          ],
+          [
+            "4079148688",
+            8
+          ]
+        ],
+        "Location County Code": [
+          [
+            "23",
+            150
+          ],
+          [
+            "16",
+            101
+          ],
+          [
+            "58",
+            98
+          ],
+          [
+            "39",
+            81
+          ],
+          [
+            "26",
+            58
+          ],
+          [
+            "62",
+            54
+          ]
+        ],
+        "Location County": [
+          [
+            "Dade",
+            150
+          ],
+          [
+            "Broward",
+            101
+          ],
+          [
+            "Orange",
+            98
+          ],
+          [
+            "Hillsborough",
+            81
+          ],
+          [
+            "Duval",
+            58
+          ],
+          [
+            "Pinellas",
+            54
+          ]
+        ],
+        "District": [
+          [
+            "D4",
+            262
+          ],
+          [
+            "D3",
+            206
+          ],
+          [
+            "D1",
+            165
+          ],
+          [
+            "D2",
+            158
+          ],
+          [
+            "D5",
+            134
+          ],
+          [
+            "D7",
+            126
+          ]
+        ]
+      }
+    },
+    "newlodg.csv": {
+      "url": "https://www2.myfloridalicense.com/sto/file_download/extracts/newlodg.csv",
+      "status": 200,
+      "bytes": 677450,
+      "delimiter": ",",
+      "columns": [
+        "Application Number",
+        "Application Type",
+        "Application Approval Date ",
+        "Board Code",
+        "License Type Code",
+        "Licensee Name",
+        "Rank Code",
+        "Modifier Code",
+        "Mailing Name",
+        "Mailing Street Address",
+        "Mailing Address Line 2",
+        "Mailing Address Line 3",
+        "Mailing City",
+        "Mailing State Code",
+        "Mailing Zip Code",
+        "Primary Phone Number",
+        "Mailing County Code",
+        "Business Name",
+        "Filler",
+        "Location Street Address",
+        "Location Address Line 2",
+        "Location Address Line 3",
+        "Location City",
+        "Location State Code",
+        "Location Zip Code",
+        "Location County Code",
+        "Secondary Phone Number",
+        "District",
+        "Region",
+        "License Number",
+        "Primary Status Code",
+        "Secondary Status Code",
+        "License Expiry Date",
+        "Last Inspection Date",
+        "Number of Rental Units"
+      ],
+      "n_columns": 35,
+      "n_rows": 2356,
+      "n_matching": 51,
+      "sample": [
+        [
+          "552140",
+          "Initial License",
+          "07/01/2026",
+          "200",
+          "2007",
+          "MCCLOSKEY, GARY & MCCLOSKEY, CHRISTIE",
+          "DWEL",
+          "SNGL",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "MRK TRAVEL LLC",
+          " ",
+          "3221 MARCELLUS CIRCLE",
+          "",
+          "",
+          "TAMPA",
+          "FL",
+          "33609",
+          "39",
+          "Hillsborough",
+          "",
+          "D3",
+          "",
+          "DWE3914155",
+          "20",
+          "20",
+          "02/01/2027",
+          "",
+          "1"
+        ],
+        [
+          "552536",
+          "Initial License",
+          "07/07/2026",
+          "200",
+          "2007",
+          "1STONE LLC",
+          "DWEL",
+          "SNGL",
+          "1STONE LLC",
+          "",
+          "9703 BETHEL RD",
+          " ",
+          "FREDERICK",
+          "MD",
+          "21702",
+          "301-471-0486",
+          "720",
+          "1STONE LLC",
+          " ",
+          "8418  FLAGSTONE DR",
+          "",
+          "",
+          "TAMPA",
+          "FL",
+          "33615",
+          "39",
+          "Hillsborough",
+          "",
+          "D3",
+          "",
+          "DWE3914156",
+          "20",
+          "20",
+          "02/01/2027",
+          "",
+          "1"
+        ],
+        [
+          "552544",
+          "Initial License",
+          "07/07/2026",
+          "200",
+          "2007",
+          "CHORDIA, ABHIJEET & BOBHATE, APURVA",
+          "DWEL",
+          "SNGL",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "CHORDIA, ABHIJEET & BOBHATE, APURVA",
+          " ",
+          "2806 N 21ST ST",
+          "",
+          "",
+          "TAMPA",
+          "FL",
+          "33605",
+          "39",
+          "Hillsborough",
+          "",
+          "D3",
+          "",
+          "DWE3914157",
+          "20",
+          "20",
+          "02/01/2027",
+          "",
+          "1"
+        ]
+      ],
+      "county_like": {
+        "Mailing County Code": [
+          [
+            "23",
+            93
+          ],
+          [
+            "16",
+            38
+          ],
+          [
+            "710",
+            27
+          ],
+          [
+            "59",
+            24
+          ],
+          [
+            "58",
+            20
+          ],
+          [
+            "732",
+            20
+          ]
+        ],
+        "Location County Code": [
+          [
+            "13",
+            228
+          ],
+          [
+            "16",
+            223
+          ],
+          [
+            "23",
+            213
+          ],
+          [
+            "62",
+            195
+          ],
+          [
+            "59",
+            182
+          ],
+          [
+            "46",
+            142
+          ]
+        ],
+        "District": [
+          [
+            "850-624-2448",
+            1
+          ],
+          [
+            "631-921-4279",
+            1
+          ],
+          [
+            "314-239-3404",
+            1
+          ],
+          [
+            "239-530-1199",
+            1
+          ],
+          [
+            "772-579-6934",
+            1
+          ],
+          [
+            "813-363-1880",
+            1
+          ]
+        ]
+      }
+    },
+    "chgownr_lodg.csv": {
+      "url": "https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_lodg.csv",
+      "status": 200,
+      "bytes": 98250,
+      "delimiter": ",",
+      "columns": [
+        "Application Number",
+        "Application Type",
+        "Application Approval Date ",
+        "Board Code",
+        "License Type Code",
+        "Licensee Name",
+        "Rank Code",
+        "Modifier Code",
+        "Mailing Name",
+        "Mailing Street Address",
+        "Mailing Address Line 2",
+        "Mailing Address Line 3",
+        "Mailing City",
+        "Mailing State Code",
+        "Mailing Zip Code",
+        "Primary Phone Number",
+        "Mailing County Code",
+        "Business Name",
+        "Filler",
+        "Location Street Address",
+        "Location Address Line 2",
+        "Location Address Line 3",
+        "Location City",
+        "Location State Code",
+        "Location Zip Code",
+        "Location County Code",
+        "Location County",
+        "Secondary Phone Number",
+        "District",
+        "Region",
+        "License Number",
+        "Primary Status Code",
+        "Secondary Status Code",
+        "License Expiry Date",
+        "Last Inspection Date",
+        "Number of Rental Units"
+      ],
+      "n_columns": 36,
+      "n_rows": 290,
+      "n_matching": 8,
+      "sample": [
+        [
+          "65563",
+          "Approve Change Owner Request",
+          "07/14/2026",
+          "200",
+          "2001",
+          "KHR YBOR LLC",
+          "HOTL",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "HILTON GARDEN INN TAMPA YBOR HISTORIC DISTRICT",
+          " ",
+          "1700 E 9TH STREET",
+          "",
+          "",
+          "TAMPA",
+          "FL",
+          "33605",
+          "39",
+          "Hillsborough",
+          "8137699267",
+          "D3",
+          "23",
+          "HOT3912109",
+          "20",
+          "20",
+          "02/01/2027",
+          "07/29/2026",
+          "96"
+        ],
+        [
+          "68991",
+          "Approve Change Owner Request",
+          "07/17/2026",
+          "200",
+          "2001",
+          "KB HOUSTON GALLERIA LLC",
+          "HOTL",
+          "",
+          "KB HOUSTON GALLERIA LLC",
+          "",
+          "10150 PALM RIVER RD",
+          " ",
+          "TAMPA ",
+          "FL",
+          "33619",
+          "39",
+          "8136619719",
+          "FAIRFIELD TAMPA BRANDON",
+          " ",
+          "10150 PALM RIVER RD",
+          "",
+          "",
+          "TAMPA",
+          "FL",
+          "33619",
+          "39",
+          "Hillsborough",
+          "8136619719",
+          "D3",
+          "23",
+          "HOT3911434",
+          "20",
+          "20",
+          "02/01/2027",
+          "07/18/2026",
+          "107"
+        ],
+        [
+          "69748",
+          "Approve Change Owner Request",
+          "08/18/2026",
+          "200",
+          "2001",
+          "YOLO TAMPA AIRPORT LLC",
+          "HOTL",
+          "",
+          "YOLO TAMPA AIRPORT LLC",
+          "",
+          "5530  BUTLER NATIONAL DR",
+          " ",
+          "ORLANDO",
+          "FL",
+          "32812",
+          "58",
+          "4073734283",
+          "TOWNEPLACE SUITES BY MARRIOTT TAMPA WESTSHORE",
+          " ",
+          "5302 AVION PARK DR",
+          "",
+          "",
+          "TAMPA",
+          "FL",
+          "33607",
+          "39",
+          "Hillsborough",
+          "4073734283",
+          "D3",
+          "11",
+          "HOT3913621",
+          "20",
+          "20",
+          "02/01/2027",
+          "08/19/2026",
+          "120"
+        ]
+      ],
+      "county_like": {
+        "Mailing County Code": [
+          [
+            "305-890-1137",
+            4
+          ],
+          [
+            "3057892733",
+            3
+          ],
+          [
+            "407-933-3213",
+            3
+          ],
+          [
+            "561-207-2715",
+            2
+          ],
+          [
+            "9415752301",
+            2
+          ],
+          [
+            "3057201180",
+            2
+          ]
+        ],
+        "Location County Code": [
+          [
+            "23",
+            88
+          ],
+          [
+            "16",
+            34
+          ],
+          [
+            "26",
+            24
+          ],
+          [
+            "62",
+            19
+          ],
+          [
+            "60",
+            11
+          ],
+          [
+            "39",
+            10
+          ]
+        ],
+        "Location County": [
+          [
+            "Dade",
+            88
+          ],
+          [
+            "Broward",
+            34
+          ],
+          [
+            "Duval",
+            24
+          ],
+          [
+            "Pinellas",
+            19
+          ],
+          [
+            "Palm Beach",
+            11
+          ],
+          [
+            "Hillsborough",
+            10
+          ]
+        ],
+        "District": [
+          [
+            "D1",
+            93
+          ],
+          [
+            "D2",
+            46
+          ],
+          [
+            "D3",
+            42
+          ],
+          [
+            "D5",
+            35
+          ],
+          [
+            "D4",
+            34
+          ],
+          [
+            "D6",
+            21
+          ]
+        ]
+      }
+    },
+    "districts": {
+      "hrfood1.csv": {
+        "status": 200,
+        "rows": 10362,
+        "hillsborough_rows": 2,
+        "tampa_rows": 37
+      },
+      "hrfood2.csv": {
+        "status": 200,
+        "rows": 10644,
+        "hillsborough_rows": 0,
+        "tampa_rows": 64
+      },
+      "hrfood3.csv": {
+        "status": 200,
+        "rows": 12295,
+        "hillsborough_rows": 4710,
+        "tampa_rows": 3923
+      },
+      "hrfood4.csv": {
+        "status": 200,
+        "rows": 15072,
+        "hillsborough_rows": 6,
+        "tampa_rows": 129
+      },
+      "hrfood5.csv": {
+        "status": 200,
+        "rows": 7943,
+        "hillsborough_rows": 0,
+        "tampa_rows": 107
+      },
+      "hrfood6.csv": {
+        "status": 200,
+        "rows": 5316,
+        "hillsborough_rows": 0,
+        "tampa_rows": 81
+      },
+      "hrfood7.csv": {
+        "status": 200,
+        "rows": 7983,
+        "hillsborough_rows": 8,
+        "tampa_rows": 144
+      }
+    },
+    "district_columns": [
+      "Board Code",
+      "License Type Code",
+      "Licensee Name",
+      "Rank Code",
+      "Modifier Code",
+      "Mailing Name",
+      "Mailing Street Address",
+      "Mailing Address Line 2",
+      "Mailing Address Line 3",
+      "Mailing City",
+      "Mailing State Code",
+      "Mailing Zip Code",
+      "Primary Phone Number",
+      "Mailing County Code",
+      "Business Name",
+      "Filler",
+      "Location Street Address",
+      "Location Address Line 2",
+      "Location Address Line 3",
+      "Location City",
+      "Location State Code",
+      "Location Zip Code",
+      "Location County Code",
+      "Location County",
+      "Secondary Phone Number",
+      "District",
+      "Region",
+      "License Number",
+      "Primary Status Code",
+      "Secondary Status Code",
+      "License Expiry Date",
+      "Last Inspection Date",
+      "Number of Seats or Rental Units",
+      "Base Risk Level",
+      "Secondary Risk Level"
+    ]
+  },
+  "ahca": {
+    "locate GET": {
+      "url": "https://quality.healthfinder.fl.gov/Facility-Search/FacilityLocateSearch",
+      "method": "GET",
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 201702,
+      "download_links": [
+        "/files/AllFacilityData_MiamiDade_08242026.xlsx",
+        "/files/Clinical Lab Facility Data_08242026.xlsx"
+      ],
+      "hillsborough_mentions": 3
+    },
+    "locate POST county": {
+      "url": "https://quality.healthfinder.fl.gov/Facility-Search/FacilityLocateSearch",
+      "method": "POST",
+      "status": 400,
+      "content_type": "",
+      "bytes": 0
+    },
+    "proximity GET": {
+      "url": "https://quality.healthfinder.fl.gov/Facility-Search/FacilityProximitySearch",
+      "method": "GET",
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 88576,
+      "download_links": [
+        "/files/AllFacilityData_MiamiDade_08242026.xlsx",
+        "/files/Clinical Lab Facility Data_08242026.xlsx"
+      ],
+      "hillsborough_mentions": 0
+    },
+    "AllFacilityData_Hillsborough_08242026.xlsx": {
+      "url": "https://quality.healthfinder.fl.gov/files/AllFacilityData_Hillsborough_08242026.xlsx",
+      "status": 404,
+      "bytes": 0
+    },
+    "AllFacilityData_MiamiDade_08242026.xlsx": {
+      "url": "https://quality.healthfinder.fl.gov/files/AllFacilityData_MiamiDade_08242026.xlsx",
+      "status": 200,
+      "bytes": 726022
+    }
+  }
+}
