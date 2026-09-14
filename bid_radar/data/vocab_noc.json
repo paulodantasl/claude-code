@@ -1,4 +1,66 @@
 {
-  "base": "https://pubrec6.hillsclerk.com/ORIPublicAccess/",
-  "error": "TimeoutError: Page.goto: Timeout 45000ms exceeded.\nCall log:\n  - navigating to \"https://pubrec6.hillsclerk.com/ORIPublicAccess/\", waiting until \"domcontentloaded\"\n"
+  "clerk": [
+    {
+      "url": "https://pubrec6.hillsclerk.com/ORIPublicAccess/",
+      "error": "ConnectTimeout: HTTPSConnectionPool(host='pubrec6.hillsclerk.com', port=443): Max retries exceeded with url: /ORIPublicAccess/ (Caused by ConnectTimeoutError(<HTTPSConnection(host='pubrec6.hillsclerk.com', port=443) "
+    },
+    {
+      "url": "https://pubrec.hillsclerk.com/",
+      "error": "ConnectionError: HTTPSConnectionPool(host='pubrec.hillsclerk.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='pubrec.hillsclerk.com', port=443): Failed to resolve"
+    },
+    {
+      "url": "https://www.hillsclerk.com/",
+      "status": 200,
+      "final": "https://www.hillsclerk.com/",
+      "bytes": 220406,
+      "title": "Hillsborough County Clerk of Courts - Hillsclerk",
+      "captcha": false,
+      "terms": true
+    },
+    {
+      "url": "https://publicrec.hillsclerk.com/",
+      "status": 200,
+      "final": "https://publicrec.hillsclerk.com/",
+      "bytes": 624,
+      "title": "publicrec.hillsclerk.com - /",
+      "captcha": false,
+      "terms": false
+    }
+  ],
+  "accela": {
+    "root": {
+      "url": "https://aca-prod.accela.com/TAMPA/Default.aspx",
+      "status": 200,
+      "final": "https://aca-prod.accela.com/TAMPA/Default.aspx",
+      "bytes": 82135,
+      "title": "Accela Citizen Access",
+      "captcha": false,
+      "terms": true
+    },
+    "record": {
+      "url": "https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=01TOI&agencyCode=TAMPA",
+      "status": 200,
+      "final": "https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=01TOI&agencyCode=TAMPA",
+      "bytes": 373288,
+      "title": "Accela Citizen Access",
+      "captcha": false,
+      "terms": true
+    },
+    "has_viewstate": true,
+    "labels": {
+      "Contractor": 3,
+      "Licensed Professional": 6,
+      "Applicant": 1,
+      "Owner": 2,
+      "Valuation": 79,
+      "Job Value": 3,
+      "Square Feet": 0,
+      "Contact": 14,
+      "License": 20
+    }
+  },
+  "verdict": {
+    "clerk_reachable": true,
+    "accela_reachable": true
+  }
 }
