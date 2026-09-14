@@ -637,30 +637,48 @@ because executing it would create a real account in the production org.
 **Done when:** the tracker's "Modelled vs actual" shows a NOC-derived win rate
 per submarket, and a Won job in JobTread flips the row without a human.
 
-### Phase 5 — Developer / GC direct track
-1. `bid_radar/relationships.yaml` from §4, seeded to `opportunities/` as
-   `trade: relationship` rows with owner + next action + date.
-2. A short `bid_radar/REGISTRATIONS.md` checklist the user completes by hand
-   (COMPASS, BuildingConnected, TGH vendor form, HCAA OpenGov/DemandStar,
-   AECOM Hunt / Turner prequal), each with the URL and what to enter under
-   *Work Performed* / *Service Area*.
+### Phase 5 — Developer / GC direct track — ✅ DONE 2026-09-14
+1. `bid_radar/relationships.yaml` — the eight §4 targets with why, action, URL
+   and a dated next action, ordered by leverage. `seed_relationships.py` turns
+   it into `opportunities/` documents (dry run by default); all eight are
+   seeded and on the board as `trade: relationship`.
+2. `bid_radar/REGISTRATIONS.md` — the five that are a form somebody has to
+   fill in (COMPASS, AECOM Hunt / Turner, TGH vendor, HCAA OpenGov +
+   DemandStar, BuildingConnected / PlanHub), each with the URL, the documents
+   to have ready, and the specific thing to ask for. The three that are a
+   conversation rather than a form are listed separately.
+3. The page gained a `relationship` trade so these rows read correctly: no
+   dollar figure, no JobTread button, a dashed left border, the *why* shown in
+   place of a value, and — verified by test — they never count toward biddable
+   or live pipeline.
 
 **Done when:** every §4 row is on the board with a dated next action.
 
+**What actually happened.** All eight are on the board. `owner` is blank on
+every one, deliberately: who chases what is not a decision a script should
+make. The earliest due date is 2026-09-19 (email Nick Diaz at HCAA about the
+next prequalification cycle, since the 2026-09-03 RFP was missed); the
+highest-leverage is COMPASS, due 2026-09-26, which opens Moss — the GC for both
+Water Street and Gasworx — and 60-odd other Florida GCs in one registration.
+
 ---
 
-## 7. Efficiency notes for the executor
+## 8. What is NOT done
 
-- Phase 0 is the only phase with real uncertainty (whether the ArcGIS layer
-  behaves as `arcgis_api.py` assumes). Start there; everything else is
-  plumbing over verified files.
-- Validate in Actions with `days_back=7` while iterating; switch to 90 for the
-  first real run.
-- Do not refactor `permit_scraper` or `ideal_apis` beyond the `Source` literal
-  and a new import; add modules under `bid_radar/` and import across.
-- Tests: pytest under `bid_radar/tests/`; run them locally (they use fixtures,
-  no network) before every push.
-- If a source's layout differs from what §3 expects, **update §3 in the same
-  PR** — this file is the system of record for what was observed.
-- Report to the user after Phase 0 and Phase 3 land; those are the two moments
-  the tool changes what they can do on Monday.
+Stated plainly so nobody assumes otherwise.
+
+- **Phase 4 in full.** `noc.py` (Hillsborough Clerk Notices of Commencement →
+  measured win rate and real average contract per submarket), the calibration
+  seed, and JobTread outcome writeback. The Clerk has no API and needs a
+  Playwright scrape of a search UI; it must run in Actions.
+- **Phase 2 steps 4 and 6.** The DBPR food-service and lodging extracts,
+  Sunbiz daily corporate filings, AHCA licensure, and the HCAA monthly
+  Planned Procurement Opportunities PDF. The three Tampa city layers displaced
+  them in priority, not in value: Sunbiz is still the only route to "a new LLC
+  registered at a commercial address", which is 6-12 months of warning.
+- **A geocoder.** Not needed for any source built so far — all four Tampa
+  layers serve point geometry. Sources 6a-6c will need one.
+- **The Routine's first firing** (2026-09-14 13:00Z) is unobserved, and it
+  stores no MCP connectors. See Phase 3.
+- **The JobTread push from the page.** The search shape is observed; the
+  create shape is introspected, not executed.

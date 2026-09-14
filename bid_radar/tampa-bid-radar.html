@@ -137,6 +137,7 @@ section{margin:38px 0 0}
 .opp[data-tone="go"]{border-left-color:var(--go)}
 .opp[data-tone="won"]{border-left-color:var(--go);background:var(--go-soft)}
 .opp[data-tone="hot"]{border-left-color:var(--hot)}
+.opp.rel{border-left-style:dashed;border-left-color:var(--ink-3)}
 .opp .nm{font-weight:600;line-height:1.25;margin-bottom:3px}
 .opp .loc{font-size:11.5px;color:var(--ink-2);margin-bottom:6px}
 .opp .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:11.5px;color:var(--ink-2)}
@@ -644,7 +645,11 @@ const TRADES = [
   {id:'retail',      en:'Retail / service',        pt:'Varejo / serviços'},
   {id:'office',      en:'Office',                  pt:'Escritório'},
   {id:'hospitality', en:'Hotel / amenity',         pt:'Hotel / amenidades'},
-  {id:'other',       en:'Other',                   pt:'Outro'}
+  {id:'other',       en:'Other',                   pt:'Outro'},
+  /* Not a fitout. Relationship rows are the developer and GC track from
+     PLAN.md §4 — a prequalification, an introduction, a vendor form. They
+     carry no value, so they never count toward biddable or live pipeline. */
+  {id:'relationship',en:'Relationship / prequal',  pt:'Relacionamento / prequal'}
 ];
 
 /* Where a row came from — mirrors the signal table below. */
@@ -763,6 +768,7 @@ const T = {
   sig_undeclared:'trade not declared yet',
   sig_nocontact:'no contact in this source',
   promoted_action:'Introduce the company',
+  rel_due:'by',
   jt_send:'Send to JobTread', jt_sending:'Sending…', jt_sent:'In JobTread',
   jt_exists:'Already in JobTread', jt_unavail:'JobTread not connected in this view',
   jt_reauth:'JobTread needs reconnecting in your claude.ai connectors',
@@ -853,6 +859,7 @@ const T = {
   sig_undeclared:'tipo ainda não declarado',
   sig_nocontact:'sem contato nesta fonte',
   promoted_action:'Apresentar a empresa',
+  rel_due:'até',
   jt_send:'Enviar ao JobTread', jt_sending:'Enviando…', jt_sent:'No JobTread',
   jt_exists:'Já está no JobTread', jt_unavail:'JobTread não conectado nesta visualização',
   jt_reauth:'JobTread precisa ser reconectado nos seus conectores do claude.ai',
@@ -1409,20 +1416,23 @@ function oppCard(r, st){
      </label>` : '';
 
   const contacts = r.contacts || [];
-  const jtBtn = (!r.example && !r.jobtreadAccountId)
+  const isRel = r.trade === 'relationship';
+  const jtBtn = (!r.example && !isRel && !r.jobtreadAccountId)
     ? `<button class="xbtn" data-jt="${esc(r.id)}">${T_.jt_send}</button>` : '';
   const jtNote = r.jobtreadAccountId
     ? `<span class="jt">${T_.jt_sent}${r.jobtreadName?' — '+esc(r.jobtreadName):''}</span>` : '';
 
-  return `<article class="opp" data-tone="${st.tone}">
+  return `<article class="opp${isRel?' rel':''}" data-tone="${st.tone}">
     <div class="nm">${esc(r.name)}</div>
     <div class="loc">${esc(r.hood)}${trade?' · '+esc(trade[L]):''}${r.example?' <span class="ex-chip">example</span>':''}</div>
     ${r.address?`<div class="loc">${esc(r.address)}</div>`:''}
     <div class="row">
-      <span>${isWon?T_.lbl_actual:T_.lbl_est} <b>${money(val)}</b></span>
-      ${r.bidDate?`<span class="mono">${T_.lbl_bid} ${esc(r.bidDate)}</span>`:''}
+      ${isRel ? '' : `<span>${isWon?T_.lbl_actual:T_.lbl_est} <b>${money(val)}</b></span>`}
+      ${r.bidDate?`<span class="mono">${isRel?T_.rel_due:T_.lbl_bid} ${esc(r.bidDate)}</span>`:''}
       ${r.score?`<span class="mono">${T_.sig_score} ${esc(r.score)}</span>`:''}
+      ${isRel&&r.priority?`<span class="mono">#${esc(r.priority)}</span>`:''}
     </div>
+    ${isRel&&r.why?`<div class="act" style="border-top:0;padding-top:2px">${esc(r.why)}</div>`:''}
     ${contacts.length?`<div class="row" style="margin-top:4px"><span class="contact">${contacts.slice(0,2).map(contactLink).join(' · ')}</span></div>`:''}
     ${(src||r.sourceUrl)?`<div class="row" style="margin-top:4px">
       ${src?`<span>${esc(src[L])}</span>`:''}

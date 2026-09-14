@@ -338,3 +338,36 @@ pytest bid_radar/tests
 They load the real HTML file, stub `claude.use`, and assert the page renders
 with no capabilities at all — a broken tray is worse than a broken collector,
 because nobody sees a stack trace.
+
+---
+
+## The developer and GC track (Phase 5)
+
+Eight relationship rows now sit on the board next to real jobs, as
+`trade: relationship` — no dollar figure, no JobTread button, a dashed border,
+and the *why* shown where a value would be. They never count toward biddable or
+live pipeline; a test enforces that.
+
+`relationships.yaml` is the source of truth and `seed_relationships.py` turns it
+into board rows (dry run by default). **`REGISTRATIONS.md` is the one to read** —
+five of the eight are a form somebody has to fill in, with the URL, the
+documents to have ready, and the specific thing to ask for.
+
+Ordered by leverage:
+
+1. **COMPASS** — one registration opens Moss (GC for both Water Street and
+   Gasworx) and 60-odd other Florida GCs. Due 2026-09-26.
+2. **AECOM Hunt / Turner** — named CM for the Rays district, approved
+   2026-08-28. The bowl is out of reach; the fitouts around it are not.
+3. **Sunwest Construction** — the most reachable ownership on the board.
+4. **JPRE + Archer** — Gasworx retail leasing. They know the tenant a year
+   before any public record does.
+5. **TGH vendor application** — ask for the construction-services category;
+   the default routing is clinical supply.
+6. **HCAA** — the prequal RFP closed 2026-09-03 and we missed it. Email Nick
+   Diaz about the next cycle. Due 2026-09-19, the earliest date on the list.
+7. **BuildingConnected / PlanHub** — an incomplete profile is invisible.
+8. **SPP** — a two-year play, not a bid.
+
+`owner` is blank on every row on purpose. Who chases what is not a decision a
+script should make.
