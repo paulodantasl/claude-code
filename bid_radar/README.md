@@ -412,6 +412,12 @@ by record id on the data branch, so a second run fetches only what is new.
 Enrichment happens **before** scoring, because value and contacts both move the
 score.
 
+Accela's speed is not dependable — the same 223 pages took ten minutes one run
+and were still going at forty-four the next — so enrichment is bounded twice
+over: at most `ACCELA_MAX_FETCH` pages and at most `ACCELA_BUDGET_S` seconds of
+fetching, with the cache flushed every 20 pages. A slow day leaves part of the
+back-catalogue for tomorrow; it never leaves the job hanging.
+
 **`market_share.csv`** is the output: contractor of record × submarket ×
 permits × average job value. The share of that table which is ours is our
 measured share, per submarket — which is what two of the five calibration dials

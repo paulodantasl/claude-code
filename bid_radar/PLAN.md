@@ -382,6 +382,12 @@ Property Partners Llc*; tenant contact Philip Hart; Job Value 300,000; Sq Ft
   is flushed every `ACCELA_SAVE_EVERY` (20) fetches — the first live run was
   cancelled at nine minutes by an unrelated push (`cancel-in-progress: true`)
   and lost everything it had paid for.
+- **Accela's speed is not dependable, and this is the main operational risk.**
+  The same 223 pages took ten minutes on the 2026-09-14 02:22Z run and were
+  still going at forty-four minutes on the 02:42Z one, with a warmer cache and
+  no change on our side. `ACCELA_BUDGET_S` (600s) stops the fetching; the run
+  uses what is cached, counts what it skipped, and finishes. A slow day costs a
+  partial back-catalogue, never a dead job, and the next run tops the cache up.
 - **Four parsing defects the first live run exposed, now fixed and tested**
   (`tests/test_accela.py`). They mattered because each one would have gone
   straight onto a cold call:
