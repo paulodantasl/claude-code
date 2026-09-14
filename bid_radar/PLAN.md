@@ -746,8 +746,17 @@ via `mcp__Ideal__query`.
 **What actually happened.** The tray, Promote and Dismiss are covered by 14
 browser tests that run the real file in Chromium against a stubbed database and
 assert that promote and dismiss touch only the three human-owned fields. The
-first Routine firing is 2026-09-14 13:00Z — the "within one business day with
-no human step" criterion is not yet observed and should be checked then. The
+first Routine firing was 2026-09-14 13:06:31Z and it **worked** — the "within
+one business day with no human step" criterion is now OBSERVED, not assumed.
+Nobody touched it. The tracker database went from 84 signals to 88 and rising
+while the run was still in flight, and the rows it wrote include 14 `dbpr-*`
+and 20 `hcaa-*` documents at **version 1** — the two collectors built that
+morning, picked up with no change to the Routine's prompt. Existing `abt-*`,
+`entitlement-*` and `permit-*` documents incremented to version 2 and 3 rather
+than duplicating, which is the idempotent upsert doing its job. A spot check of
+a new row: ZIKI'S GREEK STREET FOOD, 615 S Channelside Dr Ste 6, `waterst`,
+score 83, one phone from the public record, `dismissed` and `promotedTo` both
+untouched. The
 JobTread push is now **verified end to end against the live org** (2026-09-14,
 with the owner's go-ahead), every call in the exact shape the page sends:
 
