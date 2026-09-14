@@ -142,3 +142,123 @@ def test_the_month_candidates_try_the_report_month_and_the_one_before():
     folders = {c[0] for c in cands}
     assert len(folders) >= 2
     assert all(len(c[0]) == 7 and c[0][4] == "-" for c in cands)
+
+
+# -------------------------------------------------------------------- dbpr
+
+from sources import dbpr_hr  # noqa: E402
+
+# The exact 38-name header the four extracts ship.
+FOOD_HEADER = ['Application Number', 'Application Type', 'Application Approval Date ',
+               'Board Code', 'License Type Code', 'Licensee Name', 'Rank Code',
+               'Modifier Code', 'Mailing Name', 'Mailing Street Address',
+               'Mailing Address Line 2', 'Mailing Address Line 3', 'Mailing City',
+               'Mailing State Code', 'Mailing Zip Code', 'Primary Phone Number',
+               'Mailing County Code', 'Business Name', 'Filler',
+               'Location Street Address', 'Location Address Line 2',
+               'Location Address Line 3', 'Location City', 'Location State Code',
+               'Location Zip Code', 'Location County Code', 'Location County',
+               'Secondary Phone Number', 'District', 'Region', 'License Number',
+               'Primary Status Code', 'Secondary Status Code', 'License Expiry Date',
+               'Last Inspection Date', 'Number of Seats', 'Base Risk Level',
+               'Secondary Risk Level']
+
+# Verbatim from newfood.csv, 2026-09-14. Phone at 15, county code at 16.
+ROW_BLUSH = ['1634414', 'Plan Review and Initial (COMBO SEAT)', '08/13/2026', '200',
+             '2010', 'FNS RESTAURANTS INC', 'SEAT', '', 'FNS RESTAURANTS INC', '',
+             '20156 OAKFLOWER AVE', ' ', 'TAMPA', 'FL', '33647', '646-251-4814',
+             '39', 'BLUSH SOCIAL', ' ', '101 PHILIPPE PKWY SUITE B', '', '',
+             'SAFETY HARBOR', 'FL', '34695', '62', 'Pinellas', '646-251-4814',
+             'D3', '10', 'SEA6218939', '20', '20', '02/01/2027', '08/13/2026', '128']
+
+# Verbatim from chgownr_food.csv, same day. Phone and county code SWAPPED.
+ROW_HAVELI = ['1863868', 'Approve Change Owner Request', '07/17/2026', '200', '2010',
+              'JAI BUA RANI LLC', 'SEAT', '', 'JAI BUA RANI LLC', '',
+              '12908 N DALE MABRY HWY', ' ', 'TAMPA', 'FL', '33618', '39',
+              '8134886294', 'HAVELI INDIAN KITCHEN', ' ', '12908  N DALE MABRY HWY',
+              '', '', 'TAMPA ', 'FL', '33618', '39', 'Hillsborough', '813-488-6294',
+              'D3', '15', 'SEA3917924', '20', '20', '02/01/2027', '07/17/2026', '40']
+
+
+def test_a_tampa_mailing_address_is_not_a_tampa_job():
+    """BLUSH SOCIAL mails to Tampa 33647 and builds in Safety Harbor, Pinellas.
+    A blanket text match for 'Tampa' imports it as a Tampa lead."""
+    rec = dbpr_hr._row(FOOD_HEADER, ROW_BLUSH)
+    assert rec["Mailing City"] == "TAMPA"
+    assert rec["Location County"] == "Pinellas"
+    assert dbpr_hr._in_tampa(rec) is False
+
+
+def test_a_real_hillsborough_row_is_kept():
+    rec = dbpr_hr._row(FOOD_HEADER, ROW_HAVELI)
+    assert dbpr_hr._in_tampa(rec) is True
+    assert rec["Business Name"] == "HAVELI INDIAN KITCHEN"
+
+
+def test_the_phone_and_county_code_swap_is_repaired():
+    """The same 38-name header ships with two different column orders. In
+    chgownr_food.csv the phone lands in the county-code column."""
+    ok = dbpr_hr._row(FOOD_HEADER, ROW_BLUSH)
+    assert ok["Primary Phone Number"] == "646-251-4814"
+    assert not ok.get("_swapped_phone_county")
+
+    swapped = dbpr_hr._row(FOOD_HEADER, ROW_HAVELI)
+    assert swapped["_swapped_phone_county"] is True
+    assert swapped["Primary Phone Number"] == "8134886294"   # repaired
+    assert swapped["Mailing County Code"] == "39"
+
+
+def test_the_signal_carries_the_trading_name_a_phone_and_the_seat_count():
+    rec = dbpr_hr._row(FOOD_HEADER, ROW_HAVELI)
+    sig = dbpr_hr._signal(rec, "chgownr_food.csv", "Food-service change of ownership",
+                          "restaurant", "dbpr_hr", "2026-07-17",
+                          "2026-09-14T00:00:00", None)
+    # The trading name is what you ask for on the phone, not the holding company.
+    assert sig["entity"] == "HAVELI INDIAN KITCHEN"
+    assert sig["applicant"] == "JAI BUA RANI LLC"
+    assert {"kind": "phone", "value": "(813) 488-6294"} in sig["contacts"]
+    assert sig["seats"] == 40
+    assert sig["licence_number"] == "SEA3917924"
+    assert sig["trade"] == "restaurant"
+
+
+def test_without_a_geocoder_the_row_admits_it_does_not_know_the_submarket():
+    """ZIP is not a submarket — 33602 alone spans Downtown, the Riverwalk,
+    Water Street and the Channel District."""
+    rec = dbpr_hr._row(FOOD_HEADER, ROW_HAVELI)
+    sig = dbpr_hr._signal(rec, "x.csv", "l", "restaurant", "dbpr_hr", None,
+                          "2026-09-14T00:00:00", None)
+    assert sig["hood"] is None
+    assert sig["needs_geocode"] is True
+
+
+def test_with_a_geocoder_the_row_lands_in_a_real_submarket():
+    sig = dbpr_hr._signal(dbpr_hr._row(FOOD_HEADER, ROW_HAVELI), "x.csv", "l",
+                          "restaurant", "dbpr_hr", None, "2026-09-14T00:00:00",
+                          lambda s, c, st, z: (-82.4400, 27.9560))   # Ybor
+    assert sig["needs_geocode"] is False
+    assert sig["hood"] == "ybor"
+
+
+def test_a_single_family_rental_is_not_a_commercial_fitout():
+    """newlodg.csv is full of DWEL/SNGL rows — somebody's house on a rental
+    licence. They are not buildouts."""
+    header = [h for h in FOOD_HEADER if h != "Location County"]
+    row = list(ROW_HAVELI)
+    row[6] = "DWEL"
+    rec = dbpr_hr._row(FOOD_HEADER, row)
+    sig = dbpr_hr._signal(rec, "newlodg.csv", "New lodging licence", "hospitality",
+                          "dbpr_hr", None, "2026-09-14T00:00:00", None)
+    assert sig["is_dwelling"] is True
+    assert sig["is_fitout"] is False
+    assert header  # newlodg genuinely lacks Location County
+
+
+def test_newlodg_has_no_location_county_and_falls_back_to_the_city():
+    """Trap 2: the lodging file ships a different, shorter header."""
+    header = [h for h in FOOD_HEADER if h != "Location County"]
+    values = [v for i, v in enumerate(ROW_HAVELI) if FOOD_HEADER[i] != "Location County"]
+    rec = dbpr_hr._row(header, values)
+    assert "Location County" not in rec
+    assert rec["Location City"] == "TAMPA"
+    assert dbpr_hr._in_tampa(rec) is True

@@ -179,3 +179,19 @@ def test_score_is_clamped_to_0_100():
                   stage_hint="issued")):
         r = score.score(s, TODAY)
         assert 0 <= r["score"] <= 100
+
+
+def test_a_relationship_row_scores_like_a_door_not_a_job():
+    """HCAA prequalification is worth working and is never a fitout to bid.
+    It must not be hard-blocked on `trade_other`, and it must not need a
+    dollar value it can never have."""
+    sig = {"source": "hcaa_ppo", "hood": "airport", "trade": "relationship",
+           "stage_hint": "pre_permit", "is_fitout": True,
+           "entity": "Hillsborough County Aviation Authority",
+           "filed_at": "2026-11-15", "contacts": [{"kind": "email",
+                                                   "value": "x@tampaairport.com"}]}
+    out = score.score(dict(sig), today=date(2026, 9, 14))
+    assert "trade_other" not in out["blockers"]
+    assert "below_size_gate" not in out["blockers"]
+    assert out["score"] > 0
+

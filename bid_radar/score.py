@@ -29,7 +29,11 @@ BLOCKLIST_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "block
 QUALIFY_AT = 55
 
 FIT = {"medical": 30, "restaurant": 25, "hospitality": 20, "retail": 15,
-       "office": 10, "other": 0}
+       "office": 10, "other": 0,
+       # A door, not a job. An HCAA prequalification or a developer
+       # introduction is worth working, but it is never a fitout to bid, so it
+       # scores like a precursor rather than like the trade it may lead to.
+       "relationship": 20}
 
 # Stages where the trade is genuinely not declared yet — the build-back permit
 # or the tenant is still to come. Blocking these on `trade == other` would drop
@@ -167,8 +171,12 @@ def access_points(signal: dict, blocked: str | None) -> int:
 def meets_size_gate(signal: dict) -> bool:
     """§2.3(c). Licence-type sources pass on the second branch, because value
     is unknowable there — and so do permits, for the same reason."""
+    # `sunbiz` is deliberately NOT here. A corporate filing carries no value,
+    # no area and no seat count, so it cannot pass on the second branch — and
+    # that is correct: a new LLC on its own is not yet a job. It earns its way
+    # in by corroborating a permit or a licence at the same address.
     if signal.get("source") in {"abt", "ahca", "dbpr_hr", "permit",
-                                "entitlement", "cra_grant"}:
+                                "entitlement", "cra_grant", "hcaa_ppo"}:
         return True
     return bool((signal.get("value_est") or 0) >= 75_000
                 or (signal.get("sqft") or 0) >= 1_200

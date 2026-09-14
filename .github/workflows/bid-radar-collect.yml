@@ -99,6 +99,11 @@ jobs:
           HCAA_DUMP: bid_radar/data/hcaa_report_sample.txt
         run: python bid_radar/sources/hcaa_ppo.py
 
+      - name: DISCOVER — geocoder and the AHCA search form
+        if: ${{ endsWith(github.ref, '-p6') || (github.event_name == 'workflow_dispatch' && inputs.discover != 'false') }}
+        continue-on-error: true
+        run: python bid_radar/discover_state3.py
+
       - name: Unit and page tests
         run: pytest -q bid_radar/tests
 
