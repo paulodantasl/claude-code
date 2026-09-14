@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-09-14T10:37:30+00:00",
+  "retrieved_at": "2026-09-14T10:51:43+00:00",
   "census": {
     "one_line": [
       {
@@ -72,13 +72,19 @@
       "/Facility-Search/FacilityLocateSearch",
       "/Facility-Search/FacilityProximitySearch"
     ],
-    "post_county_only": {
+    "post_countySelection": {
       "status": 400,
       "bytes": 0,
       "content_type": "",
       "hillsborough_mentions": 0
     },
     "post_county_+_type": {
+      "status": 400,
+      "bytes": 0,
+      "content_type": "",
+      "hillsborough_mentions": 0
+    },
+    "post_county_as_code": {
       "status": 400,
       "bytes": 0,
       "content_type": "",

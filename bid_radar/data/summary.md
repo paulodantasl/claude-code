@@ -1,6 +1,6 @@
 # Tampa Bid Radar
 
-Collected 2026-09-14T10:37:43+00:00 · 365-day window · eight tracked submarkets
+Collected 2026-09-14T10:51:57+00:00 · 365-day window · eight tracked submarkets
 
 | Source | Records | In a submarket | Qualified |
 |---|---|---|---|
@@ -8,12 +8,12 @@ Collected 2026-09-14T10:37:43+00:00 · 365-day window · eight tracked submarket
 | Active entitlements | 272 | 58 | **26**|
 | Alcoholic-beverage permits | 36 | 19 | **15**|
 | CRA commercial grants | 38 | 10 | **3**|
-| DBPR food service and lodging | 229 | 0 | **0**|
+| DBPR food service and lodging | 229 | 31 | **23**|
 | HCAA planned procurement | 21 | 21 | **0**|
 | Sunbiz new entities | 0 | 0 | **0**|
-| _total_ | 892 | 244 | **76** |
+| _total_ | 892 | 275 | **99** |
 
-## Qualified — call these (76)
+## Qualified — call these (99)
 
 Score ≥ 55/100 with no hard blocker (PLAN §2.3/§2.4), inside one of the eight submarkets, bid window still open.
 
@@ -25,7 +25,30 @@ Score ≥ 55/100 with no hard blocker (PLAN §2.3/§2.4), inside one of the eigh
 | abt | `AB1-23-0000003` | 2025-11-25 | abt | Ybor City | restaurant | **83** | Mise en Place | 1205 E 8th Ave (1229 E 8th ave) | 813-254-5373 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D79739&outFields=%2A&f=json) |
 | abt | `AB1-26-0000007` | 2026-02-12 | abt | Downtown Riverwalk | restaurant | **83** | On A Roll Sushi | 101 N Franklin St (Suite C) | 813-400-1100 (+2) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81739&outFields=%2A&f=json) |
 | abt | `2014-0000042-AB1` | 2026-05-28 | abt | Downtown Riverwalk | restaurant | **83** | Mitas Cocina Moderna | 301 W Plattt St (Suite C) | 813-369-9287 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D851&outFields=%2A&f=json) |
+| dbpr_hr | `VEN3900323` | 2026-07-07 | dbpr_hr | Downtown Riverwalk | restaurant | **83** | FLORIDA'S HEALTHY MART | 220 E MADISON ST, TAMPA | (410) 205-0453 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv) |
+| dbpr_hr | `SEA3915602` | 2026-07-10 | dbpr_hr | Downtown Riverwalk | restaurant | **83** | MITA'S COCINA MODERNA | 301 W PLATT ST STE C, TAMPA | (813) 353-1341 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_food.csv) |
+| dbpr_hr | `MFD3954750` | 2026-07-14 | dbpr_hr | Dale Mabry | restaurant | **83** | BANANA PUDDING LADY | 4601 N LOIS AVE, TAMPA | (863) 614-7369 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv) |
+| dbpr_hr | `MFD3954753` | 2026-07-15 | dbpr_hr | Dale Mabry | restaurant | **83** | G&C FOOD SERVICES | 4601 N LOIS AVE, TAMPA | (561) 727-7535 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv) |
 | abt | `AB1-26-0000021` | 2026-07-20 | abt | Ybor City | restaurant | **83** | Tommy's Chophouse | 1616 E 7th Ave (Unit 1626) | (727) 444-1414 (+1) | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81748&outFields=%2A&f=json) |
+| dbpr_hr | `MFD3954759` | 2026-07-22 | dbpr_hr | Airport / Westshore | restaurant | **83** | BYTE | 301 N WESTSHORE BLVD, TAMPA | (813) 817-7885 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv) |
+| dbpr_hr | `SEA3919577` | 2026-07-24 | dbpr_hr | Ybor City | restaurant | **83** | D'ROSE GASTROBAR | 2238 E 7TH AVE, TAMPA | (813) 374-0041 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv) |
+| dbpr_hr | `SEA3919578` | 2026-07-24 | dbpr_hr | Ybor City | restaurant | **83** | TOMMY'S CHOPHOUSE | 1622 E 7 AVE, TAMPA | (727) 444-1414 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv) |
+| dbpr_hr | `MFD3954768` | 2026-07-29 | dbpr_hr | Dale Mabry | restaurant | **83** | IRENE'S | 4601 N LOIS AVE, TAMPA | (863) 327-2869 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv) |
+| dbpr_hr | `SEA3919148` | 2026-08-11 | dbpr_hr | Ybor City | restaurant | **83** | 232 BAR | 232 N 11 ST, TAMPA | (941) 661-8587 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_food.csv) |
+| dbpr_hr | `VEN3900325` | 2026-08-14 | dbpr_hr | Dale Mabry | restaurant | **83** | 3D SMART VENDING/NOVUS WESTSHORE COOLER | 4310 W SPRUCE ST, TAMPA | (656) 208-9796 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv) |
+| dbpr_hr | `SEA3919457` | 2026-08-14 | dbpr_hr | Dale Mabry | restaurant | **83** | FAMILY PASTEL STORE | 2741 W COLOMBUS DR, TAMPA | (321) 945-6257 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_food.csv) |
+| dbpr_hr | `MFD3954782` | 2026-08-19 | dbpr_hr | Dale Mabry | restaurant | **83** | 4STARTERS | 4601 N LOIS AVE, TAMPA | (813) 679-7810 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv) |
+| dbpr_hr | `SEA3911554` | 2026-08-19 | dbpr_hr | Ybor City | restaurant | **83** | SALEM'S FRESH EATS | 1611 N NEBRASKA AVE, TAMPA | (813) 898-2848 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_food.csv) |
+| dbpr_hr | `SEA3916483` | 2026-08-24 | dbpr_hr | Airport / Westshore | restaurant | **83** | OASIS KITCHEN & CAFE | 5426 BAY CENTER DR STE 125, TAMPA | (813) 838-6396 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_food.csv) |
+| dbpr_hr | `SEA3919592` | 2026-08-27 | dbpr_hr | Airport / Westshore | restaurant | **83** | CEVICHE TAPAS BAR & RESTAURANT | 2223 N WEST SHORE BLVD STE B-224, TAMPA | (407) 716-6609 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv) |
+| dbpr_hr | `MFD3954791` | 2026-08-27 | dbpr_hr | Dale Mabry | restaurant | **83** | JUICY GRUB BITES | 4601 N LOIS AVE, TAMPA | (727) 623-5613 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv) |
+| dbpr_hr | `MFD3954736` | 2026-08-31 | dbpr_hr | Ybor City | restaurant | **83** | HAMDE LLC | 2302 E 7 AVE, TAMPA | (813) 298-4048 (+1) | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv) |
+| dbpr_hr | `NOS3918274` | 2026-09-01 | dbpr_hr | Water Street | restaurant | **83** | ZIKI'S GREEK STREET FOOD | 615 S CHANNELSIDE DR STE 6, TAMPA | (407) 620-8197 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_food.csv) |
+| dbpr_hr | `SEA3917714` | 2026-09-04 | dbpr_hr | Airport / Westshore | restaurant | **83** | TOWNEPLACE SUITES BY MARRIOTT TAMPA WESTSHORE | 5302 AVION PARK DR, TAMPA | (407) 373-4283 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_food.csv) |
+| dbpr_hr | `SEA3918532` | 2026-09-10 | dbpr_hr | Downtown Riverwalk | restaurant | **83** | RREAL TACOS | 808 N FRANKLIN ST STE 814, TAMPA | (404) 409-7302 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_food.csv) |
+| dbpr_hr | `SEA3919602` | 2026-09-11 | dbpr_hr | Ybor City | restaurant | **83** | BOOKENDS: LITERATURE AND LIBATIONS | 2208 E 2 AVE, TAMPA | (727) 501-3053 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv) |
+| dbpr_hr | `HOT3912109` | 2026-07-14 | dbpr_hr | Ybor City | hospitality | **78** | HILTON GARDEN INN TAMPA YBOR HISTORIC DISTRICT | 1700 E 9TH STREET, TAMPA | (813) 769-9267 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_lodg.csv) |
+| dbpr_hr | `HOT3913621` | 2026-08-18 | dbpr_hr | Airport / Westshore | hospitality | **78** | TOWNEPLACE SUITES BY MARRIOTT TAMPA WESTSHORE | 5302 AVION PARK DR, TAMPA | (407) 373-4283 | — | [record](https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_lodg.csv) |
 | permit | `BLD-26-0520507` | 2025-11-20 | revision | Ybor City | medical | **75** | Melissa Z. Schott-Gomez Baker Barrios Archi… | 1071 Blanche Armwood St | mschott@bakerbarrios.com (+2) | $3,000,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02UKW&agencyCode=TAMPA) |
 | permit | `BLD-26-0523685` | 2026-03-23 | revision | Dale Mabry | medical | **75** | BayCare | 3001 W Dr Martin Luther King Jr Blvd #1-2 | mmaliskey@robinsmorton.com (+2) | $2,500,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00H35&agencyCode=TAMPA) |
 | abt | `AB1-24-0000030` | 2025-09-25 | abt | Downtown Riverwalk | restaurant | **73** | Tampa Sun Football Club | 1701 N Boulevard | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D76939&outFields=%2A&f=json) |
@@ -417,4 +440,4 @@ The contractor of record on every enriched permit, from its own Accela page. Thi
 - **Accela enrichment** filled 136 of 136 permit rows from their own record pages (136 fetched this run, 0 from cache, 0 failed). That is where the contractor of record, the job valuation, the real square footage and the applicant's phone and email come from — the ArcGIS layer has none of them.
 - **CRA grants** are the only source with a real dollar figure (`TOTALPROJECTCOST`); a grant that is Awarded and not Completed has committed money and outstanding work.
 
-Signals outside every tracked submarket: 648 of 892.
+Signals outside every tracked submarket: 617 of 892.

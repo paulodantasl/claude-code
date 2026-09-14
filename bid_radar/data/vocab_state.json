@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-09-14T10:37:21+00:00",
+  "retrieved_at": "2026-09-14T10:51:30+00:00",
   "dbpr": {
     "pages": [
       {
@@ -467,7 +467,7 @@
         "method": "GET",
         "status": 403,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 5736,
+        "bytes": 5714,
         "final_url": "https://dos.sunbiz.org/data-definitions/cor.html"
       }
     ],
@@ -710,7 +710,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 87047,
+        "bytes": 83758,
         "final_url": "https://www.tampaairport.com/business/business-opportunities",
         "pdf_links": []
       },
@@ -719,7 +719,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 96324,
+        "bytes": 93035,
         "final_url": "https://www.tampaairport.com/business/procurement/current-solicitation-opportunities",
         "pdf_links": [
           "https://www.tampaairport.com/sites/default/files/2026-09/Planned%20Procurement%20Opportunities%20Report%20-%20September%202026.pdf"
@@ -730,7 +730,7 @@
         "method": "GET",
         "status": 403,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 5727,
+        "bytes": 5705,
         "final_url": "https://procurement.opengov.com/portal/tampaairport"
       },
       {
