@@ -50,15 +50,15 @@ jobs:
           pip install -e ./ideal_apis
 
       - name: DISCOVER — Tampa ArcGIS vocabulary
-        if: ${{ github.event.inputs.discover != 'false' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.discover != 'false' }}
         run: python bid_radar/discover_tampa.py
 
       - name: DISCOVER — other Tampa sources
-        if: ${{ github.event.inputs.discover != 'false' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.discover != 'false' }}
         run: python bid_radar/discover_sources.py
 
       - name: DISCOVER — leading-indicator layers
-        if: ${{ github.event.inputs.discover != 'false' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.discover != 'false' }}
         run: python bid_radar/discover_leading.py
 
       - name: Unit tests
