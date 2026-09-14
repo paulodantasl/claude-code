@@ -104,6 +104,9 @@ The work is not building a scraper. It is:
 
 ## Suggested build order
 
+> Superseded in detail by **[PLAN.md](PLAN.md)** — the execution plan for the live lead engine, with verified sources, definitions, architecture and per-phase acceptance criteria.
+
+
 1. **Feed → pipeline.** A writer that turns a classified permit or licence row
    into a pipeline row. Highest value, smallest change: it is the only step that
    makes the tracker self-filling.
