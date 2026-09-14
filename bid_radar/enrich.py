@@ -17,6 +17,11 @@ Cost control, because these are 370 KB pages:
   * a failed fetch is skipped, never fatal, and never cached as a negative
   * the cache is written every SAVE_EVERY fetches, so a run cancelled mid-flight
     (a new push cancels the workflow) keeps the pages it already paid for
+  * BUDGET_S caps the wall clock. Accela is not always fast: the same 223 pages
+    that took ten minutes on 2026-09-14 02:22Z were still going at thirty-seven
+    on the 02:42Z run. Enrichment is one step of a pipeline, and it must not be
+    allowed to hold the rest of it hostage — it stops fetching at the budget and
+    the run continues with what is cached.
 """
 from __future__ import annotations
 
@@ -35,6 +40,7 @@ CACHE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 MAX_FETCH = int(os.environ.get("ACCELA_MAX_FETCH", "160"))
 PAUSE = float(os.environ.get("ACCELA_PAUSE", "0.7"))
 SAVE_EVERY = int(os.environ.get("ACCELA_SAVE_EVERY", "20"))
+BUDGET_S = float(os.environ.get("ACCELA_BUDGET_S", "600"))
 TIMEOUT = 45
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"}
@@ -71,13 +77,15 @@ def enrich(signals: list[dict], *, only_tracked: bool = True) -> dict:
             and (s.get("hood") or not only_tracked)]
     stats["eligible"] = len(todo)
     budget = MAX_FETCH
+    deadline = time.monotonic() + BUDGET_S
 
     for sig in todo:
         key = sig["source_id"]
         parsed = cache.get(key)
         if parsed is not None:
             stats["cached"] += 1
-        elif budget <= 0:
+        elif budget <= 0 or time.monotonic() > deadline:
+            stats["skipped"] = stats.get("skipped", 0) + 1
             continue
         else:
             budget -= 1
@@ -98,6 +106,9 @@ def enrich(signals: list[dict], *, only_tracked: bool = True) -> dict:
         _merge(sig, parsed)
         stats["enriched"] += 1
 
+    if stats.get("skipped"):
+        print(f"    {stats['skipped']} left for the next run "
+              f"(fetch cap {MAX_FETCH}, budget {BUDGET_S:.0f}s)", flush=True)
     cache["_meta"] = {"updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                       "records": len([k for k in cache if not k.startswith("_")])}
     save_cache(cache)

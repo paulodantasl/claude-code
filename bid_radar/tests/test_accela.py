@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 
 import pytest
 
@@ -192,3 +193,25 @@ def test_a_cancelled_run_keeps_the_pages_it_already_paid_for(tmp_path, monkeypat
     kept = enrich.load_cache()
     assert sorted(k for k in kept if not k.startswith("_")) == ["BLD-0", "BLD-1",
                                                                "BLD-2", "BLD-3"]
+
+
+def test_a_slow_accela_cannot_hold_the_rest_of_the_pipeline_hostage(tmp_path, monkeypatch):
+    """The same 223 pages took ten minutes on one run and were still going at
+    thirty-seven on the next. Enrichment is one step; it stops at the budget
+    and the run continues with what is cached."""
+    monkeypatch.setattr(enrich, "CACHE_PATH", str(tmp_path / "accela_cache.json"))
+    monkeypatch.setattr(enrich, "BUDGET_S", 0.25)
+    monkeypatch.setattr(enrich, "PAUSE", 0.0)
+    monkeypatch.setattr(enrich, "fetch_one",
+                        lambda url: (time.sleep(0.12), {"job_value": 250_000.0})[1])
+
+    signals = [{"source": "permit", "source_id": f"BLD-{i}", "hood": "waterst",
+                "source_url": f"https://aca.example/{i}"} for i in range(10)]
+    stats = enrich.enrich(signals)
+
+    assert stats["fetched"] < 10          # it stopped early
+    assert stats["skipped"] == 10 - stats["fetched"]
+    assert stats["fetched"] >= 1          # and it did real work first
+    # What it did fetch is enriched and kept; the rest simply waits.
+    assert sum(1 for s in signals if s.get("enriched")) == stats["fetched"]
+    assert len([k for k in enrich.load_cache() if not k.startswith("_")]) == stats["fetched"]
