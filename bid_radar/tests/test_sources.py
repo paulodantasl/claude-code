@@ -380,3 +380,27 @@ def test_a_surrendered_licence_is_never_a_lead(monkeypatch):
     monkeypatch.setattr(abt, "_all_features",
                         lambda: [{"attributes": attrs, "geometry": {"x": -82.44, "y": 27.96}}])
     assert abt.collect(365) == []
+
+
+@pytest.mark.parametrize("name,expected", [
+    # Observed in the live layer: a status note typed into the business-name
+    # field put a tenant called "No Signoff" on the call list at 73.
+    ("No Signoff - Initial Approval 4-28-2026", None),
+    ("Initial Approval pending", None),
+    ("N/A", None),
+    ("TBD", None),
+    ("See Ordinance", None),
+    ("4-28-2026", None),
+    ("", None),
+    ("Tommy's Chophouse", "Tommy's Chophouse"),
+    ("BOSC ", "BOSC"),
+    ("Mise en Place", "Mise en Place"),
+    ("On A Roll Sushi", "On A Roll Sushi"),
+])
+def test_an_administrative_note_is_not_a_business_name(name, expected):
+    assert abt._entity({"BUS_NAME": name}) == expected
+
+
+def test_entity_falls_through_to_the_owner_name():
+    assert abt._entity({"BUS_NAME": "No Signoff",
+                        "BUS_OWNER_NAME2": "Ybor Hospitality Group"}) == "Ybor Hospitality Group"

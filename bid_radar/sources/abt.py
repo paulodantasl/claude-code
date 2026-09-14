@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import sys
 from datetime import datetime, timedelta, timezone
 
@@ -72,11 +73,24 @@ def _contacts(a: dict) -> list[dict]:
     return out
 
 
+# Staff sometimes type a status note into the business-name field. Observed:
+# "No Signoff - Initial Approval 4-28-2026" arrived as a tenant called
+# No Signoff and went onto the call list at 73.
+_ADMIN_NOTE = re.compile(
+    r"^\s*(?:no\s+signoff|initial\s+approval|pending|approved|denied|n/?a|"
+    r"tbd|unknown|none|see\s+ordinance|recvd|received|vacant|closed|"
+    r"under\s+review|in\s+process|\d{1,2}[-/]\d{1,2}[-/]\d{2,4})\b", re.I)
+
+
 def _entity(a: dict) -> str | None:
+    """The business name, or None. An administrative note is not a name."""
     for field in ("BUS_NAME", "BUS_OWNER_NAME2", "BUS_OWNER_NAME"):
         name = arcgis.clean(a.get(field))
-        if name:
-            return name
+        if not name or len(name) < 2 or _ADMIN_NOTE.match(name):
+            continue
+        if not re.search(r"[A-Za-z]{2}", name):
+            continue
+        return name
     return None
 
 
