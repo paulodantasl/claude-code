@@ -1,7 +1,7 @@
 {
   "service": "https://arcgis.tampagov.net/arcgis/rest/services/Planning/PermitsAll/FeatureServer",
   "layer": 0,
-  "retrieved_at": "2026-09-14T01:22:38.313424+00:00",
+  "retrieved_at": "2026-09-14T01:29:08.280818+00:00",
   "planning_services": [
     "Planning/ActiveEntitlementLocations",
     "Planning/ActiveEntitlementLocations",
