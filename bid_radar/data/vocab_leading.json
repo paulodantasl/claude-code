@@ -1,0 +1,1557 @@
+{
+  "retrieved_at": "2026-09-14T01:08:52.538146+00:00",
+  "abt": {
+    "url": "https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0",
+    "geometryType": "esriGeometryPoint",
+    "count": 4096,
+    "dates": {
+      "HISTORY_ACT_DT": {
+        "min": "1911-02-06",
+        "max": "2026-09-02",
+        "non_null": 3134,
+        "last_365d": 28
+      },
+      "ORD_LTR_DT": {
+        "min": "1945-06-08",
+        "max": "2997-01-29",
+        "non_null": 3743,
+        "last_365d": 9
+      },
+      "MTH24_END_DT": {
+        "min": "2017-01-13",
+        "max": "2022-04-01",
+        "non_null": 30,
+        "last_365d": 0
+      },
+      "FIRE_PMT_DT": {
+        "min": "0201-04-11",
+        "max": "2018-08-26",
+        "non_null": 621,
+        "last_365d": 0
+      },
+      "PLACARD_DT": {
+        "min": "1999-01-01",
+        "max": "2026-07-30",
+        "non_null": 2075,
+        "last_365d": 13
+      },
+      "POST_DT": {
+        "min": "2008-12-04",
+        "max": "2026-04-17",
+        "non_null": 203,
+        "last_365d": 5
+      },
+      "POST_DRY_DT": {
+        "min": "2010-02-06",
+        "max": "2026-06-16",
+        "non_null": 159,
+        "last_365d": 6
+      },
+      "POST_LT_DT": {
+        "min": "2008-12-09",
+        "max": "2026-07-23",
+        "non_null": 202,
+        "last_365d": 7
+      },
+      "DAY_120": {
+        "min": "2009-01-21",
+        "max": "2017-02-20",
+        "non_null": 89,
+        "last_365d": 0
+      },
+      "DAY_180": {
+        "min": "2012-01-25",
+        "max": "2019-02-10",
+        "non_null": 91,
+        "last_365d": 0
+      },
+      "VOL_DAY180": {
+        "min": "2010-09-04",
+        "max": "2022-04-01",
+        "non_null": 284,
+        "last_365d": 0
+      },
+      "RESUMP_SALES_DT": {
+        "min": "2010-04-01",
+        "max": "2023-07-17",
+        "non_null": 79,
+        "last_365d": 0
+      },
+      "ANN_RPT_PC_DT": {
+        "min": "2012-12-07",
+        "max": "2012-12-07",
+        "non_null": 2,
+        "last_365d": 0
+      },
+      "RPT_FILE_DT": {
+        "min": "2013-01-07",
+        "max": "2013-01-07",
+        "non_null": 2,
+        "last_365d": 0
+      },
+      "LT_LTR_DT": {
+        "min": "2018-02-16",
+        "max": "2018-02-16",
+        "non_null": 1,
+        "last_365d": 0
+      },
+      "LT_RPT_DT": {
+        "min": null,
+        "max": null,
+        "non_null": 0,
+        "last_365d": 0
+      },
+      "SUPS_LTR_DT": {
+        "min": "2018-08-24",
+        "max": "2021-08-27",
+        "non_null": 4,
+        "last_365d": 0
+      },
+      "SUSP_END_DT": {
+        "min": "2018-10-23",
+        "max": "2021-09-27",
+        "non_null": 5,
+        "last_365d": 0
+      },
+      "REVOKE_LTR_DT": {
+        "min": null,
+        "max": null,
+        "non_null": 0,
+        "last_365d": 0
+      },
+      "REVOKE_DT": {
+        "min": null,
+        "max": null,
+        "non_null": 0,
+        "last_365d": 0
+      },
+      "CREATEDATE": {
+        "min": "2018-10-11",
+        "max": "2026-09-02",
+        "non_null": 905,
+        "last_365d": 30
+      },
+      "LASTUPDATE": {
+        "min": "2018-09-11",
+        "max": "2026-09-04",
+        "non_null": 4082,
+        "last_365d": 274
+      }
+    },
+    "vocab": {
+      "HISTORY_ACTION": [
+        {
+          "value": "Active",
+          "count": 1634
+        },
+        {
+          "value": "Dry",
+          "count": 1515
+        },
+        {
+          "value": "Hist_AB_Pmt_Chg",
+          "count": 268
+        },
+        {
+          "value": "Hist_BusNm_Chg",
+          "count": 244
+        },
+        {
+          "value": "Hist_Owner_Chg",
+          "count": 204
+        },
+        {
+          "value": "Hist_Other",
+          "count": 125
+        },
+        {
+          "value": "Hist_Ord_Chg",
+          "count": 76
+        },
+        {
+          "value": "Hist_BusAdd_Chg",
+          "count": 12
+        },
+        {
+          "value": "Hist_Contact_Chg",
+          "count": 9
+        },
+        {
+          "value": "Hist_Not_Identified",
+          "count": 8
+        },
+        {
+          "value": null,
+          "count": 0
+        }
+      ],
+      "AB_CLASS_PREFIX": [
+        {
+          "value": "2",
+          "count": 1425
+        },
+        {
+          "value": "4",
+          "count": 1295
+        },
+        {
+          "value": "1",
+          "count": 327
+        },
+        {
+          "value": "Special Restaurant (COP-Only)",
+          "count": 326
+        },
+        {
+          "value": "Small Venue (COP-Only)",
+          "count": 85
+        },
+        {
+          "value": "Small Venue (COP/PS)",
+          "count": 83
+        },
+        {
+          "value": "Restaurant (COP-Only)",
+          "count": 73
+        },
+        {
+          "value": "3",
+          "count": 61
+        },
+        {
+          "value": "Large Venue (COP-Only)",
+          "count": 55
+        },
+        {
+          "value": "Large Venue (COP/PS)",
+          "count": 51
+        },
+        {
+          "value": "Convenience Goods (PS-Only)",
+          "count": 49
+        },
+        {
+          "value": "Shopper's Goods (PS-Only)",
+          "count": 40
+        },
+        {
+          "value": "11",
+          "count": 40
+        },
+        {
+          "value": "Shopper's Goods/Convenience Goods (PS-Only)",
+          "count": 39
+        },
+        {
+          "value": "Bar/Lounge (COP-Only)",
+          "count": 26
+        },
+        {
+          "value": "Hotel (COP-Only)",
+          "count": 21
+        },
+        {
+          "value": "Bar/Lounge/Nightclub (COP/PS)",
+          "count": 17
+        },
+        {
+          "value": "Small Venue (PS-Only)",
+          "count": 15
+        },
+        {
+          "value": "Convenience Goods/Gasoline Retail (PS-Only)",
+          "count": 13
+        },
+        {
+          "value": "Shopper's Goods/Gasoline Retail/Convenience Goods",
+          "count": 7
+        },
+        {
+          "value": "Bar/Lounge/Nightclub (COP-Only)",
+          "count": 6
+        },
+        {
+          "value": "Specialty Retail (PS-Only)",
+          "count": 5
+        },
+        {
+          "value": "Craft Distillery (PS-Only)",
+          "count": 5
+        },
+        {
+          "value": "Gasoline Retail (PS-Only)",
+          "count": 4
+        },
+        {
+          "value": "SIDE WALK CAF\u00c9 (COP-ONLY)",
+          "count": 4
+        },
+        {
+          "value": "14 (BC)",
+          "count": 4
+        },
+        {
+          "value": "Bar/Lounge (COP/PS)",
+          "count": 4
+        },
+        {
+          "value": "Shopper's Goods/Gasoline Retail (PS-Only)",
+          "count": 2
+        },
+        {
+          "value": null,
+          "count": 0
+        }
+      ],
+      "AB_CLASS_SUFFIX": [
+        {
+          "value": "COPR",
+          "count": 1064
+        },
+        {
+          "value": "APS",
+          "count": 929
+        },
+        {
+          "value": "COP",
+          "count": 849
+        },
+        {
+          "value": "BWL",
+          "count": 481
+        },
+        {
+          "value": "BW",
+          "count": 423
+        },
+        {
+          "value": "COPX",
+          "count": 226
+        },
+        {
+          "value": "PS",
+          "count": 61
+        },
+        {
+          "value": "C",
+          "count": 40
+        },
+        {
+          "value": "L",
+          "count": 4
+        },
+        {
+          "value": "BWL-Non Profit Club",
+          "count": 2
+        },
+        {
+          "value": "BWL (Accessory to Shopper's Goods Only)",
+          "count": 2
+        },
+        {
+          "value": "PGC",
+          "count": 1
+        },
+        {
+          "value": "B",
+          "count": 1
+        },
+        {
+          "value": null,
+          "count": 0
+        }
+      ],
+      "POSTED": [
+        {
+          "value": "Yes",
+          "count": 159
+        },
+        {
+          "value": "No",
+          "count": 4
+        },
+        {
+          "value": null,
+          "count": 0
+        }
+      ],
+      "ABSALETYPE": [
+        {
+          "value": "Beer/Wine/Liquor",
+          "count": 1882
+        },
+        {
+          "value": "Beer/Wine",
+          "count": 1860
+        },
+        {
+          "value": "Beer",
+          "count": 328
+        },
+        {
+          "value": "Liquor",
+          "count": 8
+        },
+        {
+          "value": null,
+          "count": 0
+        }
+      ],
+      "ABSALECONDITION": [
+        {
+          "value": "Consumption On Premises-Restaurant",
+          "count": 1134
+        },
+        {
+          "value": "Package Sales",
+          "count": 994
+        },
+        {
+          "value": "Consumption On Premises & Package Sales",
+          "count": 845
+        },
+        {
+          "value": "Consumption On Premises-Special Restaurant",
+          "count": 298
+        },
+        {
+          "value": "Consumption On Premises",
+          "count": 229
+        },
+        {
+          "value": "Consumption On Premises-Small Venue",
+          "count": 81
+        },
+        {
+          "value": "Consumption On Premises & Package Sales-Small Venue",
+          "count": 66
+        },
+        {
+          "value": "Consumption On Premises-Large Venue",
+          "count": 51
+        },
+        {
+          "value": "Consumption On Premises & Package Sales-Large Venue",
+          "count": 50
+        },
+        {
+          "value": "Package Sales-Convenience Goods",
+          "count": 48
+        },
+        {
+          "value": "Consumption On Premises-Non-Profit-Sales To Members & Nonresident Guests Only",
+          "count": 41
+        },
+        {
+          "value": "Package Sales-Shopper's Goods/Convenience Goods",
+          "count": 37
+        },
+        {
+          "value": "Package Sales-Shopper's Goods",
+          "count": 34
+        },
+        {
+          "value": "Consumption On Premises-Bar/Lounge",
+          "count": 25
+        },
+        {
+          "value": "Consumption On Premises-Hotel",
+          "count": 22
+        },
+        {
+          "value": "Package Sales-Convenience Goods/Gasoline Retail",
+          "count": 14
+        },
+        {
+          "value": "Package Sales-Small Venue",
+          "count": 14
+        },
+        {
+          "value": "Consumption On Premises & Package Sales-Bar/Lounge/Nightclub",
+          "count": 13
+        },
+        {
+          "value": "Package Sales-Specialty Retail",
+          "count": 5
+        },
+        {
+          "value": "Consumption On Premises-Bar/Lounge/Nightclub",
+          "count": 5
+        },
+        {
+          "value": "Package Sales-Craft Distillery",
+          "count": 5
+        },
+        {
+          "value": "Consumption On Premises-Bottle Club",
+          "count": 4
+        },
+        {
+          "value": "Consumption On Premises-Side Walk Caf\u00e9",
+          "count": 4
+        },
+        {
+          "value": "Package Sales-Gasoline Retail",
+          "count": 4
+        },
+        {
+          "value": "Package Sales-Shopper's Goods/Gasoline Retail/Convenience Goods",
+          "count": 4
+        },
+        {
+          "value": "Consumption On Premises-Annual Report Required",
+          "count": 3
+        },
+        {
+          "value": "Consumption On Premises-Non-Profit Club",
+          "count": 2
+        },
+        {
+          "value": "Package Sales-Shopper's Goods/Gasoline Retail",
+          "count": 2
+        },
+        {
+          "value": "Consumption On Premises & Package Sales-Bar/Lounge",
+          "count": 2
+        },
+        {
+          "value": "Consumption On Premises-Public Golf Course",
+          "count": 1
+        },
+        {
+          "value": null,
+          "count": 0
+        }
+      ],
+      "REPORT_CLASS": [
+        {
+          "value": "No",
+          "count": 2403
+        },
+        {
+          "value": "Yes",
+          "count": 1456
+        },
+        {
+          "value": "0",
+          "count": 10
+        },
+        {
+          "value": null,
+          "count": 0
+        }
+      ],
+      "REVIEWED": [
+        {
+          "value": "Yes",
+          "count": 2593
+        },
+        {
+          "value": "No",
+          "count": 1438
+        },
+        {
+          "value": "In Process",
+          "count": 1
+        },
+        {
+          "value": null,
+          "count": 0
+        }
+      ]
+    },
+    "fill_rate": {
+      "BUS_NAME": 3094,
+      "BUS_OWNER_NAME": 2486,
+      "BUS_PHONE": 1939,
+      "BUS_OWN_PHONE": 453,
+      "BUS_OWN_EMAIL": 890,
+      "SEAT_COUNT": 23,
+      "AB_SLS_AREA_TTL_SF": 4087,
+      "PERMIT_ADDR": 4048,
+      "APP_NUM": 2599,
+      "ORD_PERMIT": 3989
+    },
+    "best_date_field": "LASTUPDATE",
+    "samples": [
+      {
+        "attributes": {
+          "OBJECTID": 15591,
+          "REVIEWED": "Yes",
+          "PDF_ORD_LTR": "2015-0000039_ORD",
+          "PDF_RDX": "",
+          "PDF_SURVEY_SP": "AB2-15-0000005_SP",
+          "HISTORY_ACTION": "Active",
+          "HISTORY_ACT_DT": null,
+          "OLD_ORD_PERMIT": null,
+          "ORD_PERMIT": "2015-0000039-AB2",
+          "ORD_LTR_DT": 1427068800000,
+          "APP_NUM": "AB2-15-0000005",
+          "NUM": "201",
+          "DIR": "W",
+          "STREET_NAME": "Platt",
+          "TYPE": "St",
+          "SUFFIX": null,
+          "PERMIT_ADDR": "201 W Platt St",
+          "PERMIT_ADDR_2": "and 203",
+          "PERMIT_ZIP": "33606",
+          "AB_CLASS_PREFIX": "Restaurant (COP-Only)",
+          "AB_CLASS_SUFFIX": "BWL",
+          "SWC_AB": "No",
+          "USE_CONDITION": null,
+          "OFF_DUTY_REQ": "No",
+          "OFF_DUTY_COND": null,
+          "MTH24_END_DT": null,
+          "REPORT_CLASS": "Yes",
+          "REPORT_CLASS_AFF": "Yes",
+          "AB_SLS_AREA_TTL_SF": "4445",
+          "AB_SLS_AREA_IN_SF": "4001",
+          "AB_SLS_AREA_OUT_SF": "444",
+          "OCC_LOAD_IN": null,
+          "OCC_LOAD_OUT": null,
+          "SEAT_COUNT": null,
+          "FIRE_OCC_LOAD": null,
+          "FIRE_PMT_DT": null,
+          "PKG_COUNT": 36.0,
+          "AMPFD_SOUND": "Yes",
+          "HRS_SUNDAY": "Per City Code",
+          "HRS_MONDAY": "Per City Code",
+          "HRS_TUESDAY": "Per City Code",
+          "HRS_WEDNESDAY": "Per City Code",
+          "HRS_THURSDAY": "Per City Code",
+          "HRS_FRIDAY": "Per City Code",
+          "HRS_SATURDAY": "Per City Code",
+          "PLACARD_DT": 1431993600000,
+          "BUS_NAME": "BOSC ",
+          "BUS_OWNER_NAME": "Mainstreet South Tampa LLC",
+          "BUS_OWNER_NAME2": "BOSC and Partker St Bakery",
+          "BUS_OWNER_MAIL_ADD": "701 S Howard Ave Ste 106 531",
+          "BUS_OWNER_MAIL_CITY": "Tampa",
+          "BUS_OWNER_MAIL_ST": "FL",
+          "BUS_OWNER_MAIL_ZIP": "33606",
+          "BUS_OWN_PHONE": "813-486-8128",
+          "BUS_PHONE": null,
+          "BUS_OWN_EMAIL": "dawn@mainstreeteg.com",
+          "PMT_COMMENT": "Recvd Signoff On 5/19/2015.",
+          "POSTED": null,
+          "POST_DT": null,
+          "POST_DRY_DT": null,
+          "POST_LT_DT": null,
+          "POST_120EXT": null,
+          "DAY_120": null,
+          "POST_180EXT": null,
+          "DAY_180": null,
+          "VOL_EXT_APP": null,
+          "VOL_DAY180": null,
+          "RESUMP_SALES": null,
+          "RESUMP_SALES_DT": null,
+          "ANN_RPT_PC_DT": null,
+          "RPT_FILE_DT": null,
+          "LT_LTR_DT": null,
+          "LT_RPT_DT": null,
+          "ADMIN_LT_FEE": null,
+          "LT_FEE_REASON": null,
+          "SUPS_LTR_DT": null,
+          "ACT_SUSP": null,
+          "SUSP_ISSD": null,
+          "SUSP_END_DT": null,
+          "REVOKE_LTR_DT": null,
+          "REVOKE_DT": null,
+          "ENFCMT_COMMENT": null,
+          "HIST_EXT_REASON": null,
+          "HIST_EXT_DT": null,
+          "COMMENT_MISC": null,
+          "GlobalID": "{7557011E-9641-42C1-B047-8708EF825698}",
+          "ABSALETYPE": "Beer/Wine/Liquor",
+          "ABSALECONDITION": "Consumption On Premises-Restaurant",
+          "CREATEDATE": 1551454303000,
+          "CREATEDBY": "DP7C",
+          "LASTUPDATE": 1788549800000,
+          "LASTEDITOR": "ads\\hsim"
+        },
+        "geometry": {
+          "x": -82.46123549881668,
+          "y": 27.941897671979664
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 4826,
+          "REVIEWED": "Yes",
+          "PDF_ORD_LTR": "2011-0000054_ORD",
+          "PDF_RDX": "2011-0000054_RDX",
+          "PDF_SURVEY_SP": "V11-0000119_SP",
+          "HISTORY_ACTION": "Active",
+          "HISTORY_ACT_DT": 1439769600000,
+          "OLD_ORD_PERMIT": null,
+          "ORD_PERMIT": "2011-0000054",
+          "ORD_LTR_DT": 1303344000000,
+          "APP_NUM": "V11-119",
+          "NUM": "1919",
+          "DIR": "E",
+          "STREET_NAME": "7th",
+          "TYPE": "Ave",
+          "SUFFIX": null,
+          "PERMIT_ADDR": "1919 E 7th Ave",
+          "PERMIT_ADDR_2": null,
+          "PERMIT_ZIP": "33605",
+          "AB_CLASS_PREFIX": "4",
+          "AB_CLASS_SUFFIX": "COPR",
+          "SWC_AB": "No",
+          "USE_CONDITION": null,
+          "OFF_DUTY_REQ": "Yes",
+          "OFF_DUTY_COND": "Per AB Approval Conditions",
+          "MTH24_END_DT": null,
+          "REPORT_CLASS": "Yes",
+          "REPORT_CLASS_AFF": "No",
+          "AB_SLS_AREA_TTL_SF": "4289",
+          "AB_SLS_AREA_IN_SF": "4289",
+          "AB_SLS_AREA_OUT_SF": "0",
+          "OCC_LOAD_IN": null,
+          "OCC_LOAD_OUT": null,
+          "SEAT_COUNT": null,
+          "FIRE_OCC_LOAD": "150",
+          "FIRE_PMT_DT": 1291334400000,
+          "PKG_COUNT": 0.0,
+          "AMPFD_SOUND": "Yes",
+          "HRS_SUNDAY": "Per City Code",
+          "HRS_MONDAY": "Per City Code",
+          "HRS_TUESDAY": "Per City Code",
+          "HRS_WEDNESDAY": "Per City Code",
+          "HRS_THURSDAY": "Per City Code",
+          "HRS_FRIDAY": "Per City Code",
+          "HRS_SATURDAY": "Per City Code",
+          "PLACARD_DT": 1415836800000,
+          "BUS_NAME": "LARA",
+          "BUS_OWNER_NAME": "Suzanne Allana Crouch",
+          "BUS_OWNER_NAME2": null,
+          "BUS_OWNER_MAIL_ADD": "7201 N Howard Ave",
+          "BUS_OWNER_MAIL_CITY": "Tampa",
+          "BUS_OWNER_MAIL_ST": "FL",
+          "BUS_OWNER_MAIL_ZIP": "33604",
+          "BUS_OWN_PHONE": "813-410-3730",
+          "BUS_PHONE": "813-410-3730",
+          "BUS_OWN_EMAIL": "lara.work22@gmail.com",
+          "PMT_COMMENT": "See Ordinance For Security Conditions. Recvd Signoff On  8/14/2015.",
+          "POSTED": null,
+          "POST_DT": null,
+          "POST_DRY_DT": null,
+          "POST_LT_DT": null,
+          "POST_120EXT": null,
+          "DAY_120": null,
+          "POST_180EXT": null,
+          "DAY_180": null,
+          "VOL_EXT_APP": null,
+          "VOL_DAY180": null,
+          "RESUMP_SALES": null,
+          "RESUMP_SALES_DT": null,
+          "ANN_RPT_PC_DT": null,
+          "RPT_FILE_DT": null,
+          "LT_LTR_DT": null,
+          "LT_RPT_DT": null,
+          "ADMIN_LT_FEE": null,
+          "LT_FEE_REASON": null,
+          "SUPS_LTR_DT": null,
+          "ACT_SUSP": null,
+          "SUSP_ISSD": null,
+          "SUSP_END_DT": null,
+          "REVOKE_LTR_DT": null,
+          "REVOKE_DT": null,
+          "ENFCMT_COMMENT": null,
+          "HIST_EXT_REASON": "60 Day Ext Up",
+          "HIST_EXT_DT": "20121230",
+          "COMMENT_MISC": "0",
+          "GlobalID": "{6A897091-392D-4C6B-A0FF-753F2801FD1D}",
+          "ABSALETYPE": "Beer/Wine/Liquor",
+          "ABSALECONDITION": "Consumption On Premises-Restaurant",
+          "CREATEDATE": null,
+          "CREATEDBY": null,
+          "LASTUPDATE": 1788532683000,
+          "LASTEDITOR": "ads\\hsqt"
+        },
+        "geometry": {
+          "x": -82.43720019238557,
+          "y": 27.960053774459187
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 35820,
+          "REVIEWED": "Yes",
+          "PDF_ORD_LTR": "1995-0000157_ORD",
+          "PDF_RDX": "1995-0000157_RDX",
+          "PDF_SURVEY_SP": "",
+          "HISTORY_ACTION": "Active",
+          "HISTORY_ACT_DT": 1606262400000,
+          "OLD_ORD_PERMIT": null,
+          "ORD_PERMIT": "1995-0000157",
+          "ORD_LTR_DT": 808444800000,
+          "APP_NUM": "L94-035",
+          "NUM": "1701",
+          "DIR": "E",
+          "STREET_NAME": "4th",
+          "TYPE": "Ave",
+          "SUFFIX": null,
+          "PERMIT_ADDR": "1701 E 4th Ave",
+          "PERMIT_ADDR_2": null,
+          "PERMIT_ZIP": "33605",
+          "AB_CLASS_PREFIX": "2",
+          "AB_CLASS_SUFFIX": "COPR",
+          "SWC_AB": "No",
+          "USE_CONDITION": null,
+          "OFF_DUTY_REQ": "Yes",
+          "OFF_DUTY_COND": "Per City Code",
+          "MTH24_END_DT": null,
+          "REPORT_CLASS": "Yes",
+          "REPORT_CLASS_AFF": "Yes",
+          "AB_SLS_AREA_TTL_SF": "See Ordinance",
+          "AB_SLS_AREA_IN_SF": "See Ordinance",
+          "AB_SLS_AREA_OUT_SF": "See Ordinance",
+          "OCC_LOAD_IN": null,
+          "OCC_LOAD_OUT": null,
+          "SEAT_COUNT": null,
+          "FIRE_OCC_LOAD": null,
+          "FIRE_PMT_DT": null,
+          "PKG_COUNT": 0.0,
+          "AMPFD_SOUND": "Yes",
+          "HRS_SUNDAY": "Per City Code",
+          "HRS_MONDAY": "Per City Code",
+          "HRS_TUESDAY": "Per City Code",
+          "HRS_WEDNESDAY": "Per City Code",
+          "HRS_THURSDAY": "Per City Code",
+          "HRS_FRIDAY": "Per City Code",
+          "HRS_SATURDAY": "Per City Code",
+          "PLACARD_DT": 1415836800000,
+          "BUS_NAME": "Pepper's Island Restaurant",
+          "BUS_OWNER_NAME": "Pepper's Island Restaurant",
+          "BUS_OWNER_NAME2": "",
+          "BUS_OWNER_MAIL_ADD": "1233 Tahitian Sunrise Dr",
+          "BUS_OWNER_MAIL_CITY": "Plant City",
+          "BUS_OWNER_MAIL_ST": "FL",
+          "BUS_OWNER_MAIL_ZIP": "33565",
+          "BUS_OWN_PHONE": "813-750-3199",
+          "BUS_PHONE": "813-242-0752",
+          "BUS_OWN_EMAIL": "peppersisland.ybor@gmail.com",
+          "PMT_COMMENT": "sign off 1/16/2025",
+          "POSTED": null,
+          "POST_DT": null,
+          "POST_DRY_DT": null,
+          "POST_LT_DT": null,
+          "POST_120EXT": null,
+          "DAY_120": null,
+          "POST_180EXT": null,
+          "DAY_180": null,
+          "VOL_EXT_APP": null,
+          "VOL_DAY180": null,
+          "RESUMP_SALES": null,
+          "RESUMP_SALES_DT": null,
+          "ANN_RPT_PC_DT": null,
+          "RPT_FILE_DT": null,
+          "LT_LTR_DT": null,
+          "LT_RPT_DT": null,
+          "ADMIN_LT_FEE": null,
+          "LT_FEE_REASON": null,
+          "SUPS_LTR_DT": null,
+          "ACT_SUSP": null,
+          "SUSP_ISSD": null,
+          "SUSP_END_DT": null,
+          "REVOKE_LTR_DT": null,
+          "REVOKE_DT": null,
+          "ENFCMT_COMMENT": null,
+          "HIST_EXT_REASON": null,
+          "HIST_EXT_DT": null,
+          "COMMENT_MISC": "02/02/2012 Rla",
+          "GlobalID": "{20861297-4BAA-443A-ABC9-041A358CD524}",
+          "ABSALETYPE": "Beer/Wine",
+          "ABSALECONDITION": "Consumption On Premises-Restaurant",
+          "CREATEDATE": 1606314534000,
+          "CREATEDBY": "HSJ3",
+          "LASTUPDATE": 1788522398000,
+          "LASTEDITOR": "ads\\hsqt"
+        },
+        "geometry": {
+          "x": -82.44026829360473,
+          "y": 27.957906001211214
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 81755,
+          "REVIEWED": "Yes",
+          "PDF_ORD_LTR": null,
+          "PDF_RDX": null,
+          "PDF_SURVEY_SP": null,
+          "HISTORY_ACTION": "Active",
+          "HISTORY_ACT_DT": 1788363654000,
+          "OLD_ORD_PERMIT": null,
+          "ORD_PERMIT": null,
+          "ORD_LTR_DT": null,
+          "APP_NUM": "AB1-26-0000023",
+          "NUM": "223",
+          "DIR": "S",
+          "STREET_NAME": "Howard",
+          "TYPE": "Ave",
+          "SUFFIX": null,
+          "PERMIT_ADDR": "223 S. Howard Ave.",
+          "PERMIT_ADDR_2": null,
+          "PERMIT_ZIP": "33606",
+          "AB_CLASS_PREFIX": "Shopper's Goods (PS-Only)",
+          "AB_CLASS_SUFFIX": "BW",
+          "SWC_AB": null,
+          "USE_CONDITION": null,
+          "OFF_DUTY_REQ": null,
+          "OFF_DUTY_COND": null,
+          "MTH24_END_DT": null,
+          "REPORT_CLASS": null,
+          "REPORT_CLASS_AFF": null,
+          "AB_SLS_AREA_TTL_SF": "1434",
+          "AB_SLS_AREA_IN_SF": "1434",
+          "AB_SLS_AREA_OUT_SF": "0",
+          "OCC_LOAD_IN": null,
+          "OCC_LOAD_OUT": null,
+          "SEAT_COUNT": null,
+          "FIRE_OCC_LOAD": null,
+          "FIRE_PMT_DT": null,
+          "PKG_COUNT": null,
+          "AMPFD_SOUND": null,
+          "HRS_SUNDAY": "Consistent With Chapter 14",
+          "HRS_MONDAY": "Consistent With Chapter 14",
+          "HRS_TUESDAY": "Consistent With Chapter 14",
+          "HRS_WEDNESDAY": "Consistent With Chapter 14",
+          "HRS_THURSDAY": "Consistent With Chapter 14",
+          "HRS_FRIDAY": "Consistent With Chapter 14",
+          "HRS_SATURDAY": "Consistent With Chapter 14",
+          "PLACARD_DT": null,
+          "BUS_NAME": null,
+          "BUS_OWNER_NAME": null,
+          "BUS_OWNER_NAME2": null,
+          "BUS_OWNER_MAIL_ADD": null,
+          "BUS_OWNER_MAIL_CITY": null,
+          "BUS_OWNER_MAIL_ST": null,
+          "BUS_OWNER_MAIL_ZIP": null,
+          "BUS_OWN_PHONE": null,
+          "BUS_PHONE": null,
+          "BUS_OWN_EMAIL": null,
+          "PMT_COMMENT": null,
+          "POSTED": null,
+          "POST_DT": null,
+          "POST_DRY_DT": null,
+          "POST_LT_DT": null,
+          "POST_120EXT": null,
+          "DAY_120": null,
+          "POST_180EXT": null,
+          "DAY_180": null,
+          "VOL_EXT_APP": null,
+          "VOL_DAY180": null,
+          "RESUMP_SALES": null,
+          "RESUMP_SALES_DT": null,
+          "ANN_RPT_PC_DT": null,
+          "RPT_FILE_DT": null,
+          "LT_LTR_DT": null,
+          "LT_RPT_DT": null,
+          "ADMIN_LT_FEE": null,
+          "LT_FEE_REASON": null,
+          "SUPS_LTR_DT": null,
+          "ACT_SUSP": null,
+          "SUSP_ISSD": null,
+          "SUSP_END_DT": null,
+          "REVOKE_LTR_DT": null,
+          "REVOKE_DT": null,
+          "ENFCMT_COMMENT": null,
+          "HIST_EXT_REASON": null,
+          "HIST_EXT_DT": null,
+          "COMMENT_MISC": null,
+          "GlobalID": "{CAD1EBF1-F73C-47B4-A039-AFAEF5556B2D}",
+          "ABSALETYPE": null,
+          "ABSALECONDITION": null,
+          "CREATEDATE": 1788364442000,
+          "CREATEDBY": "ads\\hsqt",
+          "LASTUPDATE": 1788364442000,
+          "LASTEDITOR": "ads\\hsqt"
+        },
+        "geometry": {
+          "x": -82.48317419184676,
+          "y": 27.94208467433679
+        }
+      }
+    ]
+  },
+  "entitlement": {
+    "url": "https://arcgis.tampagov.net/arcgis/rest/services/Planning/ActiveEntitlementLocations/FeatureServer/0",
+    "geometryType": "esriGeometryPoint",
+    "count": 289,
+    "dates": {
+      "CREATEDDATE": {
+        "min": "2021-01-06",
+        "max": "2026-09-11",
+        "non_null": 289,
+        "last_365d": 272
+      },
+      "LASTUPDATE": {
+        "min": "2021-06-14",
+        "max": "2026-09-11",
+        "non_null": 289,
+        "last_365d": 274
+      }
+    },
+    "vocab": {
+      "APPSTATUS": [
+        {
+          "value": "In Process",
+          "count": 218
+        },
+        {
+          "value": "Awaiting Client Reply",
+          "count": 53
+        },
+        {
+          "value": "Open",
+          "count": 18
+        }
+      ],
+      "RECORDALIAS": [
+        {
+          "value": "Rezoning",
+          "count": 79
+        },
+        {
+          "value": "Variance Review Board",
+          "count": 58
+        },
+        {
+          "value": "Design Exception 1",
+          "count": 35
+        },
+        {
+          "value": "Formal Decision",
+          "count": 30
+        },
+        {
+          "value": "ROW Vacating",
+          "count": 26
+        },
+        {
+          "value": "General Land Use",
+          "count": 24
+        },
+        {
+          "value": "Special Use 1 - General",
+          "count": 16
+        },
+        {
+          "value": "AB Special Use 2",
+          "count": 10
+        },
+        {
+          "value": "Design Exception 2",
+          "count": 5
+        },
+        {
+          "value": "AB Special Use 1 - Standard",
+          "count": 3
+        },
+        {
+          "value": "Temp Special Event",
+          "count": 3
+        }
+      ],
+      "MAPDOT": [
+        {
+          "value": "Rezoning",
+          "count": 79
+        },
+        {
+          "value": "Variances",
+          "count": 58
+        },
+        {
+          "value": "Design Exceptions",
+          "count": 40
+        },
+        {
+          "value": "Formal Decision",
+          "count": 30
+        },
+        {
+          "value": "Vacating",
+          "count": 26
+        },
+        {
+          "value": "General Land Use",
+          "count": 24
+        },
+        {
+          "value": "Special Use Cases",
+          "count": 16
+        },
+        {
+          "value": "Special Use Cases - Alcoholic Beverage Sales",
+          "count": 13
+        },
+        {
+          "value": "",
+          "count": 3
+        }
+      ],
+      "CRA": [
+        {
+          "value": "East Tampa",
+          "count": 36
+        },
+        {
+          "value": "West Tampa",
+          "count": 19
+        },
+        {
+          "value": "Drew Park",
+          "count": 5
+        },
+        {
+          "value": "Central Park",
+          "count": 4
+        },
+        {
+          "value": "Downtown Core",
+          "count": 2
+        },
+        {
+          "value": "Ybor City 2",
+          "count": 2
+        },
+        {
+          "value": "Tampa Heights Riverfront",
+          "count": 2
+        },
+        {
+          "value": "Channel District",
+          "count": 1
+        },
+        {
+          "value": null,
+          "count": 0
+        }
+      ],
+      "COUNCILDISTRICT": [
+        {
+          "value": "5",
+          "count": 114
+        },
+        {
+          "value": "6",
+          "count": 89
+        },
+        {
+          "value": "4",
+          "count": 64
+        },
+        {
+          "value": "7",
+          "count": 17
+        },
+        {
+          "value": null,
+          "count": 0
+        }
+      ]
+    },
+    "fill_rate": {
+      "RECORDID": 289,
+      "ADDRESS": 289,
+      "TENTATIVEHEARING": 289,
+      "NEIGHBORHOOD": 283,
+      "URL": 289
+    },
+    "best_date_field": "LASTUPDATE",
+    "samples": [
+      {
+        "attributes": {
+          "OBJECTID": 39,
+          "RECORDID": "REZ-26-0000041",
+          "ADDRESS": "4208 W Bay To Bay Blvd",
+          "UNIT": "",
+          "APPSTATUS": "In Process",
+          "TENTATIVEHEARING": "08/20/2026",
+          "TENTATIVETIME": "17:01",
+          "RECORDALIAS": "Rezoning",
+          "MAPDOT": "Rezoning",
+          "CRA": null,
+          "NEIGHBORHOOD": "Virginia Park",
+          "COUNCILDISTRICT": "4",
+          "CREATED": "Accela",
+          "CREATEDDATE": 1769403600000,
+          "LASTUPDATE": 1789099200000,
+          "LASTEDITOR": "GIS",
+          "GlobalID": "{EDEAD513-5DF3-4A49-AE58-408A853C4A5B}",
+          "URL": "https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=004J0&agencyCode=TAMPA"
+        },
+        "geometry": {
+          "x": -82.51443315541232,
+          "y": 27.91978868217267
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 48,
+          "RECORDID": "REZ-26-0000045",
+          "ADDRESS": "2408 Stuart St",
+          "UNIT": "",
+          "APPSTATUS": "In Process",
+          "TENTATIVEHEARING": "07/23/2026",
+          "TENTATIVETIME": "17:01",
+          "RECORDALIAS": "Rezoning",
+          "MAPDOT": "Rezoning",
+          "CRA": null,
+          "NEIGHBORHOOD": "Palmetto Beach",
+          "COUNCILDISTRICT": "5",
+          "CREATED": "Accela",
+          "CREATEDDATE": 1770958800000,
+          "LASTUPDATE": 1789099200000,
+          "LASTEDITOR": "GIS",
+          "GlobalID": "{B0DC05A9-091E-43A9-A132-6C60ED8E0D57}",
+          "URL": "https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=009EE&agencyCode=TAMPA"
+        },
+        "geometry": {
+          "x": -82.43256148970167,
+          "y": 27.947306378222024
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 68,
+          "RECORDID": "REZ-26-0000063",
+          "ADDRESS": "2115 W Saint John St",
+          "UNIT": "",
+          "APPSTATUS": "In Process",
+          "TENTATIVEHEARING": "09/10/2026",
+          "TENTATIVETIME": "17:01",
+          "RECORDALIAS": "Rezoning",
+          "MAPDOT": "Rezoning",
+          "CRA": "West Tampa",
+          "NEIGHBORHOOD": "Old West Tampa",
+          "COUNCILDISTRICT": "5",
+          "CREATED": "Accela",
+          "CREATEDDATE": 1775534400000,
+          "LASTUPDATE": 1789099200000,
+          "LASTEDITOR": "GIS",
+          "GlobalID": "{B5EC8879-6B99-487B-9ACF-D1E537319B1C}",
+          "URL": "https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=00K7C&agencyCode=TAMPA"
+        },
+        "geometry": {
+          "x": -82.48109726404206,
+          "y": 27.96453023354888
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 91,
+          "RECORDID": "DE1-26-0000121",
+          "ADDRESS": "3208 E Dr Martin Luther King Jr Blvd",
+          "UNIT": "",
+          "APPSTATUS": "Awaiting Client Reply",
+          "TENTATIVEHEARING": "N/A",
+          "TENTATIVETIME": "",
+          "RECORDALIAS": "Design Exception 1",
+          "MAPDOT": "Design Exceptions",
+          "CRA": "East Tampa",
+          "NEIGHBORHOOD": "East Tampa 1",
+          "COUNCILDISTRICT": "5",
+          "CREATED": "Accela",
+          "CREATEDDATE": 1778040000000,
+          "LASTUPDATE": 1789099200000,
+          "LASTEDITOR": "GIS",
+          "GlobalID": "{9F4279B7-3264-460A-A168-08EA21F21311}",
+          "URL": "https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=00Q33&agencyCode=TAMPA"
+        },
+        "geometry": {
+          "x": -82.42417507952555,
+          "y": 27.981535589012953
+        }
+      }
+    ]
+  },
+  "cra_grant": {
+    "url": "https://arcgis.tampagov.net/arcgis/rest/services/Planning/CRACommercialInitiative/MapServer/0",
+    "geometryType": "esriGeometryPoint",
+    "count": 38,
+    "dates": {
+      "AWARDEDDATE": {
+        "min": "2021-03-11",
+        "max": "2026-08-25",
+        "non_null": 37,
+        "last_365d": 13
+      },
+      "COMPLETIONDATE": {
+        "min": "2023-11-27",
+        "max": "2026-07-30",
+        "non_null": 20,
+        "last_365d": 5
+      },
+      "created_date": {
+        "min": "2026-09-03",
+        "max": "2026-09-04",
+        "non_null": 13,
+        "last_365d": 13
+      },
+      "last_edited_date": {
+        "min": "2026-09-04",
+        "max": "2026-09-10",
+        "non_null": 38,
+        "last_365d": 38
+      }
+    },
+    "vocab": {
+      "STATUS": [
+        {
+          "value": "Completed",
+          "count": 20
+        },
+        {
+          "value": "Awarded ",
+          "count": 18
+        }
+      ],
+      "GRANTTYPE": [
+        {
+          "value": "Commercial Exterior Grant",
+          "count": 11
+        },
+        {
+          "value": "Fa\u00e7ade Improvement Grant",
+          "count": 11
+        },
+        {
+          "value": "Commercial Interior Grant",
+          "count": 6
+        },
+        {
+          "value": "Commercial Special Projects Grant",
+          "count": 4
+        },
+        {
+          "value": "Business Enhancement Micro Grant",
+          "count": 2
+        },
+        {
+          "value": "Commercial Design Grant",
+          "count": 2
+        },
+        {
+          "value": "Commercial Interior",
+          "count": 1
+        },
+        {
+          "value": "Vanilla Shell Grant",
+          "count": 1
+        }
+      ],
+      "CRA": [
+        {
+          "value": "West Tampa",
+          "count": 19
+        },
+        {
+          "value": "East Tampa",
+          "count": 10
+        },
+        {
+          "value": "Ybor City 1",
+          "count": 3
+        },
+        {
+          "value": "Ybor City 2",
+          "count": 2
+        },
+        {
+          "value": "Downtown Non Core",
+          "count": 2
+        },
+        {
+          "value": "Drew Park",
+          "count": 1
+        },
+        {
+          "value": "Downtown Core",
+          "count": 1
+        }
+      ],
+      "OCCUPANCY": [
+        {
+          "value": "Occupied",
+          "count": 19
+        },
+        {
+          "value": "Vacant",
+          "count": 19
+        }
+      ]
+    },
+    "fill_rate": {
+      "APPLICANT": 38,
+      "BUSINESSPROPERTYOWNER": 38,
+      "ADDRESS": 38,
+      "AWARDEDAMOUNT": 37,
+      "TOTALPROJECTCOST": 30,
+      "DESCRIPTION": 38,
+      "FISCALYEAR": 38
+    },
+    "best_date_field": "last_edited_date",
+    "samples": [
+      {
+        "attributes": {
+          "OBJECTID": 32,
+          "BUSINESSPROPERTYOWNER": "SanMarten LLC / Wine Stream",
+          "APPLICANT": "Ted Boscaino",
+          "CRA": "West Tampa",
+          "FOLIO": "179629.0000",
+          "BOARDMEMBERDISTRICT": null,
+          "ADDRESS": "2301 N Albany Ave",
+          "OCCUPANCY": "Occupied",
+          "FISCALYEAR": 2023,
+          "GRANTTYPE": "Business Enhancement Micro Grant",
+          "STATUS": "Completed",
+          "TOTALPROJECTCOST": 25680.0,
+          "AWARDEDAMOUNT": 0.0,
+          "AWARDEDDATE": 1685471773000,
+          "FINALAWARDAMOUNT": 10000.0,
+          "COMPLETIONDATE": 1701113921000,
+          "PRIVATEINVESTMENT": 15680.0,
+          "ROI": 1.57,
+          "DESCRIPTION": "A Business Enhancement Micro Grant (old grant) was awarded to add LED lighting to enhance the visibility and appearance of the 120 foot historic Pendas y Alvarez Cigar Factory building clock tower, built in 1913. This project is part of a full building renovation being done by the owners. ",
+          "QUOTES": null,
+          "PHOTO": 1,
+          "PhotoDescriptionAwardees": null,
+          "DISTRICT": "5",
+          "NEIGHBORHOOD": "Old West Tampa",
+          "GlobalID": "{6FC4BEE0-3436-4722-A986-9CF43274C8D8}",
+          "created_user": "ads\\hssx",
+          "created_date": 1788547699000,
+          "last_edited_user": "ads\\hsrr",
+          "last_edited_date": 1789064444000,
+          "LEGACYCREDIT": null,
+          "COMPLTEDDESC": "A Business Enhancement Micro Grant (old grant) was issued to add LED lighting to enhance the visibility and appearance of the 120 foot historic Pendas y Alvarez Cigar Factory building clock tower, built in 1913."
+        },
+        "geometry": {
+          "x": -82.48029911319583,
+          "y": 27.96172870740561
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 33,
+          "BUSINESSPROPERTYOWNER": "Clonts Properties",
+          "APPLICANT": "Cynthia Clonts",
+          "CRA": "East Tampa",
+          "FOLIO": "158831.0000",
+          "BOARDMEMBERDISTRICT": null,
+          "ADDRESS": "3835 N 50th St",
+          "OCCUPANCY": "Occupied",
+          "FISCALYEAR": 2025,
+          "GRANTTYPE": "Commercial Exterior Grant",
+          "STATUS": "Completed",
+          "TOTALPROJECTCOST": 58503.11,
+          "AWARDEDAMOUNT": 0.0,
+          "AWARDEDDATE": 1730223063000,
+          "FINALAWARDAMOUNT": 42540.17,
+          "COMPLETIONDATE": 1750872678000,
+          "PRIVATEINVESTMENT": 15962.94,
+          "ROI": 0.01,
+          "DESCRIPTION": "A Commercial Exterior Grant was awarded to support a full building renovation for an existing retail strip center. The grant will utilize the property owner\u2019s Legacy Credit to fund exterior improvements to modernize the building, improve curb appeal and attract tenants.",
+          "QUOTES": "\"Our experience working with the CRA was great. Working with the team proved to be a positive experience that led to the complete renovation of our strip center. Clonts properties is now proud to say that we have 8 new tenants and contributing to the overall economic development of Grant Park.\" \u2013 Cynthia C.",
+          "PHOTO": 3,
+          "PhotoDescriptionAwardees": "Andrea Roshaven (Economic Development Specialist III), Cynthia Clonts Garcia (awardee), Cedric McCray (CRA Director) and Parker Clonts (awardee) ",
+          "DISTRICT": "5",
+          "NEIGHBORHOOD": "Grant Park",
+          "GlobalID": "{765DAE85-72B7-495C-8CD8-F3EB74885074}",
+          "created_user": "ads\\hssx",
+          "created_date": 1788543249000,
+          "last_edited_user": "ads\\hsrr",
+          "last_edited_date": 1789064439000,
+          "LEGACYCREDIT": "Yes",
+          "COMPLTEDDESC": "A Commercial Exterior Grant was issued to support a full building renovation for an existing retail strip center. The grant utilized the property owner\u2019s Legacy Credit to fund exterior improvements to modernize the building, improve curb appeal and attract tenants."
+        },
+        "geometry": {
+          "x": -82.40125889550916,
+          "y": 27.981184897840375
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 30,
+          "BUSINESSPROPERTYOWNER": "Health Matters Pharmacy West, LLL/The Well",
+          "APPLICANT": "Dr. Vondalyn Wright",
+          "CRA": "East Tampa",
+          "FOLIO": "154468.0000",
+          "BOARDMEMBERDISTRICT": null,
+          "ADDRESS": "5110 N 40th St",
+          "OCCUPANCY": "Occupied",
+          "FISCALYEAR": 2023,
+          "GRANTTYPE": "Commercial Special Projects Grant",
+          "STATUS": "Completed",
+          "TOTALPROJECTCOST": 822641.7,
+          "AWARDEDAMOUNT": 0.0,
+          "AWARDEDDATE": 1675965206000,
+          "FINALAWARDAMOUNT": 346622.1,
+          "COMPLETIONDATE": 1746032039000,
+          "PRIVATEINVESTMENT": 476019.6,
+          "ROI": 1.37,
+          "DESCRIPTION": "A Special Grant (old grant) was awarded to assist with a full building and site rehabilitation of a former nightclub to create a health care and wellness facility, including pharmacy services.",
+          "QUOTES": null,
+          "PHOTO": 2,
+          "PhotoDescriptionAwardees": null,
+          "DISTRICT": "5",
+          "NEIGHBORHOOD": "The Legacy of Fair Oaks",
+          "GlobalID": "{00E062DF-F16C-4839-9105-39443C56B02E}",
+          "created_user": "ads\\hssx",
+          "created_date": 1788540949000,
+          "last_edited_user": "ads\\hsrr",
+          "last_edited_date": 1789064426000,
+          "LEGACYCREDIT": null,
+          "COMPLTEDDESC": "A Special Grant (old grant) was issued to assist with a full building and site rehabilitation of a former nightclub to create a health care and wellness facility, including pharmacy services."
+        },
+        "geometry": {
+          "x": -82.41448683579851,
+          "y": 27.99299667187677
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 24,
+          "BUSINESSPROPERTYOWNER": "SanMarten LLC / Wine Stream",
+          "APPLICANT": "Ted Boscaino",
+          "CRA": "West Tampa",
+          "FOLIO": "179629.0000",
+          "BOARDMEMBERDISTRICT": null,
+          "ADDRESS": "2301 N Albany Ave",
+          "OCCUPANCY": "Occupied",
+          "FISCALYEAR": 2022,
+          "GRANTTYPE": "Fa\u00e7ade Improvement Grant",
+          "STATUS": "Completed",
+          "TOTALPROJECTCOST": 189762.96,
+          "AWARDEDAMOUNT": 0.0,
+          "AWARDEDDATE": 1655835954000,
+          "FINALAWARDAMOUNT": 50000.0,
+          "COMPLETIONDATE": 1713916800000,
+          "PRIVATEINVESTMENT": 139762.96,
+          "ROI": 2.7952592,
+          "DESCRIPTION": "A Fa\u00e7ade Grant (old grant) was awarded to support a full building renovation of the historic Pendas y Alvarez Cigar Factory. The project will focuse on preserving the building\u2019s historic character while improving its exterior and overall functionality. The grant-funded improvements will revitalize a landmark property and contribute to the architectural and economic vitality of the community.",
+          "QUOTES": null,
+          "PHOTO": 2,
+          "PhotoDescriptionAwardees": null,
+          "DISTRICT": "5",
+          "NEIGHBORHOOD": "Old West Tampa",
+          "GlobalID": "{1BD2B6C1-1728-41F2-90F3-F26C9826BB74}",
+          "created_user": null,
+          "created_date": null,
+          "last_edited_user": "ads\\hsrr",
+          "last_edited_date": 1789064271000,
+          "LEGACYCREDIT": null,
+          "COMPLTEDDESC": "A Fa\u00e7ade Grant  (old grant) was issued to support replacement of the old first-floor windows with new impact windows in the historic 1913 Pendas y Alvarez Cigar Factory building, as part of a full building renovation. The project focused on preserving the building\u2019s historic character while improving its exterior and overall functionality, revitalizing a landmark property, and contributing to the architectural and economic vitality of the community."
+        },
+        "geometry": {
+          "x": -82.48036949954977,
+          "y": 27.961821000179228
+        }
+      }
+    ]
+  }
+}
