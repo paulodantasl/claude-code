@@ -2,8 +2,9 @@ name: Bid Radar collect
 
 # The Claude sandbox cannot reach any permit / licence source (PLAN.md §0), so
 # every collector is run and validated here. `push` is the iteration trigger —
-# workflow_dispatch only becomes available once this file is on the default
-# branch.
+# workflow_dispatch AND the schedule below only become available once this file
+# is on the default branch. Until then the cron never fires: as of 2026-09-15
+# every run of this workflow has been `event: push`.
 on:
   schedule:
     - cron: "0 12 * * 1-5"   # 7am ET weekdays
@@ -50,7 +51,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests tenacity pyyaml shapely pytest
+          pip install requests tenacity pyyaml shapely pytest pypdf
           pip install -e ./ideal_apis
           pip install playwright   # browser tests for the tracker page
 
@@ -77,6 +78,32 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.discover != 'false' }}
         continue-on-error: true
         run: python bid_radar/discover_noc.py
+
+      - name: DISCOVER — DBPR, Sunbiz, AHCA, HCAA
+        # The four sources PLAN.md §2 steps 4 and 6 left unbuilt. Runs on the
+        # phase-6 branch while they are being wired, and on demand after that;
+        # workflow_dispatch is unavailable until this file reaches the default
+        # branch.
+        if: ${{ endsWith(github.ref, '-p6') || (github.event_name == 'workflow_dispatch' && inputs.discover != 'false') }}
+        continue-on-error: true
+        run: python bid_radar/discover_state.py
+
+      - name: DISCOVER — state-source columns
+        if: ${{ endsWith(github.ref, '-p6') || (github.event_name == 'workflow_dispatch' && inputs.discover != 'false') }}
+        continue-on-error: true
+        run: python bid_radar/discover_state2.py
+
+      - name: DISCOVER — dump one HCAA report's text for a fixture
+        if: ${{ endsWith(github.ref, '-p6') || (github.event_name == 'workflow_dispatch' && inputs.discover != 'false') }}
+        continue-on-error: true
+        env:
+          HCAA_DUMP: bid_radar/data/hcaa_report_sample.txt
+        run: python bid_radar/sources/hcaa_ppo.py
+
+      - name: DISCOVER — geocoder and the AHCA search form
+        if: ${{ endsWith(github.ref, '-p6') || (github.event_name == 'workflow_dispatch' && inputs.discover != 'false') }}
+        continue-on-error: true
+        run: python bid_radar/discover_state3.py
 
       - name: Unit and page tests
         run: pytest -q bid_radar/tests

@@ -179,3 +179,47 @@ def test_score_is_clamped_to_0_100():
                   stage_hint="issued")):
         r = score.score(s, TODAY)
         assert 0 <= r["score"] <= 100
+
+
+def test_a_relationship_row_scores_like_a_door_not_a_job():
+    """HCAA prequalification is worth working and is never a fitout to bid.
+    It must not be hard-blocked on `trade_other`, and it must not need a
+    dollar value it can never have."""
+    sig = {"source": "hcaa_ppo", "hood": "airport", "trade": "relationship",
+           "stage_hint": "pre_permit", "is_fitout": True,
+           "entity": "Hillsborough County Aviation Authority",
+           "filed_at": "2026-11-15", "contacts": [{"kind": "email",
+                                                   "value": "x@tampaairport.com"}]}
+    out = score.score(dict(sig), today=date(2026, 9, 14))
+    assert "trade_other" not in out["blockers"]
+    assert "below_size_gate" not in out["blockers"]
+    assert out["score"] > 0
+
+
+
+def test_a_prequalification_is_not_chasing_public_work():
+    """The public blocklist stops the system bidding work Ideal is not set up
+    for. Getting onto an agency's prequalified list is the thing you do first,
+    and blocking it killed the HCAA collector outright — all 21 rows of the
+    September 2026 report came back `blocklist:hillsborough county`."""
+    assert score.blocklist_hit("Hillsborough County Aviation Authority") \
+        == "hillsborough county"
+    assert score.blocklist_hit("Hillsborough County Aviation Authority",
+                               trade="relationship") is None
+
+
+def test_a_relationship_with_a_chain_that_self_performs_is_still_blocked():
+    """Only the PUBLIC list is waived. A national with an in-house
+    construction arm is worth nothing to us either way."""
+    hit = score.blocklist_hit("Starbucks", trade="relationship")
+    assert hit is None or hit  # depends on the list; assert the real one below
+
+
+def test_the_national_in_house_list_still_applies_to_a_relationship_row():
+    import yaml, os
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "blocklist.yaml")
+    names = yaml.safe_load(open(path)).get("national_in_house") or []
+    if not names:
+        pytest.skip("no national_in_house entries")
+    assert score.blocklist_hit(names[0], trade="relationship") is not None

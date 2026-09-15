@@ -29,7 +29,11 @@ BLOCKLIST_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "block
 QUALIFY_AT = 55
 
 FIT = {"medical": 30, "restaurant": 25, "hospitality": 20, "retail": 15,
-       "office": 10, "other": 0}
+       "office": 10, "other": 0,
+       # A door, not a job. An HCAA prequalification or a developer
+       # introduction is worth working, but it is never a fitout to bid, so it
+       # scores like a precursor rather than like the trade it may lead to.
+       "relationship": 20}
 
 # Stages where the trade is genuinely not declared yet — the build-back permit
 # or the tenant is still to come. Blocking these on `trade == other` would drop
@@ -75,9 +79,20 @@ def _norm(name: str | None) -> str:
     return re.sub(r"[^a-z0-9&' ]+", " ", (name or "").lower()).strip()
 
 
-def blocklist_hit(*names: str | None) -> str | None:
+def blocklist_hit(*names: str | None, trade: str | None = None) -> str | None:
     """Returns the pattern that matched, or None. Checked against every name
-    we have for the signal, because the tenant may only appear in the scope."""
+    we have for the signal, because the tenant may only appear in the scope.
+
+    A `relationship` row skips the PUBLIC list, and only that list. The public
+    blocklist exists to stop the system chasing public work Ideal is not set up
+    to bid — bonding, certified payroll, the responsiveness rules. Getting onto
+    an agency's prequalified-contractor list is not bidding public work; it is
+    the thing you must do first, and PLAN.md §4 names it as the earliest dated
+    action on the board. Blocking it defeated the HCAA collector entirely: all
+    21 rows of the September 2026 report came back
+    `blocklist:hillsborough county`. The national in-house list still applies —
+    a relationship with a chain that self-performs is still worth nothing.
+    """
     for name in names:
         n = _norm(name)
         if not n:
@@ -85,9 +100,10 @@ def blocklist_hit(*names: str | None) -> str | None:
         for pattern in _NATIONAL:
             if pattern in n:
                 return pattern
-        for pattern in _PUBLIC:
-            if pattern in n:
-                return pattern
+        if trade != "relationship":
+            for pattern in _PUBLIC:
+                if pattern in n:
+                    return pattern
     return None
 
 
@@ -167,8 +183,12 @@ def access_points(signal: dict, blocked: str | None) -> int:
 def meets_size_gate(signal: dict) -> bool:
     """§2.3(c). Licence-type sources pass on the second branch, because value
     is unknowable there — and so do permits, for the same reason."""
+    # `sunbiz` is deliberately NOT here. A corporate filing carries no value,
+    # no area and no seat count, so it cannot pass on the second branch — and
+    # that is correct: a new LLC on its own is not yet a job. It earns its way
+    # in by corroborating a permit or a licence at the same address.
     if signal.get("source") in {"abt", "ahca", "dbpr_hr", "permit",
-                                "entitlement", "cra_grant"}:
+                                "entitlement", "cra_grant", "hcaa_ppo"}:
         return True
     return bool((signal.get("value_est") or 0) >= 75_000
                 or (signal.get("sqft") or 0) >= 1_200
@@ -185,7 +205,8 @@ def score(signal: dict, today: date | None = None) -> dict:
     opens, closes = bid_window(stage, signal.get("filed_at"), today,
                                hearing_at=signal.get("hearing_at"))
     blocked = blocklist_hit(signal.get("entity"), signal.get("brand"),
-                            signal.get("project_name"))
+                            signal.get("project_name"),
+                            trade=signal.get("trade"))
 
     trade = signal.get("trade") or "other"
     precursor = stage in PRECURSOR_STAGES and trade == "other"
