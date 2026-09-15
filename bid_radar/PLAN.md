@@ -551,7 +551,13 @@ test.
 **What actually happened.** Green on run 4 (`workflow_dispatch` is not
 available until the workflow file reaches the default branch, so `push` on
 `claude/bid-radar-lead-engine-**` is the iteration trigger — that is a GitHub
-constraint, not a choice). First real output: 29 commercial records in 90
+constraint, not a choice). **The same constraint applies to `schedule:`, which
+was missed when this was written:** the `0 12 * * 1-5` cron has never fired,
+because GitHub only evaluates cron on the default branch. Verified 2026-09-15 —
+all 33 collect runs carry `event: push`, and `.github/workflows/` on `main`
+contains no `bid-radar-*` file. Until this workflow lands on `main` the feed is
+alive only while someone is pushing to the phase branch. No code change is
+needed; merging is the fix. First real output: 29 commercial records in 90
 days, 16 in a tracked submarket, 3 at EARLY START (Wagamama Pan Asian at 1050
 Water St; Edikted at WestShore Plaza; a renovation at 4915 Independence Pkwy).
 113 tests pass. Two deviations, both recorded above: the acceptance test is

@@ -2,8 +2,9 @@ name: Bid Radar collect
 
 # The Claude sandbox cannot reach any permit / licence source (PLAN.md §0), so
 # every collector is run and validated here. `push` is the iteration trigger —
-# workflow_dispatch only becomes available once this file is on the default
-# branch.
+# workflow_dispatch AND the schedule below only become available once this file
+# is on the default branch. Until then the cron never fires: as of 2026-09-15
+# every run of this workflow has been `event: push`.
 on:
   schedule:
     - cron: "0 12 * * 1-5"   # 7am ET weekdays

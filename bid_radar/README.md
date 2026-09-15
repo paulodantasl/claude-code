@@ -152,8 +152,16 @@ the first one runs.
 ### Where the output goes
 
 GitHub Actions (`.github/workflows/bid-radar-collect.yml`) runs the collector
-at 7am ET on weekdays and commits `bid_radar/data/` to the **`bid-radar-data`
-branch**. That branch is the hand-off: a Claude session can read GitHub but
+and commits `bid_radar/data/` to the **`bid-radar-data` branch**.
+
+The workflow declares `schedule: 0 12 * * 1-5` (7am ET weekdays), but **that
+cron does not fire yet, and no scheduled run has ever happened.** GitHub
+evaluates `schedule:` and `workflow_dispatch:` only on a repository's default
+branch, and this file currently lives only on the phase branch. Every one of
+the runs to date — 33 as of 2026-09-15 — was `event: push`, triggered by a
+commit to `claude/bid-radar-lead-engine-**`. The feed therefore refreshes only
+while someone is pushing to that branch; it becomes a real daily job the moment
+this workflow file lands on `main`, with no change to the file itself. That branch is the hand-off: a Claude session can read GitHub but
 cannot reach any permit host, so it picks the data up from there and writes it
 into the tracker's database (Phase 3).
 
