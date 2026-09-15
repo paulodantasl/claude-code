@@ -11,6 +11,16 @@
   "min": 5000.0,
   "max": 18800000.0,
   "by_hood": {
+    "davis": {
+      "hood_label": "Davis Islands",
+      "n": 1,
+      "p25": 401497.0,
+      "median": 401497.0,
+      "p75": 401497.0,
+      "mean": 401497.0,
+      "min": 401497.0,
+      "max": 401497.0
+    },
     "waterst": {
       "hood_label": "Water Street",
       "n": 5,
@@ -20,16 +30,6 @@
       "mean": 2658013.0,
       "min": 300000.0,
       "max": 6500000.0
-    },
-    "riverwalk": {
-      "hood_label": "Downtown Riverwalk",
-      "n": 6,
-      "p25": 325000.0,
-      "median": 2453528.0,
-      "p75": 11500000.0,
-      "mean": 5880588.0,
-      "min": 5000.0,
-      "max": 18800000.0
     },
     "dalemabry": {
       "hood_label": "Dale Mabry",
@@ -41,15 +41,15 @@
       "min": 28300.0,
       "max": 7000000.0
     },
-    "davis": {
-      "hood_label": "Davis Islands",
-      "n": 1,
-      "p25": 401497.0,
-      "median": 401497.0,
-      "p75": 401497.0,
-      "mean": 401497.0,
-      "min": 401497.0,
-      "max": 401497.0
+    "riverwalk": {
+      "hood_label": "Downtown Riverwalk",
+      "n": 6,
+      "p25": 325000.0,
+      "median": 2453528.0,
+      "p75": 11500000.0,
+      "mean": 5880588.0,
+      "min": 5000.0,
+      "max": 18800000.0
     },
     "airport": {
       "hood_label": "Airport / Westshore",
@@ -73,5 +73,5 @@
     }
   },
   "contractors_seen": 103,
-  "retrieved_at": "2026-09-14T13:26:31+00:00"
+  "retrieved_at": "2026-09-15T00:29:44+00:00"
 }

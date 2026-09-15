@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-09-14T13:16:30+00:00",
+  "retrieved_at": "2026-09-15T00:19:48+00:00",
   "dbpr": {
     "pages": [
       {
@@ -7,9 +7,10 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 263075,
+        "bytes": 263226,
         "final_url": "https://www2.myfloridalicense.com/hotels-restaurants/public-records/",
         "download_links": [
+          "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-09-13.xlsx",
           "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-09-06.xlsx",
           "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-08-30.xlsx",
           "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-08-23.xlsx",
@@ -48,8 +49,7 @@
           "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-01-04.xlsx",
           "https://www2.myfloridalicense.com/sto/file_download/extracts/1fdinspi.csv",
           "https://www2.myfloridalicense.com/sto/file_download/extracts/2fdinspi.csv",
-          "https://www2.myfloridalicense.com/sto/file_download/extracts/3fdinspi.csv",
-          "https://www2.myfloridalicense.com/sto/file_download/extracts/4fdinspi.csv"
+          "https://www2.myfloridalicense.com/sto/file_download/extracts/3fdinspi.csv"
         ]
       },
       {
@@ -57,7 +57,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 195417,
+        "bytes": 195416,
         "final_url": "https://www2.myfloridalicense.com/hotels-restaurants/lodging-public-records/",
         "download_links": [
           "https://www2.myfloridalicense.com/sto/file_download/extracts/1ldinspi.csv",
@@ -116,12 +116,13 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 157701,
+        "bytes": 157702,
         "final_url": "https://www2.myfloridalicense.com/open-government/",
         "download_links": []
       }
     ],
     "files": [
+      "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-09-13.xlsx",
       "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-09-06.xlsx",
       "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-08-30.xlsx",
       "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-08-23.xlsx",
@@ -424,12 +425,12 @@
       "https://www2.myfloridalicense.com/sto/file_download/stats/chgownr_lodg_fy1617.csv"
     ],
     "sample": {
-      "url": "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-09-06.xlsx",
+      "url": "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-09-13.xlsx",
       "method": "GET",
       "status": 200,
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "bytes": 42290,
-      "final_url": "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-09-06.xlsx",
+      "bytes": 40951,
+      "final_url": "https://www2.myfloridalicense.com/hr/inspections/documents/EOS_Weekly_Extract_2026-09-13.xlsx",
       "first_lines": [
         "PK\u0003\u0004\u0014\u0000\u0006\u0000\b\u0000\u0000\u0000!\u0000b\u009a\u00d1\"\u0099\u0001\u0000\u0000'\u0007\u0000\u0000\u0013\u0000\b\u0002[Content_Types].xml \u00a2\u0004\u0002(\u00a0\u0000\u0002\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u00ccU\u00c9n\u00c20\u0010\u00bdW\u00ea?D\u00beV\u00c4@\u00a5\u00aa\u00aa\b",
         "\u00ba",
@@ -467,11 +468,27 @@
         "method": "GET",
         "status": 403,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 5736,
+        "bytes": 5714,
         "final_url": "https://dos.sunbiz.org/data-definitions/cor.html"
       }
     ],
     "candidates": [
+      {
+        "url": "https://sftp.floridados.gov/doc/cor/20260914c.txt",
+        "method": "HEAD",
+        "status": 401,
+        "content_type": "text/html",
+        "bytes": 0,
+        "final_url": "https://sftp.floridados.gov/doc/cor/20260914c.txt"
+      },
+      {
+        "url": "https://sftp.floridados.gov/doc/cor/20260914a.txt",
+        "method": "HEAD",
+        "status": 401,
+        "content_type": "text/html",
+        "bytes": 0,
+        "final_url": "https://sftp.floridados.gov/doc/cor/20260914a.txt"
+      },
       {
         "url": "https://sftp.floridados.gov/doc/cor/20260911c.txt",
         "method": "HEAD",
@@ -489,20 +506,20 @@
         "final_url": "https://sftp.floridados.gov/doc/cor/20260911a.txt"
       },
       {
-        "url": "https://sftp.floridados.gov/doc/cor/20260910c.txt",
+        "url": "https://dos.myflorida.com/sunbiz/data/cor/20260914c.txt",
         "method": "HEAD",
-        "status": 401,
-        "content_type": "text/html",
+        "status": 404,
+        "content_type": "",
         "bytes": 0,
-        "final_url": "https://sftp.floridados.gov/doc/cor/20260910c.txt"
+        "final_url": "https://dos.fl.gov/sunbiz/data/cor/20260914c.txt"
       },
       {
-        "url": "https://sftp.floridados.gov/doc/cor/20260910a.txt",
+        "url": "https://dos.myflorida.com/sunbiz/data/cor/20260914a.txt",
         "method": "HEAD",
-        "status": 401,
-        "content_type": "text/html",
+        "status": 404,
+        "content_type": "",
         "bytes": 0,
-        "final_url": "https://sftp.floridados.gov/doc/cor/20260910a.txt"
+        "final_url": "https://dos.fl.gov/sunbiz/data/cor/20260914a.txt"
       },
       {
         "url": "https://dos.myflorida.com/sunbiz/data/cor/20260911c.txt",
@@ -521,20 +538,20 @@
         "final_url": "https://dos.fl.gov/sunbiz/data/cor/20260911a.txt"
       },
       {
-        "url": "https://dos.myflorida.com/sunbiz/data/cor/20260910c.txt",
+        "url": "https://search.sunbiz.org/data/cor/20260914c.txt",
         "method": "HEAD",
-        "status": 404,
-        "content_type": "",
+        "status": 403,
+        "content_type": "text/html; charset=UTF-8",
         "bytes": 0,
-        "final_url": "https://dos.fl.gov/sunbiz/data/cor/20260910c.txt"
+        "final_url": "https://search.sunbiz.org/data/cor/20260914c.txt"
       },
       {
-        "url": "https://dos.myflorida.com/sunbiz/data/cor/20260910a.txt",
+        "url": "https://search.sunbiz.org/data/cor/20260914a.txt",
         "method": "HEAD",
-        "status": 404,
-        "content_type": "",
+        "status": 403,
+        "content_type": "text/html; charset=UTF-8",
         "bytes": 0,
-        "final_url": "https://dos.fl.gov/sunbiz/data/cor/20260910a.txt"
+        "final_url": "https://search.sunbiz.org/data/cor/20260914a.txt"
       },
       {
         "url": "https://search.sunbiz.org/data/cor/20260911c.txt",
@@ -551,22 +568,6 @@
         "content_type": "text/html; charset=UTF-8",
         "bytes": 0,
         "final_url": "https://search.sunbiz.org/data/cor/20260911a.txt"
-      },
-      {
-        "url": "https://search.sunbiz.org/data/cor/20260910c.txt",
-        "method": "HEAD",
-        "status": 403,
-        "content_type": "text/html; charset=UTF-8",
-        "bytes": 0,
-        "final_url": "https://search.sunbiz.org/data/cor/20260910c.txt"
-      },
-      {
-        "url": "https://search.sunbiz.org/data/cor/20260910a.txt",
-        "method": "HEAD",
-        "status": 403,
-        "content_type": "text/html; charset=UTF-8",
-        "bytes": 0,
-        "final_url": "https://search.sunbiz.org/data/cor/20260910a.txt"
       }
     ]
   },
@@ -593,7 +594,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=utf-8",
-        "bytes": 201707,
+        "bytes": 201702,
         "final_url": "https://quality.healthfinder.fl.gov/Facility-Search/FacilityLocateSearch",
         "download_links": [
           "https://quality.healthfinder.fl.gov/files/AllFacilityData_MiamiDade_08242026.xlsx",
