@@ -1,19 +1,19 @@
 # Tampa Bid Radar
 
-Collected 2026-09-15T00:20:20+00:00 · 365-day window · eight tracked submarkets
+Collected 2026-09-15T13:18:03+00:00 · 365-day window · eight tracked submarkets
 
 | Source | Records | In a submarket | Qualified |
 |---|---|---|---|
-| Building permits | 296 | 136 | **32**|
-| Active entitlements | 272 | 58 | **26**|
+| Building permits | 297 | 139 | **33**|
+| Active entitlements | 275 | 58 | **26**|
 | Alcoholic-beverage permits | 36 | 19 | **15**|
 | CRA commercial grants | 38 | 10 | **3**|
-| DBPR food service and lodging | 229 | 31 | **14**|
+| DBPR food service and lodging | 232 | 31 | **14**|
 | HCAA planned procurement | 21 | 21 | **21**|
 | Sunbiz new entities | 0 | 0 | **0**|
-| _total_ | 892 | 275 | **111** |
+| _total_ | 899 | 278 | **112** |
 
-## Qualified — call these (111)
+## Qualified — call these (112)
 
 Score ≥ 55/100 with no hard blocker (PLAN §2.3/§2.4), inside one of the eight submarkets, bid window still open.
 
@@ -89,11 +89,13 @@ Score ≥ 55/100 with no hard blocker (PLAN §2.3/§2.4), inside one of the eigh
 | abt | `AB1-26-0000009` | 2026-04-28 | abt | Dale Mabry | restaurant | **63** | — | 4100 West Boy Scout Boulevard (2281 North Lois Avenue) | — | — | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/AlcoholBeverage/FeatureServer/0/query?where=OBJECTID%3D81744&outFields=%2A&f=json) |
 | permit | `BLD-26-0525334` | 2026-05-22 | early_start | Water Street | hospitality | **63** | VIP Lounge- Interior Remodel | 401 Channelside Dr | tfultz@sdi-co.com (+1) | $1,000,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00TJ9&agencyCode=TAMPA) |
 | entitlement | `AB2-26-0000021` | 2026-06-01 | pre_permit | Ybor City | restaurant | **63** | AB Special Use 2 case | 1018 E Cass St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=00UXZ&agencyCode=TAMPA) |
+| entitlement | `AB2-26-0000027` | 2026-09-14 | pre_permit | Dale Mabry | restaurant | **63** | AB Special Use 2 case | 4410 W Boy Scout Blvd | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=02GXG&agencyCode=TAMPA) |
 | permit | `BLD-26-0523153` | 2026-03-03 | revision | Airport / Westshore | hospitality | **62** | Springhill | 4835 W Cypress St | brian.morgan@mckibbonplaces.com (+2) | $600,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00CZO&agencyCode=TAMPA) |
 | permit | `BLD-26-0522653` | 2026-02-13 | revision | Downtown Riverwalk | restaurant | **60** | Rreal Tacos | 808 N Franklin St #202-3412 | roy.rasllc@gmail.com (+2) | $5,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=009G1&agencyCode=TAMPA) |
 | permit | `BLD-26-0523102` | 2026-03-02 | revision | Airport / Westshore | retail | **59** | Spc 264A | 2223 N West Shore Blvd | lweyant.rfl@gmail.com (+3) | $1,700,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00CRE&agencyCode=TAMPA) |
+| permit | `BLD-26-0519132` | 2025-10-03 | revision | Airport / Westshore | office | **58** | Meridan Three | 4200 W Cypress St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02KOP&agencyCode=TAMPA) |
+| permit | `BLD-26-0519297` | 2025-10-10 | revision | Dale Mabry | office | **58** | PwC Tampa MW | 4040 W Boy Scout Blvd | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02M7Y&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000008` | 2025-10-31 | pre_permit | Airport / Westshore | other | **58** | Rezoning case, hearing 2026-04-09 | 7700 W Courtney Campbell Cswy | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=25CAP&capID2=00000&capID3=02QOX&agencyCode=TAMPA) |
-| permit | `BLD-26-0520048` | 2025-11-06 | revision | Airport / Westshore | retail | **58** | Marlene Zipin iConstructors LLC | 3000 Bayport Dr | mzipin@iconstructors.com (+1) | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02S3P&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000030` | 2025-12-15 | pre_permit | Ybor City | other | **58** | Rezoning case, hearing 2026-05-14 | 1220 Scott St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=25CAP&capID2=00000&capID3=02YLT&agencyCode=TAMPA) |
 | permit | `BLD-26-0521454` | 2025-12-24 | revision | Water Street | retail | **58** | Michael Spada WST Block 1 LLC | 200 S Nebraska Ave | mspada@spprealestate.com (+2) | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02ZTL&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000034` | 2026-01-06 | pre_permit | Dale Mabry | other | **58** | Rezoning case, hearing 2026-09-10 | 4400 W Boy Scout Blvd | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=000F1&agencyCode=TAMPA) |
@@ -117,14 +119,13 @@ Score ≥ 55/100 with no hard blocker (PLAN §2.3/§2.4), inside one of the eigh
 | entitlement | `SU1-26-0000077` | 2026-08-06 | pre_permit | Airport / Westshore | other | **58** | Special Use 1 - General case | 5119 W Grace St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=024MJ&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000116` | 2026-08-10 | pre_permit | Airport / Westshore | other | **58** | Rezoning case | 253 N West Shore Blvd | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=025D6&agencyCode=TAMPA) |
 | entitlement | `LND-26-0000132` | 2026-08-12 | pre_permit | Westshore Marina | other | **58** | General Land Use case | 4402 W Lancaster St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=0267S&agencyCode=TAMPA) |
-| entitlement | `LND-26-0000133` | 2026-08-12 | pre_permit | Westshore Marina | other | **58** | General Land Use case | 6807 S Manhattan Ave | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=0268V&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000117` | 2026-08-14 | pre_permit | Davis Islands | other | **58** | Rezoning case | 319 Bayshore Blvd | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=026ZC&agencyCode=TAMPA) |
 | entitlement | `LND-26-0000138` | 2026-08-25 | pre_permit | Ybor City | other | **58** | General Land Use case | 2708 N Central Ave | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=02A92&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000120` | 2026-09-03 | pre_permit | Dale Mabry | other | **58** | Rezoning case | 3112 W Abdella St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=02E2B&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000121` | 2026-09-08 | pre_permit | Airport / Westshore | other | **58** | Rezoning case | 4509 W Gray St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=02F9I&agencyCode=TAMPA) |
 | permit | `BLD-26-0524039` | 2026-04-06 | revision | Dale Mabry | retail | **57** | US Bank | 4050 W Boy Scout Blvd | bdurkin@burnhamnationwide.com (+2) | $625,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00JVV&agencyCode=TAMPA) |
-| permit | `BLD-26-0519297` | 2025-10-10 | revision | Dale Mabry | office | **56** | PwC Tampa MW | 4040 W Boy Scout Blvd | doug@gulfcoastpermitting.com (+2) | $7,000,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02M7Y&agencyCode=TAMPA) |
 | permit | `BLD-26-0524427` | 2026-04-17 | revision | Airport / Westshore | retail | **56** | Kendra Scott | 2223 N West Shore Blvd | sday@interplanllc.com (+2) | $400,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00MOS&agencyCode=TAMPA) |
+| permit | `BLD-26-0525116` | 2026-05-14 | revision | Airport / Westshore | office | **56** | David Bearce | 4925 Independence Pkwy | _41permits@ecslimited.com (+3) | $5,000,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00RRV&agencyCode=TAMPA) |
 | permit | `BLD-26-0526342` | 2026-07-06 | early_start | Airport / Westshore | retail | **56** | Edikted | 2223 N West Shore Blvd | sarah.elitesolutions4u@gmail.com (+2) | $350,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=01W3M&agencyCode=TAMPA) |
 | permit | `BLD-26-0520728` | 2025-12-01 | revision | Ybor City | office | **55** | Aureate | 1071 Blanche Armwood St | mgrill@aureatedev.com (+2) | $2,800,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02W0O&agencyCode=TAMPA) |
 | permit | `BLD-26-0521174` | 2025-12-12 | revision | Water Street | office | **55** | Velera | 615 Channelside Dr | bcoleman@ecslimited.com (+3) | $2,775,433 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02YC5&agencyCode=TAMPA) |
@@ -211,6 +212,7 @@ A live rezoning, variance or special-use case with a hearing date. The earliest 
 | hcaa_ppo | `HCAA-September2026-561f6be2` | 2027-04-01 | pre_permit | Airport / Westshore | relationship | **78** | Hillsborough County Aviation Authority | Tampa International Airport | rharris@tampaairport.com | — | [record](https://www.tampaairport.com/sites/default/files/2026-09/Planned%20Procurement%20Opportunities%20Report%20-%20September%202026.pdf) |
 | entitlement | `AB2-26-0000004` | 2025-12-02 | pre_permit | Dale Mabry | restaurant | **63** | AB Special Use 2 case | 3907 W Dr Martin Luther King Jr Blvd #A | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=25CAP&capID2=00000&capID3=02WHC&agencyCode=TAMPA) |
 | entitlement | `AB2-26-0000021` | 2026-06-01 | pre_permit | Ybor City | restaurant | **63** | AB Special Use 2 case | 1018 E Cass St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=00UXZ&agencyCode=TAMPA) |
+| entitlement | `AB2-26-0000027` | 2026-09-14 | pre_permit | Dale Mabry | restaurant | **63** | AB Special Use 2 case | 4410 W Boy Scout Blvd | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=02GXG&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000008` | 2025-10-31 | pre_permit | Airport / Westshore | other | **58** | Rezoning case, hearing 2026-04-09 | 7700 W Courtney Campbell Cswy | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=25CAP&capID2=00000&capID3=02QOX&agencyCode=TAMPA) |
 | entitlement | `VAC-26-0000004` | 2025-12-04 | pre_permit | Ybor City | other | **58** | ROW Vacating case | 2308 N 13th St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=25CAP&capID2=00000&capID3=02X03&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000030` | 2025-12-15 | pre_permit | Ybor City | other | **58** | Rezoning case, hearing 2026-05-14 | 1220 Scott St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=25CAP&capID2=00000&capID3=02YLT&agencyCode=TAMPA) |
@@ -249,7 +251,6 @@ A live rezoning, variance or special-use case with a hearing date. The earliest 
 | entitlement | `VRB-26-0000118` | 2026-08-08 | pre_permit | Davis Islands | other | **58** | Variance Review Board case | 404 E Davis Blvd | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=02535&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000116` | 2026-08-10 | pre_permit | Airport / Westshore | other | **58** | Rezoning case | 253 N West Shore Blvd | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=025D6&agencyCode=TAMPA) |
 | entitlement | `LND-26-0000132` | 2026-08-12 | pre_permit | Westshore Marina | other | **58** | General Land Use case | 4402 W Lancaster St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=0267S&agencyCode=TAMPA) |
-| entitlement | `LND-26-0000133` | 2026-08-12 | pre_permit | Westshore Marina | other | **58** | General Land Use case | 6807 S Manhattan Ave | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=0268V&agencyCode=TAMPA) |
 | entitlement | `FDN-26-0000121` | 2026-08-13 | pre_permit | Airport / Westshore | other | **58** | Formal Decision case | 4805 N Manhattan Ave | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=026NM&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000117` | 2026-08-14 | pre_permit | Davis Islands | other | **58** | Rezoning case | 319 Bayshore Blvd | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=026ZC&agencyCode=TAMPA) |
 | entitlement | `FDN-26-0000131` | 2026-08-20 | pre_permit | Davis Islands | other | **58** | Formal Decision case | 119 Adriatic Ave | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=028N0&agencyCode=TAMPA) |
@@ -268,7 +269,7 @@ A live rezoning, variance or special-use case with a hearing date. The earliest 
 | entitlement | `REZ-26-0000109` | 2026-07-16 | pre_permit | Airport / Westshore | other | **50** | Rezoning case, hearing 2026-12-10 | 4507 W Gray St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=01YW8&agencyCode=TAMPA) |
 | entitlement | `REZ-26-0000110` | 2026-07-16 | pre_permit | Downtown Riverwalk | other | **50** | Rezoning case, hearing 2026-12-10 | 1710 N Tampa St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&capID1=26CAP&capID2=00000&capID3=01YWQ&agencyCode=TAMPA) |
 
-## revision (50)
+## revision (51)
 
 A change to an in-flight permit. The job is active.
 
@@ -291,16 +292,17 @@ A change to an in-flight permit. The job is active.
 | permit | `BLD-26-0523153` | 2026-03-03 | revision | Airport / Westshore | hospitality | **62** | Springhill | 4835 W Cypress St | brian.morgan@mckibbonplaces.com (+2) | $600,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00CZO&agencyCode=TAMPA) |
 | permit | `BLD-26-0522653` | 2026-02-13 | revision | Downtown Riverwalk | restaurant | **60** | Rreal Tacos | 808 N Franklin St #202-3412 | roy.rasllc@gmail.com (+2) | $5,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=009G1&agencyCode=TAMPA) |
 | permit | `BLD-26-0523102` | 2026-03-02 | revision | Airport / Westshore | retail | **59** | Spc 264A | 2223 N West Shore Blvd | lweyant.rfl@gmail.com (+3) | $1,700,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00CRE&agencyCode=TAMPA) |
-| permit | `BLD-26-0520048` | 2025-11-06 | revision | Airport / Westshore | retail | **58** | Marlene Zipin iConstructors LLC | 3000 Bayport Dr | mzipin@iconstructors.com (+1) | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02S3P&agencyCode=TAMPA) |
+| permit | `BLD-26-0519132` | 2025-10-03 | revision | Airport / Westshore | office | **58** | Meridan Three | 4200 W Cypress St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02KOP&agencyCode=TAMPA) |
+| permit | `BLD-26-0519297` | 2025-10-10 | revision | Dale Mabry | office | **58** | PwC Tampa MW | 4040 W Boy Scout Blvd | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02M7Y&agencyCode=TAMPA) |
 | permit | `BLD-26-0521454` | 2025-12-24 | revision | Water Street | retail | **58** | Michael Spada WST Block 1 LLC | 200 S Nebraska Ave | mspada@spprealestate.com (+2) | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02ZTL&agencyCode=TAMPA) |
 | permit | `BLD-26-0522885` | 2026-02-23 | revision | Water Street | retail | **58** | Travis Chess DPR Construction 1 N. Dale Mab… | 200 S Nebraska Ave | travisch@dpr.com (+2) | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00B8P&agencyCode=TAMPA) |
 | permit | `BLD-26-0524039` | 2026-04-06 | revision | Dale Mabry | retail | **57** | US Bank | 4050 W Boy Scout Blvd | bdurkin@burnhamnationwide.com (+2) | $625,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00JVV&agencyCode=TAMPA) |
-| permit | `BLD-26-0519297` | 2025-10-10 | revision | Dale Mabry | office | **56** | PwC Tampa MW | 4040 W Boy Scout Blvd | doug@gulfcoastpermitting.com (+2) | $7,000,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02M7Y&agencyCode=TAMPA) |
 | permit | `BLD-26-0524427` | 2026-04-17 | revision | Airport / Westshore | retail | **56** | Kendra Scott | 2223 N West Shore Blvd | sday@interplanllc.com (+2) | $400,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00MOS&agencyCode=TAMPA) |
+| permit | `BLD-26-0525116` | 2026-05-14 | revision | Airport / Westshore | office | **56** | David Bearce | 4925 Independence Pkwy | _41permits@ecslimited.com (+3) | $5,000,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00RRV&agencyCode=TAMPA) |
 | permit | `BLD-26-0520728` | 2025-12-01 | revision | Ybor City | office | **55** | Aureate | 1071 Blanche Armwood St | mgrill@aureatedev.com (+2) | $2,800,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02W0O&agencyCode=TAMPA) |
 | permit | `BLD-26-0521174` | 2025-12-12 | revision | Water Street | office | **55** | Velera | 615 Channelside Dr | bcoleman@ecslimited.com (+3) | $2,775,433 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02YC5&agencyCode=TAMPA) |
 | permit | `BLD-26-0525092` | 2026-05-13 | revision | Downtown Riverwalk | office | **55** | Louisa Carfi Judy's Permit Service | 100 N Tampa St | judyspermitservice@judysps.com (+2) | $2,453,528 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00RML&agencyCode=TAMPA) |
-| permit | `BLD-26-0520046` | 2025-11-06 | revision | Airport / Westshore | other | **53** | Main Terminal | 4100 George J Bean Pkwy | npetterson@henselphelps.com (+2) | $280,000,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02S3N&agencyCode=TAMPA) |
+| permit | `BLD-26-0520048` | 2025-11-06 | revision | Airport / Westshore | retail | **53** | (Suite 110) Addition: Interior ALT | 3000 Bayport Dr | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02S3P&agencyCode=TAMPA) |
 | permit | `BLD-26-0520356` | 2025-11-17 | revision | Westshore Marina | office | **53** | Boys and Girls Club Of Tampa Bay Liberty Mo… | 4219 W Mango Ave | erink@dpr.com (+2) | $800,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02TP0&agencyCode=TAMPA) |
 | permit | `BLD-26-0522689` | 2026-02-16 | revision | Airport / Westshore | office | **53** | Murat Kizikli PRIVATE PROVIDER - BUREAU VER… | 4950 W Kennedy Blvd #2 | murat.kizikli@bureauveritas.com (+1) | $807,282 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=009P8&agencyCode=TAMPA) |
 | permit | `BLD-26-0523162` | 2026-03-03 | revision | Dale Mabry | office | **53** | MUFG | 4050 W Boy Scout Blvd | meghan.r@lkdesigngroup.com (+2) | $775,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00D1W&agencyCode=TAMPA) |
@@ -316,7 +318,7 @@ A change to an in-flight permit. The job is active.
 | permit | `BLD-26-0524769` | 2026-05-04 | revision | Downtown Riverwalk | office | **50** | Thornton Tomasetti | 400 N Ashley Dr | judyspermitservice@judysps.com (+2) | $150,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00PKW&agencyCode=TAMPA) |
 | permit | `BLD-26-0526369` | 2026-07-06 | revision | Downtown Riverwalk | office | **50** | Altieri Ins. Consultants | 400 N Tampa St #FS | sepermits@gmail.com (+2) | $213,576 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=01WDJ&agencyCode=TAMPA) |
 | permit | `BLD-26-0525940` | 2026-06-17 | revision | Airport / Westshore | office | **49** | Nationwide | 4200 W Cypress St | admin@darinranker.com (+2) | $75,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=01SVA&agencyCode=TAMPA) |
-| permit | `BLD-26-0519132` | 2025-10-03 | revision | Airport / Westshore | office | **48** | Meridan Three | 4200 W Cypress St | permits@revivekitchenandbath.com (+2) | $60,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02KOP&agencyCode=TAMPA) |
+| permit | `BLD-26-0520046` | 2025-11-06 | revision | Airport / Westshore | other | **48** | Main Terminal | 4100 George J Bean Pkwy | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02S3N&agencyCode=TAMPA) |
 | permit | `BLD-26-0520487` | 2025-11-19 | revision | Davis Islands | office | **48** | The Art Center | 705 W Swann Ave | donnally@timelinecontracting.com (+1) | $50,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02UGG&agencyCode=TAMPA) |
 | permit | `BLD-26-0523931` | 2026-03-31 | revision | Airport / Westshore | office | **46** | Michael Hilley hilley construction llc | 4006 W Cayuga St #1-4 | mike@hilleyconstruction.com (+2) | $15,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00IY5&agencyCode=TAMPA) |
 | permit | `BLD-26-0522271` | 2026-01-30 | revision | Airport / Westshore | other | **42** | Mango Space Coworking | 1101 N Ward St | 8136012701 | $500,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=0068Y&agencyCode=TAMPA) |
@@ -334,9 +336,9 @@ A change to an in-flight permit. The job is active.
 | Ybor City | 1 | 7 | 3 | 2 | 1 | 19 | **33** |
 | Downtown Riverwalk | 1 | 8 | 2 |  | 6 | 5 | **22** |
 | Downtown Tampa |  |  |  |  |  | 1 | **1** |
-| Westshore Marina |  |  |  |  | 1 | 7 | **8** |
-| Dale Mabry | 2 | 2 |  | 1 | 2 | 8 | **15** |
-| Airport / Westshore | 1 |  | 3 | 4 | 8 | 19 | **56** |
+| Westshore Marina |  |  |  |  | 1 | 6 | **7** |
+| Dale Mabry | 2 | 3 |  | 1 | 2 | 8 | **16** |
+| Airport / Westshore | 1 |  | 3 | 4 | 9 | 19 | **57** |
 
 ## Already permitted (62)
 
@@ -345,10 +347,10 @@ Not an outreach list. This is who is building what, where — the input to win-r
 | Source | Ref | Filed | Stage | Submarket | Trade | Entity / scope | Address | Contact | Value | Link |
 |---|---|---|---|---|---|---|---|---|---|---|
 | permit | `BLD-26-0521997` | 2026-01-21 | issued | Dale Mabry | medical | Michael Maliskey Robins & Morton | 3001 W Dr Martin Luther King Jr Blvd #1 | mmaliskey@robinsmorton.com (+2) | $3,000,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=003FQ&agencyCode=TAMPA) |
-| permit | `BLD-25-0518967` | 2025-09-25 | issued | Airport / Westshore | medical | Juan Fradera ECS Florida, LLC | 5610 W La Salle St | jfraderavelez@ecslimited.com (+3) | $2,300,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02IUV&agencyCode=TAMPA) |
 | permit | `BLD-26-0523439` | 2026-03-11 | issued | Dale Mabry | medical | Alterations | 2809 W Virginia Ave | aaron@sherriespermits.com (+2) | $1,000,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00F3G&agencyCode=TAMPA) |
 | permit | `BLD-26-0524159` | 2026-04-09 | issued | Ybor City | medical | Dr. Matt Robison, DDS | 1203 Ray Charles Blvd | info@rcigroupinc.net (+1) | $362,500 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00KS2&agencyCode=TAMPA) |
 | cra_grant | `CRA-14` | 2021-10-14 | issued | Ybor City | restaurant | De La Grana Properties | 1710 E 7th Ave | — | $116,521 | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/CRACommercialInitiative/MapServer/0/query?where=OBJECTID%3D14&outFields=%2A&f=json) |
+| permit | `BLD-25-0518967` | 2025-09-25 | issued | Airport / Westshore | medical | Int. Remodel-Labcorp | 5610 W La Salle St | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02IUV&agencyCode=TAMPA) |
 | permit | `BLD-26-0523359` | 2026-03-09 | issued | Airport / Westshore | restaurant | Charley's Steakhouse | 1965 N West Shore Blvd | cwoodsby@tottrg.com (+2) | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00EI8&agencyCode=TAMPA) |
 | permit | `BLD-26-0523757` | 2026-03-24 | issued | Dale Mabry | restaurant | HTeaO Bar | 4355 N Himes Ave | mpomroy@interplanllc.com (+2) | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00HOH&agencyCode=TAMPA) |
 | permit | `BLD-26-0525525` | 2026-06-01 | issued | Downtown Riverwalk | restaurant | Chick Fil A | 200 UT Poe Pkwy | kricketts1@ecslimited.com (+3) | $1,100,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00V1I&agencyCode=TAMPA) |
@@ -357,6 +359,7 @@ Not an outreach list. This is who is building what, where — the input to win-r
 | cra_grant | `CRA-7` | 2023-02-09 | issued | Ybor City | retail | Ybor Bungalow Adventure LLC | 2208 E 2nd Ave | — | $349,491 | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/CRACommercialInitiative/MapServer/0/query?where=OBJECTID%3D7&outFields=%2A&f=json) |
 | cra_grant | `CRA-11` | 2023-11-09 | issued | Airport / Westshore | retail | Cayuga Hale | 4011 W Cayuga St | — | $165,668 | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/CRACommercialInitiative/MapServer/0/query?where=OBJECTID%3D11&outFields=%2A&f=json) |
 | cra_grant | `CRA-19` | 2024-04-11 | issued | Downtown Riverwalk | office | Kasten Enterprises | 513 Franklin St | — | $986,787 | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/CRACommercialInitiative/MapServer/0/query?where=OBJECTID%3D19&outFields=%2A&f=json) |
+| permit | `BLD-26-0519101` | 2025-10-02 | issued | Airport / Westshore | office | Inspections Only. No discounted fees*** ATF… | 5005 N Hale Ave | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02KH4&agencyCode=TAMPA) |
 | permit | `BLD-26-0523750` | 2026-03-24 | issued | Dale Mabry | retail | Autozone | 3020 W Columbus Dr | claire@withpulley.com (+3) | $585,064 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00HLG&agencyCode=TAMPA) |
 | cra_grant | `CRA-18` | — | issued | Ybor City | office | J.C. Newman Cigar Company | 2701 N 16th St | — | $316,406 | [record](https://arcgis.tampagov.net/arcgis/rest/services/Planning/CRACommercialInitiative/MapServer/0/query?where=OBJECTID%3D18&outFields=%2A&f=json) |
 | permit | `BLD-26-0524777` | 2026-05-04 | issued | Water Street | retail | Fitness Studio includes MEPs | 912 E Cumberland Ave | corey@withpulley.com (+2) | $300,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00PMQ&agencyCode=TAMPA) |
@@ -369,7 +372,6 @@ Not an outreach list. This is who is building what, where — the input to win-r
 | permit | `BLD-26-0525056` | 2026-05-12 | issued | Dale Mabry | office | Includes MEPs and Fire | 3848 W Columbus Dr | judyspermitservice@judysps.com (+2) | $1,800,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00RD0&agencyCode=TAMPA) |
 | permit | `BLD-26-0525263` | 2026-05-20 | issued | Downtown Riverwalk | office | Ogletree Deakins | 100 N Tampa St | judyspermitservice@judysps.com (+2) | $1,854,416 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00SY0&agencyCode=TAMPA) |
 | permit | `BLD-26-0525692` | 2026-06-08 | issued | Dale Mabry | office | Guida House Project | 1516 N Renfrew St | kh@wilderarchitecture.com (+2) | $2,000,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00WAH&agencyCode=TAMPA) |
-| permit | `BLD-26-0519101` | 2025-10-02 | issued | Airport / Westshore | office | Inspections Only. No discounted fees*** ATF… | 5005 N Hale Ave | nccconstruction@yahoo.com (+1) | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02KH4&agencyCode=TAMPA) |
 | permit | `BLD-26-0524100` | 2026-04-08 | issued | Airport / Westshore | retail | no mec. no fire | 2223 N West Shore Blvd | lweyant.rfl@gmail.com (+2) | $60,239 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00KAF&agencyCode=TAMPA) |
 | permit | `BLD-26-0526514` | 2026-07-11 | issued | Airport / Westshore | office | Louisa Carfi Judy's Permit Service | 5426 Bay Center Dr | judyspermitservice@judysps.com (+2) | $1,000,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=01XT2&agencyCode=TAMPA) |
 | permit | `BLD-26-0522650` | 2026-02-13 | issued | Airport / Westshore | office | Morgan Stanley | 4890 W Kennedy Blvd #700 | judyspermitservice@judysps.com (+2) | $720,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=009FA&agencyCode=TAMPA) |
@@ -383,7 +385,6 @@ Not an outreach list. This is who is building what, where — the input to win-r
 | permit | `BLD-26-0524658` | 2026-04-28 | issued | Dale Mabry | office | AON | 4010 W Boy Scout Blvd | thomas.finnerty@aon.com (+2) | $275,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00OJR&agencyCode=TAMPA) |
 | permit | `BLD-26-0525216` | 2026-05-19 | issued | Downtown Riverwalk | office | Ankura | 101 E Kennedy Blvd | judyspermitservice@judysps.com (+2) | $400,576 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00SM6&agencyCode=TAMPA) |
 | permit | `BLD-26-0526501` | 2026-07-10 | issued | Downtown Riverwalk | office | AIC Architecture | 1000 N Ashley Dr | judyspermitservice@judysps.com (+2) | $350,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=01XP9&agencyCode=TAMPA) |
-| permit | `BLD-26-0520382` | 2025-11-17 | issued | Airport / Westshore | office | Screening Equipment Deployment Services | 4100 George J Bean Pkwy | eric.hott@mjmelect.com (+2) | $202,446 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02TUI&agencyCode=TAMPA) |
 | permit | `BLD-26-0523204` | 2026-03-04 | issued | Downtown Riverwalk | office | Back to Vanilla Shell | 702 N Franklin St | mlb@benderson.com (+2) | $150,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00DCH&agencyCode=TAMPA) |
 | permit | `BLD-26-0525247` | 2026-05-20 | issued | Water Street | office | Berkadia Tampa | 1001 Water St #100-110 | sepermits@gmail.com (+2) | $200,835 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00SU4&agencyCode=TAMPA) |
 | permit | `BLD-26-0525577` | 2026-06-03 | issued | Dale Mabry | office | Louisa Carfi Judy's Permit Service | 4211 W Boy Scout Blvd | judyspermitservice@judysps.com (+2) | $180,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00VED&agencyCode=TAMPA) |
@@ -396,8 +397,9 @@ Not an outreach list. This is who is building what, where — the input to win-r
 | permit | `BLD-26-0525512` | 2026-06-01 | issued | Downtown Riverwalk | office | Louisa Carfi Judy's Permit Service | 100 N Tampa St | judyspermitservice@judysps.com (+2) | $103,273 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00UXJ&agencyCode=TAMPA) |
 | permit | `BLD-26-0525551` | 2026-06-02 | issued | Airport / Westshore | office | Zachary Seaberg Seaberg Builders Inc. | 205 S Hoover Blvd #A | zach@seabergbuilders.com (+3) | $80,117 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00V78&agencyCode=TAMPA) |
 | permit | `BLD-26-0525760` | 2026-06-10 | issued | Airport / Westshore | office | GenServe | 1511 N West Shore Blvd | jennifer.rodriguez@highwoods.com (+3) | $127,626 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=00WVV&agencyCode=TAMPA) |
+| permit | `BLD-26-0526601` | 2026-07-15 | issued | Water Street | other | Puffins Exhibit | 701 Channelside Dr | _41permits@ecslimited.com (+2) | $39,000,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=01YPA&agencyCode=TAMPA) |
+| permit | `BLD-26-0519438` | 2025-10-16 | issued | Dale Mabry | other | Hubert Warehouse Flex space North and South | 4614 N Hubert Ave | — | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02NDI&agencyCode=TAMPA) |
 | permit | `BLD-26-0525929` | 2026-06-17 | issued | Dale Mabry | office | Fly USA | 4300 W Tampa Bay Blvd | jourdona@lafatewilson.com (+2) | $60,000 | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=01STC&agencyCode=TAMPA) |
-| permit | `BLD-26-0519438` | 2025-10-16 | issued | Dale Mabry | other | Hubert Warehouse Flex space North and South | 4614 N Hubert Ave | cgonzalez@stellarconstruction.us (+3) | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02NDI&agencyCode=TAMPA) |
 | permit | `BLD-26-0520494` | 2025-11-19 | issued | Airport / Westshore | other | MEPs | 5016 N Coolidge Ave #1-5 | tfultz@sdi-co.com (+2) | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=02UIQ&agencyCode=TAMPA) |
 | permit | `BLD-26-0521536` | 2025-12-30 | issued | Water Street | other | Justin Burton B & N Welding and Fabrication | 200 N 19th St | justin@bic-fl.com (+3) | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=25CAP&capID2=00000&capID3=030AI&agencyCode=TAMPA) |
 | permit | `BLD-26-0526740` | 2026-07-21 | issued | Water Street | other | Sea Lion and Penguin Exhibits | 701 Channelside Dr | kricketts1@ecslimited.com (+1) | — | [record](https://aca-prod.accela.com/TAMPA/Cap/CapDetail.aspx?Module=Building&TabName=Building&capID1=26CAP&capID2=00000&capID3=02069&agencyCode=TAMPA) |
@@ -407,7 +409,7 @@ Not an outreach list. This is who is building what, where — the input to win-r
 
 _…and 2 more in `signals.jsonl`._
 
-## Who is building fitouts here (113 contractor × submarket)
+## Who is building fitouts here (108 contractor × submarket)
 
 The contractor of record on every enriched permit, from its own Accela page. This is the win-rate dataset: the share of this table that is ours is our measured share, per submarket. Full table in `market_share.csv`.
 
@@ -415,24 +417,23 @@ The contractor of record on every enriched permit, from its own Accela page. Thi
 |---|---|---|---|---|---|
 | Downtown Riverwalk | BUILDIFY GENERAL CONTRACTORS | CGC1534286 | 5 | office | $571,621 |
 | Downtown Riverwalk | RUBICON GENERAL CONTRACTORS | CGC1511762 | 4 | office | $829,276 |
+| Water Street | MATTHEW GILBERT BARR & BARR INC | CGC1513535 | 2 | other | $39,000,000 |
 | Downtown Riverwalk | ALLIED CONSTRUCTION MANAGEMENT INC | CGC1518570 | 2 | hospitality | $15,150,000 |
 | Water Street | RELIANCE CONSTRUCTION COMPANY LLC | CGC048539 | 2 | hospitality | $4,607,316 |
 | Dale Mabry | ROBINSMORTON.COM THE ROBINS & MORTON GROUP | CGC1523017 | 2 | medical | $2,750,000 |
 | Airport / Westshore | AXECEL CONSTRUCTION LLC | CBC1261274 | 2 | office | $1,747,958 |
-| Airport / Westshore | DPR CONSTRUCTION | CGC1524578 | 2 | other | $1,346,689 |
 | Airport / Westshore | ABI COMPANIES INC | CGC1522944 | 2 | office | $983,689 |
 | Dale Mabry | CARLOS BENITO RANON | CGC049808 | 2 | office | $756,650 |
 | Airport / Westshore | ED TAYLOR CONSTRUCTION | CGC049804 | 2 | office | $592,334 |
 | Dale Mabry | RUBICON GENERAL CONTRACTORS | CGC1511762 | 2 | office | $402,500 |
 | Dale Mabry | BUILDIFY GENERAL CONTRACTORS | CGC1534286 | 2 | office | $365,000 |
 | Water Street | ICONSTRUCTORS LLC | CGC1535583 | 2 | office | $331,626 |
-| Airport / Westshore | Ronald E Allen | CBC1266613 | 2 | office | $253,058 |
 | Airport / Westshore | AXIS ONE CONSTRUCTION COMPANY | CGC1516931 | 2 | office | $101,313 |
 | Airport / Westshore | NWR CONSTRUCTION | CGC1520910 | 2 | other | $159,800 |
 | Water Street | DPR CONSTRUCTION | CGC1524578 | 2 | retail | — |
 | Airport / Westshore | SDI COMPANY LLC | CGC1522623 | 2 | other | — |
-| Dale Mabry | JAVIER J ISTURIZ | CGC1504355 | 1 | office | $7,000,000 |
 | Water Street | KELSO BUILDING SERVICES | CAC1820797 | 1 | hospitality | $6,000,000 |
+| Airport / Westshore | RUBICON GENERAL CONTRACTORS | CGC1511762 | 1 | office | $5,000,000 |
 | Ybor City | ARCO MURRAY CONSTRUCTION COMPANY | CGC1513959 | 1 | medical | $3,000,000 |
 | Downtown Riverwalk | DHGRIFFIN.COM D H GRIFFIN WRECKING COMPANY | CGC1518009 | 1 | other | $2,900,000 |
 | Airport / Westshore | THE PERRY COMPANY | CGC1516353 | 1 | office | $2,800,000 |
@@ -443,13 +444,14 @@ The contractor of record on every enriched permit, from its own Accela page. Thi
 | Airport / Westshore | William R Chavez | CBC1263714 | 1 | hospitality | $2,100,000 |
 | Dale Mabry | JOHNSON-LAUX CONSTRUCTION LLC | CGC1519701 | 1 | office | $2,000,000 |
 | Dale Mabry | INTERSTRUCTINC.COM INTERSTRUCT TAMPA LLC | CGC1525332 | 1 | office | $1,800,000 |
+| Airport / Westshore | MANAGEMENT RESOURCE SYSTEMS INC | CGC1530441 | 1 | retail | $1,700,000 |
 
 ## What each source can and cannot tell you
 
 - **Building permits** publish at issuance. There is no application stage, no valuation, and no applicant or contractor field. Only `early_start` and `strip_out` rows have a live bid window; the tenant is parsed from the project description and is blank where it could not be read with confidence.
 - **Active entitlements** are the earliest signal — a live rezoning or special-use case with a published hearing date — but the layer names no applicant, so the address is the lead and the trade is undeclared except on alcoholic-beverage cases.
 - **Alcoholic-beverage permits** are the only source with a contact channel. Seat counts are filled on 23 of 4,096 rows and are not used.
-- **Accela enrichment** filled 136 of 136 permit rows from their own record pages (136 fetched this run, 0 from cache, 0 failed). That is where the contractor of record, the job valuation, the real square footage and the applicant's phone and email come from — the ArcGIS layer has none of them.
+- **Accela enrichment** filled 130 of 139 permit rows from their own record pages (130 fetched this run, 0 from cache, 0 failed). That is where the contractor of record, the job valuation, the real square footage and the applicant's phone and email come from — the ArcGIS layer has none of them.
 - **CRA grants** are the only source with a real dollar figure (`TOTALPROJECTCOST`); a grant that is Awarded and not Completed has committed money and outstanding work.
 
-Signals outside every tracked submarket: 617 of 892.
+Signals outside every tracked submarket: 621 of 899.

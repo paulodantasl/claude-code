@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-09-15T00:19:48+00:00",
+  "retrieved_at": "2026-09-15T13:17:22+00:00",
   "dbpr": {
     "pages": [
       {
@@ -107,7 +107,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 156329,
+        "bytes": 156326,
         "final_url": "https://www2.myfloridalicense.com/instant-public-records/",
         "download_links": []
       },
@@ -116,7 +116,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 157702,
+        "bytes": 157695,
         "final_url": "https://www2.myfloridalicense.com/open-government/",
         "download_links": []
       }
@@ -610,7 +610,7 @@
         "method": "GET",
         "status": 200,
         "content_type": "text/html; charset=utf-8",
-        "bytes": 82894,
+        "bytes": 82899,
         "final_url": "https://quality.healthfinder.fl.gov/Researchers/Order-Data/",
         "download_links": [
           "https://fhfstore.blob.core.windows.net/documents/researchers/OrderData/documents/City_State_Country Codes.xlsx",
@@ -731,7 +731,7 @@
         "method": "GET",
         "status": 403,
         "content_type": "text/html; charset=UTF-8",
-        "bytes": 5727,
+        "bytes": 5705,
         "final_url": "https://procurement.opengov.com/portal/tampaairport"
       },
       {

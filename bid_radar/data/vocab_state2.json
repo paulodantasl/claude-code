@@ -1,10 +1,10 @@
 {
-  "retrieved_at": "2026-09-15T00:19:55+00:00",
+  "retrieved_at": "2026-09-15T13:17:40+00:00",
   "dbpr": {
     "newfood.csv": {
       "url": "https://www2.myfloridalicense.com/sto/file_download/extracts/newfood.csv",
       "status": 200,
-      "bytes": 464438,
+      "bytes": 473615,
       "delimiter": ",",
       "columns": [
         "Application Number",
@@ -47,7 +47,7 @@
         "Secondary Risk Level"
       ],
       "n_columns": 38,
-      "n_rows": 1275,
+      "n_rows": 1300,
       "n_matching": 79,
       "sample": [
         [
@@ -169,15 +169,15 @@
         "Mailing County Code": [
           [
             "23",
-            160
+            165
           ],
           [
             "16",
-            98
+            99
           ],
           [
             "58",
-            88
+            92
           ],
           [
             "39",
@@ -185,25 +185,25 @@
           ],
           [
             "26",
-            55
+            56
           ],
           [
             "60",
-            52
+            55
           ]
         ],
         "Location County Code": [
           [
             "23",
-            193
+            198
           ],
           [
             "58",
-            125
+            129
           ],
           [
             "16",
-            99
+            100
           ],
           [
             "39",
@@ -211,25 +211,25 @@
           ],
           [
             "26",
-            69
+            70
           ],
           [
             "60",
-            65
+            70
           ]
         ],
         "Location County": [
           [
             "Dade",
-            193
+            198
           ],
           [
             "Orange",
-            125
+            129
           ],
           [
             "Broward",
-            99
+            100
           ],
           [
             "Hillsborough",
@@ -237,37 +237,37 @@
           ],
           [
             "Duval",
-            69
+            70
           ],
           [
             "Palm Beach",
-            65
+            70
           ]
         ],
         "District": [
           [
             "D4",
-            270
+            278
           ],
           [
             "D3",
-            247
+            249
           ],
           [
             "D1",
-            202
+            207
           ],
           [
             "D2",
-            173
+            179
           ],
           [
             "D5",
-            151
+            153
           ],
           [
             "D7",
-            142
+            144
           ]
         ]
       }
@@ -275,7 +275,7 @@
     "chgownr_food.csv": {
       "url": "https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_food.csv",
       "status": 200,
-      "bytes": 392742,
+      "bytes": 404195,
       "delimiter": ",",
       "columns": [
         "Application Number",
@@ -318,8 +318,8 @@
         "Secondary Risk Level"
       ],
       "n_columns": 38,
-      "n_rows": 1141,
-      "n_matching": 67,
+      "n_rows": 1173,
+      "n_matching": 72,
       "sample": [
         [
           "1863868",
@@ -444,7 +444,7 @@
           ],
           [
             "813-374-2413",
-            11
+            15
           ],
           [
             "888-592-7753",
@@ -466,79 +466,79 @@
         "Location County Code": [
           [
             "23",
-            150
-          ],
-          [
-            "16",
-            101
+            154
           ],
           [
             "58",
-            98
+            106
+          ],
+          [
+            "16",
+            104
           ],
           [
             "39",
-            81
+            84
           ],
           [
             "26",
-            58
+            59
           ],
           [
             "62",
-            54
+            56
           ]
         ],
         "Location County": [
           [
             "Dade",
-            150
-          ],
-          [
-            "Broward",
-            101
+            154
           ],
           [
             "Orange",
-            98
+            106
+          ],
+          [
+            "Broward",
+            104
           ],
           [
             "Hillsborough",
-            81
+            84
           ],
           [
             "Duval",
-            58
+            59
           ],
           [
             "Pinellas",
-            54
+            56
           ]
         ],
         "District": [
           [
             "D4",
-            262
+            272
           ],
           [
             "D3",
-            206
+            212
           ],
           [
             "D1",
-            165
+            169
           ],
           [
             "D2",
-            158
+            164
           ],
           [
             "D5",
-            134
+            137
           ],
           [
             "D7",
-            126
+            129
           ]
         ]
       }
@@ -546,7 +546,7 @@
     "newlodg.csv": {
       "url": "https://www2.myfloridalicense.com/sto/file_download/extracts/newlodg.csv",
       "status": 200,
-      "bytes": 679299,
+      "bytes": 689706,
       "delimiter": ",",
       "columns": [
         "Application Number",
@@ -586,8 +586,8 @@
         "Number of Rental Units"
       ],
       "n_columns": 35,
-      "n_rows": 2362,
-      "n_matching": 51,
+      "n_rows": 2399,
+      "n_matching": 52,
       "sample": [
         [
           "552140",
@@ -712,11 +712,11 @@
           ],
           [
             "16",
-            38
+            39
           ],
           [
             "710",
-            27
+            28
           ],
           [
             "59",
@@ -734,27 +734,27 @@
         "Location County Code": [
           [
             "13",
-            228
+            229
           ],
           [
             "16",
-            223
+            228
           ],
           [
             "23",
-            213
+            215
           ],
           [
             "62",
-            196
+            201
           ],
           [
             "59",
-            183
+            188
           ],
           [
             "46",
-            143
+            144
           ]
         ],
         "District": [
@@ -788,7 +788,7 @@
     "chgownr_lodg.csv": {
       "url": "https://www2.myfloridalicense.com/sto/file_download/extracts/chgownr_lodg.csv",
       "status": 200,
-      "bytes": 98250,
+      "bytes": 99409,
       "delimiter": ",",
       "columns": [
         "Application Number",
@@ -829,7 +829,7 @@
         "Number of Rental Units"
       ],
       "n_columns": 36,
-      "n_rows": 290,
+      "n_rows": 293,
       "n_matching": 8,
       "sample": [
         [
@@ -867,7 +867,7 @@
           "20",
           "20",
           "02/01/2027",
-          "07/29/2026",
+          "09/14/2026",
           "96"
         ],
         [
@@ -989,7 +989,7 @@
           ],
           [
             "62",
-            19
+            20
           ],
           [
             "60",
@@ -1015,7 +1015,7 @@
           ],
           [
             "Pinellas",
-            19
+            20
           ],
           [
             "Palm Beach",
@@ -1037,15 +1037,15 @@
           ],
           [
             "D3",
-            42
+            43
+          ],
+          [
+            "D4",
+            36
           ],
           [
             "D5",
             35
-          ],
-          [
-            "D4",
-            34
           ],
           [
             "D6",
@@ -1161,7 +1161,7 @@
       "method": "GET",
       "status": 200,
       "content_type": "text/html; charset=utf-8",
-      "bytes": 88571,
+      "bytes": 88566,
       "download_links": [
         "/files/AllFacilityData_MiamiDade_08242026.xlsx",
         "/files/Clinical Lab Facility Data_08242026.xlsx"
