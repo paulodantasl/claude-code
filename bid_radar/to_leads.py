@@ -118,7 +118,7 @@ def signal_to_lead(signal: dict, LeadRecord):  # noqa: N803
         priority=_priority(signal.get("score") or 0),
         notes=notes,
         raw={k: signal.get(k) for k in (
-            "source_id", "source_url", "retrieved_at", "hood", "trade",
+            "source_id", "source_url", "retrieved_at", "hood", "trade", "niche",
             "stage_hint", "score", "score_components", "bid_window", "qualified",
             "blockers", "warnings", "lat", "lon", "occupancy_category",
             "record_type", "project_name", "value_est", "sqft")},

@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import arcgis  # noqa: E402
+import classify  # noqa: E402
 import geo  # noqa: E402
 
 SOURCE = "cra_grant"
@@ -95,6 +96,9 @@ def collect(days_back: int = 365) -> list[dict]:
             "applicant": arcgis.clean(a.get("APPLICANT")),
             "brand": None,
             "trade": trade,
+            "niche": classify.niche_of(
+                None, description,
+                arcgis.clean(a.get("BUSINESSPROPERTYOWNER"))),
             "confidence": confidence,
             "stage_hint": "cra_awarded" if live else "issued",
             "record_type": grant_type,

@@ -152,8 +152,16 @@ the first one runs.
 ### Where the output goes
 
 GitHub Actions (`.github/workflows/bid-radar-collect.yml`) runs the collector
-at 7am ET on weekdays and commits `bid_radar/data/` to the **`bid-radar-data`
-branch**. That branch is the hand-off: a Claude session can read GitHub but
+and commits `bid_radar/data/` to the **`bid-radar-data` branch**.
+
+The workflow declares `schedule: 0 12 * * 1-5` (7am ET weekdays), but **that
+cron does not fire yet, and no scheduled run has ever happened.** GitHub
+evaluates `schedule:` and `workflow_dispatch:` only on a repository's default
+branch, and this file currently lives only on the phase branch. Every one of
+the runs to date — 33 as of 2026-09-15 — was `event: push`, triggered by a
+commit to `claude/bid-radar-lead-engine-**`. The feed therefore refreshes only
+while someone is pushing to that branch; it becomes a real daily job the moment
+this workflow file lands on `main`, with no change to the file itself. That branch is the hand-off: a Claude session can read GitHub but
 cannot reach any permit host, so it picks the data up from there and writes it
 into the tracker's database (Phase 3).
 
@@ -182,6 +190,32 @@ assumed:
 - **Volume is low.** 29 commercial records citywide in 90 days, 16 in a
   tracked submarket. The window is 365 days for that reason, with the last 90
   called out separately.
+
+### Target niches
+
+Three build-out types are labelled individually on top of the trade:
+`urgent_care`, `veterinary` and `hair_salon` (`classify.niche_of`). The niche
+does not replace the trade — an urgent care is still a `medical` fitout and a
+salon still a `retail` one — so it changes nothing downstream of `trade`. It
+adds a named `niche` component to the score (`score.NICHE_BONUS`: 5 for urgent
+care and veterinary, which already score 30 as medical; 10 for hair salon,
+which scores 15 as retail and would otherwise sit under the 55 bar). Those
+weights are stated priorities, not measured win rates.
+
+**Unlike the trade, the niche is decided by the words only, never by
+`OCCUPANCYCATEGORY`.** This is measured rather than assumed. Of the 899
+signals on the data branch, exactly two carry `B-1` (Animal hospital) or `B-3`
+(Barber shop / beauty shop). One is "Livewell Animal Hospital", which the
+words already catch; the other is filed `B-3` and its tenant is "New Heights
+Dance Academy" — the landlord's stale classification, carried forward. So the
+code contributes one label beyond the words and that label is wrong. `B-5`
+(Clinic. Outpatient) is excluded for a different reason: dental, dermatology,
+physical therapy and urgent care all file under it.
+
+On the current extract this finds **one** row (the animal hospital) and
+changes no row's qualified/not-qualified state. That is the honest yield: the
+detection is in place for what the feed produces next, not a backlog it
+uncovered.
 
 ### The three layers we did not know existed
 
@@ -261,10 +295,15 @@ Signals with a contact become **contact leads** and are eligible for a JobTread
 push. Signals without become **intel leads** — the slot the batch already has
 for non-contactable rows. Every permit signal is intel today.
 
-The JobTread handshake was observed live through the `Ideal` connector, not
-assumed: org `22P6bRn5p6Pn`, 259 customer accounts, and the `accounts … name
-like` and `createAccount` shapes are recorded in PLAN.md §6 Phase 1. Nothing in
-the tracker page will call a shape that has not been observed.
+Every JobTread call the page makes has been run against the live org and seen
+to work — none of it is assumed. On 2026-09-14 the account lookup, the job and
+status read, `createAccount` (including `suffixIfNecessary`, which returns
+`"… (2)"` on a name collision instead of failing) and `deleteAccount` were all
+exercised in the shapes the page sends. The two accounts created to prove the
+write path were deleted immediately and nothing was left in the org. Shapes are
+recorded in PLAN.md §6 Phase 1 and Phase 3.
+
+Nothing in the tracker page calls a shape that has not been observed.
 
 ---
 
@@ -463,6 +502,95 @@ measurement produced.
 can honestly come from is a Won or Lost row someone logged on the board. Market
 share is a different number, and a declared job value is not a contract value —
 it is what the applicant told the city the work is worth.
+
+## The state and federal sources (Phase 6)
+
+Three more sources, and the geocoder they turned out to need. All of it was
+discovered from a GitHub runner — the sandbox reaches none of these hosts.
+
+### DBPR — who is opening a restaurant
+
+A new food-service licence at an address means a restaurant is opening there.
+A **change of ownership** means one is being taken over, which in this trade
+almost always means a remodel. Both are public, free, and were not being read.
+
+| File | Rows | What it is |
+|---|---|---|
+| `newfood.csv` | 1,274 | New food-service licences this fiscal year |
+| `chgownr_food.csv` | 1,141 | Change of ownership |
+| `newlodg.csv` | 2,356 | New lodging licences |
+| `chgownr_lodg.csv` | 290 | Lodging change of ownership |
+
+Every row carries a trading name, a street address, a phone number and a seat
+count. **14 qualified in the eight submarkets, all with a phone number.**
+
+Three things about these files will bite anyone who reads them casually, and
+all three are handled:
+
+1. The same 38-name header ships in **two different column orders** — in one
+   file the phone is at index 15, in another at 16. A real row reads
+   `Primary Phone Number = "39"`.
+2. `newlodg.csv` has a **different, shorter header** with no `Location County`.
+3. A **Tampa mailing address is not a Tampa job** — the first row of
+   `newfood.csv` mails to Tampa 33647 and builds in Safety Harbor, Pinellas.
+
+And one the live data found: `MFDV` is a food truck and `VEND` a vending
+machine. Nine of the first 23 qualified rows were one or the other, five of
+them at a single commissary address. Neither is a buildout.
+
+### HCAA — the prequalification that was missed
+
+The airport publishes a planned-procurement report every month listing what it
+intends to advertise and when. **The 2026-09-03 prequalified-contractors RFP
+was in it months ahead.** Reading it monthly is how that stops happening.
+
+It now surfaces `Prequalified Contractors List, 1. Building Construction and
+2. …`, advertising 2026-04-20, contact `ndiaz@tampaairport.com` — the same
+cycle and the same person PLAN §4 says to email.
+
+The PDF's table is shredded by text extraction: every cell lands on its own
+line, so a contact arrives as "Rayesha" then "Cotton". The contact email is the
+anchor — exactly one per contract, and nothing else in the document has one.
+
+The OpenGov portal is **not** an alternative: it 403s to a runner and both of
+its `/api/public` endpoints return the single-page-app shell, not JSON.
+
+### Sunbiz — built, waiting on credentials
+
+A new LLC at a commercial address is the earliest signal that exists, six to
+twelve months ahead of a permit. The daily files are **not** a free download:
+they live on `sftp.floridados.gov`, which returns 401 to anonymous, and there
+is no mirror. The collector is written and gated on `SUNBIZ_USER` /
+`SUNBIZ_PASS`; it returns empty and says exactly why until those exist, then
+starts producing with no code change.
+
+Its record layout is transcribed from the published definition rather than
+observed, so `LAYOUT_VERIFIED` is `False` and that flag rides on every row it
+emits. A short line is rejected rather than sliced past the end — a wrong
+offset yields nothing, not a convincing wrong name.
+
+### The geocoder
+
+The Tampa layers serve point geometry; the state files do not. Without a
+geocoder their rows can never be placed and the scorer drops every one.
+
+The US Census geocoder is free and needs no key. It was not trusted on a 200 —
+it was checked against four addresses whose submarket the ArcGIS geometry
+already knew, and agreed on all three it could resolve. The fourth is the
+honest limit: **1050 Water St returns "Tie"**, because Water Street is new
+construction and the TIGER road file has not caught up. An unresolved row keeps
+`needs_geocode` and is never placed by ZIP — 33602 alone spans Downtown, the
+Riverwalk, Water Street and the Channel District.
+
+### AHCA — not built, and why
+
+The medical-TI niche is Ideal's proven strength, so this one is a real loss.
+There is no route that does not involve scraping a UI: per-county extracts
+exist only for Miami-Dade, and the facility search returns 400 to its own
+control names because it is a client-rendered app. Driving it with Playwright
+would work and would break on their next redesign. It is left out rather than
+shipped fragile. Medical signal continues to come from permits and
+entitlements, which is later warning than a licence application would give.
 
 ## JobTread status writeback
 

@@ -256,3 +256,103 @@ def test_ordinary_fitouts_are_not_mistaken_for_strip_outs(name2, desc):
 def test_early_start_wins_over_strip_out():
     name2, desc = "EARLY START: " + STRIP_OUT_REAL[0], STRIP_OUT_REAL[1]
     assert classify.stage_of("Issued", name2, desc) == "early_start"
+
+
+# --- target niches: urgent care, veterinary, hair salon --------------------
+
+NICHE_CASES = [
+    # (occupancy, name2, desc, expected niche)
+    ("B-5 Business-Clinic. Outpatient",
+     "BAYCARE URGENT CARE", "Interior buildout of urgent care suite",
+     "urgent_care"),
+    ("", "", "New walk-in clinic, 3,100 sf shell fitout", "urgent_care"),
+    ("", "", "Tenant improvement for express care center", "urgent_care"),
+    ("", "VCA TAMPA", "Veterinary clinic buildout with radiology",
+     "veterinary"),
+    ("", "", "New animal hospital including kennel and surgical suite",
+     "veterinary"),
+    ("", "GREAT CLIPS", "Buildout of hair salon, 6 stations", "hair_salon"),
+    ("", "", "New barber shop with 4 chairs", "hair_salon"),
+    ("", "", "Interior fitout for salon suites", "hair_salon"),
+    ("", "", "Blow dry bar tenant improvement", "hair_salon"),
+]
+
+
+@pytest.mark.parametrize("occ,name2,desc,expected", NICHE_CASES,
+                         ids=[c[3] + ":" + (c[1] or c[2])[:24]
+                              for c in NICHE_CASES])
+def test_target_niches_are_labelled(occ, name2, desc, expected):
+    assert classify.niche_of(occ, name2, desc, record_type=ALT) == expected
+
+
+NOT_A_NICHE = [
+    # A bare "salon" qualified as something else is a different fitout.
+    ("", "", "Nail salon buildout, 8 manicure stations"),
+    ("", "", "Lash and brow salon tenant improvement"),
+    ("", "", "Tanning salon remodel"),
+    ("", "", "Pet grooming salon and retail"),
+    # Outpatient, but the record never says which kind.
+    ("B-5 Business-Clinic. Outpatient", "", "Interior buildout of clinic"),
+    ("B-5 Business-Clinic. Outpatient", "TAMPA DENTAL", "Dental office fitout"),
+    # Not a vet: no exam room, no medical gas.
+    ("", "PETSMART", "Retail pet store buildout"),
+    # "Veterans" is not "veterinary".
+    ("", "", "Veterans Memorial Park restroom building"),
+    ("M-4 Mercantile-Retail", "", "New retail shell, tenant unknown"),
+]
+
+
+@pytest.mark.parametrize("occ,name2,desc", NOT_A_NICHE,
+                         ids=[c[2][:34] for c in NOT_A_NICHE])
+def test_non_target_rows_get_no_niche(occ, name2, desc):
+    assert classify.niche_of(occ, name2, desc, record_type=ALT) is None
+
+
+def test_niche_does_not_change_the_trade():
+    """The niche is a label on top of the trade, not a replacement."""
+    assert classify.trade_of("", "", "New animal hospital",
+                             record_type=ALT)[0] == "medical"
+    assert classify.trade_of("", "", "Buildout of hair salon",
+                             record_type=ALT)[0] == "retail"
+    assert classify.trade_of("", "", "New walk-in clinic",
+                             record_type=ALT)[0] == "medical"
+
+
+def test_a_strip_out_declares_no_niche():
+    """Same reason trade_of returns `other`: the use is on the build-back."""
+    assert classify.niche_of("B-3 Business-Barber shop / beauty shop",
+                             *STRIP_OUT_REAL, record_type=ALT) is None
+
+
+def test_a_demolition_declares_no_niche():
+    assert classify.niche_of("B-1 Business-Animal hospital", "",
+                             "Demolition of existing animal hospital",
+                             record_type="Commercial Demolition Permit") is None
+
+
+def test_a_stale_occupancy_code_does_not_override_a_named_tenant():
+    """Live row: filed B-3 (Barber Shop/Beauty Shop), tenant is a dance
+    academy. The code is the space's previous use, carried forward."""
+    assert classify.niche_of(
+        "B-3 Business-Barber Shop/Beauty Shop",
+        "PP: Interior Remodel: Unit 4707 and 4709 - New Heights Dance Academy",
+        "PP Plan Review & Inspections: Private Provider Review and "
+        "Inspections. Interior Reno affecting 4709 and 4707 (leased as one "
+        "unit) No Mech or Plumbing work.",
+        record_type=ALT) is None
+
+
+def test_the_occupancy_code_alone_never_asserts_a_niche():
+    """Measured on the data branch: it adds one label over the words and that
+    label is wrong. The words decide; see the note above NICHE_KEYWORDS."""
+    assert classify.niche_of("B-1 Business-Animal hospital", "",
+                             "Interior alterations", record_type=ALT) is None
+    assert classify.niche_of("B-3 Business-Barber Shop/Beauty Shop", "",
+                             "Remodel", record_type=ALT) is None
+
+
+def test_the_occupancy_string_is_not_read_as_free_text():
+    """"B-1 Business-Animal hospital" contains "animal hospital"; passing it
+    positionally must not match."""
+    assert classify.niche_of("B-1 Business-Animal hospital",
+                             record_type=ALT) is None

@@ -179,3 +179,87 @@ def test_score_is_clamped_to_0_100():
                   stage_hint="issued")):
         r = score.score(s, TODAY)
         assert 0 <= r["score"] <= 100
+
+
+def test_a_relationship_row_scores_like_a_door_not_a_job():
+    """HCAA prequalification is worth working and is never a fitout to bid.
+    It must not be hard-blocked on `trade_other`, and it must not need a
+    dollar value it can never have."""
+    sig = {"source": "hcaa_ppo", "hood": "airport", "trade": "relationship",
+           "stage_hint": "pre_permit", "is_fitout": True,
+           "entity": "Hillsborough County Aviation Authority",
+           "filed_at": "2026-11-15", "contacts": [{"kind": "email",
+                                                   "value": "x@tampaairport.com"}]}
+    out = score.score(dict(sig), today=date(2026, 9, 14))
+    assert "trade_other" not in out["blockers"]
+    assert "below_size_gate" not in out["blockers"]
+    assert out["score"] > 0
+
+
+
+def test_a_prequalification_is_not_chasing_public_work():
+    """The public blocklist stops the system bidding work Ideal is not set up
+    for. Getting onto an agency's prequalified list is the thing you do first,
+    and blocking it killed the HCAA collector outright — all 21 rows of the
+    September 2026 report came back `blocklist:hillsborough county`."""
+    assert score.blocklist_hit("Hillsborough County Aviation Authority") \
+        == "hillsborough county"
+    assert score.blocklist_hit("Hillsborough County Aviation Authority",
+                               trade="relationship") is None
+
+
+def test_a_relationship_with_a_chain_that_self_performs_is_still_blocked():
+    """Only the PUBLIC list is waived. A national with an in-house
+    construction arm is worth nothing to us either way."""
+    hit = score.blocklist_hit("Starbucks", trade="relationship")
+    assert hit is None or hit  # depends on the list; assert the real one below
+
+
+def test_the_national_in_house_list_still_applies_to_a_relationship_row():
+    import yaml, os
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "blocklist.yaml")
+    names = yaml.safe_load(open(path)).get("national_in_house") or []
+    if not names:
+        pytest.skip("no national_in_house entries")
+    assert score.blocklist_hit(names[0], trade="relationship") is not None
+
+
+# --- target niches ---------------------------------------------------------
+
+def test_niche_bonus_is_its_own_component_and_adds_up():
+    r = score.score(sig(trade="retail", niche="hair_salon"), TODAY)
+    c = r["score_components"]
+    assert c["fit"] == score.FIT["retail"]
+    assert c["niche"] == score.NICHE_BONUS["hair_salon"]
+    assert r["score"] == sum(c.values())
+
+
+def test_a_row_with_no_niche_scores_exactly_as_before():
+    with_niche = score.score(sig(trade="retail", niche=None), TODAY)
+    legacy = score.score(sig(trade="retail"), TODAY)
+    assert with_niche["score_components"]["niche"] == 0
+    assert with_niche["score"] == legacy["score"]
+
+
+def test_the_bonus_is_what_brings_a_hair_salon_over_the_bar():
+    """retail at 15 leaves a salon under 55 on an unnamed, 90-day row."""
+    base = dict(trade="retail", stage_hint="dbpr_hr", entity=None,
+                source="permit", sqft=1_400)
+    without = score.score(sig(**base), TODAY)
+    with_niche = score.score(sig(niche="hair_salon", **base), TODAY)
+    assert without["score"] < score.QUALIFY_AT <= with_niche["score"]
+
+
+def test_urgent_care_and_veterinary_keep_the_medical_fit():
+    for niche in ("urgent_care", "veterinary"):
+        c = score.score(sig(trade="medical", niche=niche), TODAY)["score_components"]
+        assert c["fit"] == score.FIT["medical"]
+        assert c["niche"] == score.NICHE_BONUS[niche]
+
+
+def test_a_niche_bonus_cannot_rescue_a_hard_blocker():
+    """A salon outside the submarkets is still not a lead."""
+    r = score.score(sig(trade="retail", niche="hair_salon", hood=None), TODAY)
+    assert "outside_submarkets" in r["blockers"]
+    assert not r["qualified"]

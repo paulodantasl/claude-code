@@ -47,10 +47,17 @@ KEYWORD_TRADE = [
                    r"dining|food service|bakery|deli\b|grill\b|sushi|cantina|taqueria)"),
     ("medical",    r"\b(dental|dentist|\bdds\b|\bdmd\b|orthodon|medical|clinic|surgery|"
                    r"surgical|imaging|radiolog|urgent care|physician|pediatric|\bmd\b|"
-                   r"veterinar|dialysis|pharmacy|therapy|wellness center)"),
+                   r"veterinar|dialysis|pharmacy|therapy|wellness center|"
+                   # Urgent care and veterinary trade under a dozen house
+                   # styles; without these the row falls through to `other`
+                   # when OCCUPANCYCATEGORY is blank.
+                   r"walk[-\s]?in clinic|immediate care|express care|"
+                   r"animal hospital|animal clinic|pet hospital|pet clinic|"
+                   r"vet (?:clinic|hospital|office)|spay|neuter)"),
     ("retail",     r"\b(retail|store|shop\b|boutique|salon|barber|spa\b|showroom|"
                    r"mercantile|tenant improvement within the mall|"
-                   r"fitness|gym\b|yoga|pilates|cycling studio|nail|lash|med spa)"),
+                   r"fitness|gym\b|yoga|pilates|cycling studio|nail|lash|med spa|"
+                   r"hair studio|beauty bar|blow[-\s]?dry bar|blowout bar|braiding)"),
     ("hospitality", r"\b(hotel|motel|resort|lodging|guest room|ballroom|banquet)"),
     ("office",     r"\b(office|suite \d|workplace|coworking|law firm|headquarters)"),
 ]
@@ -253,6 +260,93 @@ def trade_of(occupancy_category: str | None, *text: str | None,
     if kw:
         return kw, 0.5
     return "other", 0.2
+
+
+# --- Target niches ----------------------------------------------------------
+# Three build-out types Ideal wants named individually rather than buried in
+# `medical` and `retail`. The niche is a LABEL ON TOP OF the trade, not a
+# replacement for it: an urgent care is still a medical fitout and a hair salon
+# is still a retail one, so nothing downstream of `trade` changes.
+#
+# The niche is decided by the WORDS ONLY — unlike trade_of, which trusts the
+# filed FBC occupancy code first. Three codes look like they would name one of
+# these uses exactly, and none of them is used here:
+#
+#   B-5  Clinic. Outpatient         — dental, dermatology, physical therapy and
+#        urgent care all file under it, so it cannot say which.
+#   B-1  Animal hospital
+#   B-3  Barber shop / beauty shop  — these two look precise, but the filed
+#        code can be the space's PREVIOUS use.
+#
+# Measured, not assumed: of the 899 signals on the data branch (retrieved
+# 2026-09-15) exactly two carry B-1 or B-3. One is "Livewell Animal Hospital",
+# which the words already catch. The other is filed
+# `B-3 Business-Barber Shop/Beauty Shop` and its tenant is "New Heights Dance
+# Academy" — the landlord's stale classification. So the code adds one label
+# over the words and that label is wrong, which is the whole of its observed
+# value. This file's standing trade-off is that a false lead costs more than a
+# missed one, so occupancy stays out of the niche decision. Revisit if a later
+# extract shows B-1/B-3 rows that are right and silent.
+
+# Checked before occupancy, which is the opposite of trade_of. The reason: the
+# free text names the business type, while an occupancy code names a building
+# class that holds several of them. For the trade question the code is the more
+# reliable of the two; for "which niche" the words are.
+NICHE_KEYWORDS = [
+    ("urgent_care", r"\burgent\s+care\b|\bwalk[-\s]?in\s+clinic\b"
+                    r"|\bimmediate\s+care\b|\bexpress\s+care\b|\bquick\s+care\b"
+                    r"|\bafter[-\s]?hours\s+clinic\b|\bminute\s*clinic\b"),
+    # Not "pet store" or "pet grooming" — those are retail with no exam room,
+    # no medical gas and no lead-lined radiology wall.
+    ("veterinary",  r"\bveterinar\w*|\banimal\s+(?:hospital|clinic)\b"
+                    r"|\bvet\s+(?:hospital|clinic|office)\b"
+                    r"|\bpet\s+(?:hospital|clinic)\b|\bspay\b|\bneuter\b"
+                    r"|\bequine\s+clinic\b"),
+    ("hair_salon",  r"\bhair\s+(?:salon|studio|stylist|bar|cuttery)\b"
+                    r"|\bbeauty\s+(?:salon|bar|shop)\b|\bbarber\b"
+                    r"|\bblow[-\s]?(?:dry|out)\s+bar\b"
+                    r"|\bbraid(?:ing|s)?\s+(?:salon|shop|bar|studio)\b"
+                    r"|\bsalon\s+suites?\b"),
+]
+
+# A bare "salon" is a hair salon often enough to be worth reading, but these
+# qualifiers mean it is not: a nail bar, a lash studio and a tanning salon are
+# different fitouts with different plumbing and ventilation.
+_BARE_SALON = re.compile(r"\bsalon\b", re.I)
+_SALON_NOT_HAIR = re.compile(
+    r"\b(nail|lash|brow|tan(?:ning)?|wax(?:ing)?|massage|med(?:ical)?\s*spa|"
+    r"pet|dog|grooming|tattoo)\b", re.I)
+
+
+def niche_of(occupancy_category: str | None, *text: str | None,
+             record_type: str | None = None) -> str | None:
+    """One of NICHE_KEYWORDS' labels, or None. Never a guess.
+
+    None is the normal answer — most rows are not one of these three. A
+    demolition or a strip-out returns None for the same reason trade_of
+    returns `other` there: the use is not declared on that permit.
+
+    `occupancy_category` is accepted and deliberately ignored, for the reason
+    set out above the keyword table. It stays in the signature rather than
+    being dropped so that callers keep the same shape as `trade_of` and cannot
+    pass the occupancy string as free text by mistake — "B-1 Business-Animal
+    hospital" contains the words "animal hospital", so feeding it to the
+    matcher would quietly restore exactly the behaviour measured to be wrong.
+    """
+    del occupancy_category
+    if (record_type or "") in DEMOLITION_RECORD_TYPES:
+        return None
+    if is_strip_out(*text):
+        return None
+
+    blob = " ".join(t for t in text if t)
+    for niche, pattern in NICHE_KEYWORDS:
+        if re.search(pattern, blob, re.I):
+            return niche
+
+    if _BARE_SALON.search(blob) and not _SALON_NOT_HAIR.search(blob):
+        return "hair_salon"
+    return None
 
 
 def stage_of(project_status: str | None, *text: str | None) -> str:
