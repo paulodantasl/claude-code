@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-09-15T13:17:46+00:00",
+  "retrieved_at": "2026-10-03T12:20:41+00:00",
   "census": {
     "one_line": [
       {
@@ -15,8 +15,8 @@
         "status": 200,
         "content_type": "application/json",
         "n_matches": 1,
-        "lon": -82.441460343029,
-        "lat": 27.960332331173,
+        "lon": -82.441460188687,
+        "lat": 27.960330721623,
         "matched": "1616 E 7TH AVE, TAMPA, FL, 33605",
         "hood": "ybor",
         "agrees": true
@@ -27,8 +27,8 @@
         "status": 200,
         "content_type": "application/json",
         "n_matches": 1,
-        "lon": -82.524155107224,
-        "lat": 27.946456976484,
+        "lon": -82.524155680843,
+        "lat": 27.946459557438,
         "matched": "253 N WEST SHORE BLVD, TAMPA, FL, 33609",
         "hood": "airport",
         "agrees": true
@@ -39,8 +39,8 @@
         "status": 200,
         "content_type": "application/json",
         "n_matches": 1,
-        "lon": -82.5043937309,
-        "lat": 28.063877502186,
+        "lon": -82.50439307664,
+        "lat": 28.063876248877,
         "matched": "12908 N DALE MABRY HWY, TAMPA, FL, 33618",
         "hood": null,
         "agrees": null
@@ -49,8 +49,8 @@
     "benchmark": null,
     "batch": {
       "status": 200,
-      "bytes": 495,
-      "head": "\"1\",\"1050 Water St, Tampa, FL, 33602\",\"Tie\"\n\"2\",\"1616 E 7th Ave, Tampa, FL, 33605\",\"Match\",\"Exact\",\"1616 E 7TH AVE, TAMPA, FL, 33605\",\"-82.441460343028,27.960332331173\",\"104524202\",\"L\"\n\"3\",\"253 N West Shore Blvd, Tampa, FL, 33609\",\"Match\",\"Exact\",\"253 N WEST SHORE BLVD, TAMPA, FL, 33609\",\"-82.524155107224,27.946456976484\",\"104524580\",\"R\"\n\"4\",\"12908 N Dale Mabry Hwy, Tampa, FL, 33618\",\"Match\",\"Exac"
+      "bytes": 496,
+      "head": "\"1\",\"1050 Water St, Tampa, FL, 33602\",\"Tie\"\n\"2\",\"1616 E 7th Ave, Tampa, FL, 33605\",\"Match\",\"Exact\",\"1616 E 7TH AVE, TAMPA, FL, 33605\",\"-82.441460188687,27.960330721623\",\"104524202\",\"L\"\n\"3\",\"253 N West Shore Blvd, Tampa, FL, 33609\",\"Match\",\"Exact\",\"253 N WEST SHORE BLVD, TAMPA, FL, 33609\",\"-82.524155680843,27.946459557438\",\"104524580\",\"R\"\n\"4\",\"12908 N Dale Mabry Hwy, Tampa, FL, 33618\",\"Match\",\"Exac"
     }
   },
   "ahca": {
