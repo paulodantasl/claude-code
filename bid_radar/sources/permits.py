@@ -73,6 +73,7 @@ def to_signal(feat: dict, retrieved: str | None = None) -> dict | None:
         "entity": classify.entity_of(name2, desc),
         "brand": None,
         "trade": trade,
+        "niche": classify.niche_of(occ, name2, desc, record_type=record_type),
         "confidence": confidence,
         "stage_hint": classify.stage_of(a.get("PROJECTSTATUS"), name2, desc),
         "record_type": record_type,

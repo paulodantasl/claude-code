@@ -191,6 +191,32 @@ assumed:
   tracked submarket. The window is 365 days for that reason, with the last 90
   called out separately.
 
+### Target niches
+
+Three build-out types are labelled individually on top of the trade:
+`urgent_care`, `veterinary` and `hair_salon` (`classify.niche_of`). The niche
+does not replace the trade — an urgent care is still a `medical` fitout and a
+salon still a `retail` one — so it changes nothing downstream of `trade`. It
+adds a named `niche` component to the score (`score.NICHE_BONUS`: 5 for urgent
+care and veterinary, which already score 30 as medical; 10 for hair salon,
+which scores 15 as retail and would otherwise sit under the 55 bar). Those
+weights are stated priorities, not measured win rates.
+
+**Unlike the trade, the niche is decided by the words only, never by
+`OCCUPANCYCATEGORY`.** This is measured rather than assumed. Of the 899
+signals on the data branch, exactly two carry `B-1` (Animal hospital) or `B-3`
+(Barber shop / beauty shop). One is "Livewell Animal Hospital", which the
+words already catch; the other is filed `B-3` and its tenant is "New Heights
+Dance Academy" — the landlord's stale classification, carried forward. So the
+code contributes one label beyond the words and that label is wrong. `B-5`
+(Clinic. Outpatient) is excluded for a different reason: dental, dermatology,
+physical therapy and urgent care all file under it.
+
+On the current extract this finds **one** row (the animal hospital) and
+changes no row's qualified/not-qualified state. That is the honest yield: the
+detection is in place for what the feed produces next, not a backlog it
+uncovered.
+
 ### The three layers we did not know existed
 
 Discovery turned up three more layers on the same host, all public and all

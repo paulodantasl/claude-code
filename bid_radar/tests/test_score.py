@@ -223,3 +223,43 @@ def test_the_national_in_house_list_still_applies_to_a_relationship_row():
     if not names:
         pytest.skip("no national_in_house entries")
     assert score.blocklist_hit(names[0], trade="relationship") is not None
+
+
+# --- target niches ---------------------------------------------------------
+
+def test_niche_bonus_is_its_own_component_and_adds_up():
+    r = score.score(sig(trade="retail", niche="hair_salon"), TODAY)
+    c = r["score_components"]
+    assert c["fit"] == score.FIT["retail"]
+    assert c["niche"] == score.NICHE_BONUS["hair_salon"]
+    assert r["score"] == sum(c.values())
+
+
+def test_a_row_with_no_niche_scores_exactly_as_before():
+    with_niche = score.score(sig(trade="retail", niche=None), TODAY)
+    legacy = score.score(sig(trade="retail"), TODAY)
+    assert with_niche["score_components"]["niche"] == 0
+    assert with_niche["score"] == legacy["score"]
+
+
+def test_the_bonus_is_what_brings_a_hair_salon_over_the_bar():
+    """retail at 15 leaves a salon under 55 on an unnamed, 90-day row."""
+    base = dict(trade="retail", stage_hint="dbpr_hr", entity=None,
+                source="permit", sqft=1_400)
+    without = score.score(sig(**base), TODAY)
+    with_niche = score.score(sig(niche="hair_salon", **base), TODAY)
+    assert without["score"] < score.QUALIFY_AT <= with_niche["score"]
+
+
+def test_urgent_care_and_veterinary_keep_the_medical_fit():
+    for niche in ("urgent_care", "veterinary"):
+        c = score.score(sig(trade="medical", niche=niche), TODAY)["score_components"]
+        assert c["fit"] == score.FIT["medical"]
+        assert c["niche"] == score.NICHE_BONUS[niche]
+
+
+def test_a_niche_bonus_cannot_rescue_a_hard_blocker():
+    """A salon outside the submarkets is still not a lead."""
+    r = score.score(sig(trade="retail", niche="hair_salon", hood=None), TODAY)
+    assert "outside_submarkets" in r["blockers"]
+    assert not r["qualified"]

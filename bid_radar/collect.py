@@ -41,6 +41,14 @@ RETRIEVED_AT = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 TRADE_ORDER = ["medical", "restaurant", "hospitality", "retail", "office", "other"]
 
+# Named target niches. These sit inside the trades above — an urgent care is
+# counted under `medical` in the grid and again here — so the two tables do
+# not sum to each other.
+NICHE_ORDER = ["urgent_care", "veterinary", "hair_salon"]
+NICHE_LABEL = {"urgent_care": "Urgent care",
+               "veterinary": "Veterinary clinic",
+               "hair_salon": "Hair salon / barber"}
+
 # Stages a human can act on, most urgent first. Anything else is history.
 LIVE_STAGES = ["early_start", "strip_out", "cra_awarded", "abt", "pre_permit", "revision"]
 
@@ -290,6 +298,24 @@ def summary(signals: list[dict], report: dict, directory: list[dict] | None = No
                      + f" | **{sum(row.values())}** |")
     else:
         L.append("_nothing live in a tracked submarket in this window_")
+    L.append("")
+
+    # ---- target niches -----------------------------------------------
+    L.append("## Target niches (live stages only)")
+    L.append("")
+    niches: Counter = Counter(s["niche"] for s in live if s.get("niche"))
+    if niches:
+        L.append("| Niche | Live signals | Qualified |")
+        L.append("|---|---|---|")
+        for key in NICHE_ORDER:
+            if not niches[key]:
+                continue
+            q = sum(1 for s in live
+                    if s.get("niche") == key and s.get("qualified"))
+            L.append(f"| {NICHE_LABEL[key]} | {niches[key]} | {q} |")
+    else:
+        L.append("_no urgent care, veterinary or hair-salon signal live in "
+                 "this window_")
     L.append("")
 
     # ---- already awarded --------------------------------------------

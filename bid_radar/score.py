@@ -46,6 +46,17 @@ PRECURSOR_STAGES = {"strip_out", "pre_permit", "cra_awarded"}
 # hospitality. This is a design decision, not a measurement.
 FIT_PRECURSOR = 20
 
+# Named target niches (PLAN §2.3). These ride on top of the trade's FIT rather
+# than replacing it, and they are reported as their own score component so the
+# waterfall stays readable and the bonus can be pulled back out.
+#
+# Urgent care and veterinary already sit in `medical` at 30, so they get a
+# small nudge. A hair salon scores as `retail` at 15, which puts most of them
+# under the 55 bar on their own — the larger bonus is what makes a requested
+# target niche actually reachable. Like FIT_PRECURSOR these are stated
+# priorities, not measured win rates; revise them once Phase 4 has outcomes.
+NICHE_BONUS = {"urgent_care": 5, "veterinary": 5, "hair_salon": 10}
+
 # stage_hint -> (days until the window opens, days it stays open)
 # Permit stages, from what the layer can express (PLAN.md §2.3(d)):
 #   early_start  the main permit is still pending; buyout is live now
@@ -211,10 +222,11 @@ def score(signal: dict, today: date | None = None) -> dict:
     trade = signal.get("trade") or "other"
     precursor = stage in PRECURSOR_STAGES and trade == "other"
     fit = FIT_PRECURSOR if precursor else FIT.get(trade, 0)
+    niche = NICHE_BONUS.get(signal.get("niche") or "", 0)
     urg = urgency_points(opens, stage, today)
     val = value_points(signal.get("value_est"))
     acc = access_points(signal, blocked)
-    total = max(0, min(100, fit + urg + val + acc))
+    total = max(0, min(100, fit + niche + urg + val + acc))
 
     hard: list[str] = []
     soft: list[str] = []
@@ -244,7 +256,8 @@ def score(signal: dict, today: date | None = None) -> dict:
 
     return {
         "score": total,
-        "score_components": {"fit": fit, "urgency": urg, "value": val, "access": acc},
+        "score_components": {"fit": fit, "niche": niche, "urgency": urg,
+                             "value": val, "access": acc},
         "bid_window": {"open": opens, "close": closes},
         "qualified": total >= QUALIFY_AT and not hard,
         "blockers": hard,
