@@ -11,6 +11,7 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass, field
 
+from bid_tracker import taxonomy
 from bid_tracker.db import load_sources
 
 
@@ -34,8 +35,11 @@ def period_of(iso_date: str) -> str:
 
 def series_for(project_type: str | None = None, work_class: str | None = None,
                agency_type: str | None = None) -> str | None:
-    """First configured series whose applies_to matches agency type, project type, then work class."""
+    """First configured series whose applies_to matches agency type, project type, then work class.
+    The work class is inferred from the project type when not given."""
     series = load_sources().get("cost_index_series", [])
+    if project_type and not work_class:
+        work_class = next((p[1] for p in taxonomy.PROJECT_TYPES if p[0] == project_type), None)
     for key in (agency_type, project_type, work_class):
         if not key:
             continue

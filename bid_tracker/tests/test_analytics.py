@@ -62,6 +62,8 @@ def test_escalation(conn):
     assert series_for("R-MOLD", "restoration", "county") == "WPUIP2300001"
     assert series_for("V-TI", "vertical", "city") == "PCU236223236223"
     assert series_for(None, None, None) == "WPUIP2300001"
+    assert series_for("V-REN") == "PCU236223236223"         # work class inferred from project type
+    assert series_for("R-WATER") == "WPUIP2300001"
 
 
 def test_benchmark_segment_and_fallback(loaded):
