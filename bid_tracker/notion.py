@@ -8,6 +8,7 @@ Relations point at Notion page URLs, so they resolve on the pass after the relat
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import sqlite3
@@ -15,11 +16,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from bid_tracker import taxonomy
+from bid_tracker.canonical import write_csv
 from bid_tracker.competitors import profiles
 from bid_tracker.db import table_counts
 from bid_tracker.stats import solicitation_totals, tab_stats
 
 SCHEMA_VERSION = 1
+MAP_FILE = "notion_map.csv"   # next to the DB; `rebuild` reloads it so page ids survive a fresh DB
+MAP_COLUMNS = ["entity", "local_ref", "notion_page_id", "synced_hash", "synced_at"]
 
 
 def _opts(values, color: str = "default") -> str:
@@ -381,3 +385,22 @@ def ack(conn: sqlite3.Connection, acks: list[dict]) -> int:
     conn.execute("UPDATE ingest_runs SET notion_synced_at = ? WHERE notion_synced_at IS NULL", (now,))
     conn.commit()
     return n
+
+
+def save_map(conn: sqlite3.Connection, path: Path) -> int:
+    """Write notion_map to CSV. Without it a rebuilt DB re-creates every Notion page as a duplicate."""
+    rows = [dict(r) for r in conn.execute("SELECT * FROM notion_map ORDER BY entity, local_ref")]
+    write_csv(path, MAP_COLUMNS, rows)
+    return len(rows)
+
+
+def load_map(conn: sqlite3.Connection, path: Path) -> int:
+    if not path.exists():
+        return 0
+    with open(path, newline="", encoding="utf-8") as fh:
+        rows = [tuple(r.get(c) or None for c in MAP_COLUMNS) for r in csv.DictReader(fh)]
+    conn.executemany(
+        f"INSERT OR REPLACE INTO notion_map({', '.join(MAP_COLUMNS)}) VALUES ({', '.join('?' * len(MAP_COLUMNS))})",
+        rows)
+    conn.commit()
+    return len(rows)

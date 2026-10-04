@@ -164,16 +164,24 @@ def apply_alias_file(conn) -> int:
 
 def cmd_rebuild(args):
     from bid_tracker.importer import import_package
+    from bid_tracker.notion import MAP_FILE, load_map, save_map
 
     data = dbm.data_dir()
     path = Path(args.db) if args.db else dbm.default_db_path()
+    map_path = path.parent / MAP_FILE
     if path.exists():
+        if not map_path.exists():   # DB from before the map file existed: keep its Notion page ids
+            old = dbm.connect(path)
+            dbm.init_db(old)
+            save_map(old, map_path)
+            old.close()
         backup = path.with_suffix(".db.bak")
         shutil.move(path, backup)
         print(f"moved old DB to {backup}")
     conn = dbm.connect(path)
     dbm.init_db(conn)
     print(f"aliases applied: {apply_alias_file(conn)}")
+    print(f"Notion page ids restored: {load_map(conn, map_path)}")
     dirs = sorted(p for p in (data / "index").glob("*") if p.is_dir())
     dirs += sorted(p for p in (data / "packages").glob("*") if p.is_dir())
     if (data / "private").is_dir():
@@ -459,11 +467,13 @@ def cmd_export_notion(args):
 
 
 def cmd_notion_ack(args):
-    from bid_tracker.notion import ack
+    from bid_tracker.notion import MAP_FILE, ack, save_map
 
-    conn, _ = open_db(args)
+    conn, path = open_db(args)
     acks = json.loads(Path(args.acks).read_text())
     print(f"recorded {ack(conn, acks)} Notion page ids")
+    map_path = path.parent / MAP_FILE
+    print(f"wrote {save_map(conn, map_path)} page ids to {map_path} (commit it with the data)")
 
 
 # --------------------------------------------------------------------------- parser

@@ -23,7 +23,9 @@ Relations: Bid Tabs ↔ Bidders ("Bidders on Tab"), Bid Tabs ↔ Ideal Pursuits 
    Claude applies the ops with the Notion MCP: `create-pages` into the data source for `create`,
    `update-page` for `update`. Set relation properties to the page URLs in `relations`.
 3. Write `acks.json`: `[{"db": "...", "ref": "...", "page_id": "...", "hash": "..."}]` for every applied op.
-4. `python3 -m bid_tracker notion-ack acks.json` records page ids and hashes in `notion_map`.
+4. `python3 -m bid_tracker notion-ack acks.json` records page ids and hashes in `notion_map` and writes them to
+   `notion_map.csv` next to the DB. Commit that file with the data: `rebuild` reloads it, so a fresh DB
+   updates the existing pages instead of creating duplicates.
 5. Run export once more: ops whose relations were pending now resolve. Repeat until no pending relations.
 
 The Notion data-source ids live in `$BID_TRACKER_DATA/notion_ids.json` (private).

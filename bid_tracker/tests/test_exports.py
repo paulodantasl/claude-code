@@ -5,7 +5,8 @@ from pathlib import Path
 import pytest
 
 from bid_tracker.importer import import_package
-from bid_tracker.notion import NOTION_SCHEMA, ack, ddl, export
+from bid_tracker import db
+from bid_tracker.notion import NOTION_SCHEMA, ack, ddl, export, load_map, save_map
 from conftest import FAKE_VALID, REPO
 
 
@@ -53,6 +54,13 @@ def test_notion_manifest_matches_schema_and_deltas(loaded, tmp_path):
     ack(loaded, acks2)
     third = json.loads(export(loaded, tmp_path).read_text())
     assert third["ops"] == []
+    # A rebuilt DB that reloads the saved map updates the same pages instead of creating new ones.
+    assert save_map(loaded, tmp_path / "notion_map.csv") == len(acks)
+    fresh = db.connect(tmp_path / "rebuilt.db")
+    db.init_db(fresh)
+    assert import_package(fresh, FAKE_VALID, fixtures=True).status == "ok"
+    assert load_map(fresh, tmp_path / "notion_map.csv") == len(acks)
+    assert json.loads(export(fresh, tmp_path).read_text())["ops"] == []
 
 
 def test_notion_ddl_has_every_property():
