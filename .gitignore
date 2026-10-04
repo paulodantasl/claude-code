@@ -18,3 +18,7 @@ estimating/projects/*
 estimating-projects/
 dist/
 
+# Permit scraper: lead-gen output (real permit records) — never commit
+permit_scraper/**/*.csv
+permit_matches*.csv
+permit_scraper*.zip
