@@ -259,9 +259,11 @@ def cmd_stats(args):
              f"  bidders {st['n']} · low {money(st['low'])} · second {money(st['second'])} · gap {pct(st['gap'])}"
              f" · low/median {ratio(st['low_median'])} · low/EE {ratio(st['low_ee'])} · CV {pct(st['cv'])}"
              f" · low $/SF {money2(st['low_psf'])}", ""]
-    lines.append(table(["#", "Bidder", "Total", "Awardee", "Ideal"],
-                       [[b["price_rank"], b["canonical_name"], money(b["total_bid"]), "yes" if b["is_awardee"] else "",
-                         "yes" if b["is_ideal"] else ""] for b in obj["bids"]]))
+    scored = any(b["score_total"] is not None for b in obj["bids"])
+    lines.append(table(["#", "Bidder", "Total"] + (["Score"] if scored else []) + ["Awardee", "Ideal"],
+                       [[b["price_rank"] or ("NR" if b["responsive"] == 0 else ""), b["canonical_name"],
+                         money(b["total_bid"])] + ([ratio(b["score_total"])] if scored else [])
+                        + ["yes" if b["is_awardee"] else "", "yes" if b["is_ideal"] else ""] for b in obj["bids"]]))
     emit(args, obj, "\n".join(lines))
 
 

@@ -76,9 +76,15 @@ def solicitation_stats(conn: sqlite3.Connection, sol_ref: str) -> dict | None:
         return None
     ee = sol["engineers_estimate"] if sol["ee_source"] == "ee" else None
     st = tab_stats(solicitation_totals(conn, sol["solicitation_id"]), ee, sol["gsf"])
+    # Every bid, including scored proposals with no price (best-value RFPs) and non-responsive ones;
+    # price_rank is set only for the clean priced bids the statistics use.
     bids = conn.execute(
-        """SELECT o.canonical_name, o.total_bid, o.price_rank, o.is_awardee, o.is_ideal, o.rank_published
-           FROM v_bid_order o WHERE o.solicitation_id = ? ORDER BY o.price_rank""",
+        """SELECT br.canonical_name, b.total_bid, o.price_rank, b.is_awardee, br.is_ideal, b.rank_published,
+                  b.score_total, b.responsive
+           FROM bids b JOIN bidders br USING(bidder_id)
+           LEFT JOIN v_bid_order o ON o.solicitation_id = b.solicitation_id AND o.bidder_id = b.bidder_id
+           WHERE b.solicitation_id = ?
+           ORDER BY o.price_rank IS NULL, o.price_rank, b.score_total DESC, b.total_bid""",
         (sol["solicitation_id"],),
     ).fetchall()
     return {
