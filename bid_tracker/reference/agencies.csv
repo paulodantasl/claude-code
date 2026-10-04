@@ -1,0 +1,31 @@
+agency_id,name,agency_type,county,portal_platform,portal_url,watch,notes
+tampa,City of Tampa,city,Hillsborough,opengov,https://www.tampa.gov/purchasing/info/bid-schedule,1,Contract Administration bid tabs posted as PDFs under tampa.gov/sites/default/files/bid/docs/; purchasing results on OpenGov Results tab
+hillsborough-bocc,Hillsborough County BOCC,county,Hillsborough,bonfire,https://hillsboroughcounty.bonfirehub.com,1,Past opportunities tab visibility not confirmed; Ch. 119 request fallback
+hcps,Hillsborough County Public Schools,school_district,Hillsborough,,https://www.hillsboroughschools.org/Page/4295,1,Facilities construction page; Ch. 119 request fallback
+hcaa,Hillsborough County Aviation Authority (TPA),airport,Hillsborough,,https://www.tampaairport.com,1,Notice of Intent to Award PDFs include the bid tab
+porttb,Port Tampa Bay,port,Hillsborough,openbids,https://www.porttb.com/procurement,1,Monthly contract-award pages
+usf,University of South Florida,university,Hillsborough,,,0,No public tab listing found; Ch. 119 request
+temple-terrace,City of Temple Terrace,city,Hillsborough,,,0,
+plant-city,City of Plant City,city,Hillsborough,,,0,
+pinellas-bocc,Pinellas County BOCC,county,Pinellas,opengov,https://pinellas.gov,1,
+stpete,City of St. Petersburg,city,Pinellas,opengov,https://procurement.opengov.com/portal/stpete,1,Free OpenGov login needed for official documents
+clearwater,City of Clearwater,city,Pinellas,,,1,
+largo,City of Largo,city,Pinellas,,,0,
+pcsb,Pinellas County Schools,school_district,Pinellas,opengov,https://procurement.opengov.com/portal/PCSB,1,
+pasco-bocc,Pasco County BOCC,county,Pasco,bidnet,,1,BidNet Direct Florida Purchasing Group (free registration)
+pasco-schools,Pasco County Schools,school_district,Pasco,,,1,
+polk-bocc,Polk County BOCC,county,Polk,,https://www.polkfl.gov/business/procurement/,1,
+lakeland,City of Lakeland,city,Polk,,,0,
+polk-schools,Polk County Public Schools,school_district,Polk,vendorlink,,1,
+manatee-bocc,Manatee County BOCC,county,Manatee,demandstar,https://www.mymanatee.org,1,Board backup PDFs at records.manateeclerk.com
+bradenton,City of Bradenton,city,Manatee,,,0,
+manatee-schools,School District of Manatee County,school_district,Manatee,,,1,
+sarasota-bocc,Sarasota County Government,county,Sarasota,opengov,https://procurement.opengov.com/portal/scgov,1,
+sarasota-city,City of Sarasota,city,Sarasota,,,0,
+sarasota-schools,Sarasota County Schools,school_district,Sarasota,,,1,
+hernando-bocc,Hernando County BOCC,county,Hernando,,,0,
+hernando-schools,Hernando County School District,school_district,Hernando,,,0,
+citrus-bocc,Citrus County BOCC,county,Citrus,,,0,
+citrus-schools,Citrus County School District,school_district,Citrus,,,0,
+dms-fl,FL Department of Management Services,state,Leon,mfmp,https://vendor.myfloridamarketplace.com,0,Pre-2022 decisions in the VBS archive
+fdot-d7,FDOT District 7,state,Hillsborough,,https://www.fdot.gov/contracts/district-offices/d7/lettings,0,Horizontal; reference only in phase 1

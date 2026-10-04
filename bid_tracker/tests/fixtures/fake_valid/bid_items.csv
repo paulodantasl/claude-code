@@ -1,0 +1,5 @@
+sol_ref,bidder_name_raw,line_no,item_desc,unit,qty,unit_price,extended,item_code,csi_division,is_allowance
+fake-city:ITB-24-001,FAKE Builder Alpha LLC,1,Selective demolition,LS,1,"$15,000.00","$15,000.00",,02,0
+fake-city:ITB-24-001,FAKE Builder Alpha LLC,2,ADA plumbing fixtures,EA,10,"$3,000.00","$30,000.00",,22,0
+fake-city:ITB-24-001,FAKE Builder Alpha LLC,3,Finishes,SF,1800,$25.00,"$45,000.00",,09,0
+fake-city:ITB-24-001,FAKE Builder Alpha LLC,4,General conditions,LS,1,"$5,000.00","$5,000.00",,01,0
