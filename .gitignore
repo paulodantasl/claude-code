@@ -18,3 +18,15 @@ estimating/projects/*
 estimating-projects/
 dist/
 
+
+# Bid tracker: code is public, bid data never is (it lives in the private
+# ideal-bid-data repo, pointed to by $BID_TRACKER_DATA)
+bid_tracker/data/*
+!bid_tracker/data/README.md
+bid_tracker/**/*.csv
+!bid_tracker/tests/fixtures/**/*.csv
+!bid_tracker/reference/agencies.csv
+bid_tracker/**/*.xlsx
+bid_tracker/**/*.pdf
+bid_tracker/**/*.jsonl
+bid_tracker/**/*.sqlite
