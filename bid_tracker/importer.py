@@ -3,8 +3,9 @@
 Dedupe rules
 - Solicitations key on sol_ref. A source with higher evidence rank (official_tab > board item >
   portal notice > news > internal) replaces the row; a lower one is only recorded as an extra source.
-- Bids key on (solicitation, bidder). When a package carries bids for a solicitation, they replace
-  the stored bids for it (a tab is all-or-nothing).
+- Bids and rate cards key on (solicitation, bidder). A package replaces the rows of the bidders it
+  carries and leaves other bidders alone, so a private package can add Ideal's own bid or rate card
+  to a public tab without disturbing it.
 - Bidders resolve by FL license number, then name_key, then alias; otherwise a new bidder is created.
 """
 
@@ -159,11 +160,15 @@ def _bid_fingerprint(conn: sqlite3.Connection, sid: int) -> list:
 
 
 def write_bids(conn: sqlite3.Connection, sid: int, rows: list, items: list) -> tuple[int, int]:
-    conn.execute("DELETE FROM bids WHERE solicitation_id = ?", (sid,))
+    """Replace this package's bidders on the tab; other bidders' rows (e.g. Ideal's own bid from a
+    private package) stay. Unit-price lines go with their bid."""
+    resolved = [(r, resolve_bidder(conn, r.values["bidder_name_raw"], r.values.get("fl_license_no"),
+                                   r.values.get("source_url"))) for r in rows]
+    for _r, bidder_id in resolved:
+        conn.execute("DELETE FROM bids WHERE solicitation_id = ? AND bidder_id = ?", (sid, bidder_id))
     bid_ids: dict[str, int] = {}
-    for r in rows:
+    for r, bidder_id in resolved:
         v = r.values
-        bidder_id = resolve_bidder(conn, v["bidder_name_raw"], v.get("fl_license_no"), v.get("source_url"))
         bid_id = conn.execute(
             """INSERT INTO bids(solicitation_id, bidder_id, bidder_name_raw, base_bid, alternates_json, total_bid,
                  total_basis, rank_published, score_total, score_price, responsive, withdrawn, is_awardee,
@@ -193,10 +198,12 @@ def write_bids(conn: sqlite3.Connection, sid: int, rows: list, items: list) -> t
 
 
 def write_rates(conn: sqlite3.Connection, sid: int, rows: list) -> int:
-    conn.execute("DELETE FROM rate_cards WHERE solicitation_id = ?", (sid,))
-    for r in rows:
+    """Replace the rate cards of the bidders in this package only."""
+    resolved = [(r, resolve_bidder(conn, r.values["bidder_name_raw"], None, r.values.get("source_url"))) for r in rows]
+    for bidder_id in {b for _r, b in resolved}:
+        conn.execute("DELETE FROM rate_cards WHERE solicitation_id = ? AND bidder_id = ?", (sid, bidder_id))
+    for r, bidder_id in resolved:
         v = r.values
-        bidder_id = resolve_bidder(conn, v["bidder_name_raw"], None, v.get("source_url"))
         conn.execute(
             """INSERT INTO rate_cards(solicitation_id, bidder_id, service, service_desc, size_min_sf, size_max_sf,
                  unit, price, after_hours_premium_pct, response_hrs, source_url, source_excerpt)

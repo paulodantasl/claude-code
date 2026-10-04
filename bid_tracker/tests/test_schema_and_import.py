@@ -109,3 +109,25 @@ def test_search_snippet_rows_yield_to_official_sources(conn, pkg_copy, tmp_path)
     assert upgraded.updated == 3                     # official tab replaces the snippet rows
     row = conn.execute("SELECT evidence_class, date_basis FROM solicitations WHERE sol_ref = 'fake-city:ITB-24-001'").fetchone()
     assert tuple(row) == ("official_tab", "bid_open")
+
+
+def test_private_package_adds_a_bidder_without_wiping_the_tab(conn, tmp_path):
+    import csv as _csv
+    from bid_tracker.canonical import SPECS
+    import_package(conn, FAKE_VALID, fixtures=True)
+    extra = tmp_path / "private"
+    extra.mkdir()
+    cols = list(SPECS["rate_cards.csv"])
+    with open(extra / "rate_cards.csv", "w", newline="") as fh:
+        w = _csv.DictWriter(fh, fieldnames=cols)
+        w.writeheader()
+        w.writerow({"sol_ref": "fake-county:RFP-25-010", "bidder_name_raw": "Ideal Remodeling LLC", "service": "mold",
+                    "size_min_sf": "10001", "unit": "sf", "price": "$12.00",
+                    "source_url": "https://example.invalid/private/rate-card",
+                    "source_excerpt": "Mold 10,001+ sf: $12.00 per sf"})
+    res = import_package(conn, extra, fixtures=True)
+    assert res.status == "ok" and res.rates_written == 1
+    assert conn.execute("SELECT COUNT(*) FROM rate_cards").fetchone()[0] == 9      # 8 public + Ideal's
+    again = import_package(conn, FAKE_VALID, fixtures=True)                           # re-import the public tab
+    assert again.status == "ok"
+    assert conn.execute("SELECT COUNT(*) FROM rate_cards").fetchone()[0] == 9
