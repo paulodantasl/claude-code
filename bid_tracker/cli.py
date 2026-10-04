@@ -281,9 +281,9 @@ def cmd_rates(args):
     conn, _ = open_db(args)
     bands = rate_bands(conn, args.service, args.since)
     cl = cliffs(conn, args.sol_ref)
-    lines = [table(["Service", "Bucket", "All bidders $/SF", "Awardees $/SF", "Ideal %ile"],
+    lines = [table(["Service", "Bucket", "Competitors $/SF", "Awardees $/SF", "Ideal $/SF", "Ideal %ile"],
                    [[b["service"], b["bucket"] + (" *" if b["derived"] else ""), qfmt(b["all_bidders"], money2),
-                     qfmt(b["awardees"], money2), pct(b["ideal_percentile"])] for b in bands]),
+                     qfmt(b["awardees"], money2), money2(b["ideal_psf"]), pct(b["ideal_percentile"])] for b in bands]),
              "* lump-sum bucket converted at its midpoint size (derived)"]
     if cl:
         lines += ["", "Price cliffs at bucket boundaries:"]

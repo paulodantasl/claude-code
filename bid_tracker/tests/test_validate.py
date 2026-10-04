@@ -100,3 +100,19 @@ def test_near_duplicate_bidder_warns():
                                                   "fake builder alfa": "FAKE Builder Alfa LLC"})
     assert any(i.code == "W-NAME" for i in issues)
     assert not has_errors(issues)
+
+
+def test_rows_added_to_a_known_solicitation_may_cite_internal_docs(tmp_path):
+    import csv as _csv
+    from bid_tracker.canonical import SPECS
+    pkg = tmp_path / "private"
+    pkg.mkdir()
+    cols = list(SPECS["bids.csv"])
+    with open(pkg / "bids.csv", "w", newline="") as fh:
+        w = _csv.DictWriter(fh, fieldnames=cols)
+        w.writeheader()
+        w.writerow({"sol_ref": "fake-city:ITB-24-001", "bidder_name_raw": "Ideal Remodeling LLC",
+                    "total_bid": "$130,000.00", "total_basis": "base", "base_bid": "$130,000.00",
+                    "source_url": "file:private/debrief.md", "source_excerpt": "Ideal bid $130,000.00"})
+    errors, issues = codes(pkg, fixtures=False, known_sol_refs={"fake-city:ITB-24-001"})
+    assert "E-URL" not in errors, [str(i) for i in issues]

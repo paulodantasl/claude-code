@@ -192,6 +192,14 @@ class Validator:
             self.err("E-DATE", f, ln, f"retrieved_at {v['retrieved_at']} predates the bid opening; a tab can't exist yet")
 
     # ------------------------------------------------------------------ bids
+    @staticmethod
+    def row_evidence(sols: dict[str, dict], ref: str | None) -> str:
+        """Bid/rate rows inherit their solicitation's evidence class. Rows added to a solicitation already
+        in the DB (e.g. Ideal's own bid from a private package) may cite an internal document."""
+        if ref in sols:
+            return sols[ref].get("evidence_class")
+        return "internal"
+
     def check_bids(self, sols: dict[str, dict]):
         by_sol: dict[str, list] = defaultdict(list)
         valid_refs = set(sols) | self.known_sol_refs
@@ -201,7 +209,7 @@ class Validator:
             if ref and ref not in valid_refs:
                 self.err("E-REF", f, ln, f"sol_ref {ref} not in solicitations.csv or the DB")
                 continue
-            msg = check_url(v.get("source_url"), (sols.get(ref) or {}).get("evidence_class"), self.fixtures)
+            msg = check_url(v.get("source_url"), self.row_evidence(sols, ref), self.fixtures)
             if msg:
                 self.err("E-URL", f, ln, msg)
             for col in ("base_bid", "total_bid"):
@@ -350,7 +358,7 @@ class Validator:
             if ref not in valid_refs:
                 self.err("E-REF", f, ln, f"sol_ref {ref} not in solicitations.csv or the DB")
                 continue
-            msg = check_url(v.get("source_url"), (sols.get(ref) or {}).get("evidence_class"), self.fixtures)
+            msg = check_url(v.get("source_url"), self.row_evidence(sols, ref), self.fixtures)
             if msg:
                 self.err("E-URL", f, ln, msg)
             lo, hi = v.get("size_min_sf"), v.get("size_max_sf")

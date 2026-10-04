@@ -157,16 +157,19 @@ def md_escape(text) -> str:
     return "".join("\\" + ch if ch in _MD_SPECIAL else ch for ch in str(text))
 
 
-def _table(headers: list[str], rows: list[list]) -> str:
-    def cell(v):
+def _table(headers: list[str], rows: list[list], money: tuple[int, ...] = ()) -> str:
+    """money = column indexes shown as dollars; other numbers print plain."""
+    def cell(i, v):
         if v is None:
             return ""
-        if isinstance(v, float):
+        if i in money and isinstance(v, (int, float)):
             return md_escape(f"${v:,.2f}")
+        if isinstance(v, float):
+            return md_escape(f"{v:,.0f}" if v == int(v) else f"{v:,.2f}")
         return md_escape(v)
 
     out = ['<table header-row="true">', "<tr>" + "".join(f"<td>{h}</td>" for h in headers) + "</tr>"]
-    out += ["<tr>" + "".join(f"<td>{cell(v)}</td>" for v in r) + "</tr>" for r in rows]
+    out += ["<tr>" + "".join(f"<td>{cell(i, v)}</td>" for i, v in enumerate(r)) + "</tr>" for r in rows]
     out.append("</table>")
     return "\n".join(out)
 
@@ -176,7 +179,7 @@ def bid_tab_payload(conn: sqlite3.Connection, s: sqlite3.Row) -> tuple[dict, str
     st = tab_stats(solicitation_totals(conn, s["solicitation_id"]), ee, s["gsf"])
     bids = conn.execute(
         """SELECT b.*, br.canonical_name, br.name_key, br.is_ideal FROM bids b JOIN bidders br USING (bidder_id)
-           WHERE b.solicitation_id = ? ORDER BY (b.total_bid IS NULL), b.total_bid""",
+           WHERE b.solicitation_id = ? ORDER BY (b.total_bid IS NULL), b.total_bid, b.rank_published""",
         (s["solicitation_id"],),
     ).fetchall()
     props = {
@@ -186,7 +189,8 @@ def bid_tab_payload(conn: sqlite3.Connection, s: sqlite3.Row) -> tuple[dict, str
         "Work Class": s["work_class"], "Project Type": s["project_type"], "GSF": s["gsf"],
         "Bidders": st.n or None, "Low Bid": st.low, "Second Bid": st.second, "Gap": st.gap,
         "Engineer's Estimate": s["engineers_estimate"], "EE Source": s["ee_source"], "Low/EE": st.low_ee,
-        "Low $/SF": st.low_psf, "Award": s["award_amount"], "Awardee": s["awardee_name"],
+        "Low $/SF": st.low_psf, "Award": s["award_amount"],
+        "Awardee": "; ".join(b["canonical_name"] for b in bids if b["is_awardee"]) or s["awardee_name"],
         "Status": s["award_status"], "Evidence": s["evidence_class"], "Date Basis": s["date_basis"],
         "Source URL": s["source_url"],
         "Excerpt": (s["source_excerpt"] or "")[:1900],
@@ -196,14 +200,16 @@ def bid_tab_payload(conn: sqlite3.Connection, s: sqlite3.Row) -> tuple[dict, str
     _date(props, "Award Date", s["award_date"])
     _date(props, "Retrieved", s["retrieved_at"])
     props = {k: v for k, v in props.items() if v is not None}
-    body = [f"**Source:** [{s['evidence_class']}]({s['source_url']}) · retrieved {s['retrieved_at']}",
-            f"> {md_escape((s['source_excerpt'] or '')[:1500]).replace(chr(10), '<br>')}"]
+    # The quoted excerpt lives in the Excerpt property; the body carries the tables.
+    body = [f"**Source:** [{s['evidence_class']}]({s['source_url']}) · retrieved {s['retrieved_at']}"]
     if bids:
+        scored = any(b["score_total"] is not None for b in bids)
         body.append("### Bids")
-        body.append(_table(["Bidder", "Base", "Total", "Rank", "Responsive", "Awardee"],
-                           [[b["canonical_name"], b["base_bid"], b["total_bid"], b["rank_published"],
-                             {1: "yes", 0: "no"}.get(b["responsive"], ""), "yes" if b["is_awardee"] else ""]
-                            for b in bids]))
+        body.append(_table(["Bidder", "Base", "Total", "Rank"] + (["Score"] if scored else []) + ["Responsive", "Awardee"],
+                           [[b["canonical_name"], b["base_bid"], b["total_bid"], b["rank_published"]]
+                            + ([b["score_total"]] if scored else [])
+                            + [{1: "yes", 0: "no"}.get(b["responsive"], ""), "yes" if b["is_awardee"] else ""]
+                            for b in bids], money=(1, 2)))
     items = conn.execute(
         """SELECT br.canonical_name, i.line_no, i.item_desc, i.unit, i.qty, i.unit_price, i.extended
            FROM bid_items i JOIN bids b USING (bid_id) JOIN bidders br ON br.bidder_id = b.bidder_id
@@ -212,7 +218,8 @@ def bid_tab_payload(conn: sqlite3.Connection, s: sqlite3.Row) -> tuple[dict, str
     ).fetchall()
     if items:
         body.append("### Unit prices")
-        body.append(_table(["Bidder", "Line", "Item", "Unit", "Qty", "Unit price", "Extended"], [list(i) for i in items]))
+        body.append(_table(["Bidder", "Line", "Item", "Unit", "Qty", "Unit price", "Extended"], [list(i) for i in items],
+                           money=(5, 6)))
     rates = conn.execute(
         """SELECT br.canonical_name, r.service, r.size_min_sf, r.size_max_sf, r.unit, r.price, r.after_hours_premium_pct
            FROM rate_cards r JOIN bidders br USING (bidder_id) WHERE r.solicitation_id = ?
@@ -222,9 +229,13 @@ def bid_tab_payload(conn: sqlite3.Connection, s: sqlite3.Row) -> tuple[dict, str
     if rates:
         body.append("### Rate card")
         body.append(_table(["Bidder", "Service", "Min SF", "Max SF", "Unit", "Price", "After-hours %"],
-                           [[r[0], r[1], r[2], r[3], r[4], r[5], r[6]] for r in rates]))
+                           [[r[0], r[1], r[2], r[3], r[4], r[5], r[6]] for r in rates], money=(5,)))
     body.append("*Mirrors the private bid DB. Edits here get overwritten on the next sync.*")
-    bidder_refs = sorted({b["name_key"] for b in bids})
+    bidder_refs = {b["name_key"] for b in bids}
+    awardee = conn.execute("SELECT name_key FROM bidders WHERE bidder_id = ?", (s["awardee_bidder_id"],)).fetchone()
+    if awardee:
+        bidder_refs.add(awardee[0])
+    bidder_refs = sorted(bidder_refs)
     return props, "\n\n".join(body), bidder_refs
 
 
@@ -275,10 +286,26 @@ def export(conn: sqlite3.Connection, out_root: Path, *, all_rows: bool = False, 
             op["pending_relations"] = pending
         ops.append(op)
 
-    # Bidders first so tab relations can resolve on the next pass.
+    # Bidders first so tab relations can resolve on the next pass. Firms seen only on rate-card or
+    # qualifications awards get a page too (no pricing stats), so every tab relation can resolve.
+    profiled = set()
     for p in profiles(conn, top=0, include_ideal=True):
         props = bidder_payload(p, conn)
         add("bidders", "bidder", props["Ref"], props)
+        profiled.add(p["bidder_id"])
+    for b in conn.execute(
+        """SELECT * FROM bidders WHERE bidder_id IN (SELECT bidder_id FROM bids UNION SELECT bidder_id FROM rate_cards
+             UNION SELECT awardee_bidder_id FROM solicitations WHERE awardee_bidder_id IS NOT NULL)
+           ORDER BY canonical_name"""
+    ).fetchall():
+        if b["bidder_id"] in profiled:
+            continue
+        props = {"Name": b["canonical_name"], "Ref": b["name_key"], "FL License": b["fl_license_no"],
+                 "HQ County": b["hq_county"], "Is Ideal": _yes(b["is_ideal"]),
+                 "Bids": conn.execute("SELECT COUNT(*) FROM bids WHERE bidder_id = ?", (b["bidder_id"],)).fetchone()[0],
+                 "Wins": conn.execute("SELECT COUNT(*) FROM bids WHERE bidder_id = ? AND is_awardee = 1",
+                                      (b["bidder_id"],)).fetchone()[0]}
+        add("bidders", "bidder", b["name_key"], {k: v for k, v in props.items() if v is not None})
     for s in conn.execute("SELECT * FROM v_solicitation_base ORDER BY bid_open_date").fetchall():
         props, body, bidder_refs = bid_tab_payload(conn, s)
         rel = {"Bidders on Tab": ("bidder", bidder_refs)}
@@ -315,10 +342,26 @@ def export(conn: sqlite3.Connection, out_root: Path, *, all_rows: bool = False, 
             },
             "content": None, "relations": {}, "hash": None,
         })
-    manifest = {"schema_version": SCHEMA_VERSION, "run": run, "counts": counts, "ops": ops}
+    manifest = {"schema_version": SCHEMA_VERSION, "run": run, "counts": counts,
+                "options": required_options(ops), "ops": ops}
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str))
     return out_dir / "manifest.json"
+
+
+def required_options(ops: list[dict]) -> dict[str, dict[str, list[str]]]:
+    """Select / multi-select values each database needs. Notion refuses a value that is not already an
+    option, so the sync adds these (ALTER COLUMN ... SET SELECT(...)) before writing pages."""
+    need: dict[str, dict[str, set]] = {}
+    for op in ops:
+        props = NOTION_SCHEMA[op["db"]]["properties"]
+        for name, kind in props.items():
+            if "SELECT" not in kind or name not in op["properties"]:
+                continue
+            value = op["properties"][name]
+            values = json.loads(value) if kind.startswith("MULTI_SELECT") else [value]
+            need.setdefault(op["db"], {}).setdefault(name, set()).update(v for v in values if v)
+    return {db: {name: sorted(v) for name, v in props.items()} for db, props in need.items()}
 
 
 def ack(conn: sqlite3.Connection, acks: list[dict]) -> int:

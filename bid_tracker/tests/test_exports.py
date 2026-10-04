@@ -37,6 +37,9 @@ def test_notion_manifest_matches_schema_and_deltas(loaded, tmp_path):
             name = key.split(":")[1] if key.startswith("date:") else key
             assert name in allowed, f"{op['db']}: {key} not in NOTION_SCHEMA"
     assert all(o["properties"]["Source URL"] for o in tabs)
+    opts = m["options"]
+    assert "FAKE City of Testville" in opts["bid_tabs"]["Agency"]
+    assert "fake-city" in opts["bidders"]["Agencies"]
     with_bids = [o for o in tabs if o["ref"] != "fake-county:RFP-25-010"]   # rate-card-only tab has no bidders
     assert all(o.get("pending_relations") for o in with_bids)              # bidders not in Notion yet
     acks = [{"db": o["db"], "ref": o["ref"], "page_id": f"page-{i}", "hash": o["hash"]}

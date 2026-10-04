@@ -17,7 +17,10 @@ Relations: Bid Tabs ↔ Bidders ("Bidders on Tab"), Bid Tabs ↔ Ideal Pursuits 
 1. `python3 -m bid_tracker export-notion --feed weekly` writes `$BID_TRACKER_DATA/notion_out/<run>/manifest.json`.
    Each op: `{db, ref, op: create|update, page_id, hash, properties, content, relations, pending_relations}`.
    Properties are already in the Notion MCP's expanded format (`date:Bid Open:start`, `__YES__`).
-2. Claude applies the ops with the Notion MCP: `create-pages` into the data source for `create`,
+2. Notion rejects a select / multi-select value that isn't already an option. First add every value in
+   the manifest's `options` block (`{db: {property: [values]}}`) with `update-data-source`
+   (`ALTER COLUMN "Agency" SET SELECT('…':gray, …)`, keeping the existing options). Then
+   Claude applies the ops with the Notion MCP: `create-pages` into the data source for `create`,
    `update-page` for `update`. Set relation properties to the page URLs in `relations`.
 3. Write `acks.json`: `[{"db": "...", "ref": "...", "page_id": "...", "hash": "..."}]` for every applied op.
 4. `python3 -m bid_tracker notion-ack acks.json` records page ids and hashes in `notion_map`.
