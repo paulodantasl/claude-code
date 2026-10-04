@@ -17,7 +17,10 @@ Relations: Bid Tabs ↔ Bidders ("Bidders on Tab"), Bid Tabs ↔ Ideal Pursuits 
 1. `python3 -m bid_tracker export-notion --feed weekly` writes `$BID_TRACKER_DATA/notion_out/<run>/manifest.json`.
    Each op: `{db, ref, op: create|update, page_id, hash, properties, content, relations, pending_relations}`.
    Properties are already in the Notion MCP's expanded format (`date:Bid Open:start`, `__YES__`).
-2. Notion rejects a select / multi-select value that isn't already an option. For each property in the
+2. **Missing properties first.** Fetch each data source and compare its properties with `NOTION_SCHEMA`
+   (`notion-schema`). Add any that are missing with one `update-data-source` (`ADD COLUMN "<prop>" <type>`),
+   e.g. `"Area Kind" SELECT(...)` and `"Area Source" URL` on Bid Tabs. Never drop or rename a column.
+   Then, since Notion rejects a select / multi-select value that isn't already an option: For each property in the
    manifest's `options` block (`{db: {property: [values]}}`): fetch the data source, copy every option it
    already has (name and color), add the missing values, and send one `update-data-source` with
    `ALTER COLUMN "<prop>" SET SELECT(...)`, or `SET MULTI_SELECT(...)` for multi-selects (Agencies,

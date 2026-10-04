@@ -11,6 +11,7 @@ from datetime import date
 from pathlib import Path
 
 from bid_tracker import db as dbm
+from bid_tracker import taxonomy
 from bid_tracker.canonical import SPECS, load_package, write_csv
 from bid_tracker.names import name_key, similarity
 
@@ -163,6 +164,7 @@ def apply_alias_file(conn) -> int:
 
 
 def cmd_rebuild(args):
+    from bid_tracker.areas import coverage
     from bid_tracker.importer import import_package, preload_agencies
     from bid_tracker.notion import MAP_FILE, load_map, save_map
 
@@ -198,6 +200,9 @@ def cmd_rebuild(args):
             failed += 1
             print_issues([i for i in res.issues if i.severity == "ERROR"])
     print(json.dumps(dbm.table_counts(conn)))
+    orphans = coverage(conn)["orphans"]
+    if orphans:
+        print(f"area rows with no solicitation: {len(orphans)} (see `areas --orphans`)")
     if failed:
         sys.exit(f"{failed} package(s) failed validation")
 
@@ -258,7 +263,7 @@ def cmd_stats(args):
         sys.exit(f"{args.sol_ref} not found")
     s, st = obj["solicitation"], obj["stats"]
     lines = [f"{s['sol_ref']}  {s['title']}", f"  {s['agency_name']} · {s['project_type']} · opened {s['bid_open_date']}"
-             f" · GSF {s['gsf'] or '—'} · EE {money(s['engineers_estimate'])} ({s['ee_source'] or '—'})",
+             f" · SF {s['gsf'] or '—'} ({s['area_kind'] or 'no area'}) · EE {money(s['engineers_estimate'])} ({s['ee_source'] or '—'})",
              f"  bidders {st['n']} · low {money(st['low'])} · second {money(st['second'])} · gap {pct(st['gap'])}"
              f" · low/median {ratio(st['low_median'])} · low/EE {ratio(st['low_ee'])} · CV {pct(st['cv'])}"
              f" · low $/SF {money2(st['low_psf'])}", ""]
@@ -275,16 +280,37 @@ def cmd_benchmark(args):
 
     conn, _ = open_db(args)
     obj = benchmark(conn, project_type=args.project_type, agency_type=args.agency_type, region=args.region,
-                    size=args.size_band, gsf=args.gsf, est_amount=args.amount, since=args.since)
+                    size=args.size_band, gsf=args.gsf, est_amount=args.amount, since=args.since,
+                    area_kind=args.area_kind)
     lines = [f"segment {obj['key']}  since {obj['since']}  n={obj['n']}  escalated to {obj['escalated_to']}"]
     lines += [f"  ! {w}" for w in obj["warnings"] + obj["escalation_flags"]]
-    lines += [f"  low $/SF (esc) {qfmt(obj['low_psf_esc'], money2)}", f"  low bid (esc)  {qfmt(obj['low_esc'])}",
+    lines += [f"  low $/SF (esc) {qfmt(obj['low_psf_esc'], money2)}  [{obj['low_psf_kind'] or 'no area'}]", f"  low bid (esc)  {qfmt(obj['low_esc'])}",
               f"  low / EE       {qfmt(obj['low_ee'], ratio)}", f"  bidders        {qfmt(obj['bidders'], ratio)}",
               f"  gap low->2nd   {qfmt(obj['gap'], pct)}", f"  spread (CV)    {qfmt(obj['cv'], pct)}", ""]
     if obj["sample"]:
-        lines.append(table(["Ref", "Opened", "N", "Low", "Low (esc)", "GSF", "Low/EE"],
+        lines.append(table(["Ref", "Opened", "N", "Low", "Low (esc)", "SF", "Area", "Low/EE"],
                            [[t["sol_ref"], t["bid_open_date"], t["n"], money(t["low"]), money(t["low_esc"]),
-                             t["gsf"] or "—", ratio(t["low_ee"])] for t in obj["sample"]]))
+                             t["gsf"] or "—", t["area_kind"] or "—", ratio(t["low_ee"])] for t in obj["sample"]]))
+    emit(args, obj, "\n".join(lines))
+
+
+def cmd_areas(args):
+    from bid_tracker.areas import coverage
+
+    conn, _ = open_db(args)
+    obj = coverage(conn, dbm.data_dir() / "area_misses.csv")
+    lines = []
+    if not args.orphans:
+        c = obj["coverage"]
+        lines.append(f"vertical per-project tabs with an area: {c['with_area']}/{c['tabs']} ({pct(c['share'])})")
+        lines += [f"  {k}: {v['with_area']}/{v['tabs']}" for k, v in obj["by_type"].items()]
+        if obj["missing"]:
+            lines += ["", table(["Ref", "Type", "Opened", "Tried", "Last tried"],
+                                [[m["sol_ref"], m["project_type"], m["bid_open_date"], m["searched"] or "—",
+                                  m["last_tried"] or "—"] for m in obj["missing"]])]
+    if obj["orphans"]:
+        lines += ["", "area rows with no solicitation (re-keyed or mistyped sol_ref):"]
+        lines += [f"  {o['sol_ref']} {o['area_kind']} {o['sf']:,.0f}" for o in obj["orphans"]]
     emit(args, obj, "\n".join(lines))
 
 
@@ -557,9 +583,12 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--agency-type")
     sp.add_argument("--region")
     sp.add_argument("--size-band")
-    sp.add_argument("--gsf", type=float)
+    sp.add_argument("--gsf", type=float, help="area of the kind the project type uses (see `areas`)")
+    sp.add_argument("--area-kind", choices=taxonomy.AREA_KINDS, help="compare $/SF on this kind of area")
     sp.add_argument("--amount", type=float, help="expected bid, for a dollar size band when GSF is unknown")
     sp.add_argument("--since", default="2023-01-01")
+    sp = add("areas", cmd_areas, "square-footage coverage: vertical tabs with no area, and orphan area rows")
+    sp.add_argument("--orphans", action="store_true", help="only area rows whose sol_ref isn't in the DB")
     sp = add("rates", cmd_rates, "term/disaster rate-card bands and price cliffs")
     sp.add_argument("--service")
     sp.add_argument("--since")

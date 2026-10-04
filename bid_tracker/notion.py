@@ -47,6 +47,8 @@ NOTION_SCHEMA: dict[str, dict] = {
             "Work Class": f"SELECT({_opts(taxonomy.WORK_CLASSES, 'brown')})",
             "Project Type": f"SELECT({_opts(sorted(taxonomy.PROJECT_TYPE_CODES), 'yellow')})",
             "GSF": "NUMBER",
+            "Area Kind": f"SELECT({_opts(taxonomy.AREA_KINDS, 'pink')})",
+            "Area Source": "URL",
             "Bid Open": "DATE",
             "Bidders": "NUMBER",
             "Low Bid": "NUMBER FORMAT 'dollar'",
@@ -186,11 +188,14 @@ def bid_tab_payload(conn: sqlite3.Connection, s: sqlite3.Row) -> tuple[dict, str
            WHERE b.solicitation_id = ? ORDER BY (b.total_bid IS NULL), b.total_bid, b.rank_published""",
         (s["solicitation_id"],),
     ).fetchall()
+    area = conn.execute("SELECT * FROM solicitation_areas WHERE sol_ref = ? AND area_kind = ?",
+                        (s["sol_ref"], s["area_kind"])).fetchone() if s["area_kind"] else None
     props = {
         "Name": f"{s['agency_name']} {s['solicitation_no']} — {s['title']}"[:200],
         "Ref": s["sol_ref"], "Agency": s["agency_name"], "Agency Type": s["agency_type"], "County": s["county"],
         "Region": s["region"], "Method": s["procurement_method"], "Award Basis": s["award_basis"],
         "Work Class": s["work_class"], "Project Type": s["project_type"], "GSF": s["gsf"],
+        "Area Kind": s["area_kind"], "Area Source": area["source_url"] if area else None,
         "Bidders": st.n or None, "Low Bid": st.low, "Second Bid": st.second, "Gap": st.gap,
         "Engineer's Estimate": s["engineers_estimate"], "EE Source": s["ee_source"], "Low/EE": st.low_ee,
         "Low $/SF": st.low_psf, "Award": s["award_amount"],
@@ -206,6 +211,10 @@ def bid_tab_payload(conn: sqlite3.Connection, s: sqlite3.Row) -> tuple[dict, str
     props = {k: v for k, v in props.items() if v is not None}
     # The quoted excerpt lives in the Excerpt property; the body carries the tables.
     body = [f"**Source:** [{s['evidence_class']}]({s['source_url']}) · retrieved {s['retrieved_at']}"]
+    if area:
+        page = f", {md_escape(area['source_page'])}" if area["source_page"] else ""
+        body.append(f"**Area:** {area['sf']:,.0f} SF {area['area_kind'].replace('_', ' ')} ({area['basis']}) · "
+                    f"[source]({area['source_url']}){page}")
     if bids:
         scored = any(b["score_total"] is not None for b in bids)
         body.append("### Bids")

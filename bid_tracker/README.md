@@ -27,6 +27,7 @@ ideal-bid-data/
   index/<YYYY-MM-DD>-bls-ppi/     escalation index values (cost_index.csv)
   private/ideal_pursuits.csv      Ideal's own go/no-go, cost, bid, result, debrief
   private/bidder_aliases.csv      manual bidder merges, re-applied on rebuild
+  area_misses.csv                 tabs with no area found yet: sol_ref, searched, last_tried
   ideal_profile.json              bond_limit_single, bond_limit_aggregate, largest_win, ohp_floor_pct
   exports/                        xlsx snapshots
 ```
@@ -37,7 +38,16 @@ ideal-bid-data/
 
 A package is a folder of CSVs; column specs are in `canonical.py`. Only `solicitations.csv` is required:
 `agencies.csv`, `solicitations.csv`, `bids.csv`, `bid_items.csv`, `rate_cards.csv`, `ideal_pursuits.csv`,
-`cost_index.csv`. Each solicitation is keyed by `sol_ref = agency_id:SOLICITATION-NO`.
+`cost_index.csv`, `areas.csv`. Each solicitation is keyed by `sol_ref = agency_id:SOLICITATION-NO`.
+
+`areas.csv` holds square footage, one row per solicitation and kind:
+- `scope_area`: the area the price covers.
+- `roof_area`
+- `building_gsf`: the whole building.
+
+Each row carries its basis (`stated` > `measured` > `derived`), page and quoted line. Areas live in their
+own table, so updating a solicitation never erases one. The project type's preferred kind becomes the
+tab's `gsf` and its $/SF; see [EXTRACTION_PROTOCOL.md](docs/EXTRACTION_PROTOCOL.md#square-footage-areascsv).
 
 The validator refuses a package with any ERROR. The rules that matter most:
 
@@ -67,7 +77,8 @@ $B import-csv path/to/package --feed weekly    # validate + load (idempotent)
 $B refresh-index                               # BLS PPI series; key from $BLS_API_KEY or private/bls_api_key
 $B stats <agency>:<SOLICITATION-NO>              # one tab: gap, low/EE, CV, $/SF, bidders
 $B stats --agency hcps                         # an agency's history
-$B benchmark --project-type V-REN --agency-type school_district --gsf 6000
+$B benchmark --project-type V-REN --agency-type school_district --gsf 6000   # gsf = the type's area kind
+$B areas                                       # which vertical tabs still lack square footage
 $B rates --service mold                        # disaster rate-card bands + price cliffs
 $B competitors --top 25 | --name "Keystone" | --vs-ideal
 $B gonogo --project-type V-REN --agency hcps --cost 500000
@@ -87,7 +98,8 @@ Per tab, with responsive totals sorted b1 ≤ b2 ≤ … ≤ bN:
 - **low/median** = b1 / median(b)
 - **low/EE** = b1 / EE, only when the agency published a true engineer's estimate (`ee_source=ee`); budgets are kept separate
 - **CV** = stdev(b)/mean(b), how tightly the field priced
-- **low $/SF** = b1 / GSF
+- **low $/SF** = b1 / area, using the project type's preferred area kind: scope area for renovation/TI/ADA,
+  roof area for envelope, building GSF for new and MEP work
 
 **Escalation:** amount × I(now)/I(bid month), using BLS PPI. The series is picked by `sources.toml`:
 
@@ -98,6 +110,7 @@ Per tab, with responsive totals sorted b1 ≤ b2 ≤ … ≤ bN:
 | Restoration and fallback | WPUIP2300001 | inputs to construction industries, goods (BLS has no remediation series) |
 
 **Benchmarks** group tabs by project type × agency type × region × size band. Size uses GSF bands when floor area is known, otherwise dollar bands. Only low-bid awards count, and term contracts are excluded. The output gives p25/p50/p75 of escalated low $/SF, low/EE, bidder count and gap.
+Low $/SF only pools tabs whose area is the same kind (`--area-kind` to pick one).
 
 - n < 5 is labelled **SMALL SAMPLE**.
 - n < 3 shows the raw values instead of percentiles.

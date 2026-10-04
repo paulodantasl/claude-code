@@ -9,6 +9,9 @@ Dedupe rules
   official tab over a search snippet), its bids and rate cards replace every other bidder's rows on
   that tab, so names a snippet got wrong don't linger as extra bidders; Ideal's own rows stay.
 - Bidders resolve by FL license number, then name_key, then alias; otherwise a new bidder is created.
+- Areas key on (sol_ref, area_kind) in their own table, so a solicitation re-import never erases one.
+  A stronger basis wins (stated > measured > derived); an equal one replaces it as a correction.
+  After every import, sync_areas copies the project type's preferred kind into solicitations.gsf.
 """
 
 from __future__ import annotations
@@ -51,6 +54,7 @@ class ImportResult:
     rates_written: int = 0
     pursuits: int = 0
     index_rows: int = 0
+    areas: int = 0
     new_refs: list[str] = field(default_factory=list)
     updated_refs: list[str] = field(default_factory=list)
 
@@ -58,7 +62,7 @@ class ImportResult:
         return (f"{self.new} new, {self.updated} updated, {self.unchanged} unchanged, "
                 f"{self.source_only} extra-source solicitations; {self.bids_written} bids, "
                 f"{self.items_written} unit-price lines, {self.rates_written} rate-card rows, "
-                f"{self.pursuits} pursuits, {self.index_rows} index values")
+                f"{self.pursuits} pursuits, {self.index_rows} index values, {self.areas} areas")
 
 
 def now_iso() -> str:
@@ -265,6 +269,44 @@ def upsert_pursuit(conn: sqlite3.Connection, v: dict) -> bool:
     return True
 
 
+def upsert_area(conn: sqlite3.Connection, v: dict, run_id: int | None) -> str:
+    """new | updated | kept. A weaker basis never replaces a stronger one for the same kind."""
+    old = conn.execute("SELECT basis FROM solicitation_areas WHERE sol_ref = ? AND area_kind = ?",
+                       (v["sol_ref"], v["area_kind"])).fetchone()
+    if old and taxonomy.GSF_BASIS_RANK[old["basis"]] > taxonomy.GSF_BASIS_RANK[v["basis"]]:
+        return "kept"
+    conn.execute(
+        """INSERT INTO solicitation_areas(sol_ref, area_kind, sf, basis, source_url, source_page, excerpt,
+             retrieved_at, notes, run_id) VALUES (?,?,?,?,?,?,?,?,?,?)
+           ON CONFLICT(sol_ref, area_kind) DO UPDATE SET sf = excluded.sf, basis = excluded.basis,
+             source_url = excluded.source_url, source_page = excluded.source_page, excerpt = excluded.excerpt,
+             retrieved_at = excluded.retrieved_at, notes = excluded.notes, run_id = excluded.run_id""",
+        (v["sol_ref"], v["area_kind"], v["sf"], v["basis"], v["source_url"], v.get("source_page"),
+         v.get("excerpt"), v.get("retrieved_at"), v.get("notes"), run_id),
+    )
+    return "updated" if old else "new"
+
+
+def sync_areas(conn: sqlite3.Connection) -> set[str]:
+    """Set solicitations.gsf / gsf_basis / area_kind from the first kind in the project type's preference
+    order. Returns the refs whose area changed."""
+    areas: dict[str, dict[str, sqlite3.Row]] = {}
+    for r in conn.execute("SELECT sol_ref, area_kind, sf, basis FROM solicitation_areas"):
+        areas.setdefault(r["sol_ref"], {})[r["area_kind"]] = r
+    changed = set()
+    for s in conn.execute(
+        "SELECT solicitation_id, sol_ref, project_type, gsf, gsf_basis, area_kind FROM solicitations"
+    ).fetchall():
+        have = areas.get(s["sol_ref"], {})
+        pick = next((have[k] for k in taxonomy.area_preference(s["project_type"]) if k in have), None)
+        new = (pick["sf"], pick["basis"], pick["area_kind"]) if pick else (None, None, None)
+        if (s["gsf"], s["gsf_basis"], s["area_kind"]) != new:
+            conn.execute("UPDATE solicitations SET gsf = ?, gsf_basis = ?, area_kind = ? WHERE solicitation_id = ?",
+                         (*new, s["solicitation_id"]))
+            changed.add(s["sol_ref"])
+    return changed
+
+
 def upsert_index(conn: sqlite3.Connection, v: dict) -> None:
     conn.execute("INSERT OR IGNORE INTO cost_index_series(series_id) VALUES (?)", (v["series_id"],))
     conn.execute(
@@ -294,7 +336,8 @@ def import_package(conn: sqlite3.Connection, path: Path | str, *, feed: str = "m
     res = ImportResult()
     res.issues = validate_package(pkg, fixtures=fixtures, today=today, **known_context(conn))
     sol_rows = pkg.rows("solicitations.csv")
-    rows_in = len(sol_rows) + len(pkg.rows("ideal_pursuits.csv")) + len(pkg.rows("cost_index.csv"))
+    rows_in = (len(sol_rows) + len(pkg.rows("ideal_pursuits.csv")) + len(pkg.rows("cost_index.csv"))
+               + len(pkg.rows("areas.csv")))
     if has_errors(res.issues) or dry_run:
         res.status = "failed" if has_errors(res.issues) else "ok"
         if has_errors(res.issues) and not dry_run:
@@ -337,6 +380,12 @@ def import_package(conn: sqlite3.Connection, path: Path | str, *, feed: str = "m
                 if v["sol_ref"] in rates_by:
                     res.rates_written += write_rates(conn, sid, rates_by[v["sol_ref"]], replace_all=upgraded)
                 set_awardee(conn, sid, v.get("awardee_name"), v.get("source_url"))
+                if v.get("gsf") and v.get("gsf_basis"):
+                    res.areas += upsert_area(conn, {
+                        "sol_ref": v["sol_ref"], "sf": v["gsf"], "basis": v["gsf_basis"],
+                        "area_kind": v.get("area_kind") or taxonomy.area_preference(v.get("project_type"))[0],
+                        "source_url": v["source_url"], "retrieved_at": v["retrieved_at"],
+                        "notes": "gsf column of solicitations.csv"}, run_id) != "kept"
             if status == "unchanged" and changed_children or upgraded:
                 status = "updated"
             if status == "new":
@@ -366,6 +415,14 @@ def import_package(conn: sqlite3.Connection, path: Path | str, *, feed: str = "m
         for r in pkg.rows("cost_index.csv"):
             upsert_index(conn, r.values)
             res.index_rows += 1
+        for r in pkg.rows("areas.csv"):
+            res.areas += upsert_area(conn, r.values, run_id) != "kept"
+        changed = sync_areas(conn)
+        if pkg.rows("areas.csv"):
+            # A tab whose area changed is updated, so Notion and the run summary pick it up.
+            for ref in sorted(changed - touched - set(res.updated_refs)):
+                res.updated += 1
+                res.updated_refs.append(ref)
         res.status = "ok"
         conn.execute(
             """UPDATE ingest_runs SET finished_at = ?, rows_new = ?, rows_updated = ?, rows_rejected = 0,

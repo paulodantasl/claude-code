@@ -6,7 +6,7 @@ import sqlite3
 from datetime import date
 from pathlib import Path
 
-from bid_tracker.benchmark import load_tabs
+from bid_tracker.benchmark import load_tabs, psf_quartiles
 from bid_tracker.competitors import head_to_head, profiles
 from bid_tracker.db import table_counts
 from bid_tracker.rates import load_rates, rate_bands
@@ -76,7 +76,7 @@ def build(conn: sqlite3.Connection, out: Path, since: str | None = None) -> Path
     for pt in sorted({t["project_type"] for t in tabs}):
         sel = [t for t in tabs if t["project_type"] == pt]
         vals = [pt, len(sel),
-                quartiles([t["low_psf_esc"] for t in sel]).get("p50"),
+                psf_quartiles(sel, project_type=pt)[1].get("p50"),
                 quartiles([t["low_ee"] for t in sel if t["low_ee"]]).get("p50"),
                 quartiles([t["n"] for t in sel]).get("p50"),
                 quartiles([t["gap"] for t in sel if t["gap"] is not None]).get("p50")]
@@ -91,14 +91,14 @@ def build(conn: sqlite3.Connection, out: Path, since: str | None = None) -> Path
     sols = conn.execute("SELECT * FROM v_solicitation_base ORDER BY bid_open_date DESC").fetchall()
     _sheet(wb, "Solicitations",
            ["Ref", "Agency", "Agency type", "County", "Region", "Title", "Method", "Award basis", "Project type",
-            "GSF", "Bid open", "Bidders", "Low", "Second", "EE", "EE source", "Award", "Awardee", "Status",
+            "GSF", "Area kind", "Bid open", "Bidders", "Low", "Second", "EE", "EE source", "Award", "Awardee", "Status",
             "Evidence", "Source URL"],
            [[s["sol_ref"], s["agency_name"], s["agency_type"], s["county"], s["region"], s["title"],
-             s["procurement_method"], s["award_basis"], s["project_type"], s["gsf"], s["bid_open_date"],
+             s["procurement_method"], s["award_basis"], s["project_type"], s["gsf"], s["area_kind"], s["bid_open_date"],
              s["n_bidders"], s["low_bid"], s["second_bid"], s["engineers_estimate"], s["ee_source"],
              s["award_amount"], s["awardee_name"], s["award_status"], s["evidence_class"], s["source_url"]]
             for s in sols],
-           {13: MONEY, 14: MONEY, 15: MONEY, 17: MONEY}, {6: 44, 21: 50})
+           {14: MONEY, 15: MONEY, 16: MONEY, 18: MONEY}, {6: 44, 22: 50})
 
     bids = conn.execute(
         """SELECT s.sol_ref, br.canonical_name, b.bidder_name_raw, b.base_bid, b.total_bid, b.total_basis,
@@ -132,7 +132,7 @@ def build(conn: sqlite3.Connection, out: Path, since: str | None = None) -> Path
     bench_rows = []
     for pt in sorted({(t["project_type"], t["agency_type"], t["region"]) for t in tabs}):
         sel = [t for t in tabs if (t["project_type"], t["agency_type"], t["region"]) == pt]
-        q_psf = quartiles([t["low_psf_esc"] for t in sel])
+        q_psf = psf_quartiles(sel, project_type=pt[0])[1]
         q_ee = quartiles([t["low_ee"] for t in sel if t["low_ee"]])
         bench_rows.append([*pt, len(sel), q_psf.get("p25"), q_psf.get("p50"), q_psf.get("p75"),
                            q_ee.get("p50"), quartiles([t["n"] for t in sel]).get("p50"),

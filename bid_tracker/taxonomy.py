@@ -31,6 +31,25 @@ PROCUREMENT_METHODS = ("ITB", "RFP", "RFQ", "JOC", "CMAR", "DB", "term_contract"
 AWARD_BASIS = ("low_bid", "best_value", "qualifications", "rate_card")
 EE_SOURCES = ("ee", "budget", "not_published")
 GSF_BASIS = ("stated", "measured", "derived")
+# What a square-foot figure measures. $/SF only compares like with like.
+AREA_KINDS = ("building_gsf", "scope_area", "roof_area")
+# Which area a project type's $/SF uses, best first. The first kind found becomes solicitations.gsf.
+AREA_PREFERENCE = {
+    "V-NEW-S": ("building_gsf", "scope_area"),
+    "V-NEW-L": ("building_gsf", "scope_area"),
+    "V-REN": ("scope_area", "building_gsf"),
+    "V-TI": ("scope_area", "building_gsf"),
+    "V-ADA": ("scope_area", "building_gsf"),
+    "V-ENV": ("roof_area", "scope_area"),
+    "V-MEP": ("building_gsf", "scope_area"),
+}
+DEFAULT_AREA_PREFERENCE = ("scope_area", "building_gsf", "roof_area")
+# A stated figure beats a plan measurement, which beats one derived from outside records.
+GSF_BASIS_RANK = {"stated": 3, "measured": 2, "derived": 1}
+
+
+def area_preference(project_type: str | None) -> tuple[str, ...]:
+    return AREA_PREFERENCE.get(project_type or "", DEFAULT_AREA_PREFERENCE)
 AWARD_STATUS = ("open", "opened", "recommended", "awarded", "rejected_all", "cancelled", "unknown")
 TOTAL_BASIS = ("base", "base+all_alts", "base+accepted_alts", "as_tabulated", "rate_card")
 RATE_SERVICES = (

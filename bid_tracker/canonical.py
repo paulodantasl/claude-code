@@ -9,6 +9,7 @@ A package is a directory of CSVs. solicitations.csv is required; the rest are op
     rate_cards.csv      term/disaster contract rates per bidder
     ideal_pursuits.csv  Ideal's own go/no-go, cost, bid and result (private)
     cost_index.csv      escalation index values (written by `ingest bls-ppi`)
+    areas.csv           square footage per solicitation, by kind, each with its cited page
 
 Derived values (ranks, gaps, $/SF, escalation) are computed by the tool and are refused in input.
 """
@@ -37,7 +38,7 @@ SPECS: dict[str, dict[str, tuple[str, bool]]] = {
         "title": ("text", True), "procurement_method": ("enum:method", True), "award_basis": ("enum:award_basis", True),
         "work_class": ("enum:work_class", True), "project_type": ("enum:project_type", True),
         "facility_type": ("text", False), "county": ("text", False), "gsf": ("num", False),
-        "gsf_basis": ("enum:gsf_basis", False), "advertise_date": ("date", False), "bid_open_date": ("date", True),
+        "gsf_basis": ("enum:gsf_basis", False), "area_kind": ("enum:area_kind", False), "advertise_date": ("date", False), "bid_open_date": ("date", True),
         "date_basis": ("enum:date_basis", False),
         "engineers_estimate": ("money", False), "ee_source": ("enum:ee_source", False),
         "award_amount": ("money", False), "award_is_nte": ("bool", False), "awardee_name": ("text", False),
@@ -79,6 +80,11 @@ SPECS: dict[str, dict[str, tuple[str, bool]]] = {
         "series_id": ("text", True), "period": ("text", True), "value": ("num", True),
         "preliminary": ("bool", False), "retrieved_at": ("date", True), "source_url": ("text", True),
     },
+    "areas.csv": {
+        "sol_ref": ("text", True), "area_kind": ("enum:area_kind", True), "sf": ("num", True),
+        "basis": ("enum:gsf_basis", True), "source_url": ("text", True), "source_page": ("text", True),
+        "excerpt": ("text", True), "retrieved_at": ("date", True), "notes": ("text", False),
+    },
 }
 FILE_ORDER = list(SPECS)
 
@@ -95,6 +101,7 @@ ENUMS = {
     "work_class": taxonomy.WORK_CLASSES,
     "project_type": tuple(sorted(taxonomy.PROJECT_TYPE_CODES)),
     "gsf_basis": taxonomy.GSF_BASIS,
+    "area_kind": taxonomy.AREA_KINDS,
     "ee_source": taxonomy.EE_SOURCES,
     "award_status": taxonomy.AWARD_STATUS,
     "evidence": taxonomy.EVIDENCE_CLASSES,

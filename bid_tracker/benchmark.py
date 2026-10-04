@@ -4,6 +4,7 @@ Segment key = project_type x agency_type x region x size_band, low-bid awards on
 contracts and not-to-exceed awards are excluded). If the full key has fewer than MIN_N tabs,
 dimensions are dropped in the order size_band -> agency_type -> region and the drop is reported.
 project_type is never dropped: mixing job types makes the numbers meaningless.
+Low $/SF only compares tabs whose area is the same kind (roof, scope or whole building).
 """
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ import sqlite3
 
 from bid_tracker.escalation import escalate, latest_period, series_for
 from bid_tracker.stats import quartiles, solicitation_totals, tab_stats
-from bid_tracker.taxonomy import band_kind, size_band
+from bid_tracker.taxonomy import area_preference, band_kind, size_band
 
 MIN_N = 5
 DROP_ORDER = ("gsf_band", "dollar_band", "agency_type", "region")
@@ -36,7 +37,7 @@ def load_tabs(conn: sqlite3.Connection, since: str | None = DEFAULT_SINCE, to_pe
         out.append({
             "sol_ref": s["sol_ref"], "title": s["title"], "agency_id": s["agency_id"], "agency_name": s["agency_name"],
             "project_type": s["project_type"], "work_class": s["work_class"], "agency_type": s["agency_type"],
-            "region": s["region"], "county": s["county"], "gsf": s["gsf"],
+            "region": s["region"], "county": s["county"], "gsf": s["gsf"], "area_kind": s["area_kind"],
             "gsf_band": size_band(s["gsf"], None), "dollar_band": size_band(None, st.low),
             "bid_open_date": s["bid_open_date"],
             "n": st.n, "low": st.low, "low_esc": low_esc,
@@ -63,6 +64,18 @@ def segment_key(project_type: str | None, agency_type: str | None, region: str |
     return key
 
 
+def psf_quartiles(tabs: list[dict], kind: str | None = None, project_type: str | None = None) -> tuple[str | None, dict]:
+    """Escalated low $/SF over tabs whose area is one kind: the one asked for, else the project type's
+    preferred kind, else the most common kind among the tabs."""
+    have = [t for t in tabs if t["low_psf_esc"] is not None and t.get("area_kind")]
+    if not kind and project_type:
+        kind = area_preference(project_type)[0]
+    if not kind and have:
+        kinds = [t["area_kind"] for t in have]
+        kind = max(sorted(set(kinds)), key=kinds.count)
+    return kind, quartiles([t["low_psf_esc"] for t in have if t["area_kind"] == kind])
+
+
 def _match(tabs: list[dict], key: dict) -> list[dict]:
     return [t for t in tabs if all(t.get(k) == v for k, v in key.items())]
 
@@ -70,7 +83,7 @@ def _match(tabs: list[dict], key: dict) -> list[dict]:
 def benchmark(conn: sqlite3.Connection, *, project_type: str | None = None, agency_type: str | None = None,
               region: str | None = None, size: str | None = None, gsf: float | None = None,
               est_amount: float | None = None, since: str | None = DEFAULT_SINCE, min_n: int = MIN_N,
-              to_period: str | None = None) -> dict:
+              to_period: str | None = None, area_kind: str | None = None) -> dict:
     tabs = load_tabs(conn, since, to_period)
     key = segment_key(project_type, agency_type, region, size=size, gsf=gsf, amount=est_amount)
     dropped: list[str] = []
@@ -88,13 +101,15 @@ def benchmark(conn: sqlite3.Connection, *, project_type: str | None = None, agen
     if dropped:
         warnings.append("widened segment by dropping " + ", ".join(dropped))
     periods = {t["series_id"]: latest_period(conn, t["series_id"]) for t in sel if t["series_id"]}
+    psf_kind, psf = psf_quartiles(sel, area_kind, project_type)
     return {
         "key": key,
         "dropped": dropped,
         "since": since,
         "n": len(sel),
         "escalated_to": periods,
-        "low_psf_esc": quartiles([t["low_psf_esc"] for t in sel]),
+        "low_psf_esc": psf,
+        "low_psf_kind": psf_kind,
         "low_esc": quartiles([t["low_esc"] for t in sel]),
         "low_ee": quartiles([t["low_ee"] for t in sel if t["low_ee"] is not None]),
         "bidders": quartiles([t["n"] for t in sel]),
@@ -102,6 +117,7 @@ def benchmark(conn: sqlite3.Connection, *, project_type: str | None = None, agen
         "cv": quartiles([t["cv"] for t in sel if t["cv"] is not None]),
         "warnings": warnings,
         "escalation_flags": flags,
-        "sample": [{k: t[k] for k in ("sol_ref", "title", "bid_open_date", "n", "low", "low_esc", "gsf", "low_ee")}
+        "sample": [{k: t[k] for k in ("sol_ref", "title", "bid_open_date", "n", "low", "low_esc", "gsf", "area_kind",
+                                       "low_ee")}
                    for t in sel],
     }

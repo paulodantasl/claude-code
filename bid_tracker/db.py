@@ -51,6 +51,10 @@ def connect(path: Path | str | None = None) -> sqlite3.Connection:
 
 def init_db(conn: sqlite3.Connection, seed: bool = True) -> None:
     conn.executescript(SCHEMA_PATH.read_text())
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(solicitations)")}
+    if "area_kind" not in cols:   # DB made before area kinds; `rebuild` gives the full schema
+        conn.execute("ALTER TABLE solicitations ADD COLUMN area_kind TEXT "
+                     "CHECK (area_kind IN ('building_gsf','scope_area','roof_area'))")
     conn.execute(
         "INSERT OR REPLACE INTO schema_meta(key, value) VALUES ('schema_version', ?)", (SCHEMA_VERSION,)
     )
@@ -124,5 +128,6 @@ def ensure_ideal_bidder(conn: sqlite3.Connection, ideal: dict) -> int:
 
 
 def table_counts(conn: sqlite3.Connection) -> dict[str, int]:
-    tables = ["agencies", "solicitations", "bids", "bidders", "bid_items", "rate_cards", "cost_index", "ideal_pursuits"]
+    tables = ["agencies", "solicitations", "bids", "bidders", "bid_items", "rate_cards", "cost_index", "ideal_pursuits",
+              "solicitation_areas"]
     return {t: conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in tables}

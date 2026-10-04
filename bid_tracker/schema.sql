@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS solicitations (
     region             TEXT,
     gsf                REAL,
     gsf_basis          TEXT CHECK (gsf_basis IN ('stated','measured','derived')),
+    area_kind          TEXT CHECK (area_kind IN ('building_gsf','scope_area','roof_area')),  -- what gsf measures; set from solicitation_areas
     advertise_date     TEXT,
     bid_open_date      TEXT NOT NULL,
     date_basis         TEXT NOT NULL DEFAULT 'bid_open' CHECK (date_basis IN ('bid_open','award','board','posted')),
@@ -117,6 +118,23 @@ CREATE TABLE IF NOT EXISTS solicitations (
 );
 CREATE INDEX IF NOT EXISTS ix_sol_segment ON solicitations(project_type, region, bid_open_date);
 CREATE INDEX IF NOT EXISTS ix_sol_agency ON solicitations(agency_id, bid_open_date);
+
+-- Square footage by kind, each with the page it came from. Keyed by sol_ref, not solicitation_id, so a
+-- solicitation re-import can't erase it and an areas package may load before its solicitation does.
+-- importer.sync_areas copies the project type's preferred kind into solicitations.gsf.
+CREATE TABLE IF NOT EXISTS solicitation_areas (
+    sol_ref      TEXT NOT NULL,
+    area_kind    TEXT NOT NULL CHECK (area_kind IN ('building_gsf','scope_area','roof_area')),
+    sf           REAL NOT NULL CHECK (sf > 0),
+    basis        TEXT NOT NULL CHECK (basis IN ('stated','measured','derived')),
+    source_url   TEXT NOT NULL,
+    source_page  TEXT,
+    excerpt      TEXT,
+    retrieved_at TEXT,
+    notes        TEXT,
+    run_id       INTEGER REFERENCES ingest_runs(run_id),
+    PRIMARY KEY (sol_ref, area_kind)
+);
 
 CREATE TABLE IF NOT EXISTS solicitation_sources (
     solicitation_id INTEGER NOT NULL REFERENCES solicitations(solicitation_id) ON DELETE CASCADE,

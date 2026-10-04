@@ -27,7 +27,7 @@ arithmetic and sourcing slips. It cannot catch a misread digit that still adds u
    - `award_basis`: `low_bid` for ITBs; `best_value` for scored RFPs; `rate_card` for unit-rate term contracts.
    - `ee_source`: `ee` only when the document calls it an engineer's / architect's estimate; a "budget" or
      "available funding" is `budget`.
-   - `gsf` only when the documents state it (`stated`) or you measured it from plans (`measured`).
+   - Square footage goes in `areas.csv`, not in `gsf` (see **Square footage** below).
 6. Validate against a copy of the live DB (a fresh `--db` path would hide duplicate-name warnings):
    `cp $BID_TRACKER_DATA/bids.db /tmp/<group>.db && python3 -m bid_tracker --db /tmp/<group>.db validate <package>`.
    Fix every ERROR; read every WARN.
@@ -56,3 +56,48 @@ Ch. 119 request. Never retry with a browser User-Agent, changed headers or a hea
 - **Not-to-exceed awards:** `award_is_nte=1`; they are excluded from low-bid statistics.
 - **Rate cards:** one row per bidder × service × size bucket. `unit` = `sf`, `lump`, `hr`, `day`, `each`.
   Each row's `source_excerpt` quotes that cell (`Mold 10,001+ sf: $14.00/sf`).
+
+## Square footage (`areas.csv`)
+
+Every per-project vertical tab (V-*, not a term or rate-card contract) needs an area row or an entry in
+`D/area_misses.csv` saying where you looked. $/SF benchmarks only use tabs with an area.
+
+**What the area measures (`area_kind`).** $/SF only compares like with like, so say what the number is:
+- `scope_area`: the area the contract price covers. That's the renovated area for V-REN / V-TI / V-ADA,
+  and the gross area for a new building.
+- `roof_area`: roof surface replaced (V-ENV). Convert roofing "squares" × 100 only when the document says squares.
+- `building_gsf`: the whole building's gross area, when that is all you can find for a partial renovation.
+  Keep looking for the scope area; record both if you find both (one row per kind).
+
+Which kind a tab's $/SF uses: V-NEW-* building_gsf then scope_area; V-REN/V-TI/V-ADA scope_area then
+building_gsf; V-ENV roof_area then scope_area; V-MEP building_gsf then scope_area.
+
+**Where to look, in order** (stop at the first scope or roof area from an official record):
+1. The solicitation documents you already saved: invitation to bid, Summary of Work (01 10 00 / 01 11 00),
+   bid-form quantities, addenda. `grep -il "sq\.\? *ft\|square f\|\bSF\b\|GSF\|squares"` over the text.
+2. The drawings: cover, G-001 or the code-data / life-safety sheet ("BUILDING AREA", "AREA OF ALTERATION").
+   Read scanned sheets visually.
+3. The award's agenda memo and its backup (Legistar / Hyland). A/E proposals in the backup often state the area.
+4. The job's building permit (city or county permit portal): "Project Area SQ FT" on the permit record.
+5. The county property appraiser's building card (whole building only, `building_gsf`, basis `derived`).
+   Only for a job covering the whole building, and only if the host is reachable; never past a wall or login.
+6. Measure it: when the plans are public but print no area, measure the scope from a scaled floor plan
+   (basis `measured`; `notes` must give the sheet, the scale and the dimensions used).
+
+**Each row:**
+- `sf`: copied exactly.
+- `basis`:
+  - `stated` (printed in an official record for this job);
+  - `measured`;
+  - `derived` (appraiser or another record about the building, not the job).
+- `source_url` and `source_page`: the document and page or sheet.
+- `excerpt`: the line containing the number, verbatim. The validator checks a stated or derived `sf`
+  appears in it (E-NOSRC).
+- An independent checker re-opens the cited page before import, the same as for bid totals.
+
+A stronger basis replaces a weaker one for the same kind (stated > measured > derived). An area row is kept
+when the solicitation is later updated, so re-harvesting a tab never erases its area.
+
+**Nothing found?** Add `sol_ref, searched, last_tried` to `D/area_misses.csv` (searched = the sources you
+tried, `;`-separated). The harvest retries it after 90 days. List it in the report with a one-line Ch. 119
+request for the plans' code-data sheet.

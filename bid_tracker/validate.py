@@ -165,6 +165,8 @@ class Validator:
                 self.err("E-NUM", f, ln, f"gsf {v['gsf']} out of range")
             if v.get("gsf") and not v.get("gsf_basis"):
                 self.err("E-ENUM", f, ln, "gsf needs gsf_basis (stated|measured|derived)")
+            if v.get("area_kind") and not v.get("gsf"):
+                self.warn("W-AREA", f, ln, "area_kind without gsf is ignored; put areas in areas.csv")
             if v.get("engineers_estimate") and not v.get("ee_source"):
                 self.err("E-EE", f, ln, "engineers_estimate needs ee_source (ee|budget|not_published)")
             for col in ("bid_bond_pct", "sbe_goal_pct"):
@@ -422,6 +424,34 @@ class Validator:
             if msg:
                 self.err("E-URL", f, ln, msg)
 
+    def check_areas(self, sols: dict[str, dict]):
+        seen: dict[tuple, int] = {}
+        for r in self.pkg.rows("areas.csv"):
+            v, f, ln = r.values, r.file, r.line
+            ref, kind = v.get("sol_ref"), v.get("area_kind")
+            if (ref, kind) in seen:
+                self.err("E-DUP", f, ln, f"{ref} {kind} repeats line {seen[(ref, kind)]}")
+            seen[(ref, kind)] = ln
+            if ref and ref not in sols and ref not in self.known_sol_refs:
+                # Areas key on sol_ref, so they apply once the solicitation is imported (`BT areas --orphans`).
+                self.warn("W-REF", f, ln, f"sol_ref {ref} is not in this package or the DB yet")
+            sf = v.get("sf")
+            if sf is not None and not (0 < sf < 5_000_000):
+                self.err("E-NUM", f, ln, f"sf {sf} out of range")
+            msg = check_url(v.get("source_url"), None, self.fixtures)
+            if msg:
+                self.err("E-URL", f, ln, msg)
+            if len(v.get("excerpt") or "") < 20:
+                self.err("E-URL", f, ln, "excerpt must quote at least 20 characters of the source")
+            elif sf and v.get("basis") in ("stated", "derived") and not appears_in(sf, [v["excerpt"]]):
+                self.err("E-NOSRC", f, ln, f"sf {sf:,.0f} does not appear in the excerpt; quote the line it came from")
+            if v.get("basis") == "measured" and not v.get("notes"):
+                self.err("E-AREA", f, ln, "a measured area needs notes: sheet, scale and the dimensions used")
+            pt = (sols.get(ref) or {}).get("project_type")
+            if pt and kind and kind not in taxonomy.area_preference(pt):
+                self.warn("W-AREA", f, ln, f"{kind} is not used for {pt} $/SF "
+                                           f"(uses {' or '.join(taxonomy.area_preference(pt))})")
+
     def run(self) -> list[Issue]:
         self.check_structure()
         agencies = self.agency_ids()
@@ -432,6 +462,7 @@ class Validator:
         self.check_sources(sols, bids_by_sol)
         self.check_pursuits(sols)
         self.check_index()
+        self.check_areas(sols)
         return self.issues
 
 

@@ -64,11 +64,19 @@ Agencies with no rows look back 120 days only. No backfill.
 
 Extract those as updates. Also re-try the refs in `D/private/holdback.csv`, the packages held back last run.
 
+**Square-footage retries.** `BT areas` lists per-project vertical tabs with no area, with when each was last
+tried. Re-try up to 10 whose `last_tried` is more than 90 days ago, oldest first. Give each to the subagent for
+its agency as an area-only task.
+
 ## 2. Extract (subagents; never write `D/bids.db`)
 Run one subagent per agency, using the Workflow tool if it's available, else Agent. Each subagent:
 - follows EXTRACTION_PROTOCOL.md;
 - saves sources under `D/raw/<agency_id>/` (gitignored);
 - writes one package to `D/staging/<run date>-<agency_id>/`, with the run date from `date -u +%F` (staging is gitignored);
+- **square footage:** for every per-project vertical tab in the package (V-*, not a term or rate-card contract) and every area retry:
+  - writes an `areas.csv` row: kind, sf, basis, page, quoted line;
+  - or, if nothing is found, a row in `area_misses.csv` inside the package folder (`sol_ref, searched, last_tried`);
+  - follows EXTRACTION_PROTOCOL.md "Square footage" for the source order and the kinds;
 - validates against **its own copy** of the live DB until there are 0 errors:
   `cp /home/user/ideal-bid-data/bids.db /tmp/<agency_id>.db && cd /home/user/claude-code && BID_TRACKER_DATA=/home/user/ideal-bid-data python3 -m bid_tracker --db /tmp/<agency_id>.db validate <package>`.
 
@@ -78,6 +86,11 @@ Subagents never run `import-csv`, `rebuild` or `notion-ack`.
 For each staged package, a **separate** subagent:
 - lists every bidder and total from the saved sources before opening `bids.csv`;
 - then compares names (verbatim), totals (to the cent), responsive flags, dates, award, evidence class and scope;
+- re-opens the cited page for every `areas.csv` row and confirms:
+  - the number;
+  - that it belongs to this job;
+  - the kind (scope vs whole building vs roof);
+  - for a `measured` row, re-measures it; a difference over 5% is a blocking issue;
 - validates against its own DB copy, the same way as step 2.
 
 On a blocking issue:
@@ -88,20 +101,24 @@ On a blocking issue:
 ## 4. Import (coordinator only)
 1. **Benchmarks before.** For each `(project_type, agency_type)` the checked packages touch, run `BT benchmark --project-type X --agency-type Y --json > /tmp/bm_before_X_Y.json`.
 2. **Import.** For each package that passed, `mv` it from `D/staging/` to `D/packages/<run date>-<agency_id>` (add `-2`, `-3` and so on if that exists; never write into an existing package). Then run `BT import-csv <that path> --feed weekly`. Remove its refs from `holdback.csv`.
+   - Merge the package's `area_misses.csv` into `D/area_misses.csv`: one row per ref, newest `last_tried`, `searched` joined.
+   - Drop refs from `D/area_misses.csv` that now have an area. `BT areas` shows which still lack one.
+   - Any orphans `BT areas --orphans` reports are area rows whose ref was re-keyed or mistyped. Fix them in the package.
 3. **Duplicates.**
    - Run `BT bidders review --threshold 0.85`, read the W-NAME warnings from validation, and list short forms with:
      `cd /home/user/claude-code && BID_TRACKER_DATA=/home/user/ideal-bid-data python3 -c "from bid_tracker import db; c=db.connect(db.default_db_path()); r=c.execute('SELECT canonical_name n, name_key k FROM bidders').fetchall(); [print(repr(a['n']),'<',repr(b['n'])) for a in r for b in r if a['k']!=b['k'] and b['k'].startswith(a['k']+' ')]"`
    - Merge only clear same-firm pairs: a typo, a cut-off name, a short form on the same agency's tab, or the same FL license. Use `BT bidders merge "<keep>" "<drop>"`.
    - Never merge because two names share a generic word ("Construction", "Roofing").
 4. **Re-key.** If a source shows a record already in the DB carries the wrong solicitation number:
-   1. Remove every row keyed by the old ref from every file that carries it. Find them with `grep -rl '<old ref>' D/packages D/private`; they can be in solicitations, bids, bid_items, rate_cards or ideal_pursuits.
+   1. Remove every row keyed by the old ref from every file that carries it. Find them with `grep -rl '<old ref>' D/packages D/private D/area_misses.csv`; they can be in solicitations, bids, bid_items, rate_cards or ideal_pursuits. Change `areas.csv` and `area_misses.csv` rows to the new ref instead of deleting them: the area is still right.
    2. In `D/notion_map.csv`, change its `bid_tab` (and any `pursuit`) `local_ref` to the new ref.
    3. Run `BT rebuild` before any `notion-ack`.
 5. **Benchmarks after.** Rerun the benchmarks and note changes in n, the p50 gap and p50 bidders.
 
 ## 5. Persist (data repo only)
 1. Stage the data:
-   `git -C /home/user/ideal-bid-data add packages index private exports notion_map.csv notion_ids.json && git -C /home/user/ideal-bid-data diff --cached --stat`.
+   `git -C /home/user/ideal-bid-data add packages index private exports notion_map.csv notion_ids.json area_misses.csv && git -C /home/user/ideal-bid-data diff --cached --stat`.
+   (`git add` fails on a path that doesn't exist yet; drop `area_misses.csv` from the list until the first miss is written.)
 2. Stop if any staged file is over 5 MB, or is a .pdf/.png/.jpg/.html/.db, or if a package is deleted that you didn't delete on purpose (re-key).
 3. Commit and push:
    `git -C /home/user/ideal-bid-data commit -m "Harvest <today>: <n> tabs" && git -C /home/user/ideal-bid-data push`.
@@ -134,6 +151,7 @@ Follow NOTION_SYNC.md. The IDs are in `D/notion_ids.json`.
 Short, with a source link for each tab. Public tab numbers are fine. Never include Ideal's cost, markup, bids, rate cards, anything from `private/`, the BLS key, or raw command or error output; describe failures in your own words. Include:
 - new and updated tabs;
 - benchmark changes (n, p50 gap, p50 bidders) by segment;
+- square-footage coverage: the first line of `BT areas`, the tabs that got an area this run, and the new misses, each with a one-line Ch. 119 request for the plans' code-data sheet;
 - new competitors and merges made;
 - packages held back and why;
 - blocked hosts, and `watch=1` agencies with no reachable source;
