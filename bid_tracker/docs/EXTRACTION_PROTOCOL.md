@@ -89,10 +89,11 @@ building_gsf; V-ENV roof_area then scope_area; V-MEP building_gsf then scope_are
 - `basis`:
   - `stated` (printed in an official record for this job);
   - `measured`;
-  - `derived` (appraiser or another record about the building, not the job).
+  - `derived` (appraiser or another record about the building, not the job, or a sum of areas quoted
+    together, e.g. two buildings in one contract).
 - `source_url` and `source_page`: the document and page or sheet.
-- `excerpt`: the line containing the number, verbatim. The validator checks a stated or derived `sf`
-  appears in it (E-NOSRC).
+- `excerpt`: the line containing the number, verbatim. The validator checks a stated `sf` appears in
+  it, and a derived one appears or is the sum of figures quoted in it (E-NOSRC).
 - An independent checker re-opens the cited page before import, the same as for bid totals.
 
 A stronger basis replaces a weaker one for the same kind (stated > measured > derived). An area row is kept

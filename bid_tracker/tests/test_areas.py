@@ -90,12 +90,17 @@ def test_validation(conn, pkg_copy, tmp_path):
         area(ref, "building_gsf", 30000),                                                           # E-DUP
         area("fake-schools:ITB-99-999", "scope_area", 2000),                                         # W-REF only
         area(ref, "roof_area", 0),                                                                   # E-NUM
+        area("fake-city:ITB-24-001", "building_gsf", 31700, "derived",                               # a sum: ok
+             excerpt="the 20,700 square foot training center and the 11,000 square foot clubhouse"),
+        area("fake-city:ITB-24-001", "scope_area", 31700,                                           # E-NOSRC
+             excerpt="the 20,700 square foot training center and the 11,000 square foot clubhouse"),
     ]
     res = import_package(conn, write_areas(tmp_path / "a", rows), fixtures=True)
     codes = {(i.severity, i.code, i.line) for i in res.issues}
     assert has_errors(res.issues) and res.status == "failed"
     assert {("ERROR", "E-NOSRC", 2), ("ERROR", "E-AREA", 3), ("ERROR", "E-DUP", 4), ("WARN", "W-REF", 5),
-            ("ERROR", "E-NUM", 6)} <= codes
+            ("ERROR", "E-NUM", 6), ("ERROR", "E-NOSRC", 8)} <= codes
+    assert not any(i.line == 7 and i.severity == "ERROR" for i in res.issues)
 
 
 def test_orphans_apply_once_the_solicitation_arrives(conn, pkg_copy, tmp_path):

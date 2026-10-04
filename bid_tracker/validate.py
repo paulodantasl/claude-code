@@ -49,6 +49,13 @@ def appears_in(target: float, texts: list[str | None], tol: float = 1.0) -> bool
     return any(abs(n - target) <= tol for t in texts for n in numbers_in(t))
 
 
+def sums_in(target: float, text: str | None, tol: float = 1.0, most: int = 4) -> bool:
+    """True if 2..most of the numbers quoted in text add up to target (e.g. two buildings' areas)."""
+    from itertools import combinations
+    nums = numbers_in(text)[:12]
+    return any(abs(sum(c) - target) <= tol for k in range(2, most + 1) for c in combinations(nums, k))
+
+
 def check_url(url: str | None, evidence: str | None, fixtures: bool) -> str | None:
     """Return an error message, or None if the URL is acceptable."""
     if not url:
@@ -443,8 +450,10 @@ class Validator:
                 self.err("E-URL", f, ln, msg)
             if len(v.get("excerpt") or "") < 20:
                 self.err("E-URL", f, ln, "excerpt must quote at least 20 characters of the source")
-            elif sf and v.get("basis") in ("stated", "derived") and not appears_in(sf, [v["excerpt"]]):
+            elif sf and v.get("basis") == "stated" and not appears_in(sf, [v["excerpt"]]):
                 self.err("E-NOSRC", f, ln, f"sf {sf:,.0f} does not appear in the excerpt; quote the line it came from")
+            elif sf and v.get("basis") == "derived" and not (appears_in(sf, [v["excerpt"]]) or sums_in(sf, v["excerpt"])):
+                self.err("E-NOSRC", f, ln, f"sf {sf:,.0f} is neither in the excerpt nor a sum of figures quoted there")
             if v.get("basis") == "measured" and not v.get("notes"):
                 self.err("E-AREA", f, ln, "a measured area needs notes: sheet, scale and the dimensions used")
             pt = (sols.get(ref) or {}).get("project_type")
