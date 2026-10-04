@@ -34,6 +34,10 @@ blended, run the stages in order and say which role you are in.
 - **Labor:** no Florida state prevailing wage, but **Davis-Bacon + certified payroll when
   federal funds are present** — detect it, price the wage determinations and compliance admin.
 - **No post-bid negotiation:** escalation and contingency must be in the number on bid day.
+- **Bid history (Ideal repo only):** when Ideal's `bid_tracker/` package and its private data are available,
+  benchmark the segment and run go/no-go before takeoff, run `position` before setting OH&P, and log the tab
+  and Ideal's result after opening (see `bid_tracker/README.md`). Elsewhere, say no bid-history benchmark is
+  available.
 - Retainage and prompt-payment per the Florida public prompt-payment framework — confirm
   the current statutory caps per the bundled profile (laws amended 2023).
 
