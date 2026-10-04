@@ -5,7 +5,9 @@ Dedupe rules
   portal notice > news > internal) replaces the row; a lower one is only recorded as an extra source.
 - Bids and rate cards key on (solicitation, bidder). A package replaces the rows of the bidders it
   carries and leaves other bidders alone, so a private package can add Ideal's own bid or rate card
-  to a public tab without disturbing it.
+  to a public tab without disturbing it. When a package upgrades a solicitation's evidence (e.g. an
+  official tab over a search snippet), its bids and rate cards replace every other bidder's rows on
+  that tab, so names a snippet got wrong don't linger as extra bidders; Ideal's own rows stay.
 - Bidders resolve by FL license number, then name_key, then alias; otherwise a new bidder is created.
 """
 
@@ -133,6 +135,13 @@ def upsert_solicitation(conn: sqlite3.Connection, v: dict, run_id: int) -> tuple
         old_rank = taxonomy.EVIDENCE_RANK[existing["evidence_class"]]
         if new_rank < old_rank:
             status = "source_only"
+        elif new_rank > old_rank:
+            sets = ", ".join(f"{c} = ?" for c in vals)
+            conn.execute(
+                f"UPDATE solicitations SET {sets}, record_hash = ?, run_id = ? WHERE solicitation_id = ?",
+                [vals[c] for c in vals] + [h, run_id, sid],
+            )
+            status = "upgraded"
         elif existing["record_hash"] == h:
             status = "unchanged"
         else:
@@ -159,11 +168,18 @@ def _bid_fingerprint(conn: sqlite3.Connection, sid: int) -> list:
     )
 
 
-def write_bids(conn: sqlite3.Connection, sid: int, rows: list, items: list) -> tuple[int, int]:
+NOT_IDEAL = "bidder_id NOT IN (SELECT bidder_id FROM bidders WHERE is_ideal = 1)"
+
+
+def write_bids(conn: sqlite3.Connection, sid: int, rows: list, items: list, *,
+               replace_all: bool = False) -> tuple[int, int]:
     """Replace this package's bidders on the tab; other bidders' rows (e.g. Ideal's own bid from a
-    private package) stay. Unit-price lines go with their bid."""
+    private package) stay. replace_all (evidence upgrade) also drops every other non-Ideal bidder.
+    Unit-price lines go with their bid."""
     resolved = [(r, resolve_bidder(conn, r.values["bidder_name_raw"], r.values.get("fl_license_no"),
                                    r.values.get("source_url"))) for r in rows]
+    if replace_all:
+        conn.execute(f"DELETE FROM bids WHERE solicitation_id = ? AND {NOT_IDEAL}", (sid,))
     for _r, bidder_id in resolved:
         conn.execute("DELETE FROM bids WHERE solicitation_id = ? AND bidder_id = ?", (sid, bidder_id))
     bid_ids: dict[str, int] = {}
@@ -197,9 +213,11 @@ def write_bids(conn: sqlite3.Connection, sid: int, rows: list, items: list) -> t
     return len(rows), n_items
 
 
-def write_rates(conn: sqlite3.Connection, sid: int, rows: list) -> int:
-    """Replace the rate cards of the bidders in this package only."""
+def write_rates(conn: sqlite3.Connection, sid: int, rows: list, *, replace_all: bool = False) -> int:
+    """Replace the rate cards of the bidders in this package only (all non-Ideal ones on an upgrade)."""
     resolved = [(r, resolve_bidder(conn, r.values["bidder_name_raw"], None, r.values.get("source_url"))) for r in rows]
+    if replace_all:
+        conn.execute(f"DELETE FROM rate_cards WHERE solicitation_id = ? AND {NOT_IDEAL}", (sid,))
     for bidder_id in {b for _r, b in resolved}:
         conn.execute("DELETE FROM rate_cards WHERE solicitation_id = ? AND bidder_id = ?", (sid, bidder_id))
     for r, bidder_id in resolved:
@@ -294,17 +312,19 @@ def import_package(conn: sqlite3.Connection, path: Path | str, *, feed: str = "m
             sid, status = upsert_solicitation(conn, v, run_id)
             touched.add(v["sol_ref"])
             changed_children = False
+            upgraded = status == "upgraded"
             if status != "source_only":
                 if v["sol_ref"] in bids_by:
                     before = _bid_fingerprint(conn, sid)
-                    nb, ni = write_bids(conn, sid, bids_by[v["sol_ref"]], items_by.get(v["sol_ref"], []))
+                    nb, ni = write_bids(conn, sid, bids_by[v["sol_ref"]], items_by.get(v["sol_ref"], []),
+                                        replace_all=upgraded)
                     res.bids_written += nb
                     res.items_written += ni
                     changed_children |= before != _bid_fingerprint(conn, sid)
                 if v["sol_ref"] in rates_by:
-                    res.rates_written += write_rates(conn, sid, rates_by[v["sol_ref"]])
+                    res.rates_written += write_rates(conn, sid, rates_by[v["sol_ref"]], replace_all=upgraded)
                 set_awardee(conn, sid, v.get("awardee_name"), v.get("source_url"))
-            if status == "unchanged" and changed_children:
+            if status == "unchanged" and changed_children or upgraded:
                 status = "updated"
             if status == "new":
                 res.new += 1

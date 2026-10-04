@@ -1,3 +1,4 @@
+import csv
 import sqlite3
 
 import pytest
@@ -102,13 +103,36 @@ def test_search_snippet_rows_yield_to_official_sources(conn, pkg_copy, tmp_path)
             r["date_basis"] = "board"
             r["notes"] = "number from a search-result snippet; page not fetched"
     edit_csv(snippet / "solicitations.csv", as_snippet)
+
+    def misspell(rows):                              # a snippet that garbled one bidder's name
+        for r in rows:
+            if r["bidder_name_raw"] == "FAKE Gamma Contracting Inc":
+                r["bidder_name_raw"] = "FAKE Gama Contractors"
+    edit_csv(snippet / "bids.csv", misspell)
     first = import_package(conn, snippet, fixtures=True)
     assert first.status == "ok" and first.new == 3
     assert conn.execute("SELECT date_basis FROM solicitations LIMIT 1").fetchone()[0] == "board"
+    tab = "(SELECT solicitation_id FROM solicitations WHERE sol_ref = 'fake-city:ITB-24-001')"
+    official_n = conn.execute(f"SELECT COUNT(*) FROM bids WHERE solicitation_id = {tab}").fetchone()[0]
+    ideal = tmp_path / "private"                     # Ideal's own bid on the same tab, from a private package
+    ideal.mkdir()
+    with open(FAKE_VALID / "bids.csv", newline="") as fh:
+        cols = next(csv.reader(fh))
+    with open(ideal / "bids.csv", "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=cols)
+        w.writeheader()
+        w.writerow({"sol_ref": "fake-city:ITB-24-001", "bidder_name_raw": "Ideal Remodeling LLC",
+                    "total_bid": "$130,000.00", "total_basis": "base",
+                    "source_url": "https://example.invalid/private/debrief", "source_excerpt": "Ideal bid $130,000.00"})
+    assert import_package(conn, ideal, fixtures=True).status == "ok"
     upgraded = import_package(conn, FAKE_VALID, fixtures=True)
     assert upgraded.updated == 3                     # official tab replaces the snippet rows
     row = conn.execute("SELECT evidence_class, date_basis FROM solicitations WHERE sol_ref = 'fake-city:ITB-24-001'").fetchone()
     assert tuple(row) == ("official_tab", "bid_open")
+    names = {r[0] for r in conn.execute(f"SELECT bidder_name_raw FROM bids WHERE solicitation_id = {tab}")}
+    assert "FAKE Gama Contractors" not in names      # the garbled snippet row doesn't linger
+    assert "Ideal Remodeling LLC" in names           # Ideal's private row survives the upgrade
+    assert len(names) == official_n + 1
 
 
 def test_private_package_adds_a_bidder_without_wiping_the_tab(conn, tmp_path):
