@@ -11,20 +11,18 @@ hq_county = "Hillsborough"
 # BLS Producer Price Index series used to escalate historical bids to today's dollars.
 # applies_to lists project_type codes or work classes; first match wins, "*" is the fallback.
 # Series IDs are confirmed on the first `refresh-index`; an ID BLS does not return is a hard error.
+# BLS publishes no aggregate commercial-building or remediation-services series (PCU236220236220 and
+# PCU562910562910 return "Series does not exist"), so other vertical work uses the office-building
+# series and restoration falls back to inputs to construction.
 [[cost_index_series]]
 series_id = "PCU236222236222"
 title = "PPI: New school building construction"
 applies_to = ["school_district"]
 
 [[cost_index_series]]
-series_id = "PCU236220236220"
-title = "PPI: Commercial and institutional building construction"
+series_id = "PCU236223236223"
+title = "PPI: New office building construction"
 applies_to = ["vertical"]
-
-[[cost_index_series]]
-series_id = "PCU562910562910"
-title = "PPI: Remediation services"
-applies_to = ["restoration"]
 
 [[cost_index_series]]
 series_id = "WPUIP2300001"

@@ -59,7 +59,8 @@ def test_escalation(conn):
     assert any("held flat" in f for f in late.flags)
     assert factor(conn, "WPUIP2300001", "2020-01").factor is None
     assert series_for("V-REN", "vertical", "school_district") == "PCU236222236222"
-    assert series_for("R-MOLD", "restoration", "county") == "PCU562910562910"
+    assert series_for("R-MOLD", "restoration", "county") == "WPUIP2300001"
+    assert series_for("V-TI", "vertical", "city") == "PCU236223236223"
     assert series_for(None, None, None) == "WPUIP2300001"
 
 

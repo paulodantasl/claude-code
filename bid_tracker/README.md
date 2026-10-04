@@ -94,9 +94,8 @@ Per tab, with responsive totals sorted b1 ≤ b2 ≤ … ≤ bN:
 | Applies to | Series | Index |
 |---|---|---|
 | Schools | PCU236222236222 | new school building construction |
-| Other vertical work | PCU236220236220 | commercial and institutional building construction |
-| Restoration | PCU562910562910 | remediation services |
-| Fallback | WPUIP2300001 | inputs to construction |
+| Other vertical work | PCU236223236223 | new office building construction (BLS has no aggregate commercial series) |
+| Restoration and fallback | WPUIP2300001 | inputs to construction industries, goods (BLS has no remediation series) |
 
 **Benchmarks** group tabs by project type × agency type × region × size band. Size uses GSF bands when floor area is known, otherwise dollar bands. Only low-bid awards count, and term contracts are excluded. The output gives p25/p50/p75 of escalated low $/SF, low/EE, bidder count and gap.
 
