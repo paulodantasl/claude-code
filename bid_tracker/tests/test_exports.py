@@ -6,7 +6,7 @@ import pytest
 
 from bid_tracker.importer import import_package
 from bid_tracker import db
-from bid_tracker.notion import NOTION_SCHEMA, ack, ddl, export, load_map, save_map
+from bid_tracker.notion import NOTION_SCHEMA, ack, ddl, export, forget, load_map, orphan_bidders, save_map
 from conftest import FAKE_VALID, REPO
 
 
@@ -92,3 +92,27 @@ def test_repo_hygiene():
 def test_reference_agencies_are_public_metadata_only():
     header = (Path(REPO) / "bid_tracker/reference/agencies.csv").read_text().splitlines()[0]
     assert header == "agency_id,name,agency_type,county,portal_platform,portal_url,watch,notes"
+
+
+def test_orphan_bidder_pages_are_only_merged_away_aliases(loaded):
+    live = loaded.execute("SELECT bidder_id, name_key FROM bidders WHERE is_ideal = 0 LIMIT 1").fetchone()
+    loaded.execute("INSERT INTO bidder_aliases(alias_key, bidder_id, alias_raw) VALUES ('fake builder alfa', ?, 'FAKE Builder Alfa')",
+                   (live["bidder_id"],))
+    ack(loaded, [{"db": "bidders", "ref": live["name_key"], "page_id": "page-live", "hash": "h"},
+                 {"db": "bidders", "ref": "fake builder alfa", "page_id": "page-merged", "hash": "h"},
+                 {"db": "bidders", "ref": "fake unknown firm", "page_id": "page-unknown", "hash": "h"}])
+    orphans = orphan_bidders(loaded)
+    assert [o["notion_page_id"] for o in orphans] == ["page-merged"]    # live and unexplained pages are left alone
+    assert forget(loaded, "bidder", [o["local_ref"] for o in orphans]) == 1
+    assert orphan_bidders(loaded) == []
+
+
+def test_cli_guards_against_the_wrong_data_dir(tmp_path):
+    from bid_tracker.cli import main
+    with pytest.raises(SystemExit, match="BID_TRACKER_DATA"):
+        main(["rebuild"])                                           # conftest's data dir has no packages/
+    db_path = str(tmp_path / "scratch.db")
+    main(["--db", db_path, "import-csv", str(FAKE_VALID), "--fixtures"])
+    with pytest.raises(SystemExit, match="notion_map is empty"):
+        main(["--db", db_path, "export-notion", "--out", str(tmp_path / "out")])
+    assert main(["--db", db_path, "export-notion", "--out", str(tmp_path / "out"), "--first-sync"]) == 0

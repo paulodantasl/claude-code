@@ -404,3 +404,27 @@ def load_map(conn: sqlite3.Connection, path: Path) -> int:
         rows)
     conn.commit()
     return len(rows)
+
+
+def orphan_bidders(conn: sqlite3.Connection) -> list[dict]:
+    """Mapped bidder pages for firms that were merged away: the ref no longer names a bidder with any
+    bid, rate card or award, and it is a recorded alias (private/bidder_aliases.csv). Never derive this
+    from a manifest: unchanged bidders are absent from manifests but very much alive."""
+    return [dict(r) for r in conn.execute(
+        """SELECT m.local_ref, m.notion_page_id FROM notion_map m
+           WHERE m.entity = 'bidder'
+             AND m.local_ref NOT IN (
+                 SELECT b.name_key FROM bidders b
+                 WHERE EXISTS (SELECT 1 FROM bids WHERE bidder_id = b.bidder_id)
+                    OR EXISTS (SELECT 1 FROM rate_cards WHERE bidder_id = b.bidder_id)
+                    OR EXISTS (SELECT 1 FROM solicitations WHERE awardee_bidder_id = b.bidder_id))
+             AND m.local_ref IN (SELECT alias_key FROM bidder_aliases)
+           ORDER BY m.local_ref""")]
+
+
+def forget(conn: sqlite3.Connection, entity: str, refs: list[str]) -> int:
+    n = 0
+    for ref in refs:
+        n += conn.execute("DELETE FROM notion_map WHERE entity = ? AND local_ref = ?", (entity, ref)).rowcount
+    conn.commit()
+    return n

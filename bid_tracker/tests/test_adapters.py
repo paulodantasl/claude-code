@@ -47,6 +47,35 @@ def test_build_package_and_import(conn, tmp_path, monkeypatch):
     assert res.status == "ok" and res.index_rows == n
 
 
+def test_api_key_falls_back_to_the_private_key_file(tmp_path, monkeypatch):
+    monkeypatch.delenv("BLS_API_KEY", raising=False)
+    assert bls_ppi.api_key() is None
+    key_file = tmp_path / "data" / bls_ppi.KEY_FILE          # conftest points BID_TRACKER_DATA at tmp/data
+    key_file.parent.mkdir(parents=True)
+    key_file.write_text("fake-key-0000\n")
+    assert bls_ppi.api_key() == "fake-key-0000"
+    ids = [s["series_id"] for s in load_sources()["cost_index_series"]]
+    seen = {}
+
+    def fetch(url, data, headers):
+        seen["url"], seen["body"] = url, json.loads(data)
+        return json.dumps(fake_bls_payload(ids)).encode()
+
+    bls_ppi.build_package(tmp_path / "idx", fetch=fetch, today=date(2026, 10, 1))
+    assert seen["url"].endswith("/v2/timeseries/data/") and seen["body"]["registrationkey"] == "fake-key-0000"
+    monkeypatch.setenv("BLS_API_KEY", "env-key")              # the environment wins over the file
+    assert bls_ppi.api_key() == "env-key"
+
+
+def test_bls_error_never_echoes_the_key(tmp_path, monkeypatch):
+    monkeypatch.setenv("BLS_API_KEY", "secret-123")
+    fetch = lambda url, data, headers: json.dumps(
+        {"status": "REQUEST_NOT_PROCESSED", "message": ["The key:secret-123 provided by the User is invalid."]}).encode()
+    with pytest.raises(bls_ppi.BLSError) as err:
+        bls_ppi.build_package(tmp_path / "idx", fetch=fetch)
+    assert "secret-123" not in str(err.value) and err.value.__cause__ is None
+
+
 def test_missing_series_is_a_hard_error(tmp_path):
     ids = [s["series_id"] for s in load_sources()["cost_index_series"]]
     fetch = lambda url, data, headers: json.dumps(fake_bls_payload(ids, drop=ids[0])).encode()

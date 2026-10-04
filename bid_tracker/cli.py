@@ -167,6 +167,8 @@ def cmd_rebuild(args):
     from bid_tracker.notion import MAP_FILE, load_map, save_map
 
     data = dbm.data_dir()
+    if not (data / "packages").is_dir():
+        sys.exit(f"no packages/ under {data}: is BID_TRACKER_DATA set to the data repo clone?")
     path = Path(args.db) if args.db else dbm.default_db_path()
     map_path = path.parent / MAP_FILE
     if path.exists():
@@ -458,6 +460,12 @@ def cmd_export_notion(args):
     from bid_tracker.notion import export
 
     conn, _ = open_db(args)
+    mapped = conn.execute("SELECT COUNT(*) FROM notion_map").fetchone()[0]
+    rows = conn.execute("SELECT COUNT(*) FROM solicitations").fetchone()[0]
+    if rows and not mapped and not args.first_sync:
+        sys.exit("notion_map is empty but the DB has rows, so every Notion page would be created again. "
+                 "Check BID_TRACKER_DATA (`status`) and that notion_map.csv was restored by `rebuild`. "
+                 "Pass --first-sync only for a brand-new, empty Notion workspace.")
     out_root = Path(args.out) if args.out else dbm.data_dir() / "notion_out"
     path = export(conn, out_root, all_rows=args.all, feed=args.feed)
     m = json.loads(path.read_text())
@@ -467,6 +475,17 @@ def cmd_export_notion(args):
         by[op["db"]][op["op"]] += 1
     pending = sum(1 for op in m["ops"] if op.get("pending_relations"))
     print(f"wrote {path}\n  ops: {json.dumps(by)}  pending relations: {pending}")
+
+
+def cmd_notion_orphans(args):
+    from bid_tracker.notion import MAP_FILE, forget, orphan_bidders, save_map
+
+    conn, path = open_db(args)
+    rows = orphan_bidders(conn)
+    print(json.dumps(rows, indent=1))
+    if args.forget and rows:
+        n = forget(conn, "bidder", [r["local_ref"] for r in rows])
+        print(f"forgot {n} bidder page ids; wrote {save_map(conn, path.parent / MAP_FILE)} to {path.parent / MAP_FILE}")
 
 
 def cmd_notion_ack(args):
@@ -604,6 +623,9 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--all", action="store_true", help="include unchanged rows")
     sp.add_argument("--feed", default="manual", choices=["weekday", "weekly", "manual"])
     sp.add_argument("--out")
+    sp.add_argument("--first-sync", action="store_true", help="allow an empty notion_map (brand-new workspace only)")
+    sp = add("notion-orphans", cmd_notion_orphans, "list bidder pages of merged-away firms; --forget drops them from the map")
+    sp.add_argument("--forget", action="store_true")
     sp = add("notion-ack", cmd_notion_ack, "record Notion page ids after applying a manifest")
     sp.add_argument("acks")
     return p

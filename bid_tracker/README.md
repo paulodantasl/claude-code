@@ -64,7 +64,7 @@ B="python3 -m bid_tracker"
 $B status
 $B validate path/to/package                    # dry check
 $B import-csv path/to/package --feed weekly    # validate + load (idempotent)
-$B refresh-index                               # BLS PPI series for escalation (BLS_API_KEY optional)
+$B refresh-index                               # BLS PPI series; key from $BLS_API_KEY or private/bls_api_key
 $B stats <agency>:<SOLICITATION-NO>              # one tab: gap, low/EE, CV, $/SF, bidders
 $B stats --agency hcps                         # an agency's history
 $B benchmark --project-type V-REN --agency-type school_district --gsf 6000

@@ -1,31 +1,33 @@
 agency_id,name,agency_type,county,portal_platform,portal_url,watch,notes
-tampa,City of Tampa,city,Hillsborough,opengov,https://www.tampa.gov/purchasing/info/bid-schedule,1,Contract Administration bid tabs posted as PDFs under tampa.gov/sites/default/files/bid/docs/; purchasing results on OpenGov Results tab
-hillsborough-bocc,Hillsborough County BOCC,county,Hillsborough,bonfire,https://hillsboroughcounty.bonfirehub.com,1,Past opportunities tab visibility not confirmed; Ch. 119 request fallback
-hcps,Hillsborough County Public Schools,school_district,Hillsborough,,https://www.hillsboroughschools.org/Page/4295,1,Facilities construction page; Ch. 119 request fallback
-hcaa,Hillsborough County Aviation Authority (TPA),airport,Hillsborough,,https://www.tampaairport.com,1,Notice of Intent to Award PDFs include the bid tab
-porttb,Port Tampa Bay,port,Hillsborough,openbids,https://www.porttb.com/procurement,1,Monthly contract-award pages
+tampa,City of Tampa,city,Hillsborough,opengov,https://www.tampa.gov/purchasing/info/bid-schedule,1,Contract Administration bid tabs as PDFs under tampa.gov/sites/default/files/bid/docs/ (construction-project-bidding listing); Purchasing ITB awards in Council backups at tampagov.hylandcloud.com/251agendaonline; OpenGov portal behind a Cloudflare bot wall
+hillsborough-bocc,Hillsborough County BOCC,county,Hillsborough,bonfire,https://hillsboroughcounty.bonfirehub.com,1,BOCC backup PDFs at eagenda.hcfl.gov carry bid tabs; Bonfire past opportunities reachable
+hcps,Hillsborough County Public Schools,school_district,Hillsborough,,https://www.hillsboroughschools.org/Page/4295,0,No public tab listing found 2026-10; Ch. 119
+hcaa,Hillsborough County Aviation Authority (TPA),airport,Hillsborough,,https://www.tampaairport.com,0,tampaairport.com sits behind a Cloudflare bot wall (403) for scripts; do not circumvent. Board minutes carry tabs; Ch. 119 fallback
+porttb,Port Tampa Bay,port,Hillsborough,openbids,https://www.porttb.com/procurement,1,Board agendas on BoardBook (meetings.boardbook.org org 1448) carry award items; Contract Awards PDF lists awards without amounts
 usf,University of South Florida,university,Hillsborough,,,0,No public tab listing found; Ch. 119 request
 temple-terrace,City of Temple Terrace,city,Hillsborough,,,0,
 plant-city,City of Plant City,city,Hillsborough,,,0,
-pinellas-bocc,Pinellas County BOCC,county,Pinellas,opengov,https://pinellas.gov,1,
-stpete,City of St. Petersburg,city,Pinellas,opengov,https://procurement.opengov.com/portal/stpete,1,Free OpenGov login needed for official documents
-clearwater,City of Clearwater,city,Pinellas,,,1,
+pinellas-bocc,Pinellas County BOCC,county,Pinellas,legistar,https://pinellas.legistar.com,1,Legistar Web API client 'pinellas': award items with the bid tab attached (pinellas.legistar1.com); OpenGov portal behind a Cloudflare bot wall
+stpete,City of St. Petersburg,city,Pinellas,opengov,https://procurement.opengov.com/portal/stpete,1,OpenGov portal behind a Cloudflare bot wall; Council agenda packets and Numbered Action Taken PDFs from stpete.org (cms5.revize.com) carry award memos
+clearwater,City of Clearwater,city,Pinellas,legistar,https://clearwater.legistar.com,1,Legistar Web API client 'clearwater'; myclearwater.com behind a bot wall
 largo,City of Largo,city,Pinellas,,,0,
-pcsb,Pinellas County Schools,school_district,Pinellas,opengov,https://procurement.opengov.com/portal/PCSB,1,
-pasco-bocc,Pasco County BOCC,county,Pasco,bidnet,,1,BidNet Direct Florida Purchasing Group (free registration)
-pasco-schools,Pasco County Schools,school_district,Pasco,,,1,
-polk-bocc,Polk County BOCC,county,Polk,,https://www.polkfl.gov/business/procurement/,1,
-lakeland,City of Lakeland,city,Polk,,,0,
-polk-schools,Polk County Public Schools,school_district,Polk,vendorlink,,1,
-manatee-bocc,Manatee County BOCC,county,Manatee,demandstar,https://www.mymanatee.org,1,Board backup PDFs at records.manateeclerk.com
+pcsb,Pinellas County Schools,school_district,Pinellas,opengov,https://procurement.opengov.com/portal/PCSB,1,"Tabulation attachments through the OpenGov public API (api.procurement.opengov.com) only while it answers without a challenge, token or login; otherwise BoardDocs purchasing summaries (awardee only) or a Ch. 119 request. Do not script the portal HTML"
+pinellas-park,City of Pinellas Park,city,Pinellas,legistar,https://pinellaspark.legistar.com,1,Legistar Web API client 'pinellaspark'; bid tabs attached to award items
+pasco-bocc,Pasco County BOCC,county,Pasco,bonfire,https://pascocountyfl.bonfirehub.com,1,Bonfire public past-opportunities list while it answers without a challenge; tabs and memos via CivicClerk tenant 'pascocofl'
+pasco-schools,Pasco County Schools,school_district,Pasco,ionwave,https://pascok12.ionwave.net,1,IonWave public Awarded Bids list with award attachments
+polk-bocc,Polk County BOCC,county,Polk,,https://www.polkfl.gov/business/procurement/,1,'Submittals Received' and 'Recommendation of Award' PDFs under polkfl.gov/wp-content/uploads; WordPress REST API answers the tool's own User-Agent
+lakeland,City of Lakeland,city,Polk,,,1,Bid tabs at lakelandgov.net/media/<id>/<no>-bid-tab.pdf; the Bid Tabulations page lists recent tabs only; Commission memos for older awards
+polk-schools,Polk County Public Schools,school_district,Polk,vendorlink,,0,No public tab source found 2026-10 (BoardDocs not readable by script); Ch. 119
+manatee-bocc,Manatee County BOCC,county,Manatee,demandstar,https://www.mymanatee.org,1,Board items at agendaonline.mymanatee.org and minutes at records.manateeclerk.com; the public.mymanatee.org portal is behind a Cloudflare bot wall
 bradenton,City of Bradenton,city,Manatee,,,0,
-manatee-schools,School District of Manatee County,school_district,Manatee,,,1,
-sarasota-bocc,Sarasota County Government,county,Sarasota,opengov,https://procurement.opengov.com/portal/scgov,1,
-sarasota-city,City of Sarasota,city,Sarasota,,,0,
-sarasota-schools,Sarasota County Schools,school_district,Sarasota,,,1,
+manatee-schools,School District of Manatee County,school_district,Manatee,,,0,manateeschools.net not readable by script in 2026-10
+sarasota-bocc,Sarasota County Government,county,Sarasota,opengov,https://procurement.opengov.com/portal/scgov,0,scgov.net behind an Akamai bot wall and OpenGov behind Cloudflare; do not circumvent
+sarasota-city,City of Sarasota,city,Sarasota,,https://sarasota.granicusideas.com,1,Commission agenda items with bid tabs at sarasota.granicusideas.com
+sarasota-schools,Sarasota County Schools,school_district,Sarasota,,,0,No public tab source found 2026-10; Ch. 119
 hernando-bocc,Hernando County BOCC,county,Hernando,,,0,
 hernando-schools,Hernando County School District,school_district,Hernando,,,0,
 citrus-bocc,Citrus County BOCC,county,Citrus,,,0,
 citrus-schools,Citrus County School District,school_district,Citrus,,,0,
 dms-fl,FL Department of Management Services,state,Leon,mfmp,https://vendor.myfloridamarketplace.com,0,Pre-2022 decisions in the VBS archive
 fdot-d7,FDOT District 7,state,Hillsborough,,https://www.fdot.gov/contracts/district-offices/d7/lettings,0,Horizontal; reference only in phase 1
+lee-bocc,Lee County BOCC,county,Lee,ionwave,https://www.leegov.com/procurement,1,Outside Tampa Bay; watched for disaster/restoration term contracts. IonWave awarded list and CivicClerk agenda reports (leecofl.api.civicclerk.com)

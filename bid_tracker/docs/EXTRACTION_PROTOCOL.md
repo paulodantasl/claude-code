@@ -28,8 +28,17 @@ arithmetic and sourcing slips. It cannot catch a misread digit that still adds u
    - `ee_source`: `ee` only when the document calls it an engineer's / architect's estimate; a "budget" or
      "available funding" is `budget`.
    - `gsf` only when the documents state it (`stated`) or you measured it from plans (`measured`).
-6. Run `python3 -m bid_tracker validate <package>`. Fix every ERROR; read every WARN.
-7. Import: `python3 -m bid_tracker import-csv <package> --feed manual`.
+6. Validate against a copy of the live DB (a fresh `--db` path would hide duplicate-name warnings):
+   `cp $BID_TRACKER_DATA/bids.db /tmp/<group>.db && python3 -m bid_tracker --db /tmp/<group>.db validate <package>`.
+   Fix every ERROR; read every WARN.
+7. Don't import. Hand the package to the coordinator, who imports it with `import-csv` only after an
+   independent check (`/bid-tabs` step 3).
+
+## Fetching
+
+Use the tool's own User-Agent (`ideal-bid-tracker/0.1 (public records research)`). A 403/429, challenge
+page, CAPTCHA or login means the source is blocked: stop, log it, use the agency's board-agenda system or a
+Ch. 119 request. Never retry with a browser User-Agent, changed headers or a headless browser.
 
 ## Field notes
 

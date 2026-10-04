@@ -1,8 +1,9 @@
 """BLS Producer Price Index adapter -> cost_index.csv import package.
 
-One POST covers every configured series. v2 (with BLS_API_KEY) allows more queries per day and
-20-year spans; v1 works without a key. Annual averages (M13) are dropped; values footnoted "P"
-are marked preliminary. A configured series BLS does not return is a hard error, so a typo in
+One POST covers every configured series. v2 (with a registration key) allows more queries per day and
+20-year spans; v1 works without a key but shares an anonymous daily limit per IP, which a shared proxy
+exhausts quickly. The key comes from $BLS_API_KEY, else from private/bls_api_key in the data dir.
+Annual averages (M13) are dropped; values footnoted "P" are marked preliminary. A configured series BLS does not return is a hard error, so a typo in
 sources.toml can't silently fall back to the wrong index.
 """
 
@@ -14,13 +15,25 @@ from pathlib import Path
 
 from bid_tracker.adapters.http import Fetch, post_json, urllib_fetch
 from bid_tracker.canonical import SPECS, write_csv
-from bid_tracker.db import load_sources
+from bid_tracker.db import data_dir, load_sources
 
 SOURCE_PAGE = "https://data.bls.gov/timeseries/{series}"
 
 
+KEY_FILE = "private/bls_api_key"
+
+
 class BLSError(RuntimeError):
     pass
+
+
+def api_key() -> str | None:
+    """$BLS_API_KEY, else the one-line key file in the private data repo."""
+    key = (os.environ.get("BLS_API_KEY") or "").strip()
+    if key:
+        return key
+    p = data_dir() / KEY_FILE
+    return (p.read_text().strip() or None) if p.exists() else None
 
 
 def parse_bls(payload: dict, retrieved_at: str) -> list[dict]:
@@ -64,11 +77,14 @@ def build_package(out_dir: Path, *, start_year: int | None = None, end_year: int
     today = today or date.today()
     end_year = end_year or today.year
     # v1 caps a request at 10 years; v2 at 20.
-    api_key = os.environ.get("BLS_API_KEY")
-    start_year = start_year or end_year - (19 if api_key else 9)
+    key = api_key()
+    start_year = start_year or end_year - (19 if key else 9)
     series = [s["series_id"] for s in load_sources().get("cost_index_series", [])]
-    payload = fetch_series(series, start_year, end_year, fetch=fetch, api_key=api_key)
-    rows = parse_bls(payload, today.isoformat())
+    payload = fetch_series(series, start_year, end_year, fetch=fetch, api_key=key)
+    try:
+        rows = parse_bls(payload, today.isoformat())
+    except BLSError as exc:     # BLS sometimes echoes the key in its refusal text; never pass it on
+        raise BLSError(str(exc).replace(key, "<BLS key>") if key else str(exc)) from None
     returned = {r["series_id"] for r in rows}
     missing = [s for s in series if s not in returned]
     if missing:
