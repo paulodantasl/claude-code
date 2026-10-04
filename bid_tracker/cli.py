@@ -163,7 +163,7 @@ def apply_alias_file(conn) -> int:
 
 
 def cmd_rebuild(args):
-    from bid_tracker.importer import import_package
+    from bid_tracker.importer import import_package, preload_agencies
     from bid_tracker.notion import MAP_FILE, load_map, save_map
 
     data = dbm.data_dir()
@@ -186,6 +186,7 @@ def cmd_rebuild(args):
     dirs += sorted(p for p in (data / "packages").glob("*") if p.is_dir())
     if (data / "private").is_dir():
         dirs.append(data / "private")
+    print(f"agencies preloaded: {preload_agencies(conn, dirs)}")
     failed = 0
     for d in dirs:
         res = import_package(conn, d, feed="manual")

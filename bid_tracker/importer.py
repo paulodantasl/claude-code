@@ -275,6 +275,19 @@ def upsert_index(conn: sqlite3.Connection, v: dict) -> None:
     )
 
 
+def preload_agencies(conn: sqlite3.Connection, dirs: list[Path]) -> int:
+    """Load every package's agencies.csv up front. Agencies are reference data, so a replay must not
+    fail because the package that defines an agency sorts after one that uses it."""
+    n = 0
+    for d in dirs:
+        for r in load_package(d).rows("agencies.csv"):
+            if not r.errors:
+                upsert_agency(conn, {k: ("" if x is None else x) for k, x in r.values.items()})
+                n += 1
+    conn.commit()
+    return n
+
+
 def import_package(conn: sqlite3.Connection, path: Path | str, *, feed: str = "manual", fixtures: bool = False,
                    dry_run: bool = False, today: date | None = None, pkg: Package | None = None) -> ImportResult:
     pkg = pkg or load_package(path)

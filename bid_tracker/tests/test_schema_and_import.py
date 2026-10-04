@@ -155,3 +155,18 @@ def test_private_package_adds_a_bidder_without_wiping_the_tab(conn, tmp_path):
     again = import_package(conn, FAKE_VALID, fixtures=True)                           # re-import the public tab
     assert again.status == "ok"
     assert conn.execute("SELECT COUNT(*) FROM rate_cards").fetchone()[0] == 9
+
+
+def test_preloaded_agencies_make_replay_order_irrelevant(conn, tmp_path):
+    import shutil
+    from bid_tracker.importer import preload_agencies
+    early = tmp_path / "a-early"                     # uses the fake agencies but doesn't define them
+    shutil.copytree(FAKE_VALID, early)
+    (early / "agencies.csv").unlink()
+    late = tmp_path / "b-late"                       # defines them
+    late.mkdir()
+    shutil.copy(FAKE_VALID / "agencies.csv", late / "agencies.csv")
+    assert import_package(conn, early, fixtures=True).status == "failed"
+    n_agencies = sum(1 for _ in open(FAKE_VALID / "agencies.csv")) - 1
+    assert preload_agencies(conn, [early, late]) == n_agencies
+    assert import_package(conn, early, fixtures=True).status == "ok"
