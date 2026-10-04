@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS solicitations (
     gsf_basis          TEXT CHECK (gsf_basis IN ('stated','measured','derived')),
     advertise_date     TEXT,
     bid_open_date      TEXT NOT NULL,
+    date_basis         TEXT NOT NULL DEFAULT 'bid_open' CHECK (date_basis IN ('bid_open','award','board','posted')),
     engineers_estimate REAL,
     ee_source          TEXT CHECK (ee_source IN ('ee','budget','not_published')),
     award_amount       REAL,
@@ -106,7 +107,7 @@ CREATE TABLE IF NOT EXISTS solicitations (
     source_url         TEXT NOT NULL,
     source_excerpt     TEXT NOT NULL CHECK (length(source_excerpt) >= 20),
     evidence_class     TEXT NOT NULL CHECK (evidence_class IN
-                           ('official_tab','board_award_item','portal_award_notice','news','internal')),
+                           ('official_tab','board_award_item','portal_award_notice','news','search_snippet','internal')),
     retrieved_at       TEXT NOT NULL,
     extracted_by       TEXT NOT NULL,
     is_private         INTEGER NOT NULL DEFAULT 0,

@@ -49,8 +49,10 @@ def edit_csv(path: Path, fn) -> None:
         cols = reader.fieldnames
         rows = list(reader)
     fn(rows)
+    for r in rows:
+        cols += [k for k in r if k not in cols]
     with open(path, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=cols)
+        w = csv.DictWriter(fh, fieldnames=cols, restval="")
         w.writeheader()
         w.writerows(rows)
 

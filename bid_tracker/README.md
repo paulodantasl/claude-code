@@ -50,8 +50,11 @@ The validator refuses a package with any ERROR. The rules that matter most:
 | E-EE | Low/EE outside 0.3–3.0 is refused (usually a transcription slip). |
 | E-SCHEMA | Derived columns (low_bid, gap, $/SF…) are refused in input; the tool computes them. |
 
-Evidence ranks: `official_tab` > `board_award_item` > `portal_award_notice` > `news` > `internal`. A weaker
-source never overwrites a stronger one; it is kept as an extra source. How to turn a tab PDF into a package:
+Evidence ranks: `official_tab` > `board_award_item` > `portal_award_notice` > `news` > `search_snippet` > `internal`.
+A weaker source never overwrites a stronger one; it is kept as an extra source. `search_snippet` marks a number
+quoted from a search-result snippet when the page itself couldn't be fetched; the official document replaces
+it on the next harvest. `date_basis` records what `bid_open_date` really is (`bid_open`, `award`, `board`,
+`posted`) when a source gives no opening date. How to turn a tab PDF into a package:
 [docs/EXTRACTION_PROTOCOL.md](docs/EXTRACTION_PROTOCOL.md). Where to find tabs: [docs/HARVEST_PROTOCOL.md](docs/HARVEST_PROTOCOL.md).
 
 ## Commands

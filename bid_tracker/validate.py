@@ -181,10 +181,13 @@ class Validator:
         d_open = date.fromisoformat(opened)
         if d_open > self.today + timedelta(days=365):
             self.err("E-DATE", f, ln, f"bid_open_date {opened} is more than a year out")
-        if v.get("award_date") and v["award_date"] < opened:
+        if v.get("award_date") and v["award_date"] < opened and (v.get("date_basis") or "bid_open") == "bid_open":
             self.err("E-DATE", f, ln, f"award_date {v['award_date']} is before bid_open_date {opened}")
         if v.get("advertise_date") and v["advertise_date"] > opened:
             self.err("E-DATE", f, ln, f"advertise_date {v['advertise_date']} is after bid_open_date {opened}")
+        basis = v.get("date_basis") or "bid_open"
+        if basis != "bid_open" and not v.get("notes"):
+            self.warn("W-DATE", f, ln, f"bid_open_date is the {basis} date; say so in notes")
         if v.get("retrieved_at") and v.get("evidence_class") in PRIMARY_EVIDENCE and v["retrieved_at"] < opened:
             self.err("E-DATE", f, ln, f"retrieved_at {v['retrieved_at']} predates the bid opening; a tab can't exist yet")
 

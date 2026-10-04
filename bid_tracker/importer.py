@@ -24,7 +24,7 @@ from bid_tracker.validate import Issue, has_errors, validate_package
 
 SOL_COLUMNS = [
     "sol_ref", "agency_id", "solicitation_no", "title", "procurement_method", "award_basis", "work_class",
-    "project_type", "facility_type", "county", "region", "gsf", "gsf_basis", "advertise_date", "bid_open_date",
+    "project_type", "facility_type", "county", "region", "gsf", "gsf_basis", "advertise_date", "bid_open_date", "date_basis",
     "engineers_estimate", "ee_source", "award_amount", "award_is_nte", "award_date", "award_status",
     "bid_bond_pct", "pp_bond_required", "sbe_goal_pct", "contract_days", "ld_per_day", "federal_funds",
     "prequal_required", "protest_filed", "source_url", "source_excerpt", "evidence_class", "retrieved_at",
@@ -106,6 +106,7 @@ def _sol_values(v: dict, conn: sqlite3.Connection) -> dict:
     agency = conn.execute("SELECT region, county FROM agencies WHERE agency_id = ?", (v["agency_id"],)).fetchone()
     out["county"] = v.get("county") or (agency["county"] if agency else None)
     out["region"] = taxonomy.region_for(out["county"]) or (agency["region"] if agency else None) or "other"
+    out["date_basis"] = v.get("date_basis") or "bid_open"
     out["award_is_nte"] = v.get("award_is_nte") or 0
     out["protest_filed"] = v.get("protest_filed") or 0
     out["is_private"] = 1 if v.get("evidence_class") == "internal" else 0

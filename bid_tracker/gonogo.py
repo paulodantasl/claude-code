@@ -45,7 +45,7 @@ def gonogo(conn: sqlite3.Connection, *, sol_ref: str | None = None, cost: float 
     def flag(level: str, msg: str):
         flags.append({"level": level, "message": msg})
 
-    ohp = profile.get("ohp_floor_pct", 0.05)
+    ohp = profile.get("ohp_floor_pct") or 0.05
     est_bid = cost * (1 + ohp) if cost else None
     bm = benchmark(conn, project_type=project_type, agency_type=agency_type, region=region, gsf=gsf, est_amount=est_bid)
     if bm["n"] < 5:

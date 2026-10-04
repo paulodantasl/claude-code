@@ -43,13 +43,16 @@ FEEDS = ("weekday", "weekly", "manual")
 
 # Higher number wins when two sources describe the same solicitation.
 EVIDENCE_RANK = {
-    "official_tab": 5,
-    "board_award_item": 4,
-    "portal_award_notice": 3,
-    "news": 2,
+    "official_tab": 6,
+    "board_award_item": 5,
+    "portal_award_notice": 4,
+    "news": 3,
+    "search_snippet": 2,   # number quoted from a search-result snippet of the source; page not fetched
     "internal": 1,
 }
 EVIDENCE_CLASSES = tuple(EVIDENCE_RANK)
+# Which event bid_open_date actually records when the opening date itself isn't published.
+DATE_BASIS = ("bid_open", "award", "board", "posted")
 
 # GSF bands for vertical work; dollar bands when GSF is unknown.
 GSF_BANDS = [(0, 2500, "<2.5k sf"), (2500, 10000, "2.5-10k sf"), (10000, 25000, "10-25k sf"), (25000, None, ">=25k sf")]

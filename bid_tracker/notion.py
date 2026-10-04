@@ -57,6 +57,7 @@ NOTION_SCHEMA: dict[str, dict] = {
             "Award Date": "DATE",
             "Status": f"SELECT({_opts(taxonomy.AWARD_STATUS, 'blue')})",
             "Evidence": f"SELECT({_opts(taxonomy.EVIDENCE_CLASSES, 'green')})",
+            "Date Basis": f"SELECT({_opts(taxonomy.DATE_BASIS, 'gray')})",
             "Source URL": "URL",
             "Excerpt": "RICH_TEXT",
             "Retrieved": "DATE",
@@ -148,13 +149,21 @@ def _h(obj) -> str:
     return hashlib.sha256(json.dumps(obj, sort_keys=True, default=str).encode()).hexdigest()
 
 
+_MD_SPECIAL = set("\\*~`$[]<>{}|^")
+
+
+def md_escape(text) -> str:
+    """Escape Notion-flavored Markdown specials so data renders literally."""
+    return "".join("\\" + ch if ch in _MD_SPECIAL else ch for ch in str(text))
+
+
 def _table(headers: list[str], rows: list[list]) -> str:
     def cell(v):
         if v is None:
             return ""
         if isinstance(v, float):
-            return f"${v:,.2f}"
-        return str(v).replace("<", "&lt;")
+            return md_escape(f"${v:,.2f}")
+        return md_escape(v)
 
     out = ['<table header-row="true">', "<tr>" + "".join(f"<td>{h}</td>" for h in headers) + "</tr>"]
     out += ["<tr>" + "".join(f"<td>{cell(v)}</td>" for v in r) + "</tr>" for r in rows]
@@ -178,7 +187,8 @@ def bid_tab_payload(conn: sqlite3.Connection, s: sqlite3.Row) -> tuple[dict, str
         "Bidders": st.n or None, "Low Bid": st.low, "Second Bid": st.second, "Gap": st.gap,
         "Engineer's Estimate": s["engineers_estimate"], "EE Source": s["ee_source"], "Low/EE": st.low_ee,
         "Low $/SF": st.low_psf, "Award": s["award_amount"], "Awardee": s["awardee_name"],
-        "Status": s["award_status"], "Evidence": s["evidence_class"], "Source URL": s["source_url"],
+        "Status": s["award_status"], "Evidence": s["evidence_class"], "Date Basis": s["date_basis"],
+        "Source URL": s["source_url"],
         "Excerpt": (s["source_excerpt"] or "")[:1900],
         "Ideal Bid": _yes(any(b["is_ideal"] for b in bids)),
     }
@@ -187,7 +197,7 @@ def bid_tab_payload(conn: sqlite3.Connection, s: sqlite3.Row) -> tuple[dict, str
     _date(props, "Retrieved", s["retrieved_at"])
     props = {k: v for k, v in props.items() if v is not None}
     body = [f"**Source:** [{s['evidence_class']}]({s['source_url']}) · retrieved {s['retrieved_at']}",
-            f"> {(s['source_excerpt'] or '')[:1500]}"]
+            f"> {md_escape((s['source_excerpt'] or '')[:1500]).replace(chr(10), '<br>')}"]
     if bids:
         body.append("### Bids")
         body.append(_table(["Bidder", "Base", "Total", "Rank", "Responsive", "Awardee"],

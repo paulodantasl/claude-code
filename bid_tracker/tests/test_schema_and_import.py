@@ -89,3 +89,23 @@ def test_fixture_guard_in_cli(tmp_path, monkeypatch):
     with pytest.raises(SystemExit):
         main(["import-csv", str(FAKE_VALID), "--fixtures"])
     assert main(["--db", str(tmp_path / "scratch.db"), "import-csv", str(FAKE_VALID), "--fixtures"]) == 0
+
+
+def test_search_snippet_rows_yield_to_official_sources(conn, pkg_copy, tmp_path):
+    import shutil
+    snippet = tmp_path / "snippet"
+    shutil.copytree(pkg_copy, snippet)
+
+    def as_snippet(rows):
+        for r in rows:
+            r["evidence_class"] = "search_snippet"
+            r["date_basis"] = "board"
+            r["notes"] = "number from a search-result snippet; page not fetched"
+    edit_csv(snippet / "solicitations.csv", as_snippet)
+    first = import_package(conn, snippet, fixtures=True)
+    assert first.status == "ok" and first.new == 3
+    assert conn.execute("SELECT date_basis FROM solicitations LIMIT 1").fetchone()[0] == "board"
+    upgraded = import_package(conn, FAKE_VALID, fixtures=True)
+    assert upgraded.updated == 3                     # official tab replaces the snippet rows
+    row = conn.execute("SELECT evidence_class, date_basis FROM solicitations WHERE sol_ref = 'fake-city:ITB-24-001'").fetchone()
+    assert tuple(row) == ("official_tab", "bid_open")

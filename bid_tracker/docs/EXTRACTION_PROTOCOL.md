@@ -33,6 +33,12 @@ arithmetic and sourcing slips. It cannot catch a misread digit that still adds u
 
 ## Field notes
 
+- **No opening date in the source?** Use the date the source does give and set `date_basis` to `award`,
+  `board` or `posted`, with a one-line note. Never estimate a date.
+- **Page blocked, only a search snippet?** `evidence_class=search_snippet`, `source_url` = the result's URL,
+  `source_excerpt` = the snippet text containing the number, verbatim. Mark `notes` "snippet only; verify".
+  These rows are replaced automatically when the official document is imported.
+
 - **Alternates.** Put each in `alternates_json` (`{"Alt 1": 12500, "Alt 2": -4000}`) and set `total_basis`
   to how the agency ranked: `base`, `base+all_alts`, `base+accepted_alts`, or `as_tabulated`.
 - **Non-responsive / withdrawn** bidders: keep the row, set `responsive=0` or `withdrawn=1`.

@@ -40,6 +40,7 @@ def test_numbers_must_come_from_excerpts():
     (lambda r: r[0].update(source_url="https://www.tampa.gov/real.pdf"), "solicitations.csv", "E-URL"),
     (lambda r: r[0].update(award_amount="$100,500.00"), "solicitations.csv", "E-NOSRC"),
     (lambda r: r[0].update(award_date="2024-01-01"), "solicitations.csv", "E-DATE"),
+    (lambda r: r[0].update(date_basis="someday"), "solicitations.csv", "E-ENUM"),
     (lambda r: r[0].update(engineers_estimate="$900,000.00"), "solicitations.csv", "E-EE"),
     (lambda r: r[0].update(project_type="R-MOLD"), "solicitations.csv", "E-ENUM"),
     (lambda r: r[0].update(procurement_method="handshake"), "solicitations.csv", "E-ENUM"),
