@@ -27,6 +27,7 @@ MAP_COLUMNS = ["entity", "local_ref", "notion_page_id", "synced_hash", "synced_a
 # Sent as null when empty, so a value that goes away (a corrected area) is cleared in Notion instead of
 # lingering. The hash ignores nulls, so tabs that never had a value don't churn.
 CLEARABLE = {"GSF", "Area Kind", "Area Source", "Low $/SF"}
+MAX_ITEM_ROWS = 80   # unit-price lines per tab page; a longer list says so and points to the xlsx export
 
 
 def _opts(values, color: str = "default") -> str:
@@ -230,13 +231,17 @@ def bid_tab_payload(conn: sqlite3.Connection, s: sqlite3.Row) -> tuple[dict, str
     items = conn.execute(
         """SELECT br.canonical_name, i.line_no, i.item_desc, i.unit, i.qty, i.unit_price, i.extended
            FROM bid_items i JOIN bids b USING (bid_id) JOIN bidders br ON br.bidder_id = b.bidder_id
-           WHERE b.solicitation_id = ? ORDER BY br.canonical_name, i.line_no LIMIT 80""",
-        (s["solicitation_id"],),
+           WHERE b.solicitation_id = ? ORDER BY br.canonical_name, i.line_no LIMIT ?""",
+        (s["solicitation_id"], MAX_ITEM_ROWS),
     ).fetchall()
     if items:
         body.append("### Unit prices")
         body.append(_table(["Bidder", "Line", "Item", "Unit", "Qty", "Unit price", "Extended"], [list(i) for i in items],
                            money=(5, 6)))
+        total = conn.execute("SELECT COUNT(*) FROM bid_items i JOIN bids b USING (bid_id) WHERE b.solicitation_id = ?",
+                             (s["solicitation_id"],)).fetchone()[0]
+        if total > len(items):
+            body.append(f"*Showing the first {len(items)} of {total} unit-price lines; the full list is in the xlsx export.*")
     rates = conn.execute(
         """SELECT br.canonical_name, r.service, r.size_min_sf, r.size_max_sf, r.unit, r.price, r.after_hours_premium_pct
            FROM rate_cards r JOIN bidders br USING (bidder_id) WHERE r.solicitation_id = ?
