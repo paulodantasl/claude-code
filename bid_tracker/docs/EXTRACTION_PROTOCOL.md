@@ -23,7 +23,8 @@ arithmetic and sourcing slips. It cannot catch a misread digit that still adds u
    `reference/agencies.csv`.
 4. **Re-read the three lowest totals** against the page a second time. These drive every benchmark.
 5. Classify:
-   - `project_type`: V-TI / V-REN / V-ADA / V-NEW-S / V-NEW-L / V-ENV / V-MEP / R-* (see README).
+   - `project_type`: V-TI / V-REN / V-ADA / V-NEW-S / V-NEW-L / V-ENV / V-MEP / V-PARK / R-* (see README).
+     Parking garages and decks are V-PARK, not V-REN: their $/SF runs an order of magnitude below a building remodel's.
    - `award_basis`: `low_bid` for ITBs; `best_value` for scored RFPs; `rate_card` for unit-rate term contracts.
    - `ee_source`: `ee` only when the document calls it an engineer's / architect's estimate; a "budget" or
      "available funding" is `budget`.
@@ -71,7 +72,7 @@ Every per-project vertical tab (V-*, not a term or rate-card contract) needs an 
 
 Which kind a tab's $/SF uses: V-NEW-* building_gsf then scope_area; V-REN/V-TI/V-ADA scope_area only (a
 whole-building figure on a partial remodel would make $/SF meaningless; a remodel of the entire building
-records that area as scope_area); V-ENV roof_area then scope_area; V-MEP building_gsf then scope_area.
+records that area as scope_area); V-ENV roof_area then scope_area; V-MEP building_gsf then scope_area; V-PARK scope_area (the deck area repaired).
 Other kinds are still worth recording: they show on the tab and help the next search.
 
 **Where to look, in order** (stop at the first scope or roof area from an official record):
@@ -94,8 +95,10 @@ Other kinds are still worth recording: they show on the tab and help the next se
   - `derived` (appraiser or another record about the building, not the job, or a sum of areas quoted
     together, e.g. two buildings in one contract).
 - `source_url` and `source_page`: the document and page or sheet.
-- `excerpt`: the line containing the number, verbatim. The validator checks a stated `sf` appears in
-  it, and a derived one appears or is the sum of figures quoted in it (E-NOSRC).
+- `excerpt`: the line containing the number, verbatim. The validator checks (E-NOSRC):
+  - a stated `sf` appears in the excerpt, or appears as roofing squares × 100 when the excerpt says squares;
+  - a derived `sf` appears, is a sum of 2-4 figures quoted there, or is the total of every figure quoted with
+    an area unit (a roof-section schedule printed without a total).
 - An independent checker re-opens the cited page before import, the same as for bid totals.
 
 A stronger basis replaces a weaker one for the same kind (stated > measured > derived). An area row is kept

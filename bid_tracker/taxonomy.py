@@ -11,6 +11,7 @@ PROJECT_TYPES = [
     ("V-NEW-L", "vertical", "New building > 20,000 GSF", 0),
     ("V-ENV", "vertical", "Roof / windows / envelope hardening", 0),
     ("V-MEP", "vertical", "MEP-led renovation (HVAC, electrical, plumbing)", 0),
+    ("V-PARK", "vertical", "Parking structure repair / restoration (decks, waterproofing, striping)", 0),
     ("R-WATER", "restoration", "Water mitigation / structural drying", 1),
     ("R-MOLD", "restoration", "Mold remediation", 1),
     ("R-FIRE", "restoration", "Fire and smoke restoration", 1),
@@ -44,6 +45,7 @@ AREA_PREFERENCE = {
     "V-ADA": ("scope_area",),
     "V-ENV": ("roof_area", "scope_area"),
     "V-MEP": ("building_gsf", "scope_area"),
+    "V-PARK": ("scope_area",),
 }
 DEFAULT_AREA_PREFERENCE = ("scope_area", "building_gsf", "roof_area")
 # A stated figure beats a plan measurement, which beats one derived from outside records.

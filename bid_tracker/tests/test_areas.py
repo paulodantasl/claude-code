@@ -97,13 +97,17 @@ def test_validation(conn, pkg_copy, tmp_path):
              excerpt="the 20,700 square foot training center and the 11,000 square foot clubhouse"),
         area("fake-city:ITB-24-001", "scope_area", 31700,                                           # E-NOSRC
              excerpt="the 20,700 square foot training center and the 11,000 square foot clubhouse"),
+        area("fake-city:ITB-24-001", "roof_area", 9300, "derived",                                   # schedule sum: ok
+             excerpt="A1 2,900 SQ. FT. 15 | A2 3,700 SQ. FT. 15 | B1 1,200 SQ. FT. 22 | B2 800 SQ. FT. 15 | C 700 SF"),
+        area("fake-county:RFP-25-010", "roof_area", 11800,                                         # squares x 100: ok
+             excerpt="REROOF INFORMATION Reroof Permit Type: Reroof Number of Squares: 118 Roof Type: Metal"),
     ]
     res = import_package(conn, write_areas(tmp_path / "a", rows), fixtures=True)
     codes = {(i.severity, i.code, i.line) for i in res.issues}
     assert has_errors(res.issues) and res.status == "failed"
     assert {("ERROR", "E-NOSRC", 2), ("ERROR", "E-AREA", 3), ("ERROR", "E-DUP", 4), ("WARN", "W-REF", 5),
             ("ERROR", "E-NUM", 6), ("ERROR", "E-NOSRC", 8)} <= codes
-    assert not any(i.line == 7 and i.severity == "ERROR" for i in res.issues)
+    assert not any(i.line in (7, 9, 10) and i.severity == "ERROR" for i in res.issues)
 
 
 def test_orphans_apply_once_the_solicitation_arrives(conn, pkg_copy, tmp_path):

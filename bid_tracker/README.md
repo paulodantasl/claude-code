@@ -154,6 +154,7 @@ The project types are:
 | Vertical, context | V-NEW-L | new building > 20k GSF |
 | | V-ENV | envelope |
 | | V-MEP | MEP-led renovation |
+| | V-PARK | parking structure repair |
 | Restoration, core | R-WATER | water |
 | | R-MOLD | mold |
 | | R-FIRE | fire |
