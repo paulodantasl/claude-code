@@ -24,6 +24,9 @@ from bid_tracker.stats import solicitation_totals, tab_stats
 SCHEMA_VERSION = 1
 MAP_FILE = "notion_map.csv"   # next to the DB; `rebuild` reloads it so page ids survive a fresh DB
 MAP_COLUMNS = ["entity", "local_ref", "notion_page_id", "synced_hash", "synced_at"]
+# Sent as null when empty, so a value that goes away (a corrected area) is cleared in Notion instead of
+# lingering. The hash ignores nulls, so tabs that never had a value don't churn.
+CLEARABLE = {"GSF", "Area Kind", "Area Source", "Low $/SF"}
 
 
 def _opts(values, color: str = "default") -> str:
@@ -208,13 +211,14 @@ def bid_tab_payload(conn: sqlite3.Connection, s: sqlite3.Row) -> tuple[dict, str
     _date(props, "Bid Open", s["bid_open_date"])
     _date(props, "Award Date", s["award_date"])
     _date(props, "Retrieved", s["retrieved_at"])
-    props = {k: v for k, v in props.items() if v is not None}
+    props = {k: v for k, v in props.items() if v is not None or k in CLEARABLE}
     # The quoted excerpt lives in the Excerpt property; the body carries the tables.
     body = [f"**Source:** [{s['evidence_class']}]({s['source_url']}) · retrieved {s['retrieved_at']}"]
-    if area:
-        page = f", {md_escape(area['source_page'])}" if area["source_page"] else ""
-        body.append(f"**Area:** {area['sf']:,.0f} SF {area['area_kind'].replace('_', ' ')} ({area['basis']}) · "
-                    f"[source]({area['source_url']}){page}")
+    for a in conn.execute("SELECT * FROM solicitation_areas WHERE sol_ref = ? ORDER BY area_kind", (s["sol_ref"],)):
+        page = f", {md_escape(a['source_page'])}" if a["source_page"] else ""
+        used = " · used for $/SF" if a["area_kind"] == s["area_kind"] else ""
+        body.append(f"**Area:** {a['sf']:,.0f} SF {a['area_kind'].replace('_', ' ')} ({a['basis']}){used} · "
+                    f"[source]({a['source_url']}){page}")
     if bids:
         scored = any(b["score_total"] is not None for b in bids)
         body.append("### Bids")
@@ -289,7 +293,7 @@ def export(conn: sqlite3.Connection, out_root: Path, *, all_rows: bool = False, 
             if missing:
                 pending[name] = missing
         payload = {"properties": props, "content": body, "relations": rel_resolved}
-        h = _h(payload)
+        h = _h({**payload, "properties": {k: v for k, v in props.items() if v is not None}})
         known = maps[entity].get(ref)
         if known and known["synced_hash"] == h and not all_rows:
             return

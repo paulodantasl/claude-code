@@ -136,3 +136,23 @@ def test_psf_compares_one_kind_only(conn, tmp_path):
     sync_areas(conn)
     b = benchmark(conn, project_type="V-MEP", since=None)
     assert b["low_psf_kind"] == "scope_area" and b["low_psf_esc"]["n"] == 8
+
+
+def test_notion_clears_an_area_that_goes_away(conn, pkg_copy, tmp_path):
+    import json
+    from bid_tracker.importer import sync_areas
+    from bid_tracker.notion import ack, export
+
+    import_package(conn, pkg_copy, fixtures=True)
+    for _ in range(3):   # sync until settled: tab relations resolve on the pass after bidders exist
+        ops = [o for o in json.loads(export(conn, tmp_path).read_text())["ops"] if o["db"] != "updates"]
+        ack(conn, [{"db": o["db"], "ref": o["ref"], "page_id": o["page_id"] or f"page-{o['ref']}",
+                    "hash": o["hash"]} for o in ops])
+    assert not ops
+    ref = "fake-schools:ITB-25-033"
+    conn.execute("DELETE FROM solicitation_areas WHERE sol_ref = ?", (ref,))
+    sync_areas(conn)
+    ops = [o for o in json.loads(export(conn, tmp_path).read_text())["ops"] if o["db"] == "bid_tabs"]
+    assert [o["ref"] for o in ops] == [ref]          # tabs that never had an area don't churn
+    assert ops[0]["op"] == "update" and ops[0]["properties"]["GSF"] is None
+    assert ops[0]["properties"]["Area Kind"] is None and ops[0]["properties"]["Low $/SF"] is None
