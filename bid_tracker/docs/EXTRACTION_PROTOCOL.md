@@ -69,8 +69,10 @@ Every per-project vertical tab (V-*, not a term or rate-card contract) needs an 
 - `building_gsf`: the whole building's gross area, when that is all you can find for a partial renovation.
   Keep looking for the scope area; record both if you find both (one row per kind).
 
-Which kind a tab's $/SF uses: V-NEW-* building_gsf then scope_area; V-REN/V-TI/V-ADA scope_area then
-building_gsf; V-ENV roof_area then scope_area; V-MEP building_gsf then scope_area.
+Which kind a tab's $/SF uses: V-NEW-* building_gsf then scope_area; V-REN/V-TI/V-ADA scope_area only (a
+whole-building figure on a partial remodel would make $/SF meaningless; a remodel of the entire building
+records that area as scope_area); V-ENV roof_area then scope_area; V-MEP building_gsf then scope_area.
+Other kinds are still worth recording: they show on the tab and help the next search.
 
 **Where to look, in order** (stop at the first scope or roof area from an official record):
 1. The solicitation documents you already saved: invitation to bid, Summary of Work (01 10 00 / 01 11 00),

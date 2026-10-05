@@ -62,7 +62,7 @@ def test_area_survives_a_later_update_with_blank_gsf(conn, pkg_copy, tmp_path):
 
 def test_preferred_kind_and_stronger_basis(conn, pkg_copy, tmp_path):
     import_package(conn, pkg_copy, fixtures=True)
-    ref = "fake-schools:ITB-25-033"   # V-REN: scope area first, then whole building
+    ref = "fake-schools:ITB-25-033"   # V-REN: scope area only
     import_package(conn, write_areas(tmp_path / "a", [area(ref, "building_gsf", 40000, "derived",
                                                            excerpt="Heated area 40,000 SF per appraiser")]),
                    fixtures=True)
@@ -75,7 +75,10 @@ def test_preferred_kind_and_stronger_basis(conn, pkg_copy, tmp_path):
     row = conn.execute("SELECT sf, basis FROM solicitation_areas WHERE sol_ref = ? AND area_kind = 'building_gsf'",
                        (ref,)).fetchone()
     assert tuple(row) == (41000, "stated")
-    # A kind the project type doesn't use never becomes its gsf.
+    # A kind the project type doesn't use never becomes its gsf: a whole building isn't a remodel's scope.
+    conn.execute("DELETE FROM solicitation_areas WHERE sol_ref = ? AND area_kind = 'scope_area'", (ref,))
+    import_package(conn, write_areas(tmp_path / "e", [area("fake-city:ITB-24-001", "scope_area", 1800)]), fixtures=True)
+    assert sol(conn, ref)["gsf"] is None and sol(conn, ref)["area_kind"] is None
     conn.execute("DELETE FROM solicitation_areas WHERE sol_ref = ?", (ref,))
     import_package(conn, write_areas(tmp_path / "d", [area(ref, "roof_area", 12000)]), fixtures=True)
     assert sol(conn, ref)["gsf"] is None
@@ -116,14 +119,20 @@ def test_orphans_apply_once_the_solicitation_arrives(conn, pkg_copy, tmp_path):
 
 
 def test_psf_compares_one_kind_only(conn, tmp_path):
-    pkg = synth_package(tmp_path / "synth", n_jobs=12)
+    # V-MEP uses whole-building GSF first, then scope area: both kinds can be a tab's gsf.
+    pkg = synth_package(tmp_path / "synth", n_jobs=12, project_type="V-MEP")
     import_package(conn, pkg, fixtures=True)
-    # Re-label four jobs' area as whole-building GSF: they drop out of the scope-area $/SF.
-    conn.execute("UPDATE solicitation_areas SET area_kind = 'building_gsf' WHERE sol_ref IN "
+    conn.execute("UPDATE solicitation_areas SET area_kind = 'scope_area' WHERE sol_ref IN "
                  "(SELECT sol_ref FROM solicitations ORDER BY sol_ref LIMIT 4)")
     from bid_tracker.importer import sync_areas
     sync_areas(conn)
-    b = benchmark(conn, project_type="V-REN", since=None)
-    assert b["n"] == 12 and b["low_psf_kind"] == "scope_area" and b["low_psf_esc"]["n"] == 8
-    b = benchmark(conn, project_type="V-REN", since=None, area_kind="building_gsf")
+    b = benchmark(conn, project_type="V-MEP", since=None)
+    assert b["n"] == 12 and b["low_psf_kind"] == "building_gsf" and b["low_psf_esc"]["n"] == 8
+    b = benchmark(conn, project_type="V-MEP", since=None, area_kind="scope_area")
     assert b["low_psf_esc"]["n"] == 4
+    # The default follows the data: with most tabs on scope area, $/SF pools those.
+    conn.execute("UPDATE solicitation_areas SET area_kind = 'scope_area' WHERE sol_ref IN "
+                 "(SELECT sol_ref FROM solicitations ORDER BY sol_ref LIMIT 8)")
+    sync_areas(conn)
+    b = benchmark(conn, project_type="V-MEP", since=None)
+    assert b["low_psf_kind"] == "scope_area" and b["low_psf_esc"]["n"] == 8

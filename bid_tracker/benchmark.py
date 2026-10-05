@@ -65,14 +65,14 @@ def segment_key(project_type: str | None, agency_type: str | None, region: str |
 
 
 def psf_quartiles(tabs: list[dict], kind: str | None = None, project_type: str | None = None) -> tuple[str | None, dict]:
-    """Escalated low $/SF over tabs whose area is one kind: the one asked for, else the project type's
-    preferred kind, else the most common kind among the tabs."""
+    """Escalated low $/SF over tabs whose area is one kind: the one asked for, else the kind most of the tabs
+    have (ties go to the project type's preference order)."""
     have = [t for t in tabs if t["low_psf_esc"] is not None and t.get("area_kind")]
-    if not kind and project_type:
-        kind = area_preference(project_type)[0]
     if not kind and have:
         kinds = [t["area_kind"] for t in have]
-        kind = max(sorted(set(kinds)), key=kinds.count)
+        order = area_preference(project_type) if project_type else ()
+        kind = max(sorted(set(kinds), key=lambda k: (order.index(k) if k in order else len(order), k)),
+                   key=kinds.count)
     return kind, quartiles([t["low_psf_esc"] for t in have if t["area_kind"] == kind])
 
 

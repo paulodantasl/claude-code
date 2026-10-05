@@ -306,7 +306,7 @@ def cmd_areas(args):
         lines += [f"  {k}: {v['with_area']}/{v['tabs']}" for k, v in obj["by_type"].items()]
         if obj["missing"]:
             lines += ["", table(["Ref", "Type", "Opened", "Tried", "Last tried"],
-                                [[m["sol_ref"], m["project_type"], m["bid_open_date"], m["searched"] or "—",
+                                [[m["sol_ref"], m["project_type"], m["bid_open_date"], (m["searched"] or "—")[:60],
                                   m["last_tried"] or "—"] for m in obj["missing"]])]
     if obj["orphans"]:
         lines += ["", "area rows with no solicitation (re-keyed or mistyped sol_ref):"]

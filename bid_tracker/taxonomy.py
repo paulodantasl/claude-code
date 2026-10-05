@@ -34,12 +34,14 @@ GSF_BASIS = ("stated", "measured", "derived")
 # What a square-foot figure measures. $/SF only compares like with like.
 AREA_KINDS = ("building_gsf", "scope_area", "roof_area")
 # Which area a project type's $/SF uses, best first. The first kind found becomes solicitations.gsf.
+# A remodel uses only the area it renovates: a whole-building figure for a partial job (a restroom in a
+# courthouse) would make $/SF meaningless. A remodel of the entire building records that area as scope_area.
 AREA_PREFERENCE = {
     "V-NEW-S": ("building_gsf", "scope_area"),
     "V-NEW-L": ("building_gsf", "scope_area"),
-    "V-REN": ("scope_area", "building_gsf"),
-    "V-TI": ("scope_area", "building_gsf"),
-    "V-ADA": ("scope_area", "building_gsf"),
+    "V-REN": ("scope_area",),
+    "V-TI": ("scope_area",),
+    "V-ADA": ("scope_area",),
     "V-ENV": ("roof_area", "scope_area"),
     "V-MEP": ("building_gsf", "scope_area"),
 }

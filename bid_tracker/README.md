@@ -98,7 +98,7 @@ Per tab, with responsive totals sorted b1 ≤ b2 ≤ … ≤ bN:
 - **low/median** = b1 / median(b)
 - **low/EE** = b1 / EE, only when the agency published a true engineer's estimate (`ee_source=ee`); budgets are kept separate
 - **CV** = stdev(b)/mean(b), how tightly the field priced
-- **low $/SF** = b1 / area, using the project type's preferred area kind: scope area for renovation/TI/ADA,
+- **low $/SF** = b1 / area, using the project type's preferred area kind: scope area only for renovation/TI/ADA,
   roof area for envelope, building GSF for new and MEP work
 
 **Escalation:** amount × I(now)/I(bid month), using BLS PPI. The series is picked by `sources.toml`:
