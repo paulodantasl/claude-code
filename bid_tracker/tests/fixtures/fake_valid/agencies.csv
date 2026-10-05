@@ -1,0 +1,4 @@
+agency_id,name,agency_type,county,portal_platform,portal_url,watch,notes
+fake-city,FAKE City of Testville,city,Hillsborough,,,0,synthetic test agency
+fake-county,FAKE Test County,county,Pinellas,,,0,synthetic test agency
+fake-schools,FAKE Test County Schools,school_district,Pasco,,,0,synthetic test agency

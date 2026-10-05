@@ -1,0 +1,9 @@
+sol_ref,bidder_name_raw,service,service_desc,size_min_sf,size_max_sf,unit,price,after_hours_premium_pct,response_hrs,source_url,source_excerpt
+fake-county:RFP-25-010,FAKE Builder Alpha LLC,water,extraction and drying,0,500,lump,"$1,500.00",0,4,https://example.invalid/fake-county/rfp-25-010-award.pdf,"Water 0-500 sf: $1,500.00"
+fake-county:RFP-25-010,FAKE Builder Alpha LLC,water,extraction and drying,501,1000,lump,"$2,800.00",0,4,https://example.invalid/fake-county/rfp-25-010-award.pdf,"Water 501-1,000 sf: $2,800.00"
+fake-county:RFP-25-010,FAKE Builder Alpha LLC,water,extraction and drying,10001,,sf,$5.25,0,4,https://example.invalid/fake-county/rfp-25-010-award.pdf,"Water 10,001+ sf: $5.25 per sf"
+fake-county:RFP-25-010,FAKE Builder Alpha LLC,mold,remediation,10001,,sf,$14.00,0,4,https://example.invalid/fake-county/rfp-25-010-award.pdf,"Mold 10,001+ sf: $14.00 per sf"
+fake-county:RFP-25-010,FAKE Zeta Restoration LLC,water,extraction and drying,0,500,lump,"$1,600.00",15,2,https://example.invalid/fake-county/rfp-25-010-award.pdf,"Water 0-500 sf: $1,600.00"
+fake-county:RFP-25-010,FAKE Zeta Restoration LLC,water,extraction and drying,501,1000,lump,"$4,200.00",15,2,https://example.invalid/fake-county/rfp-25-010-award.pdf,"Water 501-1,000 sf: $4,200.00"
+fake-county:RFP-25-010,FAKE Zeta Restoration LLC,water,extraction and drying,10001,,sf,$3.90,15,2,https://example.invalid/fake-county/rfp-25-010-award.pdf,"Water 10,001+ sf: $3.90 per sf"
+fake-county:RFP-25-010,FAKE Zeta Restoration LLC,mold,remediation,10001,,sf,$9.00,15,2,https://example.invalid/fake-county/rfp-25-010-award.pdf,"Mold 10,001+ sf: $9.00 per sf"

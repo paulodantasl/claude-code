@@ -1,0 +1,8 @@
+sol_ref,bidder_name_raw,fl_license_no,base_bid,alternates_json,total_bid,total_basis,rank_published,score_total,score_price,responsive,withdrawn,is_awardee,page_ref,source_url,source_excerpt
+fake-city:ITB-24-001,FAKE Builder Alpha LLC,FAKE0000001,"$95,000.00","{""Alt 1"": 5000}","$100,000.00",base+all_alts,1,,,1,0,1,p1,https://example.invalid/fake-city/itb-24-001-tab.pdf,
+fake-city:ITB-24-001,"FAKE Builder Beta, Inc.",,"$110,000.00",,"$110,000.00",base,2,,,1,0,0,p1,https://example.invalid/fake-city/itb-24-001-tab.pdf,
+fake-city:ITB-24-001,FAKE Gamma Contracting Inc,,"$120,000.00",,"$120,000.00",base,3,,,1,0,0,p1,https://example.invalid/fake-city/itb-24-001-tab.pdf,
+fake-city:ITB-24-001,FAKE Delta Builders Corp,,"$150,000.00",,"$150,000.00",base,4,,,1,0,0,p1,https://example.invalid/fake-city/itb-24-001-tab.pdf,
+fake-schools:ITB-25-033,FAKE Builder Beta Inc.,,"$812,400.00",,"$812,400.00",base,1,,,1,0,0,p2,https://example.invalid/fake-schools/itb-25-033-tab.pdf,
+fake-schools:ITB-25-033,Ideal Remodeling LLC,,"$845,000.00",,"$845,000.00",base,2,,,1,0,0,p2,https://example.invalid/fake-schools/itb-25-033-tab.pdf,
+fake-schools:ITB-25-033,FAKE Epsilon Construction LLC,,"$901,000.00",,"$901,000.00",base,3,,,1,0,0,p2,https://example.invalid/fake-schools/itb-25-033-tab.pdf,

@@ -57,6 +57,12 @@ Skills, and a CSI-organized knowledge base. See [`estimating/`](./estimating/REA
 for what it does, and [`estimating/INSTALL.md`](./estimating/INSTALL.md) to install it
 locally or upload it to claude.ai.
 
+## FL public bid pricing tracker (`bid_tracker/`)
+
+Database and analytics for Florida public bid tabulations. It covers benchmarks, competitors, go/no-go and win
+probability by markup, and it feeds `/bid-public`. The code is here; the data lives in a private repo. See
+[`bid_tracker/README.md`](./bid_tracker/README.md).
+
 ## Public API integrations (`ideal_apis/`)
 
 Tier 1 & 2 public APIs (NPPES, Smarty, weather, USAspending, Socrata, etc.) are

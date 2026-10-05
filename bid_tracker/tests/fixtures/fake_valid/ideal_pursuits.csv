@@ -1,0 +1,2 @@
+sol_ref,decision,decision_date,decision_reason,est_direct_cost,est_cost_pre_ohp,bid_amount,markup_pct,result,rank,score_total,score_breakdown_json,debrief,lessons,estimate_dir
+fake-schools:ITB-25-033,go,2025-01-10,FAKE test pursuit,"$700,000.00","$790,000.00","$845,000.00",0.07,lost,2,,,FAKE debrief,FAKE lesson,
