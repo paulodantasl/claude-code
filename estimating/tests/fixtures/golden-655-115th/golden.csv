@@ -1,0 +1,10 @@
+id,item,qty,unit,tol_pct
+,Grade beam,655,LF,2
+,"Structural concrete, total",123,CY,3
+,GF footprint / plate,2586.67,SF,0.5
+,Exterior perimeter,209.33,LF,0.5
+,GF exterior wall,2721.3,SF,0.5
+,GF partitions,96.8,LF,1
+,FF partitions,130.0,LF,1
+,Roof bulkhead,221.7,SF,1
+,Flood vents,8,EA,0

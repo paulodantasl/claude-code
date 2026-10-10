@@ -76,7 +76,11 @@ Owner Direct Purchase on public work; landlord fees and higher contingency on TI
 
 ## Honesty & sourcing rules (critical)
 - **Costs are assumptions to confirm with current vendor/sub quotes** unless the user
-  provided real quotes. Label budgetary numbers as such; cite the basis in `notes`.
+  provided real quotes. Label budgetary numbers as such: set `price_basis` on every priced
+  line (sourced / quote / budgetary / allowance) and cite the source in `notes`.
+- Keep the takeoff's provenance tail (`line_id,source_sheet,method,confidence`) on every
+  line it came from, and keep `qty` = the takeoff's measured qty (waste goes in
+  `waste_pct`). Div 01 / estimator-added lines leave `line_id` blank.
 - Where a price is unknown, carry an **allowance** or **plug** and flag it — do not invent
   a precise-looking number. Use WebSearch only for rough sanity ranges, never as a quote.
 - Show the full markup waterfall; make tax/bond/insurance/permit/OH&P explicit and

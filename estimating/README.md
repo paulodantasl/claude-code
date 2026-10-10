@@ -70,6 +70,22 @@ python estimating/scripts/build_estimate_xlsx.py estimating/projects/<slug>/
 python estimating/scripts/validate_estimate.py estimating/projects/<slug>/ --sector <sector>   # deterministic QA
 ```
 
+## Takeoff validator (`estimating/scripts/validate_takeoff.py`)
+Machine-checks `takeoff.md` against the takeoff accuracy protocol: sheet index coverage,
+the per-sheet scale gate (recomputes each check-dimension Δ: ≤1% / ≤5% / >5%), line IDs,
+gross/net, method/confidence, Withheld items kept out of `lineitems.csv`, the `line_id` +
+qty tie-out to `lineitems.csv`, the QA block, and the §13 ratio screen. `--golden` compares
+against verified quantities (regression evals):
+```
+python estimating/scripts/validate_takeoff.py estimating/projects/<slug>/ --sector <sector> [--golden verified.csv]
+```
+
+## Tests (`estimating/tests/`)
+`python -m pytest estimating/tests` — the golden 655 115th Ave fixture plus one mutation
+per protocol failure mode (63% undercount, misgraded 94.4% plot, scaled-not-approx,
+Withheld leak, unchecked QA box, …) and the provenance-schema / workbook tie-out. CI runs
+them with `sync.py --check` (`.github/workflows/estimating.yml`).
+
 ## Important limits (read this)
 - **Costs are budgetary assumptions**, not quotes, until backed by real vendor/sub
   pricing. The estimator labels plugs/allowances; confirm them before submitting.

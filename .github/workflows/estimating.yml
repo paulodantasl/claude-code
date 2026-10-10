@@ -1,0 +1,31 @@
+name: Estimating toolkit
+
+on:
+  pull_request:
+    paths:
+      - "estimating/**"
+      - "plugins/construction-estimating/**"
+      - ".claude/skills/**"
+      - ".claude/commands/**"
+      - ".github/workflows/estimating.yml"
+  push:
+    branches: [main]
+    paths:
+      - "estimating/**"
+      - "plugins/construction-estimating/**"
+      - ".claude/skills/**"
+      - ".claude/commands/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest openpyxl==3.1.5
+      - name: Skill copies match canonical
+        run: python3 estimating/sync.py --check
+      - name: Validator tests + golden takeoff regression
+        run: python3 -m pytest estimating/tests -q

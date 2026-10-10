@@ -35,9 +35,9 @@
 > (envelope items), confidence, and a recommended buy.
 
 ### Div {{NN}} — {{Division name}}
-| Material (spec) | Supplier (location) | Product / SKU | Price | Unit | Tag | Source (URL · date) | Avail. | Lead time | FL# / NOA | Conf. | Recommendation |
-|---|---|---|---:|---|---|---|---|---|---|---|---|
-| {{6" CMU 8×8×16}} | {{Distributor, City FL}} | {{ASTM C-90}} | {{$x.xx}} | EA | PUB-TRADE | {{url · 2026-06-19}} | {{in stock}} | {{1–2 wk}} | n/a | med | {{buy here}} |
+| Line ID | Material (spec) | Supplier (location) | Product / SKU | Price | Unit | Tag | Source (URL · date) | Avail. | Lead time | FL# / NOA | Conf. | Recommendation |
+|---|---|---|---|---:|---|---|---|---|---|---|---|---|
+| {{04-001}} | {{6" CMU 8×8×16}} | {{Distributor, City FL}} | {{ASTM C-90}} | {{$x.xx}} | EA | PUB-TRADE | {{url · 2026-06-19}} | {{in stock}} | {{1–2 wk}} | n/a | med | {{buy here}} |
 
 ## Long-lead buyout schedule (order-by priority)
 
@@ -62,5 +62,11 @@
 ## procurement.csv schema (hand-off to the estimator)
 
 ```
-division,item,spec,supplier,location,product_or_sku,unit_price,unit,price_type,source_url,source_date,availability,lead_time,fl_approval,confidence,recommendation
+line_id,division,item,spec,supplier,location,product_or_sku,unit_price,unit,price_type,source_url,source_date,availability,lead_time,fl_approval,confidence,recommendation
 ```
+
+`line_id` is the takeoff/estimate ID from `lineitems.csv` — the join key back to the
+estimate (one material may serve several IDs: repeat the row per ID). When the
+estimator adopts a price, set that line's `price_basis`: PUB-RETAIL / PUB-TRADE / MKT →
+`sourced`; a written quote received → `quote`; QUOTE-REQ / NO-DATA still open →
+`budgetary`.

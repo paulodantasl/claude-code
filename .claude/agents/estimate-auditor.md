@@ -37,7 +37,8 @@ scope-gap item is assigned to exactly one party (no double-count, no hole). Allo
 alternates, unit prices, and **every addendum** are addressed.
 
 **Reasonableness** — $/SF and trade-% bands plausible for the building type and FL market;
-quantity ratios within norms (rebar/CY, CMU/SF, duct lbs/CFM, fixtures/SF); unit costs
+quantity ratios inside the takeoff protocol §13 screen (rebar lb/CY, CMU/SF, SF/ton, gyp/SF,
+roof/footprint); every priced line carries `price_basis`; unit costs
 sane, outliers explained. Use WebSearch only for rough benchmark ranges.
 
 **Florida compliance** — Impact/NOA products where required (HVHZ/WBDR); flood provisions
@@ -61,6 +62,10 @@ proposal price = estimate BID TOTAL; alternates/allowances agree across all docu
   out-of-band divisions are Major.
 - **Takeoff QA block** — confirm the takeoff carries its completed QA block from
   `estimating/reference/takeoff-accuracy-protocol.md`; an unchecked box is a finding against the takeoff.
+  Run `python3 estimating/scripts/validate_takeoff.py <project_dir>/ --sector <sector>` (add
+  `--golden <csv>` if verified quantities exist): every FAIL is at least a Major finding —
+  misgraded or missing scale-log entries behind measured quantities, unread plan sheets,
+  Withheld items priced, and takeoff ↔ `lineitems.csv` `line_id`/qty mismatches.
 - **Sector compliance** — if a sector profile applies, audit against its red-flags checklist
   (e.g., public: bond/ODP/certified-payroll posture; TI: landlord-vendor pricing, existing-conditions
   contingency).

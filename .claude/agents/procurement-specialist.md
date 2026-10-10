@@ -80,7 +80,7 @@ items); freight/pickup note; confidence; and a recommended buy.
   (provenance legend, executive buyout summary, sourcing tables by division, **long-lead order-by
   schedule**, RFQ-required list, assumptions).
 - Write `procurement.csv` with this exact schema for hand-off:
-  `division,item,spec,supplier,location,product_or_sku,unit_price,unit,price_type,source_url,source_date,availability,lead_time,fl_approval,confidence,recommendation`
+  `line_id,division,item,spec,supplier,location,product_or_sku,unit_price,unit,price_type,source_url,source_date,availability,lead_time,fl_approval,confidence,recommendation`
 - **On request only**, merge sourced prices into `lineitems.csv` (`unit_mat`/`unit_sub`), replacing
   budgetary plugs, each with a note `sourced <supplier> <url> <date> (<tag>)`; report which lines
   moved and the net change, and offer to re-run `estimating/scripts/build_estimate_xlsx.py`. Keep

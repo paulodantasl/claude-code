@@ -12,10 +12,10 @@ columns blank/0. Use **either** self-perform (mat/lab/equip) **or** subcontract 
 not both, on a given line.
 
 ```
-division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes
-03,03 30 00,Slab-on-grade 5",4500 SF SOG w/ 6x6 WWM,4500,SF,2.85,1.10,0.20,,7,verify TO off S-201
-08,08 51 13,Impact windows,Alum impact-rated NOA windows,38,EA,,,,1450,0,sub incl install
-31,31 23 00,Termite soil treatment,Subterranean termite pretreat,4500,SF,,,,0.18,0,FBC required
+division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes,line_id,source_sheet,method,confidence,price_basis
+03,03 30 00,Slab-on-grade 5",4500 SF SOG w/ 6x6 WWM,4500,SF,2.85,1.10,0.20,,7,net; verify TO off S-201,03-001,S-201,measured,med-high,budgetary
+08,08 51 13,Impact windows,Alum impact-rated NOA windows,38,EA,,,,1450,0,sub incl install,08-001,A-501,counted,med-high,quote
+31,31 23 00,Termite soil treatment,Subterranean termite pretreat,4500,SF,,,,0.18,0,FBC required,31-001,S-201,calculated,med,sourced
 ```
 
 | Column | Meaning |
@@ -32,6 +32,17 @@ division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub
 | unit_sub | subcontract $/unit (already includes sub OH&P) |
 | waste_pct | material waste %, applied to material only |
 | notes | source/assumption |
+| line_id | takeoff ID this line prices (from `takeoff.md`); blank only for Div 01 / estimator-added lines. Join key for procurement |
+| source_sheet | sheet(s) the qty came from (carried from the takeoff) |
+| method | measured / counted / calculated / imported / scaled |
+| confidence | med-high / med / approx / assumed / RFI — a review prioritizer, not an accuracy claim |
+| price_basis | sourced (cited web/catalog) / quote (written vendor/sub quote) / budgetary (estimator judgment) / allowance — required on every priced line |
+
+The last five columns are the **provenance tail**. The validator also accepts the
+legacy 12-column header, but new work uses all 17 so the takeoff → estimate →
+procurement chain stays traceable (`validate_takeoff.py` ties `line_id` + qty back to
+`takeoff.md`). Qty is the **measured** takeoff qty — waste goes in `waste_pct`, never in
+`qty`.
 
 ## `markups.csv`
 

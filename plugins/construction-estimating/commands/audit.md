@@ -17,7 +17,8 @@ protocols, and the deterministic validator, and knows where its knowledge base l
    the agent checks against the matching benchmark bands.
 3. **Delegate.** The agent must:
    - recompute the math independently rather than trusting the workbook's own totals;
-   - run the bundled `validate_estimate.py` with the matching `--sector` flag;
+   - run the bundled `validate_estimate.py` and `validate_takeoff.py` with the matching
+     `--sector` flag (takeoff: scale gate, sheet coverage, Withheld, `line_id` tie-out);
    - hunt scope gaps and double-counts between trades;
    - check Florida compliance (HVHZ/impact, flood, termite, energy, threshold, sales tax,
      bonds);

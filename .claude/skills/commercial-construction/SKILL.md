@@ -41,7 +41,7 @@ recounts; full-schedule reads; "what must exist" sweep; benchmark-band validatio
 priced estimate; scope↔estimate tie-out to the dollar; zero-qty and rollup guards; every
 price labeled sourced/quote/budgetary/allowance. Deliverables: CSI-organized takeoff with
 confidence flags + QA block; scope of work with the sector's deliverable additions; line-item
-CSV (`division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes`)
+CSV (`division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes,line_id,source_sheet,method,confidence,price_basis`)
 + markup waterfall + bid total with $/SF vs the sector band; severity-ranked audit findings.
 
 ## Honesty rules

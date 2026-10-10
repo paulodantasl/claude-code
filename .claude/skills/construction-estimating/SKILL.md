@@ -24,14 +24,18 @@ with markups never hidden.
 ## Method
 - Build `lineitems.csv` (exact header below), one row per item by CSI division. Self-perform
   = unit_mat/lab/equip; subcontract = unit_sub (sub OH&P already inside — never re-burden).
-  Waste on material only. No rollup/total rows with costs.
-  `division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes`
+  Waste on material only — `qty` stays the measured takeoff qty. No rollup/total rows with
+  costs. Keep the takeoff's provenance tail (`line_id`, `source_sheet`, `method`,
+  `confidence`) on every line it came from; Div 01 / estimator-added lines leave `line_id`
+  blank.
+  `division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes,line_id,source_sheet,method,confidence,price_basis`
 - Build `markups.csv` (`key,value` percents): material_sales_tax_pct, general_conditions_pct,
   contingency_pct, insurance_pct, bond_pct, permit_pct, ohp_pct. Waterfall applies once, in
   order; tax on material extensions only. Bond per contract type (0 private residential;
   required on FL public work).
-- Label every line's basis: sourced / quote / budgetary / allowance / plug. Plugs expire —
-  convert to a named allowance or get a quote before release.
+- Label every priced line's `price_basis`: sourced / quote / budgetary / allowance. A plug
+  is `budgetary` with "plug" in notes — plugs expire: convert to a named allowance or get a
+  quote before release.
 - **Benchmark validation:** compute each division's % of direct + $/SF vs the sector bands in
   the accuracy protocol. Out-of-band or $0-without-exclusion → re-price or justify in writing.
 - **Tie-out matrix:** every scope allowance ⇔ exactly one ALLOW row at the same dollar;
