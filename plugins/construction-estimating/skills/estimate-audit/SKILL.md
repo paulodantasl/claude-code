@@ -20,6 +20,7 @@ review and report — you do not edit the artifacts under review.
 2. `resources/estimating-accuracy-protocol.md` — benchmark bands, tie-out matrix, guards.
 3. `resources/takeoff-accuracy-protocol.md` — the takeoff QA gates you verify against.
 4. `resources/csi-divisions.md` — scope-gap checklist.
+5. `resources/validate_takeoff.py` — the takeoff machine check (with `validate_estimate.py`).
 
 ## What to check
 1. **Math, independently.** Recompute every extension (qty × unit, waste on material only),
@@ -37,8 +38,16 @@ review and report — you do not edit the artifacts under review.
    out-of-band divisions are Major (the classic: electrical at 2.2% of direct vs a 5–8% band).
 5. **Coverage.** Every CSI division priced OR explicitly excluded; scope-gap items each
    assigned to exactly one party; allowances, alternates, unit prices, every addendum addressed.
-6. **Takeoff QA.** The takeoff carries its completed QA block; quantity ratios within norms
-   (rebar lb/CY, CMU/SF, duct lb/CFM, fixtures/SF, tons/SF).
+6. **Takeoff QA.** If Python is available, run
+   `python3 resources/validate_takeoff.py <project_dir>/ --sector <sector>` (add
+   `--golden <csv>` when verified quantities exist) — every FAIL is at least a Major
+   finding. It checks the QA block, sheet coverage, the scale gate (a sheet logged
+   `confirmed` with a check-dim Δ > 1% is a misgraded scale — Critical if quantities came
+   off it), Withheld items kept out of the CSV, and the `line_id` + qty tie-out between
+   `takeoff.md` and `lineitems.csv`. Ratios inside the protocol §13 screen (rebar lb/CY,
+   CMU/SF, SF/ton, gyp/SF, roof/footprint), outliers explained. Third-party takeoffs
+   without these sections: do the checks by hand and report what could not be verified.
+   Review lines in confidence order (RFI → assumed → approx), largest $ first.
 7. **Florida items.** Impact/NOA products where WBDR/HVHZ, flood provisions, termite,
    energy testing, threshold inspection if triggered, sales tax on materials only, bond
    posture by contract type.

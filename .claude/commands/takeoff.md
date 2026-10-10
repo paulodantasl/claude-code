@@ -19,12 +19,14 @@ where its own knowledge base lives.
 3. **Pass the sector if known** (public / residential / commercial / tenant-improvement) so
    the agent applies the matching profile. If the sector is obvious from the documents, say
    so; if ambiguous, ask once.
-4. **Delegate.** The agent produces `takeoff.md` (quantities by division — each line with
-   qty, unit, source sheet, method, confidence flag) plus a seed `lineitems.csv` with cost
-   columns blank, ready for pricing.
+4. **Delegate.** The agent produces `takeoff.md` (sheet index, per-sheet scale log,
+   quantities by division — each line with ID, qty, unit, gross/net, source sheet, method,
+   confidence — and a Withheld list) plus a seed `lineitems.csv` with cost columns blank
+   and the provenance tail filled, then runs `validate_takeoff.py` on both.
 
-When it returns, report: quantity highlights by division, the reasonableness ratio checks,
-every RFI raised, and which lines are `approx` (scaled, not printed). State plainly that
+When it returns, report: quantity highlights by division, the validator result, any
+amber/red (off-scale) sheets, the ratio checks, the Withheld list, every RFI raised, and
+which lines are `approx` (scaled, not printed). State plainly that
 scaled quantities are assumptions to confirm — do not present them as measured.
 
 This is the takeoff stage only. Pricing is `/estimate`, narrative is `/scope`, and the full

@@ -52,7 +52,8 @@ competitively shopped.
 A procurement report per the template (provenance legend, executive buyout summary,
 sourcing tables by division, long-lead order-by schedule, RFQ-required list, assumptions)
 plus a CSV:
-`division,item,spec,supplier,location,product_or_sku,unit_price,unit,price_type,source_url,source_date,availability,lead_time,fl_approval,confidence,recommendation`
+`line_id,division,item,spec,supplier,location,product_or_sku,unit_price,unit,price_type,source_url,source_date,availability,lead_time,fl_approval,confidence,recommendation`
+— `line_id` is the ID from `lineitems.csv` (the join key back to the estimate).
 
 ## Hard rules
 Never invent a supplier, SKU, price, stock status, or lead time. No URL+date → it is an

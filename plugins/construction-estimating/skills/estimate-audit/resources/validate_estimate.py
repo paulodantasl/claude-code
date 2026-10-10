@@ -32,6 +32,12 @@ from pathlib import Path
 
 HEADER = ["division", "section", "item", "description", "qty", "unit",
           "unit_mat", "unit_lab", "unit_equip", "unit_sub", "waste_pct", "notes"]
+# Optional provenance tail (takeoff -> estimate -> procurement join key + basis).
+# Accepted header = HEADER exactly, or HEADER + PROVENANCE exactly.
+PROVENANCE = ["line_id", "source_sheet", "method", "confidence", "price_basis"]
+METHODS = {"measured", "counted", "calculated", "imported", "scaled"}
+CONFIDENCE = {"med-high", "med-high/measured", "med", "approx", "assumed", "rfi"}
+PRICE_BASIS = {"sourced", "quote", "budgetary", "allowance"}
 
 # CSI MasterFormat division codes accepted in lineitems.csv (zero-padded 01-49).
 CSI_DIVS = {f"{i:02d}" for i in range(1, 50)}
@@ -242,15 +248,23 @@ def main():
         rows = list(csv.reader(f))
 
     # --- schema ---
-    if rows[0] != HEADER:
-        rep.add("FAIL", "schema", f"header mismatch: {rows[0]}")
-    bad_width = [i + 1 for i, r in enumerate(rows) if len(r) != len(HEADER)]
+    header = [h.strip() for h in rows[0]]
+    extended = header == HEADER + PROVENANCE
+    cols = HEADER + PROVENANCE if extended else HEADER
+    if header != HEADER and not extended:
+        rep.add("FAIL", "schema", f"header mismatch (want the 12 core columns, optionally + "
+                f"{','.join(PROVENANCE)}): {rows[0]}")
+    bad_width = [i + 1 for i, r in enumerate(rows) if len(r) != len(cols)]
     if bad_width:
         rep.add("FAIL", "schema", f"rows with wrong column count: {bad_width}")
     else:
-        rep.add("PASS", "schema", f"{len(rows)-1} rows, 12 columns, header exact")
+        rep.add("PASS", "schema", f"{len(rows)-1} rows, {len(cols)} columns, header exact"
+                + (" (with provenance)" if extended else ""))
+    if not extended:
+        rep.add("INFO", "provenance", "no provenance columns — line_id/source/confidence/"
+                "price_basis not tracked (run validate_takeoff.py for the tie-out)")
 
-    data = [dict(zip(HEADER, r)) for r in rows[1:] if any(c.strip() for c in r)]
+    data = [dict(zip(cols, r)) for r in rows[1:] if any(c.strip() for c in r)]
 
     # --- numeric parse + per-line checks ---
     tot = {"mat": 0.0, "lab": 0.0, "eq": 0.0, "sub": 0.0}
@@ -298,6 +312,32 @@ def main():
         elif unit == "LS":
             ls_count += 1; ls_total += q * costs
         seen_items[(r["division"].strip(), r["item"].strip().lower())].append(idx)
+
+    # provenance: enums, and every priced line labeled sourced/quote/budgetary/allowance.
+    if extended:
+        bad_prov, no_basis = [], []
+        for idx, r in enumerate(data, start=2):
+            m, c, b = (r["method"].strip().lower(), r["confidence"].strip().lower(),
+                       r["price_basis"].strip().lower())
+            if m and m not in METHODS:
+                bad_prov.append(f"row {idx}: method={m!r}")
+            if c and c not in CONFIDENCE:
+                bad_prov.append(f"row {idx}: confidence={c!r}")
+            if b and b not in PRICE_BASIS:
+                bad_prov.append(f"row {idx}: price_basis={b!r}")
+            costs = [num(r[k]) for k in ("unit_mat", "unit_lab", "unit_equip", "unit_sub")]
+            if not b and any(v for v in costs if v):
+                no_basis.append(f"row {idx} [{r['division']}] {r['item'][:30]}")
+        for check, bad, msg in [
+            ("provenance", bad_prov, f"values outside method {sorted(METHODS)} / confidence "
+             f"{sorted(CONFIDENCE)} / price_basis {sorted(PRICE_BASIS)}"),
+            ("price-basis", no_basis, "priced line with blank price_basis "
+             "(label sourced/quote/budgetary/allowance)"),
+        ]:
+            if bad:
+                rep.add("WARN", check, f"{msg}: {bad if len(bad) <= 8 else bad[:8] + ['…+' + str(len(bad)-8)]}")
+            else:
+                rep.add("PASS", check, "clean")
 
     # qty-outlier screen: a non-LS/ALLOW line whose extension dwarfs the rest of
     # its division is usually a qty/unit typo (10x slip, SF-vs-SY, etc.).

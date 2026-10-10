@@ -22,6 +22,7 @@
 
 **Mechanical / protocol gates (run these, don't eyeball them)**
 - [ ] `validate_estimate.py --sector <sector>` run on the workbook inputs — PASS (attach output)
+- [ ] `validate_takeoff.py --sector <sector>` run on the takeoff — 0 FAIL (attach output); scale log, sheet coverage, Withheld kept out, takeoff ↔ CSV `line_id` tie-out
 - [ ] Scope ↔ estimate tie-out matrix verified line-by-line
 - [ ] Zero-qty / zero-cost line audit (no silent placeholders)
 - [ ] Benchmark bands checked against the sector profile table
@@ -40,7 +41,8 @@
 
 **Reasonableness**
 - [ ] $/SF and trade-% bands plausible for building type & FL market
-- [ ] Quantity ratios within norms (rebar/CY, CMU/SF, duct lbs/CFM, fixtures/SF)
+- [ ] Quantity ratios inside the takeoff protocol §13 screen (rebar lb/CY, CMU/SF, SF/ton, gyp/SF, roof/footprint); outliers explained
+- [ ] Every priced line carries `price_basis` (sourced / quote / budgetary / allowance); budgetary lines on the largest $ flagged for quotes
 - [ ] Unit costs within sane ranges; outliers explained
 
 **Florida compliance**

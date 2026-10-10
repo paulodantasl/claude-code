@@ -38,7 +38,7 @@ confidence — and to be honest about what is measured vs. assumed.
 ## Process
 - **From PDFs:** Read the relevant discipline sheets (G/C/S/A/MEP/etc.). Pull from
   schedules (door/window/finish/equipment/fixture), plans, sections, and details. Read
-  general notes and legends. **Use the graphic scale bar, never trust PDF page scaling.**
+  general notes and legends. **Never trust PDF page scaling — pass the per-sheet scale gate (protocol §10) first.**
   Specs govern quality, drawings govern quantity — reconcile and raise RFIs on conflicts.
 - **From digitized exports:** Parse the CSV/Excel, map columns to the takeoff schema,
   normalize units, and **validate** — recompute areas/lengths/counts where possible,
@@ -62,7 +62,17 @@ plan; missed middle bars; a missed slab-on-grade). Non-negotiables:
 6. **Gross vs net declared** for every area, with the deduction rule named.
 7. Conflicts → RFIs with both values + $ swing; congested clusters get a declared ± tolerance.
 8. **Write output incrementally** as each division completes — never hold all results for one final write.
-9. Finish with the **Takeoff QA block** from the protocol — all boxes checked or the takeoff is not done.
+9. **Sheet index + scale gate first** (§9–§10): index every sheet; on every sheet you
+   measure, cite the scale source and log a check dimension — Δ ≤1% confirmed, ≤5% amber,
+   >5% red (off-scale plot: recalibrate before measuring). NTS sheets are never scaled.
+10. **Measurement conventions** (§11): finish areas to the inside wall face and the wall
+   centerline at doors; finish from the schedule row; counts need symbol AND tag; derived
+   quantities show their inputs; measured qty never includes waste.
+11. **Withheld, not guessed** (§12): ambiguous finds go in the Withheld table — never in
+   totals or the seed CSV.
+12. Finish with the **Takeoff QA block** (§14) — all boxes checked or `FAILED:` with the
+   reason — then run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate_takeoff.py <project_dir>/ --sector <sector>`
+   and fix every FAIL before hand-off.
 
 **Sector awareness:** if the job's market sector is stated (public / new-residential /
 new-commercial / tenant-improvement), also read the matching `${CLAUDE_PLUGIN_ROOT}/reference/sector-*.md` profile and
@@ -92,9 +102,12 @@ inside the plugin folder; it is replaced on update), and sync it into the canoni
 Write `takeoff.md` in the project folder using the structure in
 `${CLAUDE_PLUGIN_ROOT}/templates/takeoff-template.md` (header block, quantities-by-division table,
 assumptions, exclusions, RFIs, reasonableness checks). If useful for the estimator, also
-emit a `lineitems.csv` seed with exactly this header (cost columns blank):
-`division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes` — with
-cost columns left blank. Keep it tabular and diff-friendly.
+emit a `lineitems.csv` seed with exactly this header:
+`division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes,line_id,source_sheet,method,confidence,price_basis` — with
+cost columns and `price_basis` left blank, one row per quantity ID (`line_id` = the
+takeoff ID), no Withheld IDs. Keep it tabular and diff-friendly.
 
 End with a short summary: total line count, divisions covered, # of approximate items,
-and the top RFIs/assumptions the estimator must resolve.
+the Withheld list, any amber/red scale sheets, the validator result, and the top
+RFIs/assumptions the estimator must resolve. Confidence flags are review priorities, not
+accuracy claims — say so.

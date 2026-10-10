@@ -18,19 +18,55 @@ Use these formats for your takeoff / scope / estimate workbook / proposal / audi
 | Takeoff by | {{AGENT}} |
 | Date | {{DATE}} |
 | Basis | PDF plans + specs / digitized import / mixed |
+| Gross floor area | {{GFA}} SF |
 | Wind / Flood | V_ult {{___}} mph, Risk Cat {{___}}; Flood zone {{___}}, DFE {{___}} |
+
+> Keep the section headings below exactly as written — the validator (Claude Code) finds
+> the tables by heading. Column order matters; add columns only at the end.
+
+## Sheet index
+
+> Every sheet in the set (protocol §9). Role: plan / schedule / elevation / section /
+> detail / notes / civil / structural / MEP / spec / calc / cover. Read?: read /
+> partial / not read / N/A — give a reason for anything but `read`.
+
+| Sheet | Title | Role | Rev | Read? | Notes |
+|-------|-------|------|-----|-------|-------|
+| A1.0 | Floor plans | plan | 2 | read | |
+| … | | | | | |
+
+## Scale log
+
+> One row per sheet you measured or scaled from (protocol §10). Scale source:
+> title-block / viewport-note / scale-bar / calibrated / NTS. Check dims in feet-inches
+> (`40'-0"`) or decimal feet. Status: confirmed (≤1%) / amber (≤5%, recalibrated) /
+> red (>5%, recalibrated) / NTS. The validator recomputes Δ.
+
+| Sheet | Stated scale | Scale source | Check dim (printed) | Check dim (measured) | Δ % | Status |
+|-------|--------------|--------------|---------------------|----------------------|----:|--------|
+| A1.0 | 1/4" = 1'-0" | title-block | 40'-0" | 40'-1" | 0.2 | confirmed |
 
 ## Quantities by CSI division
 
-> One row per measurable/countable item. State the **source** (sheet # or imported
-> file), the **method** (measured / counted / calculated / imported), and a
-> **confidence** flag. Mark anything scaled off a raster PDF as **approximate** and
-> recommend verified measurement.
+> One row per measurable/countable item. ID is unique and carried into
+> `lineitems.csv` as `line_id`. Qty is **measured** (no waste). Gross/Net is required on
+> SF/SY lines (`gross` / `net` / `-`). Method: measured / counted / calculated /
+> imported / scaled. Confidence: med-high / med / approx / assumed / RFI — `scaled`
+> lines are always `approx`. Put derivations (perimeter − openings, LF × height) in Notes.
 
-| Div | Item | Qty | Unit | Source (sheet) | Method | Confidence | Notes |
-|-----|------|----:|------|----------------|--------|------------|-------|
-| 03 | Slab-on-grade, 5" | | SF | S-201 | measured | approx | flag for verified TO |
-| … | | | | | | | |
+| ID | Div | Item | Qty | Unit | Gross/Net | Source (sheet) | Method | Confidence | Notes |
+|----|-----|------|----:|------|-----------|----------------|--------|------------|-------|
+| 03-001 | 03 | Slab-on-grade, 5" | 4500 | SF | net | S-201 | measured | med-high | 60'-0" x 75'-0" printed dims |
+| … | | | | | | | | | |
+
+## Withheld
+
+> Found but not quantifiable with confidence (protocol §12). NOT in the totals above and
+> NOT in `lineitems.csv`. Candidate qty is for allowance sizing only.
+
+| ID | Item | Location (sheet / grid) | Why withheld | Candidate qty | Resolution (RFI #) |
+|----|------|-------------------------|--------------|---------------|--------------------|
+| W-01 | {{e.g., near-match fixture symbol, no tag}} | {{P-101 / C-4}} | {{no schedule row}} | {{1 EA}} | {{RFI-03}} |
 
 ## Assumptions
 
@@ -42,11 +78,26 @@ Use these formats for your takeoff / scope / estimate workbook / proposal / audi
 
 ## RFIs / clarifications needed
 
-- {{Conflicts between drawings and specs; missing details; illegible scales.}}
+- {{Conflicts between drawings and specs; missing details; illegible scales — both values + $ swing.}}
 
 ## Quantity reasonableness checks
 
-- {{e.g., rebar 110 lbs/CY — within norm; CMU 1.125 units/SF — OK.}}
+- {{Protocol §13 ratios, e.g., rebar 110 lb/CY — within 80–200; CMU 1.125 units/SF — OK.}}
+
+## Takeoff QA block
+
+> Paste the QA block from protocol §14. Mark each box `☑` or `[x]`; an unmet box stays
+> `□` with the reason on the same line.
+
+## Seed CSV for the estimator
+
+`lineitems.csv` — core 12 columns + provenance tail, cost columns blank, one row per
+quantity ID, no rollup/total rows, no Withheld IDs:
+
+```
+division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes,line_id,source_sheet,method,confidence,price_basis
+03,03 30 00,Slab-on-grade 5",4500 SF SOG w/ 6x6 WWM,4500,SF,,,,,,net; printed dims,03-001,S-201,measured,med-high,
+```
 
 ---
 
@@ -117,10 +168,10 @@ columns blank/0. Use **either** self-perform (mat/lab/equip) **or** subcontract 
 not both, on a given line.
 
 ```
-division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes
-03,03 30 00,Slab-on-grade 5",4500 SF SOG w/ 6x6 WWM,4500,SF,2.85,1.10,0.20,,7,verify TO off S-201
-08,08 51 13,Impact windows,Alum impact-rated NOA windows,38,EA,,,,1450,0,sub incl install
-31,31 23 00,Termite soil treatment,Subterranean termite pretreat,4500,SF,,,,0.18,0,FBC required
+division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub,waste_pct,notes,line_id,source_sheet,method,confidence,price_basis
+03,03 30 00,Slab-on-grade 5",4500 SF SOG w/ 6x6 WWM,4500,SF,2.85,1.10,0.20,,7,net; verify TO off S-201,03-001,S-201,measured,med-high,budgetary
+08,08 51 13,Impact windows,Alum impact-rated NOA windows,38,EA,,,,1450,0,sub incl install,08-001,A-501,counted,med-high,quote
+31,31 23 00,Termite soil treatment,Subterranean termite pretreat,4500,SF,,,,0.18,0,FBC required,31-001,S-201,calculated,med,sourced
 ```
 
 | Column | Meaning |
@@ -137,6 +188,17 @@ division,section,item,description,qty,unit,unit_mat,unit_lab,unit_equip,unit_sub
 | unit_sub | subcontract $/unit (already includes sub OH&P) |
 | waste_pct | material waste %, applied to material only |
 | notes | source/assumption |
+| line_id | takeoff ID this line prices (from `takeoff.md`); blank only for Div 01 / estimator-added lines. Join key for procurement |
+| source_sheet | sheet(s) the qty came from (carried from the takeoff) |
+| method | measured / counted / calculated / imported / scaled |
+| confidence | med-high / med / approx / assumed / RFI — a review prioritizer, not an accuracy claim |
+| price_basis | sourced (cited web/catalog) / quote (written vendor/sub quote) / budgetary (estimator judgment) / allowance — required on every priced line |
+
+The last five columns are the **provenance tail**. The validator also accepts the
+legacy 12-column header, but new work uses all 17 so the takeoff → estimate →
+procurement chain stays traceable (`validate_takeoff.py` ties `line_id` + qty back to
+`takeoff.md`). Qty is the **measured** takeoff qty — waste goes in `waste_pct`, never in
+`qty`.
 
 ## `markups.csv`
 
@@ -250,6 +312,7 @@ Sincerely,
 
 **Mechanical / protocol gates (run these, don't eyeball them)**
 - [ ] `validate_estimate.py --sector <sector>` run on the workbook inputs — PASS (attach output)
+- [ ] `validate_takeoff.py --sector <sector>` run on the takeoff — 0 FAIL (attach output); scale log, sheet coverage, Withheld kept out, takeoff ↔ CSV `line_id` tie-out
 - [ ] Scope ↔ estimate tie-out matrix verified line-by-line
 - [ ] Zero-qty / zero-cost line audit (no silent placeholders)
 - [ ] Benchmark bands checked against the sector profile table
@@ -268,7 +331,8 @@ Sincerely,
 
 **Reasonableness**
 - [ ] $/SF and trade-% bands plausible for building type & FL market
-- [ ] Quantity ratios within norms (rebar/CY, CMU/SF, duct lbs/CFM, fixtures/SF)
+- [ ] Quantity ratios inside the takeoff protocol §13 screen (rebar lb/CY, CMU/SF, SF/ton, gyp/SF, roof/footprint); outliers explained
+- [ ] Every priced line carries `price_basis` (sourced / quote / budgetary / allowance); budgetary lines on the largest $ flagged for quotes
 - [ ] Unit costs within sane ranges; outliers explained
 
 **Florida compliance**

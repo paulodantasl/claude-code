@@ -19,8 +19,14 @@ quotes, and label them as such.
 | LS | Lump sum |
 | ALLOW | Allowance |
 
-Cross-check quantities for reasonableness (e.g., rebar lbs per CY of concrete; CMU per
-SF of wall; ductwork lbs per CFM). Flag outliers.
+Cross-check quantities for reasonableness against the ratio screen in
+`takeoff-accuracy-protocol.md` §13 (rebar 40–300 lb/CY, CMU 1.05–1.20 units/SF, HVAC
+350–850 SF/ton residential / 200–500 commercial, gyp board 2.5–4.5 SF per floor SF
+residential, roof ÷ footprint 1.05–1.45 pitched). Outside the screen = explain in
+writing or fix.
+
+**Waste never goes in qty.** `qty` is the measured takeoff quantity; waste lives in
+`waste_pct`. Order units round up: `order = ceil(qty × (1 + waste) ÷ coverage)`.
 
 ## 2. Cost components per line item
 
@@ -106,7 +112,10 @@ sales tax is already inside material costs. **Never double-mark-up subcontractor
 - **Trade % of total** is plausible (e.g., on commercial: structure, MEP ~25–40% combined,
   finishes, etc. — flag a division that is implausibly large or tiny/missing).
 - **Every CSI division** is either priced or explicitly excluded — no silent gaps.
-- **Quantity ratios** (rebar/CY, CMU/SF, duct lbs/CFM, fixtures/SF) within norms.
+- **Quantity ratios** inside the takeoff protocol §13 screen (rebar lb/CY, CMU/SF,
+  SF/ton, gyp/SF, roof/footprint); outliers explained in writing.
+- **Price basis** labeled on every priced line (`price_basis`: sourced / quote /
+  budgetary / allowance); the largest budgetary lines are the first quote targets.
 - **Florida items present:** wind/impact products, flood provisions, termite treatment,
   energy testing, threshold inspection (if applicable), sales tax on materials, bonds.
 - **Markups applied once, in order; no double-markup; subs not re-burdened.**

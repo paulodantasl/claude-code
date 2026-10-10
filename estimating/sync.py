@@ -57,7 +57,7 @@ SKILL_FILES = {
             "reference/jobtread-takeoff-protocol.md",
             "templates/takeoff-template.md",
         ],
-        "scripts": ["scripts/jobtread_takeoff.py"],
+        "scripts": ["scripts/jobtread_takeoff.py", "scripts/validate_takeoff.py"],
     },
     "construction-estimating": {
         "resources": [
@@ -76,6 +76,7 @@ SKILL_FILES = {
             "reference/csi-divisions.md",
             "templates/audit-checklist.md",
             "scripts/validate_estimate.py",
+            "scripts/validate_takeoff.py",
         ],
     },
     "material-procurement": {

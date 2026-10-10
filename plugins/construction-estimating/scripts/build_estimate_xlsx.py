@@ -48,6 +48,11 @@ MARKUP_ORDER = [
     ("ohp_pct", "Overhead & Profit"),
 ]
 
+# Optional provenance columns in lineitems.csv (see estimate-workbook.md).
+PROVENANCE = ["line_id", "source_sheet", "method", "confidence", "price_basis"]
+PROVENANCE_LABELS = {"line_id": "Line ID", "source_sheet": "Source Sheet", "method": "Method",
+                     "confidence": "Confidence", "price_basis": "Price Basis"}
+
 # CSI MasterFormat division codes accepted in lineitems.csv (zero-padded 01-49).
 CSI_DIVS = {f"{i:02d}" for i in range(1, 50)}
 
@@ -123,6 +128,10 @@ def build_detail(wb, items):
     headers = ["Div", "Section", "Item", "Description", "Qty", "Unit",
                "Unit Mat", "Waste %", "Mat Ext", "Unit Lab", "Lab Ext",
                "Unit Equip", "Equip Ext", "Unit Sub", "Sub Ext", "Line Total", "Notes"]
+    # Optional provenance tail rides after Notes (columns 18+) so the canonical
+    # A..Q layout — and the validator's tie-out of it — never moves.
+    prov = [k for k in PROVENANCE if any(str(it.get(k) or "").strip() for it in items)]
+    headers += [PROVENANCE_LABELS[k] for k in prov]
     ws.append(headers)
     style_header(ws, 1, len(headers))
 
@@ -145,6 +154,8 @@ def build_detail(wb, items):
         ws.cell(r, 15, f"=E{r}*N{r}")                  # Sub Ext
         ws.cell(r, 16, f"=I{r}+K{r}+M{r}+O{r}")        # Line Total
         ws.cell(r, 17, it.get("notes", ""))
+        for j, k in enumerate(prov):
+            ws.cell(r, 18 + j, str(it.get(k) or "").strip())
 
     last = ws.max_row
     for r in range(2, last + 1):
@@ -154,7 +165,7 @@ def build_detail(wb, items):
         for c in range(1, len(headers) + 1):
             ws.cell(r, c).border = BORDER
 
-    widths = [6, 11, 22, 40, 9, 7, 11, 8, 13, 11, 13, 11, 13, 11, 13, 13, 34]
+    widths = [6, 11, 22, 40, 9, 7, 11, 8, 13, 11, 13, 11, 13, 11, 13, 13, 34] + [12] * len(prov)
     for i, w in enumerate(widths, start=1):
         ws.column_dimensions[get_column_letter(i)].width = w
     ws.freeze_panes = "A2"
